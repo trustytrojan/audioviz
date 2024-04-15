@@ -1,0 +1,9 @@
+{
+	"files.associations": {
+		".clangd": "yaml",
+		"*.ext": "c",
+		"stdexcept": "cpp",
+		"random": "cpp",
+		"*.tcc": "cpp"
+	}
+}
