@@ -8,12 +8,8 @@ void handleEvents(sf::RenderWindow &window)
 		{
 		case sf::Event::Closed:
 			window.close();
+		default:
 			break;
-			// case sf::Event::Resized:
-			// 	// update the view to the new size of the window
-			// 	sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
-			// 	window.setView(sf::View(visibleArea));
-			// 	break;
 		}
 }
 
@@ -34,7 +30,7 @@ void drawCircleFromBottomLeft(sf::RenderTarget &rt, const int x, const int y, co
 }
 
 // (x, y) is the BOTTOM-LEFT corner
-void drawVerticalPillFromBottomLeft(sf::RenderTarget &rt, const int x, const int y, const int w, const int h, const sf::Color color)
+void drawPillFromBottomLeft(sf::RenderTarget &rt, const int x, const int y, const int w, const int h, const sf::Color color)
 {
 	const auto halfw = w / 2;
 	drawCircleFromBottomLeft(rt, x, y, halfw, color);
@@ -42,7 +38,7 @@ void drawVerticalPillFromBottomLeft(sf::RenderTarget &rt, const int x, const int
 	drawCircleFromBottomLeft(rt, x, y - h, halfw, color);
 }
 
-void drawLine(sf::RenderTarget &rt, const sf::Vector2f &start, const sf::Vector2f &end, const sf::Color color)
+void drawLine(sf::RenderTarget &rt, const sf::Vector2f start, const sf::Vector2f end, const sf::Color color)
 {
 	const sf::Vertex vertices[] = {sf::Vertex(start, color), sf::Vertex(end, color)};
 	rt.draw(vertices, 2, sf::Lines);
@@ -53,39 +49,58 @@ int main()
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
 
-	sf::RenderWindow window(sf::VideoMode(800, 600), "SFML Project", sf::Style::Close, settings);
+	const auto width = 800, height = 600;
+	sf::RenderWindow window(sf::VideoMode(width, height), "SFML Project", sf::Style::Titlebar, settings);
 
-	sf::RenderTexture renderTexture;
-	if (!renderTexture.create(window.getSize().x, window.getSize().y))
+	sf::RenderTexture rt;
+	if (!rt.create(width, height))
 		throw std::runtime_error("failed to create render texture!");
 
 	sf::Shader shader;
-	if (!shader.loadFromFile("simple.frag", sf::Shader::Fragment))
+	if (!shader.loadFromFile("glow.frag", sf::Shader::Fragment))
 		throw std::runtime_error("failed to load shaders!");
-	shader.setUniform("resolution", sf::Glsl::Vec2(window.getSize().x, window.getSize().y));
+	shader.setUniform("resolution", sf::Glsl::Vec2(width, height));
+	shader.setUniform("glowColor", sf::Glsl::Vec3(1, 1, 1));
 
 	sf::RenderStates rs(&shader);
-
-	sf::Sprite sprite;
+	sf::Sprite rtSprite(rt.getTexture());
 
 	while (window.isOpen())
 	{
 		handleEvents(window);
 		window.clear();
 
-		// start with a transparent background
-		renderTexture.clear();
+		// render scene to texture
+		rt.clear({0, 0, 0, 0});
+		drawPillFromBottomLeft(rt, 200, 200, 20, 50, sf::Color::Red);
+		drawPillFromBottomLeft(rt, 300, 200, 20, 50, sf::Color::Red);
+		drawPillFromBottomLeft(rt, 250, 250, 20, 50, sf::Color::Red);
+		rt.display();
 
-		drawVerticalPillFromBottomLeft(renderTexture, 200, 200, 20, 50, sf::Color::White);
+		// apply glow on texture several times, drawing the result to the window
+		for (float i = 0; i < 2; i += 0.5f)
+		{
+			// glow vertically
+			shader.setUniform("direction", sf::Glsl::Vec2(0, i));
+			window.draw(rtSprite, rs);
 
-		// finalize the drawing to the texture
-		renderTexture.display();
+			// glow horizontally
+			shader.setUniform("direction", sf::Glsl::Vec2(i, 0));
+			window.draw(rtSprite, rs);
 
-		// create a sprite from the texture
-		sprite.setTexture(renderTexture.getTexture());
+			float j = i / 1.5;
 
-		// draw the sprite to the window with the shader
-		window.draw(sprite, rs);
+			// glow on the up-diagonal
+			shader.setUniform("direction", sf::Glsl::Vec2(j, j));
+			window.draw(rtSprite, rs);
+
+			// glow on the down-diagonal
+			shader.setUniform("direction", sf::Glsl::Vec2(j, -j));
+			window.draw(rtSprite, rs);
+		}
+
+		// overlap the glow results with the original scene
+		window.draw(rtSprite);
 
 		window.display();
 	}
