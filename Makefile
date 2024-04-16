@@ -6,7 +6,7 @@ run: compile
 	./a.out
 
 compile: clear
-	$(CC) $(CFLAGS) main.cpp $(LDLIBS)
+	$(CC) $(CFLAGS) main2.cpp $(LDLIBS)
 
 clear:
 	clear

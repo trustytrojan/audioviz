@@ -1,4 +1,6 @@
+#include <cmath>
 #include <SFML/Graphics.hpp>
+#include <iostream>
 
 void handleEvents(sf::RenderWindow &window)
 {
@@ -64,6 +66,7 @@ int main()
 
 	sf::RenderStates rs(&shader);
 	sf::Sprite rtSprite(rt.getTexture());
+	sf::Clock clock;
 
 	while (window.isOpen())
 	{
@@ -74,11 +77,11 @@ int main()
 		rt.clear({0, 0, 0, 0});
 		drawPillFromBottomLeft(rt, 200, 200, 20, 50, sf::Color::Red);
 		drawPillFromBottomLeft(rt, 300, 200, 20, 50, sf::Color::Red);
-		drawPillFromBottomLeft(rt, 250, 250, 20, 50, sf::Color::Red);
+		drawPillFromBottomLeft(rt, 250, 250, 30, 50, sf::Color::Red);
 		rt.display();
 
 		// apply glow on texture several times, drawing the result to the window
-		for (float i = 0; i < 2; i += 0.5f)
+		for (float i = 0.0000001, ix = 5; i < 2 && ix > 0; i *= ix, ix -= 0.01)
 		{
 			// glow vertically
 			shader.setUniform("direction", sf::Glsl::Vec2(0, i));
@@ -100,8 +103,10 @@ int main()
 		}
 
 		// overlap the glow results with the original scene
-		window.draw(rtSprite);
+		window.draw(rtSprite, rs);
 
 		window.display();
+
+		std::cout << "\rFPS: " << (1.0f / clock.restart().asSeconds()) << std::flush; // Print the FPS
 	}
 }
