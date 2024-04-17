@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 uniform vec2 resolution;
 
@@ -23,16 +23,25 @@ float pill_sdf(float x, float y, float width, float height)
 	return min(d, min(distToTopSemicircle, distToBottomSemicircle));
 }
 
-const vec3 pillColor = vec3(1, 0.9, 0.9);
-const vec3 glowColor = pillColor;
+const vec3 pc1 = vec3(1, 0.9, 0.9);
+const vec3 pc2 = vec3(0.5, 0.9, 0.9);
 const float glowStrength = 0.0015;
+
+out vec4 FragColor;
 
 void main()
 {
+	vec3 pillColor;
 	float p1 = pill_sdf(-0.2, 0, 0.1, 0.2);
 	float p2 = pill_sdf(0.2, 0, 0.1, 0.2);
 	float d = min(p1, p2);
+	if (d == p1)
+		pillColor = pc1;
+	else if (d == p2)
+		pillColor = pc2;
+	vec3 glowColor = pillColor;
 	vec3 color = pillColor * step(0, -d); // results in either black or pillColor
 	color += clamp((glowStrength / d) * glowColor, vec3(0), vec3(1));
-	gl_FragColor = vec4(color, 1);
+	// gl_FragColor = vec4(color, 1);
+	FragColor = vec4(color, 1);
 }

@@ -23,13 +23,18 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(width, height), "SFML Project", sf::Style::Titlebar, settings);
 
 	sf::Shader shader;
-	if (!shader.loadFromFile("glow-pill.frag", sf::Shader::Fragment))
+	if (!shader.loadFromFile("glow-pill-460.frag", sf::Shader::Fragment))
 		throw std::runtime_error("failed to load shaders!");
 	shader.setUniform("resolution", sf::Glsl::Vec2(width, height));
 	sf::RenderStates rs(&shader);
 
 	sf::RectangleShape r(sf::Vector2f(width, height));
 	sf::Clock clock;
+
+
+
+	// sf::Texture texture;
+	// texture.create();
 
 	while (window.isOpen())
 	{
