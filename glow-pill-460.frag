@@ -5,10 +5,6 @@ vec3 hsv2rgb(float h, const float s, const float v)
 	// Normalize h to the range [0, 1]
 	h = mod(h, 1);
 
-	// Ensure h is not negative
-	if (h < 0)
-		h += 1;
-
 	float r, g, b;
 
 	if (s == 0)
@@ -62,64 +58,98 @@ vec3 hsv2rgb(float h, const float s, const float v)
 	return vec3(r, g, b);
 }
 
-uniform vec2 resolution;
+vec2 this_uv;
 
-float pill_sdf(const vec2 this_uv, vec2 position, const vec2 size)
+// draws a line segment with a thickness/radius
+// a: first point
+// b: second point
+// r: radius/thickness of time
+float ligne_sdf(vec2 a, vec2 b, float r)
 {
-	position.x *= -1;
-	const vec2 uv = this_uv + position;
-	const vec2 p = abs(uv) - size;
-	const float d = length(max(p, 0)) + min(max(p.x, p.y), 0);
-	const float radius = size.x;
-	return min(d, min(length(uv - vec2(0, size.y)) - radius, length(uv - vec2(0, -size.y)) - radius));
+	const vec2 pa = this_uv - a, ba = b - a;
+	const float h = clamp(dot(pa, ba) / dot(ba, ba), 0, 1);
+	return length(pa - ba * h) - r;
 }
 
+uniform vec2 resolution;
 out vec4 FragColor;
 
 void main()
 {
-	const float aspectRatio = resolution.x / resolution.y;
-	const vec2 this_uv = (gl_FragCoord.xy / resolution - 0.5) * vec2(aspectRatio, 1);
+	// step 1: calculate and initialize this_uv
+	{
+		const float aspect_ratio = resolution.x / resolution.y;
 
-	const float glowStrength = 0.003;
-	const vec3 glowColor = vec3(1);
+		// normalize this fragment's coordinates to [0, 1] along both axes,
+		// 0 being the (left|top)most pixel per axis
+		this_uv = gl_FragCoord.xy / resolution;
 
-	const float startX = -0.5;
-	const vec2 pillSize = vec2(0.01, 0.1);
-	const float pillSpacing = 0.025;
-	// const int numPills = int(1 / (pillSize.x + pillSpacing));
-	const int numPills = 5;
+		// move origin to center of the screen such that
+		// coordinates are in the range [-0.5, 0.5]
+		this_uv -= 0.5;
 
-	float minDist = 1e9;
-	int minIdx = 0;
+		// to make life easier, double the range to [-1, 1]
+		this_uv *= 2;
+
+		// lastly, don't forget to scale x-axis by aspect_ratio.
+		// otherwise, on a non-sqaure aspect ratio, everything will be stretched.
+		this_uv.x *= aspect_ratio;
+	}
+
+	// step 2: find distance to closest pill, and get its color
+	// note: do not put this code in a function; it does not get inlined (~2000 fps loss)
 	vec3 color;
-
-	for (int i = 0; i < numPills; ++i)
+	float minDist;
 	{
-		const float d = pill_sdf(this_uv, vec2(startX + i * (pillSize.x + pillSpacing), 0), pillSize);
-		if (d < minDist)
+		const float startX = -0.95;
+		const vec2 pillSize = vec2(0.02, 0.5);
+		const float pillSpacing = 0.05;
+
+		// 2 since the coordinate range is [-1, 1] per axis
+		// might need to revise the denominator though
+		const int numPills = int(2 / (pillSize.x + pillSpacing));
+
+		int i = 0;
+		for (float prevDist = 1e9, d; i < numPills; ++i)
 		{
-			minDist = d;
-			minIdx = i;
+			const float x = startX + i * (pillSize.x + pillSpacing);
+
+			// ligne_sdf is getting inlined by the compiler!
+			// tested this by unrolling the function right here,
+			// and saw no noticeable performance improvement.
+			d = ligne_sdf(vec2(x, -0.95), vec2(x, 0), pillSize.x);
+
+			if (d > prevDist)
+			{
+				minDist = prevDist;
+				break;
+			}
+
+			prevDist = d;
 		}
+
+		color = hsv2rgb(float(i) / numPills, 0.9, 1);
 	}
 
-	// color = hsv2rgb(1 - (float(minIdx) / numPills), 0.9, 1);
-	color = vec3(1);
-
-	// decide whether we are inside/outside the pill
-	color *= step(0, -minDist);
-	
-	// only add glow if we are outside the pill
-	float alpha;
-	if (color == vec3(0))
+	// step 3: coloring
 	{
-		alpha = glowStrength / minDist;
-		color += clamp(alpha * glowColor, vec3(0), vec3(glowColor));
-	}
-	{
-		alpha = 1;
-	}
+		// decide whether we are inside/outside the pill
+		color *= step(0, -minDist);
 
-	FragColor = vec4(color, alpha);
+		// subtly blend glow with background if we are outside the pill
+		float alpha = 1;
+		if (color == vec3(0))
+		{
+			const float glowStrength = 0.003;
+			const vec3 glowColor = vec3(1);
+
+			// decrease glow as we go away from the pill
+			alpha = glowStrength / minDist;
+
+			// glow amount calculation
+			color += clamp(alpha * glowColor, vec3(0), vec3(glowColor));
+		}
+
+		FragColor = vec4(color, alpha);
+	}
 }

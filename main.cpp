@@ -16,7 +16,7 @@ void handleEvents(sf::RenderWindow &window)
 
 int main()
 {
-	const auto width = 1000, height = 1000;
+	const auto width = 800, height = 600;
 	sf::RenderWindow window(sf::VideoMode(width, height), "SFML Project", sf::Style::Titlebar);
 	// window.setVerticalSyncEnabled(true);
 
