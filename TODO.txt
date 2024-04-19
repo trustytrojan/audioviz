@@ -1,1 +1,0 @@
-since ligne_sdf can work with ANY coordinate system, try converting the whole shader to using pixels instead of UV coordinates.

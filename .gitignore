@@ -1,2 +1,11 @@
-a.out
-.vscode
+bin
+obj
+*.out
+*.o
+.vscode/settings.json
+Music
+vgcore*
+*.mkv
+*.mp4
+*.jpg
+media

@@ -1,9 +1,45 @@
 CC = g++
-CFLAGS = -Wall -Wextra -g
-LDLIBS = -lsfml-graphics -lsfml-system -lsfml-window
+CFLAGS = -Wall -Wextra -Wno-subobject-linkage -std=gnu++23 -MMD $(if $(release),-O3,-g)
+INCLUDE = -Iinclude
+LDLIBS = -lsndfile -lfftw3f -lportaudio -lsfml-graphics -lsfml-system -lsfml-window -lglfw
+OBJDIR = obj
+BINDIR = bin
+SRCDIR = src
 
-compile: clear
-	$(CC) $(CFLAGS) main.cpp $(LDLIBS)
+# List of source files
+SRCS = $(wildcard $(SRCDIR)/*.cpp)
+# List of object files
+OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
+# List of dependency files
+DEPS = $(OBJS:.o=.d)
+
+# Default target
+all: clear makedirs $(BINDIR)/a.out
+
+# Linking
+$(BINDIR)/a.out: $(OBJS) | $(BINDIR)
+	$(CC) $^ $(LDLIBS) -o $@
+
+# Compilation
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+
+# Create necessary directories
+$(BINDIR) $(OBJDIR):
+	mkdir -p $@
+
+# Clean up
+clean:
+	rm -rf $(BINDIR) $(OBJDIR)
 
 clear:
 	clear
+
+# Install to system
+install:
+	cp bin/a.out /usr/local/bin/audioviz
+
+# Include the dependency files
+-include $(DEPS)
+
+.PHONY: all makedirs clean
