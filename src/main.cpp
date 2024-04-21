@@ -2,39 +2,135 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <sndfile.hh>
+
 #include "PortAudio.hpp"
 #include "RenderStats.hpp"
 #include "SpectrumDrawable.hpp"
 #include "FfmpegEncoder.hpp"
+#include "MyRenderTexture.hpp"
 
-struct MyRenderTexture : sf::RenderTexture
+class audioviz
 {
-	sf::Sprite sprite;
+private:
+	int sample_size = 3000;
+	std::string audio_file;
 
-	MyRenderTexture(const sf::Vector2u &size, const sf::ContextSettings &settings = sf::ContextSettings())
-		: sprite(getTexture())
+	SndfileHandle sf = audio_file;
+	std::vector<float> audio_buffer = std::vector<float>(sample_size * sf.channels());
+	SpectrumDrawable sd = sample_size;
+	sf::Shader blurShader;
+	int framerate, afpvf;
+
+	struct _bg
 	{
-		if (!create(size, settings))
-			throw std::runtime_error("failed to create render-texture!");
+		sf::Texture texture;
+		sf::Sprite sprite;
+		_bg() : sprite(texture) {}
+	} bg;
+
+	struct _spectrum
+	{
+		MyRenderTexture original, blurred;
+		_spectrum(sf::Vector2u size, int antialiasing)
+			: original(size, sf::ContextSettings(0, 0, antialiasing)),
+			  blurred(size) {}
+	} spectrum;
+
+public:
+	audioviz(sf::Vector2u size, std::string audio_file, int antialiasing = 4)
+		: audio_file(audio_file),
+		  spectrum(size, antialiasing)
+	{
+		if (!blurShader.loadFromFile("blur.frag", sf::Shader::Type::Fragment))
+			throw std::runtime_error("failed to load blur shader: 'blur.frag' required in current directory");
 	}
 
-	void display()
+	void set_framerate(int framerate)
 	{
-		sf::RenderTexture::display();
-		sprite.setTexture(getTexture(), true);
+		this->framerate = framerate;
+		afpvf = sf.samplerate() / framerate;
 	}
 
-	void blur(sf::Shader &shader, float hrad, float vrad, int npasses)
+	void set_bg(const std::string &file)
 	{
-		for (int i = 0; i < npasses; ++i)
+		if (!bg.texture.loadFromFile(file))
+			throw std::runtime_error("failed to load background image: '" + file + '\'');
+	}
+
+	bool next_frame(sf::RenderTarget &target, Pa::Stream &pa_stream)
+	{
+		static const sf::Color zero_alpha{0, 0, 0, 0};
+		static const auto margin = 5;
+		const auto size = target.getSize();
+
+		const auto frames_read = sf.readf(audio_buffer.data(), sample_size);
+		if (!frames_read)
+			return false;
+		try
 		{
-			shader.setUniform("direction", sf::Glsl::Vec2{hrad, 0}); // horizontal blur
-			draw(sprite, &shader);
-			display();
+			pa_stream.write(audio_buffer.data(), afpvf);
+		}
+		catch (const PortAudio::Error &e)
+		{
+			if (e.err != paOutputUnderflowed)
+				throw;
+		}
+		if (frames_read != sample_size)
+			return false;
+		spectrum.original.clear(zero_alpha);
+		if (sf.channels() == 2)
+		{
+			sd.copy_channel_to_input(audio_buffer.data(), sf.channels(), 0, true);
+			sf::IntRect left_half{{margin, margin}, {size.x / 2 - 2 * margin + sd.bar.get_spacing() / 2, size.y - 2 * margin}};
+			sd.draw(spectrum.original, left_half, true);
+		}
+	}
 
-			shader.setUniform("direction", sf::Glsl::Vec2{0, vrad}); // vertical blur
-			draw(sprite, &shader);
-			display();
+	void start_in_target(sf::RenderTarget &target, bool play_audio = true, unsigned antialiasing = 4)
+	{
+		const auto size = target.getSize();
+		MyRenderTexture originalSpectrum(size, sf::ContextSettings(0, 0, antialiasing)), blurredSpectrum(size);
+
+		// audio frames per video frame
+		const auto afpvf = [this]
+		{
+			const auto throwGlfwError = []
+			{
+				const char *errmsg;
+				if (glfwGetError(&errmsg) != GLFW_NO_ERROR)
+					throw std::runtime_error(errmsg);
+			};
+			if (!glfwInit())
+				throwGlfwError();
+			const auto monitor = glfwGetPrimaryMonitor();
+			if (!monitor)
+				throwGlfwError();
+			const auto video_mode = glfwGetVideoMode(monitor);
+			if (!video_mode)
+				throwGlfwError();
+			int refresh_rate = video_mode->refreshRate;
+			glfwTerminate();
+			return sf.samplerate() / refresh_rate;
+		}();
+
+		std::optional<PortAudio> _;
+		std::optional<PortAudio::Stream> pa_stream;
+		if (play_audio)
+		{
+			_.emplace();
+			pa_stream.emplace(0, sf.channels(), paFloat32, sf.samplerate(), afpvf);
+		}
+
+		sf::Color zeroAlpha{0, 0, 0, 0};
+		RenderStats stats;
+		stats.printHeader();
+
+		{ // make sure background fills up the whole screen and is centered
+			const auto tsize = bg.texture.getSize();
+			bg.sprite.setOrigin({tsize.x / 2, tsize.y / 2});
+			bg.sprite.setPosition({size.x / 2, size.y / 2});
+			float scale = std::max((float)size.x / tsize.x, (float)size.y / tsize.y);
+			bg.sprite.setScale({scale, scale});
 		}
 	}
 };
@@ -122,6 +218,7 @@ int main()
 			bgSprite.setScale({scale, scale});
 		}
 
+		// pill testing
 		// VerticalPill pill({50, 100});
 		// pill.setPosition({500, 500});
 		// while (window.isOpen())
@@ -134,8 +231,7 @@ int main()
 		// return;
 
 		const auto margin = 5;
-		sd.bar.set_width(15);
-		// sd.color.set_solid_rgb(sf::Color::White);
+		sd.bar.set_width(10);
 
 		while (window.isOpen())
 		{
