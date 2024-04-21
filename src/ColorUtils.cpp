@@ -2,7 +2,7 @@
 #include <cmath>
 #include "ColorUtils.hpp"
 
-std::tuple<uint8_t, uint8_t, uint8_t> ColorUtils::hsvToRgb(float h, const float s, const float v)
+sf::Color ColorUtils::hsvToRgb(float h, const float s, const float v)
 {
 	if (s < 0 || s > 1 || v < 0 || v > 1)
 		throw std::invalid_argument("s and v should be in the range [0, 1]");
@@ -14,20 +14,20 @@ std::tuple<uint8_t, uint8_t, uint8_t> ColorUtils::hsvToRgb(float h, const float 
 	if (h < 0)
 		h += 1;
 
-	double r, g, b;
+	float r, g, b;
 
 	if (s == 0)
 		r = g = b = v;
 	else
 	{
-		double var_h = h * 6;
+		float var_h = h * 6;
 		if (var_h == 6)
 			var_h = 0;
 
 		int var_i = var_h;
-		double var_1 = v * (1 - s);
-		double var_2 = v * (1 - s * (var_h - var_i));
-		double var_3 = v * (1 - s * (1 - (var_h - var_i)));
+		float var_1 = v * (1 - s);
+		float var_2 = v * (1 - s * (var_h - var_i));
+		float var_3 = v * (1 - s * (1 - (var_h - var_i)));
 
 		switch (var_i)
 		{
@@ -71,7 +71,7 @@ std::tuple<uint8_t, uint8_t, uint8_t> ColorUtils::hsvToRgb(float h, const float 
 
 // still haven't integrated this feature yet lmao
 // just gonna let it sit on the backburner
-std::tuple<int, int, int> ColorUtils::interpolate(float t, float h1, float s1, float v1, float h2, float s2, float v2)
+sf::Color ColorUtils::interpolate(float t, float h1, float s1, float v1, float h2, float s2, float v2)
 {
 	float h = h1 + t * (h2 - h1);
 	float s = s1 + t * (s2 - s1);

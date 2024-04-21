@@ -131,10 +131,7 @@ public:
 	 * Copies the `wavedata` to the FFTW input buffer for rendering.
 	 * @param wavedata input wave sample data, expected to be of size `fft_size`
 	 */
-	void copy_to_input(const float *wavedata)
-	{
-		memcpy(fftw.input(), wavedata, fft_size * sizeof(float));
-	}
+	void copy_to_input(const float *wavedata);
 
 	/**
 	 * This method is meant for audio data.

@@ -7,26 +7,21 @@
 #include "SpectrumDrawable.hpp"
 #include "FfmpegEncoder.hpp"
 
-void throwGlfwError()
-{
-	const char *errmsg;
-	if (glfwGetError(&errmsg) != GLFW_NO_ERROR)
-		throw std::runtime_error(errmsg);
-}
-
-const sf::Sprite &toSprite(const sf::RenderTexture &rt)
-{
-	sf::Sprite sp(rt.getTexture());
-	sp.setTexture(rt.getTexture());
-	return sp;
-}
-
 struct MyRenderTexture : sf::RenderTexture
 {
+	sf::Sprite sprite;
+
 	MyRenderTexture(const sf::Vector2u &size, const sf::ContextSettings &settings = sf::ContextSettings())
+		: sprite(getTexture())
 	{
 		if (!create(size, settings))
 			throw std::runtime_error("failed to create render-texture!");
+	}
+
+	void display()
+	{
+		sf::RenderTexture::display();
+		sprite.setTexture(getTexture(), true);
 	}
 
 	const sf::Sprite &getSprite()
@@ -37,7 +32,7 @@ struct MyRenderTexture : sf::RenderTexture
 		return sp;
 	}
 
-	void blur(sf::Shader &shader, int hrad, int vrad, int npasses)
+	void blur(sf::Shader &shader, float hrad, float vrad, int npasses)
 	{
 		for (int i = 0; i < npasses; ++i)
 		{
@@ -54,14 +49,13 @@ struct MyRenderTexture : sf::RenderTexture
 
 int main()
 {
-	sf::ContextSettings ctx;
-	ctx.antialiasingLevel = 8;
-
 	int sample_size = 3000;
-	const auto audio_file = "../audioviz/Music/Trakhawk.mp3";
+	const auto audio_file = "Music/Trakhawk.mp3";
+
 	SndfileHandle sf(audio_file);
 	std::vector<float> audio_buffer(sample_size * sf.channels());
 	SpectrumDrawable sd(sample_size);
+
 	sf::Shader shader;
 	if (!shader.loadFromFile("blur.frag", sf::Shader::Type::Fragment))
 		throw std::runtime_error("failed to load shader!");
@@ -70,13 +64,17 @@ int main()
 	{
 		const sf::Vector2u size{1280, 720};
 
-		sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed, ctx);
+		sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed);
 		window.setVerticalSyncEnabled(true);
+
+		// we only want antialiasing on the spectrum to round off the pills
+		sf::ContextSettings ctx;
+		ctx.antialiasingLevel = 16;
 
 		MyRenderTexture originalSpectrum(size, ctx), blurredSpectrum(size);
 
-		PortAudio pa;
-		auto pa_stream = pa.stream(0, sf.channels(), paFloat32, sf.samplerate(), sample_size);
+		PortAudio _; // initializes portaudio
+		Pa::Stream pa_stream(0, sf.channels(), paFloat32, sf.samplerate(), sample_size);
 
 		const auto handle_events = [&]
 		{
@@ -113,14 +111,13 @@ int main()
 
 		// audio frames per video frame
 		const auto avpvf = sf.samplerate() / refresh_rate;
-		const int total_frames = sf.frames() / avpvf;
 
 		sf::Color noAlpha{0, 0, 0, 0};
 		RenderStats stats;
 		stats.printHeader();
 
 		sf::Texture bgTexture;
-		if (!bgTexture.loadFromFile("../audioviz/media/urname-blurred.jpg"))
+		if (!bgTexture.loadFromFile("media/ischezayu-blurred.jpg"))
 			throw std::runtime_error("failed to load background image!");
 		sf::Sprite bgSprite(bgTexture);
 
@@ -131,6 +128,9 @@ int main()
 			float scale = std::max((float)size.x / tsize.x, (float)size.y / tsize.y);
 			bgSprite.setScale({scale, scale});
 		}
+
+		const auto margin = 5;
+		sd.bar.set_width(15);
 
 		while (window.isOpen())
 		{
@@ -147,14 +147,16 @@ int main()
 			{
 				if (e.err != paOutputUnderflowed)
 					throw;
-				std::cerr << "Output underflowed\n";
 			}
 			if (frames_read != sample_size)
 				break;
 
-			// draw spectrum to original
+			// draw spectrum to texture
 			originalSpectrum.clear(noAlpha);
-			sd.draw(originalSpectrum, audio_buffer.data(), sf.channels(), 0, true);
+			sd.copy_channel_to_input(audio_buffer.data(), sf.channels(), 0, true);
+			sd.draw(originalSpectrum, {{size.x / 2, margin}, {size.x / 2, size.y - 5}});
+			sd.copy_channel_to_input(audio_buffer.data(), sf.channels(), 1, true);
+			sd.draw(originalSpectrum, {{margin, margin}, {size.x / 2, size.y - 5}}, true);
 			originalSpectrum.display();
 
 			// copy spectrum over
@@ -163,12 +165,11 @@ int main()
 			blurredSpectrum.display();
 
 			// run h/v blur
-			blurredSpectrum.blur(shader, 1, 1, 5);
+			blurredSpectrum.blur(shader, 0.5, 0.5, 5);
 
-			window.clear(noAlpha);
 			window.draw(bgSprite);
 			window.draw(blurredSpectrum.getSprite(), sf::BlendAdd);
-			window.draw(originalSpectrum.getSprite());
+			window.draw(originalSpectrum.sprite);
 			window.display();
 
 			stats.updateAndPrint();
@@ -180,28 +181,7 @@ int main()
 
 	const auto encode_to_video = [&]
 	{
-		sf::RenderTexture rt;
-		if (!rt.create({1280, 720}, ctx))
-			throw std::runtime_error("failed to create render-texture!");
 
-		FfmpegEncoder::Options opts;
-		opts.audio_file = audio_file;
-		FfmpegEncoder ff({1280, 720}, "out.mp4", opts);
-
-		// audio frames per video frame
-		const auto avpvf = sf.samplerate() / opts.fps;
-		const int total_frames = sf.frames() / avpvf;
-
-		while (const auto frames_read = sf.readf(audio_buffer.data(), sample_size))
-		{
-			if (frames_read != sample_size)
-				break;
-			rt.clear();
-			sd.draw(rt, audio_buffer.data(), sf.channels(), 0, true);
-			rt.display();
-			ff.encode(rt.getTexture().copyToImage());
-			sf.seek(avpvf - sample_size, SEEK_CUR);
-		}
 	};
 
 	start_in_window();

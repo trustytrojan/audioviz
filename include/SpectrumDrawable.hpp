@@ -2,17 +2,21 @@
 
 #include "FrequencySpectrum.hpp"
 #include "VerticalPill.hpp"
+#include "ColorUtils.hpp"
 
-// would be `sf::Drawable` if its `draw` method wasn't `const`
 class SpectrumDrawable
 {
+public:
+	enum class ColorMode
+	{
+		WHEEL,
+		SOLID
+	};
+
+private:
 	using FS = FrequencySpectrum;
 
 	// spectrum parameters
-	struct
-	{
-		int width = 10, spacing = 5;
-	} bar;
 	float multiplier = 4;
 
 	// internal data
@@ -23,10 +27,65 @@ class SpectrumDrawable
 public:
 	SpectrumDrawable(int fft_size);
 
-	// setters for SpectrumDrawable
+	class
+	{
+		friend class SpectrumDrawable;
+		int width = 10, spacing = 5;
+
+	public:
+		void set_width(int width) { this->width = width; }
+		void set_spacing(int spacing) { this->spacing = spacing; }
+		int get_spacing() const { return spacing; }
+	} bar;
+
+	// color stuff
+	class
+	{
+		friend class SpectrumDrawable;
+		ColorMode mode = ColorMode::WHEEL;
+		sf::Color solid_rgb{255, 255, 255};
+
+	public:
+		void set_mode(const ColorMode mode) { this->mode = mode; }
+		void set_solid_rgb(const sf::Color &rgb) { solid_rgb = rgb; }
+
+		/**
+		 * @param index_ratio the ratio of your loop index (aka `i`) to the total number of bars to print (aka `spectrum.size()`)
+		 */
+		sf::Color get(const float index_ratio) const
+		{
+			switch (mode)
+			{
+			case ColorMode::WHEEL:
+			{
+				const auto [h, s, v] = wheel.hsv;
+				return ColorUtils::hsvToRgb(index_ratio + h + wheel.time, s, v);
+			}
+
+			case ColorMode::SOLID:
+				return solid_rgb;
+
+			default:
+				throw std::logic_error("SpectrumRenderer::color::get: default case hit");
+			}
+		}
+
+		// wheel stuff
+		class
+		{
+			friend class SpectrumDrawable;
+			float time = 0, rate = 0;
+			// hue offset, saturation, value
+			sf::Vector3f hsv{0.9, 0.7, 1};
+
+		public:
+			void set_rate(const float rate) { this->rate = rate; }
+			void set_hsv(const sf::Vector3f &hsv) { this->hsv = hsv; }
+			void increment() { time += rate; }
+		} wheel;
+	} color;
+
 	void set_multiplier(float multiplier);
-	void set_bar_width(int width);
-	void set_bar_spacing(int spacing);
 
 	// passthrough setters for FrequencySpectrum
 	void set_fft_size(int fft_size);
@@ -36,10 +95,7 @@ public:
 	void set_accum_method(FS::AccumulationMethod method);
 	void set_window_func(FS::WindowFunction wf);
 
-	// convenience methods to copy audio first and then draw
-	void draw(sf::RenderTarget &target, const float *const audio, int num_channels, int channel, bool interleaved, const sf::RenderStates &states = sf::RenderStates::Default);
-	void draw(sf::RenderTarget &target, const float *const audio, const sf::RenderStates &states = sf::RenderStates::Default);
-
-private:
-	void draw(sf::RenderTarget &target, const sf::RenderStates &states);
+	void copy_channel_to_input(const float *const audio, int num_channels, int channel, bool interleaved);
+	void copy_to_input(const float *const audio);
+	void draw(sf::RenderTarget &target, sf::IntRect rect = {}, bool backwards = false);
 };

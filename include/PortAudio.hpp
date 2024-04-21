@@ -15,27 +15,41 @@ struct PortAudio
 		const PaError err;
 	};
 
+	PortAudio()
+	{
+		if (const auto err = Pa_Initialize())
+			throw Error(err);
+	}
+
+	~PortAudio()
+	{
+		if (const auto err = Pa_Terminate())
+			std::cerr << Pa_GetErrorText(err) << '\n';
+	}
+
+	PortAudio(const PortAudio &) = delete;
+	PortAudio &operator=(const PortAudio &) = delete;
+	PortAudio(PortAudio &&) = delete;
+	PortAudio &operator=(PortAudio &&) = delete;
+
 	class Stream
 	{
-		friend class PortAudio;
 		PaStream *stream;
 
-		Stream(int numInputChannels, int numOutputChannels, PaSampleFormat sampleFormat, double sampleRate, unsigned long framesPerBuffer, PaStreamCallback *streamCallback, void *userData)
+	public:
+		Stream(int numInputChannels, int numOutputChannels, PaSampleFormat sampleFormat, double sampleRate, unsigned long framesPerBuffer, PaStreamCallback *streamCallback = NULL, void *userData = NULL)
 		{
-			PaError err;
-			if ((err = Pa_OpenDefaultStream(&stream, numInputChannels, numOutputChannels, sampleFormat, sampleRate, framesPerBuffer, streamCallback, userData)))
+			if (const auto err = Pa_OpenDefaultStream(&stream, numInputChannels, numOutputChannels, sampleFormat, sampleRate, framesPerBuffer, streamCallback, userData))
 				throw Error(err);
-			if ((err = Pa_StartStream(stream)))
+			if (const auto err = Pa_StartStream(stream))
 				throw Error(err);
 		}
 
-	public:
 		~Stream()
 		{
-			PaError err;
-			if ((err = Pa_StopStream(stream)))
+			if (const auto err = Pa_StopStream(stream))
 				std::cerr << Pa_GetErrorText(err) << '\n';
-			if ((err = Pa_CloseStream(stream)))
+			if (const auto err = Pa_CloseStream(stream))
 				std::cerr << Pa_GetErrorText(err) << '\n';
 		}
 
@@ -46,46 +60,22 @@ struct PortAudio
 
 		void reopen(int numInputChannels, int numOutputChannels, PaSampleFormat sampleFormat, double sampleRate, unsigned long framesPerBuffer, PaStreamCallback *streamCallback = NULL, void *userData = NULL)
 		{
-			PaError err;
-			if ((err = Pa_StopStream(stream)))
+			if (const auto err = Pa_StopStream(stream))
 				throw Error(err);
-			if ((err = Pa_CloseStream(stream)))
+			if (const auto err = Pa_CloseStream(stream))
 				throw Error(err);
-			if ((err = Pa_OpenDefaultStream(&stream, numInputChannels, numOutputChannels, sampleFormat, sampleRate, framesPerBuffer, streamCallback, userData)))
+			if (const auto err = Pa_OpenDefaultStream(&stream, numInputChannels, numOutputChannels, sampleFormat, sampleRate, framesPerBuffer, streamCallback, userData))
 				throw Error(err);
-			if ((err = Pa_StartStream(stream)))
+			if (const auto err = Pa_StartStream(stream))
 				throw Error(err);
 		}
 
 		void write(const float *const buffer, const size_t n_frames)
 		{
-			PaError err;
-			if ((err = Pa_WriteStream(stream, buffer, n_frames)))
+			if (const auto err = Pa_WriteStream(stream, buffer, n_frames))
 				throw Error(err);
 		}
 	};
-
-	PortAudio()
-	{
-		PaError err;
-		if ((err = Pa_Initialize()))
-			throw Error(err);
-	}
-
-	~PortAudio()
-	{
-		PaError err;
-		if ((err = Pa_Terminate()))
-			std::cerr << Pa_GetErrorText(err) << '\n';
-	}
-
-	PortAudio(const PortAudio &) = delete;
-	PortAudio &operator=(const PortAudio &) = delete;
-	PortAudio(PortAudio &&) = delete;
-	PortAudio &operator=(PortAudio &&) = delete;
-
-	Stream stream(int numInputChannels, int numOutputChannels, PaSampleFormat sampleFormat, double sampleRate, unsigned long framesPerBuffer, PaStreamCallback *streamCallback = NULL, void *userData = NULL)
-	{
-		return Stream(numInputChannels, numOutputChannels, sampleFormat, sampleRate, framesPerBuffer, streamCallback, userData);
-	}
 };
+
+using Pa = PortAudio;
