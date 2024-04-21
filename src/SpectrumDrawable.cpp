@@ -68,10 +68,10 @@ void SpectrumDrawable::draw(sf::RenderTarget &target, sf::IntRect rect, bool bac
 		pills[i].setWidth(bar.width);
 
 		const auto x = backwards
-			? (rect.left + rect.width) - i * (bar.width + bar.spacing)
+			? rect.left + rect.width - bar.width - i * (bar.width + bar.spacing)
 			: rect.left + i * (bar.width + bar.spacing);
 
-		pills[i].setPosition({x, rect.height});
+		pills[i].setPosition({x, rect.top + rect.height});
 
 		// calculate new pill height (sometimes spectrum output is negative)
 		auto height = multiplier * rect.height * std::max(0.f, spectrum[i]);

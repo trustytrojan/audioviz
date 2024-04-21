@@ -24,24 +24,16 @@ struct MyRenderTexture : sf::RenderTexture
 		sprite.setTexture(getTexture(), true);
 	}
 
-	const sf::Sprite &getSprite()
-	{
-		// sf::Sprite constructor will only run once
-		static sf::Sprite sp(getTexture());
-		sp.setTexture(getTexture());
-		return sp;
-	}
-
 	void blur(sf::Shader &shader, float hrad, float vrad, int npasses)
 	{
 		for (int i = 0; i < npasses; ++i)
 		{
 			shader.setUniform("direction", sf::Glsl::Vec2{hrad, 0}); // horizontal blur
-			draw(getSprite(), &shader);
+			draw(sprite, &shader);
 			display();
 
 			shader.setUniform("direction", sf::Glsl::Vec2{0, vrad}); // vertical blur
-			draw(getSprite(), &shader);
+			draw(sprite, &shader);
 			display();
 		}
 	}
@@ -50,7 +42,7 @@ struct MyRenderTexture : sf::RenderTexture
 int main()
 {
 	int sample_size = 3000;
-	const auto audio_file = "Music/Trakhawk.mp3";
+	const auto audio_file = "Music/obsessed (feat. funeral).mp3";
 
 	SndfileHandle sf(audio_file);
 	std::vector<float> audio_buffer(sample_size * sf.channels());
@@ -69,9 +61,9 @@ int main()
 
 		// we only want antialiasing on the spectrum to round off the pills
 		sf::ContextSettings ctx;
-		ctx.antialiasingLevel = 16;
+		ctx.antialiasingLevel = 4;
 
-		MyRenderTexture originalSpectrum(size, ctx), blurredSpectrum(size);
+		MyRenderTexture originalSpectrum(size, ctx), solidColorSpectrum(size), blurredSpectrum(size);
 
 		PortAudio _; // initializes portaudio
 		Pa::Stream pa_stream(0, sf.channels(), paFloat32, sf.samplerate(), sample_size);
@@ -105,19 +97,20 @@ int main()
 			const auto video_mode = glfwGetVideoMode(monitor);
 			if (!video_mode)
 				throwGlfwError();
+			int refresh_rate = video_mode->refreshRate;
 			glfwTerminate();
-			return video_mode->refreshRate;
+			return refresh_rate;
 		}();
 
 		// audio frames per video frame
 		const auto avpvf = sf.samplerate() / refresh_rate;
 
-		sf::Color noAlpha{0, 0, 0, 0};
+		sf::Color zeroAlpha{0, 0, 0, 0};
 		RenderStats stats;
 		stats.printHeader();
 
 		sf::Texture bgTexture;
-		if (!bgTexture.loadFromFile("media/ischezayu-blurred.jpg"))
+		if (!bgTexture.loadFromFile("images/obsessed-blurred.jpg"))
 			throw std::runtime_error("failed to load background image!");
 		sf::Sprite bgSprite(bgTexture);
 
@@ -129,8 +122,20 @@ int main()
 			bgSprite.setScale({scale, scale});
 		}
 
+		// VerticalPill pill({50, 100});
+		// pill.setPosition({500, 500});
+		// while (window.isOpen())
+		// {
+		// 	window.clear();
+		// 	window.draw(pill);
+		// 	window.display();
+		// 	handle_events();
+		// }
+		// return;
+
 		const auto margin = 5;
 		sd.bar.set_width(15);
+		// sd.color.set_solid_rgb(sf::Color::White);
 
 		while (window.isOpen())
 		{
@@ -151,25 +156,62 @@ int main()
 			if (frames_read != sample_size)
 				break;
 
-			// draw spectrum to texture
-			originalSpectrum.clear(noAlpha);
-			sd.copy_channel_to_input(audio_buffer.data(), sf.channels(), 0, true);
-			sd.draw(originalSpectrum, {{size.x / 2, margin}, {size.x / 2, size.y - 5}});
-			sd.copy_channel_to_input(audio_buffer.data(), sf.channels(), 1, true);
-			sd.draw(originalSpectrum, {{margin, margin}, {size.x / 2, size.y - 5}}, true);
-			originalSpectrum.display();
+			{ // draw the spectrum, one with the color wheel to be shown, one solid-color for the glow
+				// clear with zero alpha, so that blur can be blended
+				originalSpectrum.clear(zeroAlpha);
+				// solidColorSpectrum.clear(zeroAlpha);
+
+				// copy left channel to fftw input
+				sd.copy_channel_to_input(audio_buffer.data(), sf.channels(), 0, true);
+
+				// draw left-half spectrum
+				sf::IntRect left_half{{margin, margin}, {size.x / 2 - 2 * margin + sd.bar.get_spacing() / 2, size.y - 2 * margin}};
+				// sd.color.set_mode(SpectrumDrawable::ColorMode::WHEEL);
+				sd.draw(originalSpectrum, left_half, true);
+
+				// make a solid-color copy
+				// sd.color.set_mode(SpectrumDrawable::ColorMode::SOLID);
+				// sd.draw(solidColorSpectrum, left_half, true);
+
+				// copy right channel to fftw input
+				sd.copy_channel_to_input(audio_buffer.data(), sf.channels(), 1, true);
+
+				// draw right-half spectrum
+				sf::IntRect right_half{{size.x / 2 + sd.bar.get_spacing() / 2, margin}, {size.x / 2 - 2 * margin + sd.bar.get_spacing() / 2, size.y - 2 * margin}};
+				// sd.color.set_mode(SpectrumDrawable::ColorMode::WHEEL);
+				sd.draw(originalSpectrum, right_half);
+
+				// make a solid-color copy
+				// sd.color.set_mode(SpectrumDrawable::ColorMode::SOLID);
+				// sd.draw(solidColorSpectrum, right_half);
+
+				// save changes to internal textures
+				originalSpectrum.display();
+				// solidColorSpectrum.display();
+			}
 
 			// copy spectrum over
-			blurredSpectrum.clear(noAlpha);
-			blurredSpectrum.draw(originalSpectrum.getSprite());
+			blurredSpectrum.clear(zeroAlpha);
+			blurredSpectrum.draw(originalSpectrum.sprite);
 			blurredSpectrum.display();
 
-			// run h/v blur
+			// blur the solid color spectrum, creating a glow to place behind the original spectrum
 			blurredSpectrum.blur(shader, 0.5, 0.5, 5);
 
 			window.draw(bgSprite);
-			window.draw(blurredSpectrum.getSprite(), sf::BlendAdd);
+			window.draw(blurredSpectrum.sprite, sf::BlendAdd);
 			window.draw(originalSpectrum.sprite);
+
+			// sf::RectangleShape rect1((sf::Vector2f)right_half.getSize()), rect2((sf::Vector2f)left_half.getSize());
+			// rect1.setFillColor(noAlpha);
+			// rect2.setFillColor(noAlpha);
+			// rect1.setPosition((sf::Vector2f)right_half.getPosition());
+			// rect2.setPosition((sf::Vector2f)left_half.getPosition());
+			// rect1.setOutlineThickness(1);
+			// rect2.setOutlineThickness(1);
+			// window.draw(rect1);
+			// window.draw(rect2);
+
 			window.display();
 
 			stats.updateAndPrint();
@@ -179,8 +221,7 @@ int main()
 		}
 	};
 
-	const auto encode_to_video = [&]
-	{
+	const auto encode_to_video = [&] {
 
 	};
 

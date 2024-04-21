@@ -35,6 +35,7 @@ public:
 	public:
 		void set_width(int width) { this->width = width; }
 		void set_spacing(int spacing) { this->spacing = spacing; }
+		int get_width() const { return width; }
 		int get_spacing() const { return spacing; }
 	} bar;
 
