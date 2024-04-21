@@ -37,9 +37,9 @@ public:
 	void set_window_func(FS::WindowFunction wf);
 
 	// convenience methods to copy audio first and then draw
-	void draw(sf::RenderTarget &target, const float *const audio, int num_channels, int channel, bool interleaved);
-	void draw(sf::RenderTarget &target, const float *const audio);
+	void draw(sf::RenderTarget &target, const float *const audio, int num_channels, int channel, bool interleaved, const sf::RenderStates &states = sf::RenderStates::Default);
+	void draw(sf::RenderTarget &target, const float *const audio, const sf::RenderStates &states = sf::RenderStates::Default);
 
 private:
-	void draw(sf::RenderTarget &target);
+	void draw(sf::RenderTarget &target, const sf::RenderStates &states);
 };

@@ -3,19 +3,19 @@
 SpectrumDrawable::SpectrumDrawable(const int fft_size)
 	: fs(fft_size) {}
 
-void SpectrumDrawable::draw(sf::RenderTarget &target, const float *const audio, const int num_channels, const int channel, const bool interleaved)
+void SpectrumDrawable::draw(sf::RenderTarget &target, const float *const audio, const int num_channels, const int channel, const bool interleaved, const sf::RenderStates &states)
 {
 	fs.copy_channel_to_input(audio, num_channels, channel, interleaved);
-	draw(target);
+	draw(target, states);
 }
 
-void SpectrumDrawable::draw(sf::RenderTarget &target, const float *const audio)
+void SpectrumDrawable::draw(sf::RenderTarget &target, const float *const audio, const sf::RenderStates &states)
 {
 	fs.copy_to_input(audio);
-	draw(target);
+	draw(target, states);
 }
 
-void SpectrumDrawable::draw(sf::RenderTarget &target)
+void SpectrumDrawable::draw(sf::RenderTarget &target, const sf::RenderStates &states)
 {
 	// sanity check
 	assert(spectrum.size() == pills.size());
@@ -49,7 +49,6 @@ void SpectrumDrawable::draw(sf::RenderTarget &target)
 		height = std::min(target_size.y, height);
 
 		pills[i].set_height(height);
-
-		target.draw(pills[i]);
+		target.draw(pills[i], states);
 	}
 }

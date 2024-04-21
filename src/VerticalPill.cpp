@@ -23,7 +23,7 @@ sf::Vector2f VerticalPill::getPoint(const std::size_t index) const
 {
 	const auto angle = static_cast<float>(index) / static_cast<float>(getPointCount()) * sf::degrees(360);
 	auto point = sf::Vector2f(getRadius(), getRadius()) + sf::Vector2f(getRadius(), angle);
-	if (index < getPointCount() / 2)
+	if (index <= getPointCount() / 2)
 		point.y += height;
 	return point;
 }

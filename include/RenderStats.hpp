@@ -1,34 +1,34 @@
 #pragma once
 
 #include <SFML/System.hpp>
+#include <climits>
 
 struct Statistic
 {
-	int64_t current, total, avg, min, max, count;
+	uint64_t current, total = 0, min = INT64_MAX, max = 0, count = 0;
 	const char *const name;
 
 public:
 	static void printHeader(FILE *const stream)
 	{
-		fprintf(stream, "%-12s%-12s%-12s%-12s%-12s%-12s\n", "Name", "Curr", "Avg", "Total", "Min", "Max");
+		fprintf(stream, "%-12s%-12s%-12s%-12s%-12s\n", "Name", "Curr", "Avg", "Min", "Max");
 	}
 
 	Statistic(const char *const name)
 		: name(name) {}
 
-	void update(int64_t current)
+	void update(uint64_t current)
 	{
+		this->current = current;
 		total += current;
 		++count;
-		avg = total / count;
 		min = std::min(min, current);
 		max = std::max(max, current);
-		this->current = current;
 	}
 
 	void printStats(FILE *const stream, bool newline = false) const
 	{
-		fprintf(stream, "%-12s%-12ld%-12ld%-12ld%-12ld%-12ld", name, current, avg, total, min, max);
+		fprintf(stream, "%-12s%-12ld%-12ld%-12ld%-12ld", name, current, total / count, min, max);
 		if (newline)
 			putc('\n', stream);
 	}
