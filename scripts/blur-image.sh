@@ -1,10 +1,20 @@
-[ $2 ] || { echo "args: <filename> <blur radius>"; return 1 2>/dev/null; exit 1; }
-filename=$(basename -- "$1")
+[ $2 ] || {
+	echo "args: <filename> <blur_radius>"
+	return 1 2>/dev/null
+	exit 1
+}
+
+local filename=$1
+local blur_radius=$2
+
+# remove extension from filename
+filename=$(basename -- "$filename")
 extension="${filename##*.}"
 filename="${filename%.*}"
+
 ffmpeg -y \
 	-hide_banner \
 	-loglevel error \
 	-i "$1" \
-	-vf boxblur=$2:$2 \
-	"$filename-blurred.jpg"
+	-vf boxblur=$blur_radius:$blur_radius \
+	"$filename-blurred-$blur_radius.jpg"

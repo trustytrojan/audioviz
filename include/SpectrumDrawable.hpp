@@ -87,6 +87,7 @@ public:
 	} color;
 
 	void set_multiplier(float multiplier);
+	const std::vector<float> &get_spectrum() const;
 
 	// passthrough setters for FrequencySpectrum
 	void set_fft_size(int fft_size);

@@ -5,6 +5,7 @@
 #include "SpectrumDrawable.hpp"
 #include "MyRenderTexture.hpp"
 #include "PortAudio.hpp"
+#include "ParticleSystem.hpp"
 
 class audioviz
 {
@@ -21,6 +22,9 @@ private:
 	std::vector<float> audio_buffer = std::vector<float>(sample_size * sf.channels());
 	SD sd = sample_size;
 	sf::Shader blur_shader;
+	ParticleSystem ps;
+
+	// TODO: bring the particles to life
 
 	struct _bg
 	{

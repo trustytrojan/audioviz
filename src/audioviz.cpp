@@ -3,7 +3,8 @@
 audioviz::audioviz(sf::Vector2u size, std::string audio_file, int antialiasing)
 	: size(size),
 	  audio_file(audio_file),
-	  spectrum_rt(size, antialiasing)
+	  spectrum_rt(size, antialiasing),
+	  ps(size)
 {
 	if (!blur_shader.loadFromFile("blur.frag", sf::Shader::Type::Fragment))
 		throw std::runtime_error("failed to load blur shader: 'blur.frag' required in current directory");
@@ -36,7 +37,7 @@ PortAudio::Stream audioviz::create_pa_stream()
 	return PortAudio::Stream(0, sf.channels(), paFloat32, sf.samplerate(), sample_size);
 }
 
-void debug_rects(sf::RenderTarget &target, const sf::IntRect &left_half, const sf::IntRect &right_half)
+static void debug_rects(sf::RenderTarget &target, const sf::IntRect &left_half, const sf::IntRect &right_half)
 {
 	sf::RectangleShape r1((sf::Vector2f)left_half.getSize()), r2((sf::Vector2f)right_half.getSize());
 	r1.setPosition((sf::Vector2f)left_half.getPosition());

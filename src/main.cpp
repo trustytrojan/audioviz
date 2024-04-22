@@ -10,7 +10,7 @@ int main()
 	const sf::Vector2u size{1280, 720};
 
 	PortAudio _; // initialize portaudio
-	audioviz av(size, "Music/dissect.mp3");
+	audioviz av(size, "Music/ischezayu.mp3");
 	auto pa_stream = av.create_pa_stream();
 
 	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed);

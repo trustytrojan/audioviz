@@ -48,6 +48,11 @@ void SpectrumDrawable::copy_to_input(const float *const audio)
 	fs.copy_to_input(audio);
 }
 
+const std::vector<float> &SpectrumDrawable::get_spectrum() const
+{
+	return spectrum;
+}
+
 void SpectrumDrawable::draw(sf::RenderTarget &target, sf::IntRect rect, bool backwards)
 {
 	// sanity check
