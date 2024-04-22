@@ -77,5 +77,3 @@ struct PortAudio
 		}
 	};
 };
-
-using Pa = PortAudio;

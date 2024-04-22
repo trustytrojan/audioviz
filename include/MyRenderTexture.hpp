@@ -7,17 +7,11 @@ struct MyRenderTexture : sf::RenderTexture
 	sf::Sprite sprite;
 
 	MyRenderTexture(const sf::Vector2u &size, const sf::ContextSettings &settings = sf::ContextSettings())
-		: sprite(getTexture())
+		: sprite(getTexture(), {{}, (sf::Vector2i)size})
 	{
 		if (!create(size, settings))
 			throw std::runtime_error("failed to create render-texture!");
 	}
-
-	// void display()
-	// {
-	// 	sf::RenderTexture::display();
-	// 	sprite.setTexture(getTexture(), true);
-	// }
 
 	void blur(sf::Shader &shader, float hrad, float vrad, int npasses)
 	{
