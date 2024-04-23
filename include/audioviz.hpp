@@ -15,10 +15,10 @@ private:
 
 	const sf::Vector2u size;
 	int sample_size = 3000;
-	std::string audio_file;
+	const std::string audio_file;
 	int framerate = 60, afpvf = sf.samplerate() / framerate;
 
-	SndfileHandle sf = audio_file;
+	SndfileHandle sf;
 	std::vector<float> audio_buffer = std::vector<float>(sample_size * sf.channels());
 	SD sd = sample_size;
 	sf::Shader blur_shader;
@@ -35,15 +35,21 @@ private:
 
 	struct _rt
 	{
-		MyRenderTexture original, blurred, particles;
+		struct _rt_blur
+		{
+			MyRenderTexture original, blurred;
+			_rt_blur(sf::Vector2u size, int antialiasing)
+				: original(size, sf::ContextSettings(0, 0, antialiasing)),
+				  blurred(size) {}
+		} spectrum, particles;
+
 		_rt(sf::Vector2u size, int antialiasing)
-			: original(size, sf::ContextSettings(0, 0, antialiasing)),
-			  blurred(size),
-			  particles(size, sf::ContextSettings(0, 0, antialiasing)) {}
+			: spectrum(size, antialiasing),
+			  particles(size, antialiasing) {}
 	} rt;
 
 public:
-	audioviz(sf::Vector2u size, std::string audio_file, int antialiasing = 4);
+	audioviz(sf::Vector2u size, const std::string &audio_file, int antialiasing = 4);
 	void set_framerate(int framerate);
 	void set_bg(const std::string &file);
 	PortAudio::Stream create_pa_stream();

@@ -1,12 +1,15 @@
 #include "audioviz.hpp"
 #include <numeric>
 
-audioviz::audioviz(sf::Vector2u size, std::string audio_file, int antialiasing)
+audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antialiasing)
 	: size(size),
 	  audio_file(audio_file),
+	  sf(audio_file),
 	  ps(size, 50),
 	  rt(size, antialiasing)
 {
+	if (!sf)
+		throw std::runtime_error(sf.strError());
 	if (sf.channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 	if (!blur_shader.loadFromFile("blur.frag", sf::Shader::Type::Fragment))
@@ -96,44 +99,49 @@ bool audioviz::draw_frame(sf::RenderTarget &target, PortAudio::Stream *const pa_
 			{(size.x / 2.f) + (sd.bar.get_spacing() / 2.f), margin},
 			{(size.x - (2 * margin)) / 2.f - (sd.bar.get_spacing() / 2.f), size.y - (2 * margin)}};
 
-	rt.original.clear(zero_alpha);
-	{ // draw spectrum on rt.original
-		const auto dist_between_rects = right_half.left - (left_half.left + left_half.width);
-		assert(dist_between_rects == sd.bar.get_spacing());
+	// draw spectrum on rt.original
+	rt.spectrum.original.clear(zero_alpha);
 
-		sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
-		sd.draw(rt.original, left_half, true);
+	const auto dist_between_rects = right_half.left - (left_half.left + left_half.width);
+	assert(dist_between_rects == sd.bar.get_spacing());
 
-		const auto &spectrum = sd.get_spectrum();
-		const auto amount_to_avg = spectrum.size() / 4.f;
-		float speeds[2];
-		speeds[0] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
+	sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
+	sd.draw(rt.spectrum.original, left_half, true);
 
-		sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
-		sd.draw(rt.original, right_half);
-		speeds[1] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
+	const auto &spectrum = sd.get_spectrum();
+	const auto amount_to_avg = spectrum.size() / 4.f;
+	float speeds[2];
+	speeds[0] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
 
-		const auto speeds_avg = (speeds[0] + speeds[1]) / 2;
+	sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
+	sd.draw(rt.spectrum.original, right_half);
+	speeds[1] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
 
-		rt.particles.clear(zero_alpha);
-		const auto speed_increase = sqrtf(size.y * speeds_avg);
-		ps.draw(rt.particles, {0, -speed_increase});
-		rt.particles.display();
-	}
-	rt.original.display();
+	const auto speeds_avg = (speeds[0] + speeds[1]) / 2;
 
-	// copy it to another render-texture for blurring
-	rt.blurred.clear(zero_alpha);
-	rt.blurred.draw(rt.original.sprite);
-	rt.blurred.display();
+	rt.particles.original.clear(zero_alpha);
+	const auto speed_increase = sqrtf(size.y * speeds_avg);
+	ps.draw(rt.particles.original, {0, -speed_increase});
+	rt.particles.original.display();
 
-	// blur the spectrum
-	rt.blurred.blur(blur_shader, 1, 1, 20);
+	rt.spectrum.original.display();
+
+	// perform blurring where needed
+	rt.spectrum.blurred.clear(zero_alpha);
+	rt.spectrum.blurred.draw(rt.spectrum.original.sprite);
+	rt.spectrum.blurred.display();
+	rt.spectrum.blurred.blur(blur_shader, 1, 1, 20);
+
+	rt.particles.blurred.clear(zero_alpha);
+	rt.particles.blurred.draw(rt.particles.original.sprite);
+	rt.particles.blurred.display();
+	rt.particles.blurred.blur(blur_shader, 1, 1, 10);
 
 	// layer everything together
 	target.draw(bg.sprite);
-	target.draw(rt.particles.sprite, sf::BlendAdd);
-	target.draw(rt.blurred.sprite, sf::BlendAdd);
+	target.draw(rt.particles.blurred.sprite, sf::BlendAdd);
+	target.draw(rt.particles.original.sprite, sf::BlendAdd);
+	target.draw(rt.spectrum.blurred.sprite, sf::BlendAdd);
 
 	// redraw original spectrum over everything else
 	// need to do this because anti-aliased edges will copy the
