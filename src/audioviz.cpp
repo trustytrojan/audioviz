@@ -1,11 +1,14 @@
 #include "audioviz.hpp"
+#include <numeric>
 
 audioviz::audioviz(sf::Vector2u size, std::string audio_file, int antialiasing)
 	: size(size),
 	  audio_file(audio_file),
-	  spectrum_rt(size, antialiasing),
-	  ps(size)
+	  ps(size, 50),
+	  rt(size, antialiasing)
 {
+	if (sf.channels() != 2)
+		throw std::runtime_error("only stereo audio is supported!");
 	if (!blur_shader.loadFromFile("blur.frag", sf::Shader::Type::Fragment))
 		throw std::runtime_error("failed to load blur shader: 'blur.frag' required in current directory");
 }
@@ -84,54 +87,62 @@ bool audioviz::draw_frame(sf::RenderTarget &target, PortAudio::Stream *const pa_
 	if (frames_read != sample_size)
 		return false;
 
-	// draw the spectrum based on channel count
-	spectrum_rt.original.clear(zero_alpha);
-	switch (sf.channels())
-	{
-	case 2: // stereo
-	{
-		const sf::IntRect
-			left_half{
-				{margin, margin},
-				{(size.x - (2 * margin)) / 2.f - (sd.bar.get_spacing() / 2.f), size.y - (2 * margin)}},
-			right_half{
-				{(size.x / 2.f) + (sd.bar.get_spacing() / 2.f), margin},
-				{(size.x - (2 * margin)) / 2.f - (sd.bar.get_spacing() / 2.f), size.y - (2 * margin)}};
+	// stereo rectangles to draw to
+	const sf::IntRect
+		left_half{
+			{margin, margin},
+			{(size.x - (2 * margin)) / 2.f - (sd.bar.get_spacing() / 2.f), size.y - (2 * margin)}},
+		right_half{
+			{(size.x / 2.f) + (sd.bar.get_spacing() / 2.f), margin},
+			{(size.x - (2 * margin)) / 2.f - (sd.bar.get_spacing() / 2.f), size.y - (2 * margin)}};
 
+	rt.original.clear(zero_alpha);
+	{ // draw spectrum on rt.original
 		const auto dist_between_rects = right_half.left - (left_half.left + left_half.width);
 		assert(dist_between_rects == sd.bar.get_spacing());
 
 		sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
-		sd.draw(spectrum_rt.original, left_half, true);
+		sd.draw(rt.original, left_half, true);
+
+		const auto &spectrum = sd.get_spectrum();
+		const auto amount_to_avg = spectrum.size() / 4.f;
+		float speeds[2];
+		speeds[0] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
 
 		sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
-		sd.draw(spectrum_rt.original, right_half);
-		break;
-	}
+		sd.draw(rt.original, right_half);
+		speeds[1] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
 
-	case 1: // mono
-		sd.copy_to_input(audio_buffer.data());
-		sd.draw(spectrum_rt.original, {{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
-		break;
+		const auto speeds_avg = (speeds[0] + speeds[1]) / 2;
 
-	default:
-		throw std::runtime_error("unsupported channel count!");
+		rt.particles.clear(zero_alpha);
+		const auto speed_increase = sqrtf(size.y * speeds_avg);
+		ps.draw(rt.particles, {0, -speed_increase});
+		rt.particles.display();
 	}
-	spectrum_rt.original.display();
+	rt.original.display();
 
 	// copy it to another render-texture for blurring
-	spectrum_rt.blurred.clear(zero_alpha);
-	spectrum_rt.blurred.draw(spectrum_rt.original.sprite);
-	spectrum_rt.blurred.display();
+	rt.blurred.clear(zero_alpha);
+	rt.blurred.draw(rt.original.sprite);
+	rt.blurred.display();
 
 	// blur the spectrum
-	spectrum_rt.blurred.blur(blur_shader, 0.5, 0.5, 5);
+	rt.blurred.blur(blur_shader, 1, 1, 20);
 
 	// layer everything together
 	target.draw(bg.sprite);
-	target.draw(spectrum_rt.blurred.sprite, sf::BlendAdd);
-	target.draw(spectrum_rt.original.sprite);
-	// debug_rects(target, left_half, right_half);
+	target.draw(rt.particles.sprite, sf::BlendAdd);
+	target.draw(rt.blurred.sprite, sf::BlendAdd);
+
+	// redraw original spectrum over everything else
+	// need to do this because anti-aliased edges will copy the
+	// background they are drawn on, completely ignoring alpha values.
+	// i really need to separate the actions SpectrumDrawable::draw takes.
+	sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
+	sd.draw(target, left_half, true);
+	sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
+	sd.draw(target, right_half);
 
 	// seek audio backwards
 	sf.seek(afpvf - sample_size, SEEK_CUR);

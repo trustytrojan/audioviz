@@ -53,6 +53,8 @@ const std::vector<float> &SpectrumDrawable::get_spectrum() const
 	return spectrum;
 }
 
+// TODO: redesign this class.
+
 void SpectrumDrawable::draw(sf::RenderTarget &target, sf::IntRect rect, bool backwards)
 {
 	// sanity check

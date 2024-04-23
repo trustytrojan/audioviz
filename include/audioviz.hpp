@@ -33,13 +33,14 @@ private:
 		_bg() : sprite(texture) {}
 	} bg;
 
-	struct _spectrum_rt
+	struct _rt
 	{
-		MyRenderTexture original, blurred;
-		_spectrum_rt(sf::Vector2u size, int antialiasing)
+		MyRenderTexture original, blurred, particles;
+		_rt(sf::Vector2u size, int antialiasing)
 			: original(size, sf::ContextSettings(0, 0, antialiasing)),
-			  blurred(size) {}
-	} spectrum_rt;
+			  blurred(size),
+			  particles(size, sf::ContextSettings(0, 0, antialiasing)) {}
+	} rt;
 
 public:
 	audioviz(sf::Vector2u size, std::string audio_file, int antialiasing = 4);

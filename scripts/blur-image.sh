@@ -4,8 +4,8 @@
 	exit 1
 }
 
-local filename=$1
-local blur_radius=$2
+filename=$1
+blur_radius=$2
 
 # remove extension from filename
 filename=$(basename -- "$filename")
