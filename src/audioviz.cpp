@@ -80,7 +80,7 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	// no audio left, we are done
 	// if (!frames_read)
 	// if (!ad.read_n_frames(audio_buffer, sample_size))
-	if (full_audio_idx >= full_audio.size())
+	if (full_audio_idx + afpvf >= full_audio.size())
 		return false;
 
 	try // to play the audio
@@ -145,7 +145,7 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	rt.spectrum.blurred.clear(zero_alpha);
 	rt.spectrum.blurred.draw(rt.spectrum.original.sprite);
 	rt.spectrum.blurred.display();
-	rt.spectrum.blurred.blur(blur_shader, 1, 1, 20);
+	rt.spectrum.blurred.blur(blur_shader, 1, 1, 15);
 
 	rt.particles.blurred.clear(zero_alpha);
 	rt.particles.blurred.draw(rt.particles.original.sprite);
@@ -172,7 +172,7 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	// seek audio backwards
 	// sf.seek(afpvf - sample_size, SEEK_CUR);
 	// ad.seek(afpvf - sample_size, SEEK_CUR);
-	
+
 	// NEED TO MULTIPLY BY 2 BECAUSE 2 IS THE NUMBER OF CHANNELS
 	// AND FULL_AUDIO IS INTERLEAVED AUDIO
 	full_audio_idx += 2 * afpvf;

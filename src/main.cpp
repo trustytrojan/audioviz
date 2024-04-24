@@ -11,7 +11,7 @@ int main()
 
 	// PortAudio _; // initialize portaudio
 	Pa::PortAudio _;
-	audioviz av(size, "Music/Feeel Goood.mp3");
+	audioviz av(size, "https://api.trustytrojan.dev/yt/dl/hJz_e2PjJ04?only=audio");
 	auto pa_stream = av.create_pa_stream();
 
 	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed, sf::ContextSettings(0, 0, 4));
@@ -49,7 +49,7 @@ int main()
 		glfwTerminate();
 	}
 
-	av.set_bg("images/feelgood-blurred-10.jpg");
+	av.set_bg("images/midnight-blurred-10.jpg");
 
 	while (window.isOpen())
 	{
