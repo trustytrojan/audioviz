@@ -1,5 +1,7 @@
 #include "AudioDecoder.hpp"
 
+// public:
+
 AudioDecoder::AudioDecoder(const char *const url)
 {
 	if (const auto ret = avformat_open_input(&fmtctx, url, NULL, NULL); ret < 0)
@@ -63,46 +65,52 @@ int AudioDecoder::sample_rate() const
 
 const char *AudioDecoder::get_metadata_entry(const char *const key, const AVDictionaryEntry *const prev, const int flags) const
 {
-	return av_dict_get(fmtctx->metadata, key, NULL, 0)->value;
+	return av_dict_get(fmtctx->metadata, key, prev, flags)->value;
 }
 
-void AudioDecoder::seek(int64_t frame, int whence)
+void AudioDecoder::decode_entire_file(std::vector<float> &out)
 {
-	int64_t timestamp;
-
-	switch (whence)
-	{
-	case SEEK_SET:
-		timestamp = frame;
-		break;
-	case SEEK_CUR:
-		timestamp = av_rescale_q(cdctx->frame_num + frame, {1, 1}, stream->time_base);
-		break;
-	case SEEK_END:
-		timestamp = av_rescale_q(stream->duration - frame, {1, 1}, stream->time_base);
-		break;
-	default:
-		throw std::invalid_argument("invalid seek mode");
-	}
-
-	if (const auto ret = av_seek_frame(fmtctx, stream_idx, timestamp, 0); ret < 0)
+	if (const auto ret = av_seek_frame(fmtctx, stream_idx, 0, 0); ret < 0)
 		throw AVError("av_seek_frame", ret);
-
-	avcodec_flush_buffers(cdctx);
+	out.clear();
+	while (fmt_read_frame() && cd_send_packet())
+		while (cd_recv_frame())
+		{
+			const auto data = (const float *)frame->extended_data[0];
+			const auto nb_floats = frame->nb_samples * nb_channels();
+			out.insert(out.end(), data, data + nb_floats);
+		}
 }
 
-bool AudioDecoder::operator>>(std::vector<float> &out)
+int AudioDecoder::read_n_frames(std::vector<float> &out, int n_frames)
+{
+	const auto n_samples = n_frames * nb_channels();
+	out.clear();
+	while ((int)out.size() < n_samples)
+	{
+		if (buf.empty() && !decode_to_buffer())
+			break;
+		const auto n_to_insert = std::min(n_samples - out.size(), buf.size());
+		out.insert(out.end(), buf.begin(), buf.begin() + n_to_insert);
+		buf.erase(buf.begin(), buf.begin() + n_to_insert);
+	}
+	current_frame += out.size() / nb_channels();
+	return out.size() / nb_channels();
+}
+
+// private:
+
+bool AudioDecoder::decode_to_buffer()
 {
 	if (!fmt_read_frame() || !cd_send_packet())
 		return false;
-	out.clear();
 	while (cd_recv_frame())
 	{
 		const auto data = (const float *)frame->extended_data[0];
 		const auto nb_floats = frame->nb_samples * nb_channels();
-		out.insert(out.end(), data, data + nb_floats);
+		buf.insert(buf.end(), data, data + nb_floats);
 	}
-	return out.size();
+	return buf.size();
 }
 
 bool AudioDecoder::fmt_read_frame()

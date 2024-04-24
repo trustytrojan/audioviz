@@ -39,9 +39,8 @@ class AudioDecoder
 	AVCodecContext *cdctx = nullptr;
 	AVPacket *packet = av_packet_alloc();
 	AVFrame *frame = av_frame_alloc();
-
-	// used when reading a specific number of samples/channel
 	std::deque<float> buf;
+	int current_frame = 0;
 
 public:
 	AudioDecoder(const char *const url);
@@ -55,18 +54,15 @@ public:
 
 	const char *get_metadata_entry(const char *const key, const AVDictionaryEntry *prev = NULL, const int flags = 0) const;
 
-	void seek(int64_t frame, int whence);
-
-	/**
-	 * Decodes one frame from the audio format/container, and writes the decoded audio to `out`.
-	 * The audio data will contain non-planar/packed/interleaved 32-bit floating point samples.
-	 * It is unknown how many samples are written to `out`, as it depends on the codec.
-	 * @param out vector to write audio data to. will be cleared before writing audio data.
-	 * @returns whether any data was written to `out`
-	 */
-	bool operator>>(std::vector<float> &out);
+	void decode_entire_file(std::vector<float> &out);
+	int read_n_frames(std::vector<float> &out, int n_frames);
 
 private:
+	/**
+	 * @return whether anything was decoded into `buf`
+	 */
+	bool decode_to_buffer();
+
 	/**
 	 * wrapper over `av_read_frame`
 	 * @returns `true` on success; `false` on `AVERROR_EOF`

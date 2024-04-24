@@ -4,14 +4,18 @@
 audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antialiasing)
 	: size(size),
 	  audio_file(audio_file),
-	  sf(audio_file),
+	//   sf(audio_file),
+	//   ad(audio_file),
 	  ps(size, 50),
 	  rt(size, antialiasing)
 {
-	if (!sf)
-		throw std::runtime_error(sf.strError());
-	if (sf.channels() != 2)
+	// if (!sf)
+		// throw std::runtime_error(sf.strError());
+	// if (sf.channels() != 2)
+		// throw std::runtime_error("only stereo audio is supported!");
+	if (ad.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
+	ad.decode_entire_file(full_audio);
 	if (!blur_shader.loadFromFile("blur.frag", sf::Shader::Type::Fragment))
 		throw std::runtime_error("failed to load blur shader: 'blur.frag' required in current directory");
 }
@@ -19,7 +23,8 @@ audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antiali
 void audioviz::set_framerate(int framerate)
 {
 	this->framerate = framerate;
-	afpvf = sf.samplerate() / framerate;
+	// afpvf = sf.samplerate() / framerate;
+	afpvf = ad.sample_rate() / framerate;
 }
 
 void audioviz::set_bg(const std::string &file)
@@ -40,7 +45,8 @@ void audioviz::set_bg(const std::string &file)
 
 Pa::Stream<float> audioviz::create_pa_stream()
 {
-	return Pa::Stream<float>(0, sf.channels(), sf.samplerate(), sample_size);
+	// return Pa::Stream<float>(0, sf.channels(), sf.samplerate(), sample_size);
+	return Pa::Stream<float>(0, ad.nb_channels(), ad.sample_rate(), sample_size);
 }
 
 static void debug_rects(sf::RenderTarget &target, const sf::IntRect &left_half, const sf::IntRect &right_half)
@@ -68,16 +74,21 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 		throw std::runtime_error("target size must match render-texture size!");
 
 	// read audio from file
-	const auto frames_read = sf.readf(audio_buffer.data(), sample_size);
+	// const auto frames_read = sf.readf(audio_buffer.data(), sample_size);
+	// const auto frames_read = ad.read_n_frames(audio_buffer, sample_size);
 
 	// no audio left, we are done
-	if (!frames_read)
+	// if (!frames_read)
+	// if (!ad.read_n_frames(audio_buffer, sample_size))
+	if (full_audio_idx >= full_audio.size())
 		return false;
 
 	try // to play the audio
 	{
 		if (pa_stream)
-			pa_stream->write(audio_buffer, afpvf);
+			pa_stream->write(full_audio.data() + full_audio_idx, afpvf);
+			// pa_stream->write(audio_buffer, afpvf);
+			// *pa_stream << audio_buffer;
 	}
 	catch (const Pa::Error &e)
 	{
@@ -87,7 +98,9 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	}
 
 	// not enough audio to perform fft, we are done
-	if (frames_read != sample_size)
+	// if (frames_read != sample_size)
+	// if ((int)audio_buffer.size() != sample_size)
+	if (full_audio.size() - full_audio_idx < sample_size)
 		return false;
 
 	// stereo rectangles to draw to
@@ -105,7 +118,8 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	const auto dist_between_rects = right_half.left - (left_half.left + left_half.width);
 	assert(dist_between_rects == sd.bar.get_spacing());
 
-	sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
+	// sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
+	sd.copy_channel_to_input(full_audio.data() + full_audio_idx, 2, 0, true);
 	sd.draw(rt.spectrum.original, left_half, true);
 
 	const auto &spectrum = sd.get_spectrum();
@@ -113,7 +127,8 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	float speeds[2];
 	speeds[0] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
 
-	sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
+	// sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
+	sd.copy_channel_to_input(full_audio.data() + full_audio_idx, 2, 1, true);
 	sd.draw(rt.spectrum.original, right_half);
 	speeds[1] = std::accumulate(spectrum.begin(), spectrum.begin() + amount_to_avg, 0.f) / amount_to_avg;
 
@@ -147,13 +162,17 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	// need to do this because anti-aliased edges will copy the
 	// background they are drawn on, completely ignoring alpha values.
 	// i really need to separate the actions SpectrumDrawable::draw takes.
-	sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
+	// sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
+	sd.copy_channel_to_input(full_audio.data() + full_audio_idx, 2, 0, true);
 	sd.draw(target, left_half, true);
-	sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
+	// sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
+	sd.copy_channel_to_input(full_audio.data() + full_audio_idx, 2, 1, true);
 	sd.draw(target, right_half);
 
 	// seek audio backwards
-	sf.seek(afpvf - sample_size, SEEK_CUR);
+	// sf.seek(afpvf - sample_size, SEEK_CUR);
+	// ad.seek(afpvf - sample_size, SEEK_CUR);
+	full_audio_idx += 2 * afpvf;
 	return true;
 }
 

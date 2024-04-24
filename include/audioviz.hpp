@@ -1,7 +1,8 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <sndfile.hh>
+// #include <sndfile.hh>
+#include "AudioDecoder.hpp"
 #include "SpectrumDrawable.hpp"
 #include "MyRenderTexture.hpp"
 #include "PortAudio.hpp"
@@ -16,10 +17,19 @@ private:
 	const sf::Vector2u size;
 	int sample_size = 3000;
 	const std::string audio_file;
-	int framerate = 60, afpvf = sf.samplerate() / framerate;
 
-	SndfileHandle sf;
-	std::vector<float> audio_buffer = std::vector<float>(sample_size * sf.channels());
+	AudioDecoder ad = audio_file;
+
+	int framerate = 60,
+		afpvf = ad.sample_rate() / framerate;
+	// afpvf = sf.samplerate() / framerate;
+
+	// SndfileHandle sf;
+	std::vector<float> audio_buffer =
+		// std::vector<float>(sample_size * sf.channels());
+		std::vector<float>(sample_size * ad.nb_channels());
+	std::vector<float> full_audio = std::vector<float>(ad.frames() * ad.nb_channels());
+	int full_audio_idx = 0;
 	SD sd = sample_size;
 	sf::Shader blur_shader;
 	ParticleSystem ps;
