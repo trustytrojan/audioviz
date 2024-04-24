@@ -1,5 +1,8 @@
-#include "include/PortAudio.hpp"
 #include <stdexcept>
+#include <deque>
+#include <vector>
+#include <iostream>
+#include <cassert>
 
 extern "C"
 {
@@ -34,12 +37,14 @@ class AudioDecoder
 	const AVStream *stream = nullptr;			 // freed by `avformat_close_input`
 	const AVCodecParameters *codecpar = nullptr; // freed by `avformat_close_input`
 	AVCodecContext *cdctx = nullptr;
+	AVPacket *packet = av_packet_alloc();
+	AVFrame *frame = av_frame_alloc();
+
+	std::vector<float> buf;
 
 public:
 	AudioDecoder(const char *const url)
 	{
-		fmtctx = avformat_alloc_context();
-
 		if (const auto ret = avformat_open_input(&fmtctx, url, NULL, NULL); ret < 0)
 			throw AVError("avformat_open_input", ret);
 
@@ -73,13 +78,20 @@ public:
 
 	~AudioDecoder()
 	{
+		av_frame_free(&frame);
+		av_packet_free(&packet);
 		avcodec_free_context(&cdctx);
 		avformat_close_input(&fmtctx);
 	}
 
-	double duration() const
+	constexpr double duration_sec() const
 	{
-		return stream->duration * av_q2d(stream->time_base);
+		return stream->duration * ((double)stream->time_base.num / stream->time_base.den);
+	}
+
+	constexpr int frames() const
+	{
+		return duration_sec() * sample_rate();
 	}
 
 	constexpr int nb_channels() const
@@ -102,7 +114,7 @@ public:
 			timestamp = frame;
 			break;
 		case SEEK_CUR:
-			timestamp = av_rescale_q(cdctx->frame_number + frame, {1, 1}, stream->time_base);
+			timestamp = av_rescale_q(cdctx->frame_num + frame, {1, 1}, stream->time_base);
 			break;
 		case SEEK_END:
 			timestamp = av_rescale_q(stream->duration - frame, {1, 1}, stream->time_base);
@@ -117,41 +129,46 @@ public:
 		avcodec_flush_buffers(cdctx);
 	}
 
-	int read_frames(float *const out, const int frames)
+	/**
+	 * Decodes one frame from the audio format/container, and writes the decoded audio to `out`.
+	 * The audio data will contain non-planar/packed/interleaved 32-bit floating point samples.
+	 * It is unknown how many samples are written to `out`, as it depends on the codec.
+	 * @param out vector to write audio data to. will be cleared before writing audio data.
+	 */
+	bool operator>>(std::vector<float> &out)
 	{
-		const auto out_size = frames * nb_channels();
-		auto out_idx = 0;
-
-		auto packet = av_packet_alloc();
-		auto frame = av_frame_alloc();
-
-		while (out_idx < out_size && fmt_read_frame(packet))
+		if (!fmt_read_frame() || !cd_send_packet())
+			return false;
+		out.clear();
+		while (cd_recv_frame())
 		{
-			if (packet->stream_index != stream_idx)
-				continue;
+			const auto data = (const float *)frame->extended_data[0];
+			out.insert(out.end(), data, data + frame->linesize[0]);
+		}
+		return out.size();
+	}
 
-			if (!cd_send_packet(packet))
-				break;
+	bool read(std::vector<float> &out, size_t n_frames)
+	{
+		const auto n_samples = n_frames * nb_channels();
 
-			while (out_idx < out_size && cd_recv_frame(frame))
-			{
-				const auto data = reinterpret_cast<const float *>(frame->extended_data[0]);
-				const auto n_samples = std::min(frame->nb_samples * nb_channels(), out_size - out_idx);
-				std::copy(data, data + n_samples, out + out_idx);
-				out_idx += n_samples;
-			}
-
-			// av_packet_unref(packet);
+		if (!buf.empty())
+		{
+			out.insert(out.end(), buf.cbegin(), buf.cend());
 		}
 
-		av_frame_free(&frame);
-		av_packet_free(&packet);
-
-		return out_idx / nb_channels();
+		while (out.size() < n_samples && *this >> buf)
+		{
+			out.insert(out.end(), buf.cbegin(), buf.cend());
+		}
 	}
 
 private:
-	bool fmt_read_frame(AVPacket *const packet)
+	/**
+	 * @returns `true` on success; `false` on `AVERROR_EOF`
+	 * @throws `AVError` on any other return code
+	 */
+	bool fmt_read_frame()
 	{
 		switch (const auto rc = av_read_frame(fmtctx, packet))
 		{
@@ -166,10 +183,10 @@ private:
 
 	/**
 	 * wrapper over `avcodec_send_packet`
-	 * @returns true if successful or data needs to be read from the decoder; false if EOF
+	 * @returns `true` on success or `AVERROR(EAGAIN)`; `false` on `AVERROR_EOF`
 	 * @throws `AVError` on any other return code
 	 */
-	bool cd_send_packet(AVPacket *const packet)
+	bool cd_send_packet()
 	{
 		switch (const auto rc = avcodec_send_packet(cdctx, packet))
 		{
@@ -185,10 +202,10 @@ private:
 
 	/**
 	 * wrapper over `avcodec_receive_frame`
-	 * @returns true if successful; false if EOF or nothing to receive
+	 * @returns `true` on success; `false` on `AVERROR_EOF` or `AVERROR(EAGAIN)`
 	 * @throws `AVError` on any other return code
 	 */
-	bool cd_recv_frame(AVFrame *const frame)
+	bool cd_recv_frame()
 	{
 		switch (const auto rc = avcodec_receive_frame(cdctx, frame))
 		{
@@ -202,25 +219,3 @@ private:
 		}
 	}
 };
-
-int main(const int argc, const char *const *const argv)
-{
-	if (argc < 2)
-	{
-		std::cerr << "audio file required\n";
-		return EXIT_FAILURE;
-	}
-
-	AudioDecoder decoder(argv[1]);
-	size_t sample_size = decoder.duration() * decoder.sample_rate();
-
-	PortAudio _;
-	PortAudio::Stream pa_stream(0, decoder.nb_channels(), paFloat32, decoder.sample_rate(), sample_size);
-
-	auto audio_buf = new float[decoder.nb_channels() * sample_size];
-
-	if (decoder.read_frames(audio_buf, sample_size) != sample_size)
-		throw std::runtime_error("didn't decode entire file!");
-
-	pa_stream.write(audio_buf, sample_size);
-}
