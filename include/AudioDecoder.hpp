@@ -39,7 +39,7 @@ class AudioDecoder
 	AVCodecContext *cdctx = nullptr;
 	AVPacket *packet = av_packet_alloc();
 	AVFrame *frame = av_frame_alloc();
-	std::deque<float> buf;
+	std::vector<float> buf;
 	int current_frame = 0;
 
 public:

@@ -30,6 +30,8 @@ AudioDecoder::AudioDecoder(const char *const url)
 
 	cdctx->request_sample_fmt = AV_SAMPLE_FMT_FLT;
 	avcodec_open2(cdctx, codec, NULL);
+
+	
 }
 
 AudioDecoder::AudioDecoder(const std::string &url)

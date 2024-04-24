@@ -34,14 +34,17 @@ private:
 	sf::Shader blur_shader;
 	ParticleSystem ps;
 
+	sf::Font font;
+	sf::Text title_text, artist_text;
+
 	// TODO: bring the particles to life
 
-	struct _bg
+	struct _texture_sprite
 	{
 		sf::Texture texture;
 		sf::Sprite sprite;
-		_bg() : sprite(texture) {}
-	} bg;
+		_texture_sprite() : sprite(texture) {}
+	} bg, album_cover;
 
 	struct _rt
 	{

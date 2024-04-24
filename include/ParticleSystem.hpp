@@ -5,6 +5,12 @@
 class Particle : public sf::CircleShape
 {
 	sf::Vector2f velocity;
+	sf::Vector2f target_velocity;
+
+	// every `move` call, this is applied to `velocity` until `target_velocity` is reached.
+	// if `target_velocity < velocity` then `-acceleration` will be applied.
+	// this adds a smooth transition between low/high bass energy in the audio.
+	sf::Vector2f acceleration;
 
 public:
 	Particle(float radius = 0, std::size_t pointCount = 15)
@@ -24,6 +30,12 @@ public:
 	void setVelocity(sf::Vector2f velocity)
 	{
 		this->velocity = velocity;
+		target_velocity = velocity;
+	}
+
+	void setTargetVelocity(sf::Vector2f target_velocity)
+	{
+		this->target_velocity = target_velocity;
 	}
 };
 

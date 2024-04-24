@@ -4,15 +4,46 @@
 audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antialiasing)
 	: size(size),
 	  audio_file(audio_file),
-	//   sf(audio_file),
-	//   ad(audio_file),
+	  //   sf(audio_file),
+	  //   ad(audio_file),
 	  ps(size, 50),
+	  title_text(font, ad.get_metadata_entry("title")),
+	  artist_text(font, ad.get_metadata_entry("artist")),
 	  rt(size, antialiasing)
 {
+	if (!font.loadFromFile("/usr/share/fonts/TTF/Iosevka-Regular.ttc"))
+		throw std::runtime_error("failed to load font!");
+	title_text.setStyle(sf::Text::Italic);
+	// artist_text.setStyle(sf::Text::Bold);
+
+	title_text.setCharacterSize(32);
+	artist_text.setCharacterSize(24);
+
+	title_text.setFillColor({255, 255, 255, 150});
+	artist_text.setFillColor({255, 255, 255, 150});
+
+	if (!album_cover.texture.loadFromFile("images/midnight.jpg"))
+		throw std::runtime_error("failed to load album cover!");
+	album_cover.sprite.setTexture(album_cover.texture, true);
+
+	const sf::Vector2f ac_pos{30, 30};
+	album_cover.sprite.setPosition(ac_pos);
+	
+	// using album_cover.texture.getSize(), set the scale on album_cover.sprite
+	// such that it will only take up a 50x50 area
+	const sf::Vector2f ac_size{150, 150};
+	const auto ac_tsize = album_cover.texture.getSize();
+	album_cover.sprite.setScale({ac_size.x / ac_tsize.x, ac_size.y / ac_tsize.y});
+
+	const sf::Vector2f metadata_pos{ac_pos.x + ac_size.x + 10, ac_pos.y};
+	title_text.setPosition({metadata_pos.x, metadata_pos.y + 10});
+	artist_text.setPosition({metadata_pos.x, metadata_pos.y + title_text.getCharacterSize() + 20});
+	
+
 	// if (!sf)
-		// throw std::runtime_error(sf.strError());
+	// throw std::runtime_error(sf.strError());
 	// if (sf.channels() != 2)
-		// throw std::runtime_error("only stereo audio is supported!");
+	// throw std::runtime_error("only stereo audio is supported!");
 	if (ad.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 	ad.decode_entire_file(full_audio);
@@ -87,8 +118,8 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	{
 		if (pa_stream)
 			pa_stream->write(full_audio.data() + full_audio_idx, afpvf);
-			// pa_stream->write(audio_buffer, afpvf);
-			// *pa_stream << audio_buffer;
+		// pa_stream->write(audio_buffer, afpvf);
+		// *pa_stream << audio_buffer;
 	}
 	catch (const Pa::Error &e)
 	{
@@ -168,6 +199,10 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	// sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
 	sd.copy_channel_to_input(full_audio.data() + full_audio_idx, 2, 1, true);
 	sd.draw(target, right_half);
+
+	target.draw(album_cover.sprite);
+	target.draw(title_text, sf::BlendAlpha);
+	target.draw(artist_text, sf::BlendAlpha);
 
 	// seek audio backwards
 	// sf.seek(afpvf - sample_size, SEEK_CUR);

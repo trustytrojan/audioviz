@@ -9,9 +9,8 @@ int main()
 {
 	const sf::Vector2u size{1280, 720};
 
-	// PortAudio _; // initialize portaudio
-	Pa::PortAudio _;
-	audioviz av(size, "https://api.trustytrojan.dev/yt/dl/hJz_e2PjJ04?only=audio");
+	Pa::PortAudio _; // initialize portaudio
+	audioviz av(size, "Music/Midnight Reverie.mp3");
 	auto pa_stream = av.create_pa_stream();
 
 	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed, sf::ContextSettings(0, 0, 4));
