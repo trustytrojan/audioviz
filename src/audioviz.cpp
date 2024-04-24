@@ -172,6 +172,9 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	// seek audio backwards
 	// sf.seek(afpvf - sample_size, SEEK_CUR);
 	// ad.seek(afpvf - sample_size, SEEK_CUR);
+	
+	// NEED TO MULTIPLY BY 2 BECAUSE 2 IS THE NUMBER OF CHANNELS
+	// AND FULL_AUDIO IS INTERLEAVED AUDIO
 	full_audio_idx += 2 * afpvf;
 	return true;
 }
