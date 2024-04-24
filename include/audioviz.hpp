@@ -52,8 +52,8 @@ public:
 	audioviz(sf::Vector2u size, const std::string &audio_file, int antialiasing = 4);
 	void set_framerate(int framerate);
 	void set_bg(const std::string &file);
-	PortAudio::Stream create_pa_stream();
-	bool draw_frame(sf::RenderTarget &target, PortAudio::Stream *const pa_stream = NULL);
+	Pa::Stream<float> create_pa_stream();
+	bool draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_stream = NULL);
 
 	// passthrough setters
 	void set_bar_width(int width);

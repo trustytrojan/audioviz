@@ -38,9 +38,9 @@ void audioviz::set_bg(const std::string &file)
 	bg.sprite.setScale({scale, scale});
 }
 
-PortAudio::Stream audioviz::create_pa_stream()
+Pa::Stream<float> audioviz::create_pa_stream()
 {
-	return PortAudio::Stream(0, sf.channels(), paFloat32, sf.samplerate(), sample_size);
+	return Pa::Stream<float>(0, sf.channels(), sf.samplerate(), sample_size);
 }
 
 static void debug_rects(sf::RenderTarget &target, const sf::IntRect &left_half, const sf::IntRect &right_half)
@@ -56,7 +56,7 @@ static void debug_rects(sf::RenderTarget &target, const sf::IntRect &left_half, 
 	target.draw(r2);
 }
 
-bool audioviz::draw_frame(sf::RenderTarget &target, PortAudio::Stream *const pa_stream)
+bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_stream)
 {
 	static const sf::Color zero_alpha(0);
 
@@ -77,11 +77,11 @@ bool audioviz::draw_frame(sf::RenderTarget &target, PortAudio::Stream *const pa_
 	try // to play the audio
 	{
 		if (pa_stream)
-			pa_stream->write(audio_buffer.data(), afpvf);
+			pa_stream->write(audio_buffer, afpvf);
 	}
-	catch (const PortAudio::Error &e)
+	catch (const Pa::Error &e)
 	{
-		if (e.err != paOutputUnderflowed)
+		if (e.code != paOutputUnderflowed)
 			throw;
 		std::cerr << "output underflowed\n";
 	}
