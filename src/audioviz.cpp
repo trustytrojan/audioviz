@@ -14,7 +14,7 @@ audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antiali
 	if (!font.loadFromFile("/usr/share/fonts/TTF/Iosevka-Regular.ttc"))
 		throw std::runtime_error("failed to load font!");
 	title_text.setStyle(sf::Text::Italic);
-	// artist_text.setStyle(sf::Text::Bold);
+	artist_text.setStyle(sf::Text::Italic);
 
 	title_text.setCharacterSize(32);
 	artist_text.setCharacterSize(24);
@@ -22,13 +22,13 @@ audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antiali
 	title_text.setFillColor({255, 255, 255, 150});
 	artist_text.setFillColor({255, 255, 255, 150});
 
-	if (!album_cover.texture.loadFromFile("images/midnight.jpg"))
+	if (!album_cover.texture.loadFromFile("images/obsessed.jpg"))
 		throw std::runtime_error("failed to load album cover!");
 	album_cover.sprite.setTexture(album_cover.texture, true);
 
 	const sf::Vector2f ac_pos{30, 30};
 	album_cover.sprite.setPosition(ac_pos);
-	
+
 	// using album_cover.texture.getSize(), set the scale on album_cover.sprite
 	// such that it will only take up a 50x50 area
 	const sf::Vector2f ac_size{150, 150};
@@ -36,19 +36,14 @@ audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antiali
 	album_cover.sprite.setScale({ac_size.x / ac_tsize.x, ac_size.y / ac_tsize.y});
 
 	const sf::Vector2f metadata_pos{ac_pos.x + ac_size.x + 10, ac_pos.y};
-	title_text.setPosition({metadata_pos.x, metadata_pos.y + 10});
-	artist_text.setPosition({metadata_pos.x, metadata_pos.y + title_text.getCharacterSize() + 20});
-	
+	title_text.setPosition({metadata_pos.x, metadata_pos.y});
+	artist_text.setPosition({metadata_pos.x, metadata_pos.y + title_text.getCharacterSize() + 10});
 
-	// if (!sf)
-	// throw std::runtime_error(sf.strError());
-	// if (sf.channels() != 2)
-	// throw std::runtime_error("only stereo audio is supported!");
 	if (ad.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
+	
+	// TODO: multithread this
 	ad.decode_entire_file(full_audio);
-	if (!blur_shader.loadFromFile("blur.frag", sf::Shader::Type::Fragment))
-		throw std::runtime_error("failed to load blur shader: 'blur.frag' required in current directory");
 }
 
 void audioviz::set_framerate(int framerate)
@@ -60,18 +55,26 @@ void audioviz::set_framerate(int framerate)
 
 void audioviz::set_bg(const std::string &file)
 {
-	if (!bg.texture.loadFromFile(file))
+	sf::Texture bg_texture;
+
+	if (!bg_texture.loadFromFile(file))
 		throw std::runtime_error("failed to load background image: '" + file + '\'');
 
 	// sprites do not receive texture changes, so need to reset the texture rect
-	bg.sprite.setTexture(bg.texture, true);
+	// bg_sprite.setTexture(bg_texture, true);
+
+	sf::Sprite bg_sprite(bg_texture);
 
 	// make sure bgTexture fills up the whole screen, and is centered
-	const auto tsize = bg.texture.getSize();
-	bg.sprite.setOrigin({tsize.x / 2, tsize.y / 2});
-	bg.sprite.setPosition({size.x / 2, size.y / 2});
+	const auto tsize = bg_texture.getSize();
+	bg_sprite.setOrigin({tsize.x / 2, tsize.y / 2});
+	bg_sprite.setPosition({size.x / 2, size.y / 2});
 	const auto scale = std::max((float)size.x / tsize.x, (float)size.y / tsize.y);
-	bg.sprite.setScale({scale, scale});
+	bg_sprite.setScale({scale, scale});
+
+	rt.bg.draw(bg_sprite);
+	rt.bg.blur(10, 10, 10);
+	rt.bg.multiply(0.5);
 }
 
 Pa::Stream<float> audioviz::create_pa_stream()
@@ -99,7 +102,7 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 
 	// TODO: get rid of this, maybe add a rect parameter????
 	// that would make this even more modular!!!!!!!!!!!
-	static const auto margin = 15;
+	static const auto margin = 10;
 
 	if (target.getSize() != size)
 		throw std::runtime_error("target size must match render-texture size!");
@@ -166,7 +169,10 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	const auto speeds_avg = (speeds[0] + speeds[1]) / 2;
 
 	rt.particles.original.clear(zero_alpha);
-	const auto speed_increase = sqrtf(size.y * speeds_avg);
+	// const auto speed_increase = sqrtf(sqrtf(size.y * speeds_avg));
+	const auto speed_increase =
+		// cbrtf(size.y * speeds_avg);
+		powf(size.y * speeds_avg, 1.f / 2.6666667f);
 	ps.draw(rt.particles.original, {0, -speed_increase});
 	rt.particles.original.display();
 
@@ -176,27 +182,35 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	rt.spectrum.blurred.clear(zero_alpha);
 	rt.spectrum.blurred.draw(rt.spectrum.original.sprite);
 	rt.spectrum.blurred.display();
-	rt.spectrum.blurred.blur(blur_shader, 1, 1, 15);
+	rt.spectrum.blurred.blur(1, 1, 15);
 
 	rt.particles.blurred.clear(zero_alpha);
 	rt.particles.blurred.draw(rt.particles.original.sprite);
 	rt.particles.blurred.display();
-	rt.particles.blurred.blur(blur_shader, 1, 1, 10);
+	rt.particles.blurred.blur(1, 1, 10);
 
 	// layer everything together
-	target.draw(bg.sprite);
+	// target.draw(bg.sprite);
+	target.draw(rt.bg.sprite);
 	target.draw(rt.particles.blurred.sprite, sf::BlendAdd);
 	target.draw(rt.particles.original.sprite, sf::BlendAdd);
-	target.draw(rt.spectrum.blurred.sprite, sf::BlendAdd);
+
+	// new discovery...........................
+	// this is how to invert the color??????
+	sf::BlendMode spectrum_blend(
+		sf::BlendMode::Factor::SrcAlpha,
+		sf::BlendMode::Factor::DstAlpha,
+		sf::BlendMode::Equation::ReverseSubtract);
+	
+	target.draw(rt.spectrum.blurred.sprite, spectrum_blend);
 
 	// redraw original spectrum over everything else
 	// need to do this because anti-aliased edges will copy the
 	// background they are drawn on, completely ignoring alpha values.
 	// i really need to separate the actions SpectrumDrawable::draw takes.
-	// sd.copy_channel_to_input(audio_buffer.data(), 2, 0, true);
+	
 	sd.copy_channel_to_input(full_audio.data() + full_audio_idx, 2, 0, true);
 	sd.draw(target, left_half, true);
-	// sd.copy_channel_to_input(audio_buffer.data(), 2, 1, true);
 	sd.copy_channel_to_input(full_audio.data() + full_audio_idx, 2, 1, true);
 	sd.draw(target, right_half);
 

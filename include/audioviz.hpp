@@ -31,7 +31,6 @@ private:
 	std::vector<float> full_audio = std::vector<float>(ad.frames() * ad.nb_channels());
 	int full_audio_idx = 0;
 	SD sd = sample_size;
-	sf::Shader blur_shader;
 	ParticleSystem ps;
 
 	sf::Font font;
@@ -44,7 +43,7 @@ private:
 		sf::Texture texture;
 		sf::Sprite sprite;
 		_texture_sprite() : sprite(texture) {}
-	} bg, album_cover;
+	} album_cover;
 
 	struct _rt
 	{
@@ -56,9 +55,12 @@ private:
 				  blurred(size) {}
 		} spectrum, particles;
 
+		MyRenderTexture bg;
+
 		_rt(sf::Vector2u size, int antialiasing)
 			: spectrum(size, antialiasing),
-			  particles(size, antialiasing) {}
+			  particles(size, antialiasing),
+			  bg(size, sf::ContextSettings(0, 0, antialiasing)) {}
 	} rt;
 
 public:

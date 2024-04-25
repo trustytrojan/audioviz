@@ -38,14 +38,27 @@ void ParticleSystem::set_max_height(unsigned max_height)
 	this->max_height = max_height;
 }
 
-void ParticleSystem::draw(sf::RenderTarget &target, sf::Vector2f additional_displacement)
+void ParticleSystem::draw(sf::RenderTarget &target, const sf::Vector2f additional_displacement)
 {
 	assert(target.getSize() == target_size);
 
 	for (auto &p : particles)
 	{
 		p.move();
-		p.setPosition(p.getPosition() + additional_displacement);
+
+		if (additional_displacement.lengthSq() > 0)
+		{
+			auto new_pos = p.getPosition() + additional_displacement;
+
+			if (new_pos.x >= target_size.x)
+				// teleport from right edge to left
+				new_pos.x = -p.getRadius();
+			else if (new_pos.x + p.getRadius() < 0)
+				// teleport from left edge to right
+				new_pos.x = target_size.x;
+			
+			p.setPosition(new_pos);
+		}
 
 		const auto dist_to_max_height = p.getPosition().y - max_height;
 

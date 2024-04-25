@@ -10,3 +10,4 @@ vgcore*
 *.jpg
 media
 images
+perf.data*
