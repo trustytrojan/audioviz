@@ -4,7 +4,7 @@
 
 class MyRenderTexture : public sf::RenderTexture
 {
-	static inline sf::Shader _blur, _mult;
+	static inline sf::Shader s_blur, s_mult;
 	static inline bool _shaders_loaded = false;
 
 	static void load_frag_shader(sf::Shader &shader, const char *const file)
@@ -13,16 +13,17 @@ class MyRenderTexture : public sf::RenderTexture
 			throw std::runtime_error("failed to load shader from file '" + std::string(file) + '\'');
 	}
 
-public:
-	sf::Sprite sprite;
+	sf::Sprite m_sprite;
 
+public:
 	MyRenderTexture(const sf::Vector2u &size, const sf::ContextSettings &settings = sf::ContextSettings())
-		: sprite(getTexture(), {{}, (sf::Vector2i)size})
+		: m_sprite(getTexture(), {{}, (sf::Vector2i)size})
 	{
+		// lazy initialization
 		if (!_shaders_loaded)
 		{
-			load_frag_shader(_blur, "shaders/blur.frag");
-			load_frag_shader(_mult, "shaders/mult.frag");
+			load_frag_shader(s_blur, "shaders/blur.frag");
+			load_frag_shader(s_mult, "shaders/mult.frag");
 			_shaders_loaded = true;
 		}
 
@@ -30,24 +31,41 @@ public:
 			throw std::runtime_error("failed to create render-texture!");
 	}
 
-	void blur(float hrad, float vrad, int npasses)
+	const sf::Sprite &sprite()
 	{
-		for (int i = 0; i < npasses; ++i)
+		return m_sprite;
+	}
+
+	/**
+	 * Perform a Gaussian blur with linear-sampling.
+	 * This method executes the shader with horizontal and vertical blurs `n_passes` times.
+	 * `hrad` and `vrad` are the horizontal and vertical blur radii, respectively.
+	 */
+	void blur(float hrad, float vrad, int n_passes)
+	{
+		for (int i = 0; i < n_passes; ++i)
 		{
-			_blur.setUniform("direction", sf::Glsl::Vec2{hrad, 0}); // horizontal blur
-			draw(sprite, &_blur);
+			s_blur.setUniform("direction", sf::Glsl::Vec2{hrad, 0}); // horizontal blur
+			draw(m_sprite, &s_blur);
 			display();
 
-			_blur.setUniform("direction", sf::Glsl::Vec2{0, vrad}); // vertical blur
-			draw(sprite, &_blur);
+			s_blur.setUniform("direction", sf::Glsl::Vec2{0, vrad}); // vertical blur
+			draw(m_sprite, &s_blur);
 			display();
+
+			// the blur can point in any direction (hence the name of the uniform),
+			// but anything other than up/down behaves weirdly.
+			// experiment to your liking.
 		}
 	}
 
-	void multiply(float factor)
+	/**
+	 * Multiply every pixel by `factor`.
+	 */
+	void mult(float factor)
 	{
-		_mult.setUniform("factor", factor);
-		draw(sprite, &_mult);
+		s_mult.setUniform("factor", factor);
+		draw(m_sprite, &s_mult);
 		display();
 	}
 };

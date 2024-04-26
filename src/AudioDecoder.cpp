@@ -30,8 +30,6 @@ AudioDecoder::AudioDecoder(const char *const url)
 
 	cdctx->request_sample_fmt = AV_SAMPLE_FMT_FLT;
 	avcodec_open2(cdctx, codec, NULL);
-
-	
 }
 
 AudioDecoder::AudioDecoder(const std::string &url)
@@ -70,50 +68,21 @@ const char *AudioDecoder::get_metadata_entry(const char *const key, const AVDict
 	return av_dict_get(fmtctx->metadata, key, prev, flags)->value;
 }
 
-void AudioDecoder::decode_entire_file(std::vector<float> &out)
-{
-	if (const auto ret = av_seek_frame(fmtctx, stream_idx, 0, 0); ret < 0)
-		throw AVError("av_seek_frame", ret);
-	out.clear();
-	while (fmt_read_frame() && cd_send_packet())
-		while (cd_recv_frame())
-		{
-			const auto data = (const float *)frame->extended_data[0];
-			const auto nb_floats = frame->nb_samples * nb_channels();
-			out.insert(out.end(), data, data + nb_floats);
-		}
-}
-
-int AudioDecoder::read_n_frames(std::vector<float> &out, int n_frames)
-{
-	const auto n_samples = n_frames * nb_channels();
-	out.clear();
-	while ((int)out.size() < n_samples)
-	{
-		if (buf.empty() && !decode_to_buffer())
-			break;
-		const auto n_to_insert = std::min(n_samples - out.size(), buf.size());
-		out.insert(out.end(), buf.begin(), buf.begin() + n_to_insert);
-		buf.erase(buf.begin(), buf.begin() + n_to_insert);
-	}
-	current_frame += out.size() / nb_channels();
-	return out.size() / nb_channels();
-}
-
-// private:
-
-bool AudioDecoder::decode_to_buffer()
+bool AudioDecoder::operator>>(std::vector<float> &out)
 {
 	if (!fmt_read_frame() || !cd_send_packet())
 		return false;
+	out.clear();
 	while (cd_recv_frame())
 	{
 		const auto data = (const float *)frame->extended_data[0];
 		const auto nb_floats = frame->nb_samples * nb_channels();
-		buf.insert(buf.end(), data, data + nb_floats);
+		out.insert(out.end(), data, data + nb_floats);
 	}
-	return buf.size();
+	return out.size();
 }
+
+// private:
 
 bool AudioDecoder::fmt_read_frame()
 {

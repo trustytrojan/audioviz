@@ -7,10 +7,10 @@
 
 int main()
 {
-	const sf::Vector2u size{1600, 900};
+	const sf::Vector2u size{1280, 720};
 
 	Pa::PortAudio _; // initialize portaudio
-	audioviz av(size, "Music/obsessed(feat.funeral).mp3");
+	audioviz av(size, "Music/midnight2.mp3");
 	auto pa_stream = av.create_pa_stream();
 
 	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed, sf::ContextSettings(0, 0, 4));
@@ -48,7 +48,7 @@ int main()
 		glfwTerminate();
 	}
 
-	av.set_bg("images/obsessed.jpg");
+	av.set_bg("images/midnight.jpg");
 
 	while (window.isOpen())
 	{

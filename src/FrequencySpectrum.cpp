@@ -56,7 +56,7 @@ void FrequencySpectrum::copy_channel_to_input(const float *const audio, const in
 	if (channel < 0)
 		throw std::invalid_argument("channel <= 0");
 	if (channel >= num_channels)
-		throw std::invalid_argument("channel > num_channels");
+		throw std::runtime_error("channel > num_channels");
 
 	if (!interleaved)
 	{
@@ -71,6 +71,8 @@ void FrequencySpectrum::copy_channel_to_input(const float *const audio, const in
 
 void FrequencySpectrum::render(std::vector<float> &spectrum)
 {
+	assert(spectrum.size());
+
 	// apply window function on input
 	const auto input = fftw.input();
 	for (int i = 0; i < fft_size; ++i)

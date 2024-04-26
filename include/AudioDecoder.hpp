@@ -52,17 +52,20 @@ public:
 	int nb_channels() const;
 	int sample_rate() const;
 
+	/**
+	 * wrapper over `av_dict_get` with `fmtctx->metadata`
+	 * @returns value associated with `key`
+	 */
 	const char *get_metadata_entry(const char *const key, const AVDictionaryEntry *prev = NULL, const int flags = 0) const;
 
-	void decode_entire_file(std::vector<float> &out);
-	int read_n_frames(std::vector<float> &out, int n_frames);
+	/**
+	 * WARNING: this advances the position in the `AVFormatContext`. decodes one frame from the `AVFormatContext` into `out`.
+	 * the number of audio frames written is unknown, and depends on the codec. check `out.size()` after this returns.
+	 * @return whether anything was decoded into `out`; `false` most likely means we have reached end-of-file
+	 */
+	bool operator>>(std::vector<float> &out);
 
 private:
-	/**
-	 * @return whether anything was decoded into `buf`
-	 */
-	bool decode_to_buffer();
-
 	/**
 	 * wrapper over `av_read_frame`
 	 * @returns `true` on success; `false` on `AVERROR_EOF`

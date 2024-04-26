@@ -4,7 +4,7 @@
 #include "VerticalPill.hpp"
 #include "ColorUtils.hpp"
 
-class SpectrumDrawable
+class SpectrumDrawable : public sf::Drawable
 {
 public:
 	enum class ColorMode
@@ -20,11 +20,13 @@ private:
 	float multiplier = 4;
 
 	// internal data
-	FS fs;
 	std::vector<float> spectrum;
 	std::vector<VerticalPill> pills;
+	sf::IntRect target_rect;
 
 public:
+	FS fs;
+
 	SpectrumDrawable(int fft_size);
 
 	class
@@ -87,7 +89,7 @@ public:
 	} color;
 
 	void set_multiplier(float multiplier);
-	const std::vector<float> &get_spectrum() const;
+	const std::vector<float> &get_spectrum_data() const;
 
 	// passthrough setters for FrequencySpectrum
 	void set_fft_size(int fft_size);
@@ -97,7 +99,13 @@ public:
 	void set_accum_method(FS::AccumulationMethod method);
 	void set_window_func(FS::WindowFunction wf);
 
-	void copy_channel_to_input(const float *const audio, int num_channels, int channel, bool interleaved);
-	void copy_to_input(const float *const audio);
-	void draw(sf::RenderTarget &target, sf::IntRect rect = {}, bool backwards = false);
+	void set_target_rect(const sf::IntRect &rect, bool backwards = false);
+	void do_fft(const float *const audio, int num_channels, int channel, bool interleaved);
+	void do_fft(const float *const audio);
+	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override;
+
+	// void draw(sf::RenderTarget &target, sf::IntRect rect, bool backwards);
+
+private:
+	void do_fft();
 };
