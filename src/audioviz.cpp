@@ -2,36 +2,38 @@
 #include <numeric>
 #include <mutex>
 
-static std::mutex mtx;
-
-audioviz::audioviz(sf::Vector2u size, const std::string &audio_file, int antialiasing)
+audioviz::audioviz(const sf::Vector2u size, const std::string &audio_file, const int antialiasing)
 	: size(size),
-	  audio_file(audio_file),
-	  ab(ad.nb_channels()),
+	  ad(audio_file),
 	  ps(size, 50),
 	  title_text(font, ad.get_metadata_entry("title")),
 	  artist_text(font, ad.get_metadata_entry("artist")),
 	  rt(size, antialiasing)
 {
-	setup_metadata_sprites();
+	set_text_defaults();
+
+	// for now only stereo is supported
 	if (ad.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
+
+	// default margin around the target
 	set_margin(10);
+
+	// default metadata position
+	set_metadata_position({30, 30});
 }
 
-void audioviz::decoder_thread_func(audioviz *const av)
+const std::span<float> &audioviz::current_audio() const
+{
+	return audio_span;
+}
+
+void audioviz::decoder_thread_func()
 {
 	pthread_setname_np(pthread_self(), "DecoderThread");
-	std::vector<float> tmpbuf;
-	while (1)
-	{
-		if (!(av->ad >> tmpbuf))
-			break;
-		mtx.lock();
-		av->ab.buffer().insert(av->ab.buffer().end(), tmpbuf.begin(), tmpbuf.end());
-		mtx.unlock();
-	}
-	std::cout << "decoder thread finished\n";
+	while (ad.append_to(ab.buffer()))
+		;
+	std::cout << "decoding finished\n";
 }
 
 bool audioviz::decoder_thread_finished()
@@ -39,35 +41,56 @@ bool audioviz::decoder_thread_finished()
 	return decoder_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 
-void audioviz::setup_metadata_sprites()
+void audioviz::set_title_text(const std::string &text)
 {
-	if (!font.loadFromFile("/usr/share/fonts/TTF/Iosevka-Regular.ttc"))
-		throw std::runtime_error("failed to load font!");
-	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
-	artist_text.setStyle(sf::Text::Italic);
+	title_text.setString(text);
+}
 
-	title_text.setCharacterSize(24);
-	artist_text.setCharacterSize(24);
+void audioviz::set_artist_text(const std::string &text)
+{
+	artist_text.setString(text);
+}
 
-	title_text.setFillColor({255, 255, 255, 150});
-	artist_text.setFillColor({255, 255, 255, 150});
-
-	if (!album_cover.texture.loadFromFile("images/midnight.jpg"))
-		throw std::runtime_error("failed to load album cover!");
+void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf::Vector2f desired_size)
+{
+	if (!album_cover.texture.loadFromFile(image_path))
+		throw std::runtime_error("failed to load album cover: '" + image_path.string() + '\'');
 	album_cover.sprite.setTexture(album_cover.texture, true);
 
-	const sf::Vector2f ac_pos{30, 30};
-	album_cover.sprite.setPosition(ac_pos);
-
-	// using album_cover.texture.getSize(), set the scale on album_cover.sprite
-	// such that it will only take up a 50x50 area
-	const sf::Vector2f ac_size{150, 150};
+	// using `album_cover.texture`'s size, set the scale on `album_cover.sprite`
+	// such that it will only take up a certain area
 	const auto ac_tsize = album_cover.texture.getSize();
-	album_cover.sprite.setScale({ac_size.x / ac_tsize.x, ac_size.y / ac_tsize.y});
+	album_cover.sprite.setScale({desired_size.x / ac_tsize.x, desired_size.y / ac_tsize.y});
+}
 
-	const sf::Vector2f metadata_pos{ac_pos.x + ac_size.x + 10, ac_pos.y};
-	title_text.setPosition({metadata_pos.x, metadata_pos.y});
-	artist_text.setPosition({metadata_pos.x, metadata_pos.y + title_text.getCharacterSize() + 5});
+void audioviz::set_text_font(const std::filesystem::path &path)
+{
+	if (!font.loadFromFile(path))
+		throw std::runtime_error("failed to load font: '" + path.string() + '\'');
+}
+
+void audioviz::set_metadata_position(const sf::Vector2f &pos)
+{
+	album_cover.sprite.setPosition(pos);
+
+	auto ac_size = album_cover.texture.getSize();
+	const auto ac_scale = album_cover.sprite.getScale();
+	ac_size.x *= ac_scale.x;
+	ac_size.y *= ac_scale.y;
+
+	const sf::Vector2f text_pos{pos.x + ac_size.x + 10, pos.y};
+	title_text.setPosition({text_pos.x, text_pos.y});
+	artist_text.setPosition({text_pos.x, text_pos.y + title_text.getCharacterSize() + 5});
+}
+
+void audioviz::set_text_defaults()
+{
+	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
+	artist_text.setStyle(sf::Text::Italic);
+	title_text.setCharacterSize(24);
+	artist_text.setCharacterSize(24);
+	title_text.setFillColor({255, 255, 255, 150});
+	artist_text.setFillColor({255, 255, 255, 150});
 }
 
 void audioviz::set_framerate(int framerate)
@@ -77,13 +100,11 @@ void audioviz::set_framerate(int framerate)
 	afpvf = ad.sample_rate() / framerate;
 }
 
-void audioviz::set_bg(const std::string &file)
+void audioviz::set_background(const std::filesystem::path &image_path, const EffectOptions opts)
 {
 	sf::Texture bg_texture;
-
-	if (!bg_texture.loadFromFile(file))
-		throw std::runtime_error("failed to load background image: '" + file + '\'');
-
+	if (!bg_texture.loadFromFile(image_path))
+		throw std::runtime_error("failed to load background image: '" + image_path.string() + '\'');
 	sf::Sprite bg_sprite(bg_texture);
 
 	// make sure bgTexture fills up the whole screen, and is centered
@@ -94,11 +115,14 @@ void audioviz::set_bg(const std::string &file)
 	bg_sprite.setScale({scale, scale});
 
 	rt.bg.draw(bg_sprite);
-	rt.bg.blur(10, 10, 25);
-	// rt.bg.mult(0.5);
+
+	if (opts.blur.hrad && opts.blur.vrad && opts.blur.n_passes)
+		rt.bg.blur(opts.blur.hrad, opts.blur.vrad, opts.blur.n_passes);
+	if (opts.mult)
+		rt.bg.mult(opts.mult);
 }
 
-Pa::Stream<float> audioviz::create_pa_stream()
+Pa::Stream<float> audioviz::create_pa_stream() const
 {
 	return Pa::Stream<float>(0, ad.nb_channels(), ad.sample_rate(), sample_size);
 }
@@ -119,14 +143,14 @@ void audioviz::set_margin(const int margin)
 	sd_left.set_target_rect(left_half, true);
 	sd_right.set_target_rect(right_half);
 
-	assert(sd_left.get_spectrum_data().size() == sd_right.get_spectrum_data().size());
+	assert(sd_left.data().size() == sd_right.data().size());
 }
 
 void audioviz::play_audio(Pa::Stream<float> &pa_stream)
 {
 	try // to play the audio
 	{
-		pa_stream.write(audio_buffer.data(), afpvf);
+		pa_stream.write(audio_span.data(), afpvf);
 	}
 	catch (const Pa::Error &e)
 	{
@@ -138,31 +162,36 @@ void audioviz::play_audio(Pa::Stream<float> &pa_stream)
 
 void audioviz::draw_spectrum()
 {
-	sd_left.do_fft(audio_buffer.data(), 2, 0, true);
-	sd_right.do_fft(audio_buffer.data(), 2, 1, true);
-
+	sd_left.do_fft(audio_span.data(), 2, 0, true);
+	sd_right.do_fft(audio_span.data(), 2, 1, true);
 	rt.spectrum.original.clear(zero_alpha);
 	rt.spectrum.original.draw(sd_left);
 	rt.spectrum.original.draw(sd_right);
 	rt.spectrum.original.display();
 }
 
+// should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
-	const auto sd_left_data = sd_left.get_spectrum_data(),
-			   sd_right_data = sd_right.get_spectrum_data();
-	assert(sd_left_data.size() == sd_right_data.size());
+	const auto left_data = sd_left.data(),
+			   right_data = sd_right.data();
+	assert(left_data.size() == right_data.size());
 
-	float speeds[2];
-	const auto amount_to_avg = sd_left_data.size() / 4.f;
+	// first quarter of the spectrum is generally bass
+	const auto amount_to_avg = left_data.size() / 4.f;
 
-	speeds[0] = std::accumulate(sd_left_data.begin(), sd_left_data.begin() + amount_to_avg, 0.f) / amount_to_avg;
-	speeds[1] = std::accumulate(sd_right_data.begin(), sd_right_data.begin() + amount_to_avg, 0.f) / amount_to_avg;
+	// lambda to calculate average of first `amount_to_avg` elements
+	const auto calc_avg = [=](const std::vector<float> &vec)
+	{ return std::accumulate(vec.begin(), vec.begin() + amount_to_avg, 0.f) / amount_to_avg; };
 
-	const auto speeds_avg = (speeds[0] + speeds[1]) / 2;
+	// a linear speed increase is way too jittery and sudden
+	// sqrt and cbrt are pretty good but i found going in between them to be better
+	const auto root = 2.6666667f;
+
+	const auto avg = (calc_avg(left_data) + calc_avg(right_data)) / 2;
+	const auto speed_increase = powf(size.y * avg, 1 / root);
 
 	rt.particles.original.clear(zero_alpha);
-	const auto speed_increase = powf(size.y * speeds_avg, 1.f / 2.6666667f);
 	ps.draw(rt.particles.original, {0, -speed_increase});
 	rt.particles.original.display();
 }
@@ -190,37 +219,35 @@ void audioviz::actually_draw_on_target(sf::RenderTarget &target)
 	target.draw(rt.particles.blurred.sprite(), sf::BlendAdd);
 	target.draw(rt.particles.original.sprite(), sf::BlendAdd);
 
-	// new discovery...........................
-	// this is how to invert the color??????
-	// sf::BlendMode spectrum_blend(
-	// 	sf::BlendMode::Factor::SrcAlpha,
-	// 	sf::BlendMode::Factor::DstAlpha,
-	// 	sf::BlendMode::Equation::ReverseSubtract);
-	// target.draw(rt.spectrum.blurred.sprite(), spectrum_blend);
-
+	// BlendAdd is a sane default
+	// experiment with other blend modes to make cool glows
 	target.draw(rt.spectrum.blurred.sprite(), sf::BlendAdd);
 
 	// redraw spectrum due to anti-aliased edges retaining original background color
 	target.draw(sd_left);
 	target.draw(sd_right);
-	// target.draw(rt.spectrum.original.sprite());
 
 	// draw metadata
-	target.draw(album_cover.sprite);
-	target.draw(title_text, sf::BlendAlpha);
-	target.draw(artist_text, sf::BlendAlpha);
+	if (album_cover.texture.getNativeHandle())
+		target.draw(album_cover.sprite);
+	target.draw(title_text, sf::BlendAdd);
+	target.draw(artist_text, sf::BlendAdd);
 }
 
 bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_stream)
 {
-	mtx.lock();
-	int frames_read = ab.read_frames(audio_buffer, sample_size);
-	while (!decoder_thread_finished() && frames_read < sample_size)
-		frames_read += ab.read_frames(audio_buffer, sample_size);
-	mtx.unlock();
+	// wait for enough audio to be decoded
+	// or, if decoding finished, just use what we can get
+	while (!decoder_thread_finished() && (int)ab.frames_available() < sample_size)
+		;
 
+	// get frames using a span to avoid a copy
+	const int frames_read = ab.read_frames(audio_span, sample_size);
+
+	// play audio if necessary (synchronously, to stay in sync with the frame)
 	if (pa_stream)
 		play_audio(*pa_stream);
+
 	if (frames_read != sample_size)
 		return false;
 

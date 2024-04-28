@@ -40,7 +40,7 @@ void SpectrumDrawable::set_window_func(FS::WindowFunction wf)
 	fs.set_window_func(wf);
 }
 
-const std::vector<float> &SpectrumDrawable::get_spectrum_data() const
+const std::vector<float> &SpectrumDrawable::data() const
 {
 	return spectrum;
 }

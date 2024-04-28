@@ -1,33 +1,14 @@
 #pragma once
 
-#include <deque>
 #include <vector>
-#include <stdexcept>
+#include <mutex>
+#include "AVError.hpp"
 
 extern "C"
 {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 }
-
-class AVError : public std::runtime_error
-{
-	static std::string get_err_string(const int errnum)
-	{
-		char errbuf[AV_ERROR_MAX_STRING_SIZE];
-		av_make_error_string(errbuf, AV_ERROR_MAX_STRING_SIZE, errnum);
-		return errbuf;
-	}
-
-public:
-	const char *const func;
-	const int errnum;
-
-	AVError(const char *const func, const int errnum)
-		: std::runtime_error(std::string(func) + ": " + get_err_string(errnum)),
-		  func(func),
-		  errnum(errnum) {}
-};
 
 // class to decode audio from a url into non-planar f32 frames
 class AudioDecoder
@@ -59,11 +40,13 @@ public:
 	const char *get_metadata_entry(const char *const key, const AVDictionaryEntry *prev = NULL, const int flags = 0) const;
 
 	/**
-	 * WARNING: this advances the position in the `AVFormatContext`. decodes one frame from the `AVFormatContext` into `out`.
-	 * the number of audio frames written is unknown, and depends on the codec. check `out.size()` after this returns.
+	 * WARNING: this advances the position in the `AVFormatContext`.
+	 * decodes one frame from the format and appends the samples to `out`.
+	 * @param out vector to append decoded samples to
+	 * @param mtx optional mutex to lock when appending to `out`.
 	 * @return whether anything was decoded into `out`; `false` most likely means we have reached end-of-file
 	 */
-	bool operator>>(std::vector<float> &out);
+	bool append_to(std::vector<float> &out, std::mutex *mtx = NULL);
 
 private:
 	/**

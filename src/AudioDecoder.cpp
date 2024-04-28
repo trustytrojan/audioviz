@@ -10,19 +10,14 @@ AudioDecoder::AudioDecoder(const char *const url)
 	if (const auto ret = avformat_find_stream_info(fmtctx, NULL); ret < 0)
 		throw AVError("avformat_find_stream_info", ret);
 
-	stream_idx = av_find_best_stream(fmtctx, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+	const AVCodec *codec;
+	stream_idx = av_find_best_stream(fmtctx, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
 
 	if (stream_idx < 0)
 		throw AVError("av_find_best_stream", stream_idx);
 
 	stream = fmtctx->streams[stream_idx];
 	codecpar = stream->codecpar;
-
-	auto codec = avcodec_find_decoder(codecpar->codec_id);
-
-	if (!codec)
-		throw std::runtime_error("could not find decoder");
-
 	cdctx = avcodec_alloc_context3(codec);
 
 	if (!cdctx)
@@ -65,19 +60,25 @@ int AudioDecoder::sample_rate() const
 
 const char *AudioDecoder::get_metadata_entry(const char *const key, const AVDictionaryEntry *const prev, const int flags) const
 {
-	return av_dict_get(fmtctx->metadata, key, prev, flags)->value;
+	const auto entry = av_dict_get(fmtctx->metadata, key, prev, flags);
+	return entry ? entry->value : NULL;
 }
 
-bool AudioDecoder::operator>>(std::vector<float> &out)
+bool AudioDecoder::append_to(std::vector<float> &out, std::mutex *const mtx)
 {
-	if (!fmt_read_frame() || !cd_send_packet())
+	// make sure we skip over streams that are not ours!
+	bool frame_read;
+	while ((frame_read = fmt_read_frame()) && packet->stream_index != stream_idx)
+		;
+	if (!frame_read || !cd_send_packet())
 		return false;
-	out.clear();
 	while (cd_recv_frame())
 	{
 		const auto data = (const float *)frame->extended_data[0];
 		const auto nb_floats = frame->nb_samples * nb_channels();
+		if (mtx) mtx->lock();
 		out.insert(out.end(), data, data + nb_floats);
+		if (mtx) mtx->unlock();
 	}
 	return out.size();
 }

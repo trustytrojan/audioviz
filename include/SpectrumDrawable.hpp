@@ -88,8 +88,15 @@ public:
 		} wheel;
 	} color;
 
+	// setters
+	
 	void set_multiplier(float multiplier);
-	const std::vector<float> &get_spectrum_data() const;
+	void set_target_rect(const sf::IntRect &rect, bool backwards = false);
+
+	void do_fft(const float *const audio, int num_channels, int channel, bool interleaved);
+	void do_fft(const float *const audio);
+	const std::vector<float> &data() const;
+	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override;
 
 	// passthrough setters for FrequencySpectrum
 	void set_fft_size(int fft_size);
@@ -98,13 +105,6 @@ public:
 	void set_nth_root(int nth_root);
 	void set_accum_method(FS::AccumulationMethod method);
 	void set_window_func(FS::WindowFunction wf);
-
-	void set_target_rect(const sf::IntRect &rect, bool backwards = false);
-	void do_fft(const float *const audio, int num_channels, int channel, bool interleaved);
-	void do_fft(const float *const audio);
-	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override;
-
-	// void draw(sf::RenderTarget &target, sf::IntRect rect, bool backwards);
 
 private:
 	void do_fft();

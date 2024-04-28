@@ -3,7 +3,9 @@
 #include <vector>
 #include <cstdio>
 #include <stdexcept>
+#include <ranges>
 
+// now uses spans to reduce memory usage and unnecessary copying!
 class InterleavedAudioBuffer
 {
 	std::vector<float> buf;
@@ -13,21 +15,23 @@ class InterleavedAudioBuffer
 public:
 	InterleavedAudioBuffer(const int n_channels)
 		: n_channels(n_channels) {}
-	
+
 	std::vector<float> &buffer()
 	{
-		seek(0, SEEK_SET);
 		return buf;
 	}
 
-	size_t read_frames(std::vector<float> &out, size_t n_frames)
+	size_t frames_available()
+	{
+		return (buf.size() - pos) / n_channels;
+	}
+
+	size_t read_frames(std::span<float> &span, size_t n_frames)
 	{
 		const auto n_samples = std::min(n_frames * n_channels, buf.size() - pos);
-		std::copy(buf.begin() + pos, buf.begin() + pos + n_samples, out.begin());
-		if (n_samples < out.size())
-			std::fill(out.begin() + n_samples, out.end(), 0.0f);
+		span = std::span(buf).subspan(pos, n_samples);
 		pos += n_samples;
-		return n_samples / n_channels;
+		return span.size() / 2;
 	}
 
 	void seek(size_t frame, int whence)

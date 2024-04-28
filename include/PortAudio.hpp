@@ -89,23 +89,6 @@ namespace Pa
 		Stream(Stream &&) = delete;
 		Stream &operator=(Stream &&) = delete;
 
-		// /**
-		//  * @throws `std::runtime_error` if this stream's sample format is non-interleaved
-		//  */
-		// void operator<<(const std::vector<_Tp> &buffer)
-		// {
-		// 	if (sampleFormat & paNonInterleaved)
-		// 		throw std::runtime_error("sample format is non-interleaved!");
-		// 	_write(buffer.data(), buffer.size() / numOutputChannels);
-		// }
-
-		// void write(const std::vector<_Tp> &buffer, const size_t frames)
-		// {
-		// 	if (sampleFormat & paNonInterleaved)
-		// 		throw std::runtime_error("sample format is non-interleaved!");
-		// 	_write(buffer.data(), frames);
-		// }
-
 		void write(const _Tp *const buffer, const size_t frames)
 		{
 			if (sampleFormat & paNonInterleaved)
