@@ -6,15 +6,15 @@
 
 void play()
 {
-	const sf::Vector2u size{1600, 900};
-	audioviz av(size, "Music/Purr Bass.mp3");
+	const sf::Vector2u size{1280, 720};
+	audioviz av(size, "Music/obsessed (feat. funeral).mp3");
 
 	Pa::PortAudio _;						// initialize portaudio library
 	auto pa_stream = av.create_pa_stream(); // create PortAudio stream to play audio live
 
 	// no need to provide context-settings for anti-aliasing
 	// anti-aliasing is built in to audioviz
-	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed, sf::ContextSettings(0, 0, 4));
+	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed);
 
 	// this is REQUIRED to ensure smooth playback
 	window.setVerticalSyncEnabled(true);
@@ -39,8 +39,8 @@ void play()
 	}
 
 	av.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
-	av.set_background("images/purrbass.jpg", {{}, 0.75});
-	av.set_album_cover("images/purrbass.jpg");
+	av.set_background("images/obsessed.jpg", {{}, 0.75});
+	av.set_album_cover("images/obsessed.jpg");
 
 	// need to call after setting album cover to update text position
 	// should find a way to remove this hassle

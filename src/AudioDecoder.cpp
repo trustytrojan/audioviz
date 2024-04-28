@@ -80,6 +80,7 @@ int AudioDecoder::sample_rate() const
 
 const char *AudioDecoder::get_metadata_entry(const char *const key, const AVDictionaryEntry *const prev, const int flags) const
 {
+	// the desired metadata can either be in the stream or the format itself
 	auto entry = av_dict_get(stream->metadata, key, prev, flags);
 	if (!entry)
 		entry = av_dict_get(fmtctx->metadata, key, prev, flags);

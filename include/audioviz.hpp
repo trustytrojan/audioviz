@@ -84,6 +84,8 @@ private:
 			  bg(size, sf::ContextSettings(0, 0, antialiasing)) {}
 	} rt;
 
+	sf::Clock ps_clock;
+
 public:
 	audioviz(sf::Vector2u size, const std::string &audio_file, int antialiasing = 4);
 

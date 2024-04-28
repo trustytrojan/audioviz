@@ -182,16 +182,13 @@ void audioviz::draw_particles()
 	// first quarter of the spectrum is generally bass
 	const auto amount = left_data.size() / 4.f;
 
-	// a linear speed increase is way too jittery and sudden
-	// sqrt and cbrt are pretty good but i found going in between them to be better
-	const auto root = 2.6666667f;
-
 	const auto left_max = *std::max_element(left_data.begin(), left_data.begin() + amount);
 	const auto right_max = *std::max_element(right_data.begin(), right_data.begin() + amount);
 
 	const auto avg = (left_max + right_max) / 2;
-	const auto speed_increase =
-		cbrtf(size.y * avg);
+
+	// cbrt to ease the sudden-ness of the particles' speed increase
+	const auto speed_increase = cbrtf(size.y * avg);
 
 	rt.particles.original.clear(zero_alpha);
 	ps.draw(rt.particles.original, {0, -speed_increase});
@@ -254,8 +251,17 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 		return false;
 
 	draw_spectrum();
-	draw_particles();
 	blur_spectrum();
+
+	if (framerate == 60)
+		draw_particles();
+	else if (ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60.f))
+	{
+		// keep the tickrate of the particles at 60hz for non-60fps output
+		draw_particles();
+		ps_clock.restart();
+	}
+
 	blur_particles();
 
 	actually_draw_on_target(target);
