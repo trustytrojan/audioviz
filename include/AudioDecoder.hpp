@@ -8,6 +8,7 @@ extern "C"
 {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
+#include <libswresample/swresample.h>
 }
 
 // class to decode audio from a url into non-planar f32 frames
@@ -22,6 +23,7 @@ class AudioDecoder
 	AVFrame *frame = av_frame_alloc();
 	std::vector<float> buf;
 	int current_frame = 0;
+	SwrContext *swr = nullptr;
 
 public:
 	AudioDecoder(const char *const url);

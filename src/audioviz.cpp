@@ -59,8 +59,10 @@ void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf
 
 	// using `album_cover.texture`'s size, set the scale on `album_cover.sprite`
 	// such that it will only take up a certain area
+	// widescreen images will end up looking small but it's fine
 	const auto ac_tsize = album_cover.texture.getSize();
-	album_cover.sprite.setScale({desired_size.x / ac_tsize.x, desired_size.y / ac_tsize.y});
+	float scale_factor = std::min(desired_size.x / ac_tsize.x, desired_size.y / ac_tsize.y);
+	album_cover.sprite.setScale({scale_factor, scale_factor});
 }
 
 void audioviz::set_text_font(const std::filesystem::path &path)
@@ -178,18 +180,18 @@ void audioviz::draw_particles()
 	assert(left_data.size() == right_data.size());
 
 	// first quarter of the spectrum is generally bass
-	const auto amount_to_avg = left_data.size() / 4.f;
-
-	// lambda to calculate average of first `amount_to_avg` elements
-	const auto calc_avg = [=](const std::vector<float> &vec)
-	{ return std::accumulate(vec.begin(), vec.begin() + amount_to_avg, 0.f) / amount_to_avg; };
+	const auto amount = left_data.size() / 4.f;
 
 	// a linear speed increase is way too jittery and sudden
 	// sqrt and cbrt are pretty good but i found going in between them to be better
 	const auto root = 2.6666667f;
 
-	const auto avg = (calc_avg(left_data) + calc_avg(right_data)) / 2;
-	const auto speed_increase = powf(size.y * avg, 1 / root);
+	const auto left_max = *std::max_element(left_data.begin(), left_data.begin() + amount);
+	const auto right_max = *std::max_element(right_data.begin(), right_data.begin() + amount);
+
+	const auto avg = (left_max + right_max) / 2;
+	const auto speed_increase =
+		cbrtf(size.y * avg);
 
 	rt.particles.original.clear(zero_alpha);
 	ps.draw(rt.particles.original, {0, -speed_increase});
@@ -230,8 +232,8 @@ void audioviz::actually_draw_on_target(sf::RenderTarget &target)
 	// draw metadata
 	if (album_cover.texture.getNativeHandle())
 		target.draw(album_cover.sprite);
-	target.draw(title_text, sf::BlendAdd);
-	target.draw(artist_text, sf::BlendAdd);
+	target.draw(title_text);
+	target.draw(artist_text);
 }
 
 bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_stream)

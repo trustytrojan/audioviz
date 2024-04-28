@@ -99,7 +99,7 @@ public:
 	// setters
 
 	void set_framerate(int framerate);
-	void set_background(const std::filesystem::path &image_path, EffectOptions options);
+	void set_background(const std::filesystem::path &image_path, EffectOptions options = {{10, 10, 25}, 0});
 	void set_margin(int margin);
 	void set_title_text(const std::string &text);
 	void set_artist_text(const std::string &text);

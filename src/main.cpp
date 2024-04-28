@@ -6,8 +6,8 @@
 
 void play()
 {
-	const sf::Vector2u size{1280, 720};
-	audioviz av(size, "Music/ikikik.mp3");
+	const sf::Vector2u size{1600, 900};
+	audioviz av(size, "Music/Purr Bass.mp3");
 
 	Pa::PortAudio _;						// initialize portaudio library
 	auto pa_stream = av.create_pa_stream(); // create PortAudio stream to play audio live
@@ -39,14 +39,15 @@ void play()
 	}
 
 	av.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
-	av.set_background("images/ikikik.jpg", {});
-	av.set_album_cover("images/ikikik.jpg");
+	av.set_background("images/purrbass.jpg", {{}, 0.75});
+	av.set_album_cover("images/purrbass.jpg");
 
 	// need to call after setting album cover to update text position
 	// should find a way to remove this hassle
 	av.set_metadata_position({30, 30});
 
 	RenderStats stats;
+	stats.printHeader();
 	while (window.isOpen())
 	{
 		stats.restartClock();
