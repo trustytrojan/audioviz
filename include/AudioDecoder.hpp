@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <mutex>
-#include "AVError.hpp"
+#include "av/Error.hpp"
 
 extern "C"
 {
@@ -21,7 +21,6 @@ class AudioDecoder
 	AVCodecContext *cdctx = nullptr;
 	AVPacket *packet = av_packet_alloc();
 	AVFrame *frame = av_frame_alloc();
-	std::vector<float> buf;
 	int current_frame = 0;
 	SwrContext *swr = nullptr;
 

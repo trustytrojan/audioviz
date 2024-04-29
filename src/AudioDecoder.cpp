@@ -7,16 +7,16 @@
 AudioDecoder::AudioDecoder(const char *const url)
 {
 	if (const auto ret = avformat_open_input(&fmtctx, url, NULL, NULL); ret < 0)
-		throw AVError("avformat_open_input", ret);
+		throw av::Error("avformat_open_input", ret);
 
 	if (const auto ret = avformat_find_stream_info(fmtctx, NULL); ret < 0)
-		throw AVError("avformat_find_stream_info", ret);
+		throw av::Error("avformat_find_stream_info", ret);
 
 	const AVCodec *codec;
 	stream_idx = av_find_best_stream(fmtctx, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
 
 	if (stream_idx < 0)
-		throw AVError("av_find_best_stream", stream_idx);
+		throw av::Error("av_find_best_stream", stream_idx);
 
 	stream = fmtctx->streams[stream_idx];
 	codecpar = stream->codecpar;
@@ -40,9 +40,9 @@ AudioDecoder::AudioDecoder(const char *const url)
 					cdctx->sample_fmt,
 					cdctx->sample_rate, 0, NULL);
 			rc < 0)
-			throw AVError("swr_alloc_set_opts2", rc);
+			throw av::Error("swr_alloc_set_opts2", rc);
 		if (const auto rc = swr_init(swr); rc < 0)
-			throw AVError("swr_init", rc);
+			throw av::Error("swr_init", rc);
 	}
 }
 
@@ -105,12 +105,12 @@ bool AudioDecoder::append_to(std::vector<float> &out, std::mutex *const mtx)
 			const auto bufsize = av_samples_get_buffer_size(
 				NULL, frame->ch_layout.nb_channels, frame->nb_samples, AV_SAMPLE_FMT_FLT, 0);
 			if (bufsize < 0)
-				throw AVError("av_samples_get_buffer_size", bufsize);
+				throw av::Error("av_samples_get_buffer_size", bufsize);
 			data = (const float *)av_malloc(bufsize);
 			if (!data)
 				throw std::runtime_error("cannot allocate output data buffer!");
 			if (const auto rc = swr_convert(swr, (uint8_t **)&data, frame->nb_samples, (const uint8_t **)frame->extended_data, frame->nb_samples); rc < 0)
-				throw AVError("swr_convert", rc);
+				throw av::Error("swr_convert", rc);
 		}
 		// otherwise we can use the frame's data
 		else
@@ -140,7 +140,7 @@ bool AudioDecoder::fmt_read_frame()
 	case AVERROR_EOF:
 		return false;
 	default:
-		throw AVError("av_read_frame", rc);
+		throw av::Error("av_read_frame", rc);
 	}
 }
 
@@ -154,7 +154,7 @@ bool AudioDecoder::cd_send_packet()
 	case AVERROR_EOF:
 		return false;
 	default:
-		throw AVError("avcodec_send_packet", rc);
+		throw av::Error("avcodec_send_packet", rc);
 	}
 }
 
@@ -168,6 +168,6 @@ bool AudioDecoder::cd_recv_frame()
 	case AVERROR_EOF:
 		return false;
 	default:
-		throw AVError("avcodec_receive_frame", rc);
+		throw av::Error("avcodec_receive_frame", rc);
 	}
 }

@@ -1,10 +1,9 @@
 #include "audioviz.hpp"
-#include <numeric>
-#include <mutex>
+#include <iostream>
 
-audioviz::audioviz(const sf::Vector2u size, const std::string &audio_file, const int antialiasing)
+audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: size(size),
-	  ad(audio_file),
+	  ad(media_url),
 	  ps(size, 50),
 	  title_text(font, ad.get_metadata_entry("title")),
 	  artist_text(font, ad.get_metadata_entry("artist")),
@@ -22,6 +21,15 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &audio_file, const
 	// default metadata position
 	set_metadata_position({30, 30});
 }
+
+audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
+	: spectrum(size, antialiasing),
+	  particles(size, antialiasing),
+	  bg(size, sf::ContextSettings(0, 0, antialiasing)) {}
+
+audioviz::_rt::_blur::_blur(const sf::Vector2u size, const int antialiasing)
+	: original(size, sf::ContextSettings(0, 0, antialiasing)),
+	  blurred(size) {}
 
 const std::span<float> &audioviz::current_audio() const
 {
@@ -124,11 +132,6 @@ void audioviz::set_background(const std::filesystem::path &image_path, const Eff
 		rt.bg.mult(opts.mult);
 }
 
-Pa::Stream<float> audioviz::create_pa_stream() const
-{
-	return Pa::Stream<float>(0, ad.nb_channels(), ad.sample_rate(), sample_size);
-}
-
 void audioviz::set_margin(const int margin)
 {
 	const sf::IntRect
@@ -146,20 +149,6 @@ void audioviz::set_margin(const int margin)
 	sd_right.set_target_rect(right_half);
 
 	assert(sd_left.data().size() == sd_right.data().size());
-}
-
-void audioviz::play_audio(Pa::Stream<float> &pa_stream)
-{
-	try // to play the audio
-	{
-		pa_stream.write(audio_span.data(), afpvf);
-	}
-	catch (const Pa::Error &e)
-	{
-		if (e.code != paOutputUnderflowed)
-			throw;
-		std::cerr << e.what() << '\n';
-	}
 }
 
 void audioviz::draw_spectrum()
@@ -233,7 +222,21 @@ void audioviz::actually_draw_on_target(sf::RenderTarget &target)
 	target.draw(artist_text);
 }
 
-bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_stream)
+void audioviz::set_audio_playback_enabled(bool enabled)
+{
+	if (enabled)
+	{
+		pa_init.emplace();
+		pa_stream.emplace(0, 2, ad.sample_rate(), sample_size);
+	}
+	else
+	{
+		pa_stream.reset();
+		pa_init.reset();
+	}
+}
+
+bool audioviz::draw_frame(sf::RenderTarget &target)
 {
 	// wait for enough audio to be decoded
 	// or, if decoding finished, just use what we can get
@@ -243,10 +246,19 @@ bool audioviz::draw_frame(sf::RenderTarget &target, Pa::Stream<float> *const pa_
 	// get frames using a span to avoid a copy
 	const int frames_read = ab.read_frames(audio_span, sample_size);
 
-	// play audio if necessary (synchronously, to stay in sync with the frame)
 	if (pa_stream)
-		play_audio(*pa_stream);
+		try // to play the audio
+		{
+			pa_stream->write(audio_span.data(), afpvf);
+		}
+		catch (const pa::Error &e)
+		{
+			if (e.code != paOutputUnderflowed)
+				throw;
+			std::cerr << e.what() << '\n';
+		}
 
+	// stop if we don't have enough samples to produce a frame
 	if (frames_read != sample_size)
 		return false;
 

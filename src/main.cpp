@@ -3,14 +3,16 @@
 
 #include "RenderStats.hpp"
 #include "audioviz.hpp"
+#include "pa/PortAudio.hpp"
+#include "pa/Stream.hpp"
 
 void play()
 {
 	const sf::Vector2u size{1280, 720};
 	audioviz av(size, "Music/obsessed (feat. funeral).mp3");
 
-	Pa::PortAudio _;						// initialize portaudio library
-	auto pa_stream = av.create_pa_stream(); // create PortAudio stream to play audio live
+	// enable audio playback using portaudio
+	av.set_audio_playback_enabled(true);
 
 	// no need to provide context-settings for anti-aliasing
 	// anti-aliasing is built in to audioviz
@@ -52,7 +54,7 @@ void play()
 	{
 		stats.restartClock();
 		window.clear();
-		if (!av.draw_frame(window, &pa_stream))
+		if (!av.draw_frame(window))
 			break;
 		window.display();
 		stats.updateAndPrint();

@@ -1,58 +1,19 @@
 #pragma once
 
 #include <portaudio.h>
-#include <cstdint>
-#include <iostream>
-#include <stdexcept>
-#include <vector>
+#include "Error.hpp"
+#include "Types.hpp"
 
-namespace Pa
+namespace pa
 {
-	struct Error : std::runtime_error
-	{
-		const PaError code;
-		Error(const PaError code) : std::runtime_error(std::string("portaudio: ") + Pa_GetErrorText(code)), code(code) {}
-	};
-
-	struct PortAudio
-	{
-		PortAudio()
-		{
-			if (const auto rc = Pa_Initialize())
-				throw Error(rc);
-		}
-
-		~PortAudio()
-		{
-			if (const auto rc = Pa_Terminate())
-				std::cerr << Pa_GetErrorText(rc) << '\n';
-		}
-
-		PortAudio(const PortAudio &) = delete;
-		PortAudio &operator=(const PortAudio &) = delete;
-		PortAudio(PortAudio &&) = delete;
-		PortAudio &operator=(PortAudio &&) = delete;
-	};
-
-	using Float32 = float;
-	using Int32 = int32_t;
-	// clang-format off
-	struct Int24 { uint8_t bytes[3]; };
-	// clang-format on
-	using Int16 = int16_t;
-	using Int8 = int8_t;
-	using UInt8 = uint8_t;
-
 	template <typename _Tp>
 	class Stream
 	{
 		PaStream *stream;
-		int numOutputChannels;
 		PaSampleFormat sampleFormat;
 
 	public:
 		Stream(int numInputChannels, int numOutputChannels, double sampleRate, unsigned long framesPerBuffer, bool interleaved = true, PaStreamCallback *streamCallback = NULL, void *userData = NULL)
-			: numOutputChannels(numOutputChannels)
 		{
 			if constexpr (std::is_same_v<_Tp, Float32>)
 				sampleFormat = paFloat32;
@@ -103,4 +64,4 @@ namespace Pa
 				throw Error(rc);
 		}
 	};
-};
+}
