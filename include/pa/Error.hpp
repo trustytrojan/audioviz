@@ -9,6 +9,8 @@ namespace pa
 	struct Error : std::runtime_error
 	{
 		const PaError code;
-		Error(const PaError code) : std::runtime_error(std::string("portaudio: ") + Pa_GetErrorText(code)), code(code) {}
+		Error(const std::string &func, const PaError code)
+			: std::runtime_error(func + ": " + Pa_GetErrorText(code)),
+			  code(code) {}
 	};
 }

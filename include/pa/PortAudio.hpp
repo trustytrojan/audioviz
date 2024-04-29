@@ -13,13 +13,13 @@ namespace pa
 		PortAudio()
 		{
 			if (const auto rc = Pa_Initialize())
-				throw Error(rc);
+				throw Error("Pa_Initialize", rc);
 		}
 
 		~PortAudio()
 		{
 			if (const auto rc = Pa_Terminate())
-				std::cerr << Pa_GetErrorText(rc) << '\n';
+				std::cerr << "Pa_Terminate: " << Pa_GetErrorText(rc) << '\n';
 		}
 
 		PortAudio(const PortAudio &) = delete;

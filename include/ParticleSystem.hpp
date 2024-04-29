@@ -7,13 +7,11 @@ class Particle : public sf::CircleShape
 	sf::Vector2f velocity;
 
 public:
-	Particle(float radius = 0, std::size_t pointCount = 15)
-		: sf::CircleShape(radius, pointCount) {}
+	Particle() : sf::CircleShape(0, 15) {}
 
 	void move()
 	{
-		const auto [x, y] = getPosition();
-		setPosition({x + velocity.x, y + velocity.y});
+		setPosition(getPosition() + velocity);
 	}
 
 	sf::Vector2f getVelocity() const

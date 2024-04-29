@@ -32,17 +32,17 @@ namespace pa
 				sampleFormat |= paNonInterleaved;
 
 			if (const auto rc = Pa_OpenDefaultStream(&stream, numInputChannels, numOutputChannels, sampleFormat, sampleRate, framesPerBuffer, streamCallback, userData))
-				throw Error(rc);
+				throw Error("Pa_OpenDefaultStream", rc);
 			if (const auto rc = Pa_StartStream(stream))
-				throw Error(rc);
+				throw Error("Pa_StartStream", rc);
 		}
 
 		~Stream()
 		{
 			if (const auto rc = Pa_StopStream(stream))
-				std::cerr << Pa_GetErrorText(rc) << '\n';
+				std::cerr << "Pa_StopStream: " << Pa_GetErrorText(rc) << '\n';
 			if (const auto rc = Pa_CloseStream(stream))
-				std::cerr << Pa_GetErrorText(rc) << '\n';
+				std::cerr << "Pa_CloseStream: " << Pa_GetErrorText(rc) << '\n';
 		}
 
 		Stream(const Stream &) = delete;
@@ -61,7 +61,7 @@ namespace pa
 		void _write(const void *const buffer, const size_t frames)
 		{
 			if (const auto rc = Pa_WriteStream(stream, buffer, frames))
-				throw Error(rc);
+				throw Error("Pa_WriteStream", rc);
 		}
 	};
 }
