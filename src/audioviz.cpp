@@ -3,6 +3,8 @@
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: size(size),
+	  demuxer(media_url),
+	  decoder(demuxer.find_best_stream(AVMEDIA_TYPE_AUDIO)),
 	  ad(media_url),
 	  ps(size, 50),
 	  title_text(font, ad.get_metadata_entry("title")),

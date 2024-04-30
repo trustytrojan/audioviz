@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Demuxer.hpp"
+#include <functional>
 #include "Error.hpp"
 
 extern "C"
 {
+#include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 }
 
@@ -12,97 +13,105 @@ namespace av
 {
 	class StreamDecoder
 	{
-		friend class Demuxer;
 		using FrameCallback = std::function<void(const AVFrame *)>;
 
+	public:
 		const AVStream *const stream;
-		const AVCodecParameters *const codecpar = stream->codecpar;
-		const AVCodec *const codec = avcodec_find_decoder(codecpar->codec_id);
-		AVCodecContext *cdctx = avcodec_alloc_context3(codec);
-		AVFrame *frame = av_frame_alloc();
-		FrameCallback frame_callback;
+		const AVCodecParameters *const cdpar = stream->codecpar;
+		const AVCodec *const codec = avcodec_find_decoder(cdpar->codec_id);
 
+	private:
+		AVCodecContext *_cdctx = avcodec_alloc_context3(codec);
+		AVFrame *frame = av_frame_alloc();
+
+	public:
 		StreamDecoder(const AVStream *const stream)
 			: stream(stream)
 		{
 			if (!codec)
 				throw std::runtime_error("could not find decoder");
-			if (!cdctx)
+			if (!_cdctx)
 				throw std::runtime_error("could not allocate codec context");
 			if (!frame)
 				throw std::runtime_error("could not allocate frame");
 		}
 
-	public:
 		~StreamDecoder()
 		{
 			av_frame_free(&frame);
-			avcodec_free_context(&cdctx);
-		}
-
-		bool is_open() const
-		{
-			return avcodec_is_open(cdctx);
-		}
-
-		double duration_sec() const
-		{
-			return stream->duration * av_q2d(stream->time_base);
-		}
-
-		AVCodecID codec_id() const
-		{
-			return codec->id;
-		}
-
-		AVMediaType media_type() const
-		{
-			return codec->type;
+			avcodec_free_context(&_cdctx);
 		}
 
 		/**
 		 * Returns a pointer to the internal `AVCodecContext`, so that the caller may configure the decoder before calling `open`.
-		 * ONLY MODIFY WHAT YOU NEED FOR CALLING `open`, AND NOTHING ELSE.
+		 * **Only modify what you need for calling `open`.**
 		 */
-		AVCodecContext *get_cdctx()
+		AVCodecContext *cdctx()
 		{
-			return cdctx;
+			return _cdctx;
+		}
+
+		const AVCodecContext *cdctx() const
+		{
+			return _cdctx;
 		}
 
 		/**
 		 * Opens the internal `AVCodecContext` for decoding.
-		 * @param callback callback to receive each decoded `AVFrame *`
+		 * @param callback receives a const-pointer each decoded `AVFrame`
+		 * @throws `av::Error` if `avcodec_open2` fails
 		 */
-		void open(const FrameCallback callback)
+		void open()
 		{
-			if (const auto rc = avcodec_open2(cdctx, codec, NULL); rc < 0)
+			if (const auto rc = avcodec_open2(_cdctx, codec, NULL); rc < 0)
 				throw Error("avcodec_open2", rc);
-			frame_callback = callback;
+		}
+
+		/**
+		 * @brief Sends a packet to the decoder.
+		 * @param packet packet to send to decoder
+		 * @return whether the send was successful
+		 * @note `true` is also returned in the case that the decoder has
+		 * output frames to return to the caller.
+		 * @throws `std::runtime_error` if either the codec context is not open,
+		 * or the packet's stream index does not match the decoder's stream index
+		 * @throws `av::Error` if any `avcodec_*` functions fail
+		 */
+		bool send_packet(const AVPacket *const pkt)
+		{
+			if (!avcodec_is_open(_cdctx))
+				throw std::runtime_error("codec context is not open!");
+			if (pkt->stream_index != stream->index)
+				throw std::runtime_error("received packet is not for this stream!");
+			return cd_send_packet(pkt);
+		}
+
+		// Alias for `send_packet`
+		bool operator<<(const AVPacket *const pkt)
+		{
+			return send_packet(pkt);
+		}
+
+		/**
+		 * @brief Receive a frame from the decoder.
+		 * This method should be called in a loop since one packet
+		 * can be decoded into several frames.
+		 * @return a pointer to the internal `AVFrame`,
+		 * or `NULL` if the codec requires a new packet or has been fully flushed
+		 * @throws `std::runtime_error` if the codec context is not open
+		 * @throws `av::Error` if any `avcodec_*` functions fail
+		 */
+		const AVFrame *receive_frame()
+		{
+			if (!avcodec_is_open(_cdctx))
+				throw std::runtime_error("codec context is not open!");
+			return cd_recv_frame() ? frame : NULL;
 		}
 
 	private:
-		/**
-		 * Only to be called by `Demuxer`.
-		 */
-		bool decode(const AVPacket *const packet)
+		bool cd_send_packet(const AVPacket *const pkt)
 		{
-			if (!is_open())
-				// it is assumed that the caller doesn't want this stream's data.
-				// return true to allow loops to continue reading from the owning `Demuxer`.
-				return true;
-			if (packet->stream_index != stream->index)
-				// this should never happen unless `Demuxer` gave us the wrong `AVStream`
-				throw std::runtime_error("received packet is not for this stream!");
-			if (!cd_send_packet(packet))
-				// decoder has been flushed; cannot continue decoding
-				return false;
-			while (cd_recv_frame())
-				frame_callback(frame);
-		}
-
-		bool cd_send_packet(const AVPacket *const packet)
-		{
-			switch (const auto rc = avcodec_send_packet(cdctx, packet))
+			switch (const auto rc = avcodec_send_packet(_cdctx, pkt))
 			{
 			case 0:
 			case AVERROR(EAGAIN):
@@ -116,7 +125,7 @@ namespace av
 
 		bool cd_recv_frame()
 		{
-			switch (const auto rc = avcodec_receive_frame(cdctx, frame))
+			switch (const auto rc = avcodec_receive_frame(_cdctx, frame))
 			{
 			case 0:
 				return true;

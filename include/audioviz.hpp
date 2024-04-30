@@ -14,6 +14,8 @@
 #include "pa/PortAudio.hpp"
 #include "pa/Stream.hpp"
 
+#include "av/Demuxer.hpp"
+
 // will eventually create an `audioviz` namespace,
 // move this class there and call it `stereo_spectrum`.
 class audioviz
@@ -36,6 +38,9 @@ private:
 
 	const sf::Vector2u size;
 	int sample_size = 3000;
+
+	av::MediaFileReader demuxer;
+	av::StreamDecoder &decoder;
 
 	AudioDecoder ad;
 	InterleavedAudioBuffer ab = ad.nb_channels();
@@ -107,9 +112,12 @@ public:
 	 */
 	const std::span<float> &current_audio() const;
 
-	void set_audio_playback_enabled(bool enabled);
-
 	// setters
+
+	/**
+	 * @param enabled whether to play the audio used to render the spectrum using PortAudio
+	 */
+	void set_audio_playback_enabled(bool enabled);
 
 	/**
 	 * important if you are capturing frames for video encoding!

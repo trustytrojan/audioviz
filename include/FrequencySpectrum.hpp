@@ -3,7 +3,7 @@
 #include <cstring>
 #include <vector>
 #include "spline.hpp"
-#include "fftwf_dft_r2c_1d.hpp"
+#include "fftw_dft_r2c_1d.hpp"
 
 class FrequencySpectrum
 {
@@ -46,7 +46,7 @@ private:
 	float nthroot_inv = 1.f / nth_root;
 
 	// fftw initialization
-	fftwf_dft_r2c_1d fftw = fft_size;
+	fftw::dft_r2c_1d<float> fftw = fft_size;
 
 	// interpolation
 	tk::spline spline;

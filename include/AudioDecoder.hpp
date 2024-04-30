@@ -12,6 +12,7 @@ extern "C"
 }
 
 // class to decode audio from a url into non-planar f32 frames
+// very restrictive as it only allows us to get the audio, nothing else
 class AudioDecoder
 {
 	AVFormatContext *fmtctx = nullptr;
