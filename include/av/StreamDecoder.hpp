@@ -43,7 +43,7 @@ namespace av
 		}
 
 		/**
-		 * Returns a pointer to the internal `AVCodecContext`, so that the caller may configure the decoder before calling `open`.
+		 * Returns a mutable reference to the internal `AVCodecContext`, so that the caller may configure the decoder before calling `open`.
 		 * **Only modify what you need for calling `open`.**
 		 */
 		AVCodecContext *cdctx()
@@ -69,7 +69,7 @@ namespace av
 
 		/**
 		 * @brief Sends a packet to the decoder.
-		 * @param packet packet to send to decoder
+		 * @param packet non-`NULL` pointer to packet to send to decoder. 
 		 * @return whether the send was successful
 		 * @note `true` is also returned in the case that the decoder has
 		 * output frames to return to the caller.
@@ -84,12 +84,6 @@ namespace av
 			if (pkt->stream_index != stream->index)
 				throw std::runtime_error("received packet is not for this stream!");
 			return cd_send_packet(pkt);
-		}
-
-		// Alias for `send_packet`
-		bool operator<<(const AVPacket *const pkt)
-		{
-			return send_packet(pkt);
 		}
 
 		/**

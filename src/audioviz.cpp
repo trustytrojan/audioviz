@@ -229,7 +229,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	if (enabled)
 	{
 		pa_init.emplace();
-		pa_stream.emplace(0, 2, ad.sample_rate(), sample_size);
+		pa_stream.emplace(0, 2, paFloat32, ad.sample_rate(), sample_size);
 	}
 	else
 	{

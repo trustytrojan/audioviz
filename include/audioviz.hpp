@@ -14,7 +14,8 @@
 #include "pa/PortAudio.hpp"
 #include "pa/Stream.hpp"
 
-#include "av/Demuxer.hpp"
+#include "av/MediaFileReader.hpp"
+#include "av/StreamDecoder.hpp"
 
 // will eventually create an `audioviz` namespace,
 // move this class there and call it `stereo_spectrum`.
@@ -40,7 +41,7 @@ private:
 	int sample_size = 3000;
 
 	av::MediaFileReader demuxer;
-	av::StreamDecoder &decoder;
+	av::StreamDecoder decoder;
 
 	AudioDecoder ad;
 	InterleavedAudioBuffer ab = ad.nb_channels();
@@ -92,7 +93,7 @@ private:
 	sf::Clock ps_clock;
 
 	std::optional<pa::PortAudio> pa_init;
-	std::optional<pa::Stream<float>> pa_stream;
+	std::optional<pa::Stream> pa_stream;
 
 public:
 	/**

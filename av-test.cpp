@@ -10,17 +10,17 @@
 #include "include/pa/PortAudio.hpp"
 #include "include/pa/Stream.hpp"
 
-void with_resampling()
+void with_resampling(const char *const url)
 {
-	av::MediaFileReader format("Music/skin.webm");
+	av::MediaFileReader format(url);
 	const auto stream = format.find_best_stream(AVMEDIA_TYPE_AUDIO);
 	av::StreamDecoder decoder(stream);
 
-	std::optional<av::Vector<float>> rs_output_buffer;
+	std::optional<av::Vector<uint8_t>> rs_output_buffer;
 	std::optional<av::Resampler> rs;
 
-	auto cdctx = decoder.cdctx();
-	cdctx->request_sample_fmt = AV_SAMPLE_FMT_FLT;
+	const auto cdctx = decoder.cdctx();
+	cdctx->request_sample_fmt = AV_SAMPLE_FMT_U8;
 	decoder.open();
 
 	if (cdctx->sample_fmt != cdctx->request_sample_fmt)
@@ -32,18 +32,23 @@ void with_resampling()
 
 	pa::PortAudio _;
 	pa::Stream pa_stream(0, decoder.cdpar->ch_layout.nb_channels,
-						 paFloat32,
+						 paUInt8,
 						 decoder.cdpar->sample_rate,
 						 paFramesPerBufferUnspecified);
+
+	std::cout << "requested sample format: " << av_get_sample_fmt_name(cdctx->request_sample_fmt)
+			  << "\ncodec/sample_fmt: " << avcodec_get_name(decoder.codec->id) << '/' << av_get_sample_fmt_name(cdctx->sample_fmt)
+			  << "\nresampling to: " << av_get_sample_fmt_name(cdctx->request_sample_fmt) << '\n';
 
 	while (const auto packet = format.read_packet())
 	{
 		if (packet->stream_index != decoder.stream->index)
 			continue;
-		if (!(decoder << packet))
+		if (!decoder.send_packet(packet))
 			break;
 		while (const auto frame = decoder.receive_frame())
 		{
+			assert(cdctx->sample_fmt == frame->format);
 			if (!rs_output_buffer || !rs)
 				return;
 			rs_output_buffer->resize(frame->nb_samples * frame->ch_layout.nb_channels);
@@ -97,9 +102,9 @@ PaSampleFormat avsf2pasf(const AVSampleFormat av)
 	return pa;
 }
 
-void without_resampling()
+void without_resampling(const char *const url)
 {
-	av::MediaFileReader format("Music/outcome.mp3");
+	av::MediaFileReader format(url);
 	const auto stream = format.find_best_stream(AVMEDIA_TYPE_AUDIO);
 	av::StreamDecoder decoder(stream);
 
@@ -113,13 +118,15 @@ void without_resampling()
 						 decoder.cdpar->sample_rate,
 						 paFramesPerBufferUnspecified);
 
-	std::cout << av_get_sample_fmt_name(cdctx->sample_fmt) << '\n';
+	std::cout << "requested sample format: " << av_get_sample_fmt_name(cdctx->request_sample_fmt) << '\n'
+			  << "codec: " << avcodec_get_name(decoder.codec->id) << '\n'
+			  << "sample format: " << av_get_sample_fmt_name(cdctx->sample_fmt) << '\n';
 
 	while (const auto packet = format.read_packet())
 	{
 		if (packet->stream_index != decoder.stream->index)
 			continue;
-		if (!(decoder << packet))
+		if (!decoder.send_packet(packet))
 			break;
 		while (const auto frame = decoder.receive_frame())
 		{
@@ -132,8 +139,14 @@ void without_resampling()
 	}
 }
 
-int main()
+int main(const int argc, const char *const *const argv)
 {
-	with_resampling();
-	// without_resampling();
+	if (argc < 2)
+	{
+		std::cerr << "media url required\n";
+		return EXIT_FAILURE;
+	}
+
+	with_resampling(argv[1]);
+	// without_resampling(argv[1]);
 }
