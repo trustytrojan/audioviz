@@ -8,6 +8,7 @@ namespace fftw
 	template <typename _Tp>
 	class dft_r2c_1d;
 
+	template <>
 	class dft_r2c_1d<float>
 	{
 		int N;
@@ -51,6 +52,7 @@ namespace fftw
 		int output_size() const { return N / 2 + 1; }
 	};
 
+	template <>
 	class dft_r2c_1d<double>
 	{
 		int N;

@@ -5,17 +5,14 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "AudioDecoder.hpp"
-#include "SpectrumDrawable.hpp"
+#include "StereoSpectrum.hpp"
 #include "MyRenderTexture.hpp"
 #include "ParticleSystem.hpp"
 #include "InterleavedAudioBuffer.hpp"
 
-#include "pa/PortAudio.hpp"
-#include "pa/Stream.hpp"
-
-#include "av/MediaFileReader.hpp"
-#include "av/StreamDecoder.hpp"
+#include "../deps/portaudio-pp/portaudio.hpp"
+#include "../deps/libavpp/include/av/MediaReader.hpp"
+#include "../deps/libavpp/include/av/Resampler.hpp"
 
 // will eventually create an `audioviz` namespace,
 // move this class there and call it `stereo_spectrum`.
@@ -40,11 +37,14 @@ private:
 	const sf::Vector2u size;
 	int sample_size = 3000;
 
-	av::MediaFileReader demuxer;
-	av::StreamDecoder decoder;
+	av::MediaReader _format;
+	av::Stream _stream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
+	av::Decoder _decoder = _stream.create_decoder();
+	av::Resampler _resampler = av::Resampler(
+		&_stream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _stream.sample_rate(),
+		&_stream->codecpar->ch_layout, (AVSampleFormat)_stream->codecpar->format, _stream.sample_rate());
 
-	AudioDecoder ad;
-	InterleavedAudioBuffer ab = ad.nb_channels();
+	InterleavedAudioBuffer ab = _stream.nb_channels();
 
 	// this is a view of the decoded audio in `ab`
 	std::span<float> audio_span;
@@ -56,19 +56,16 @@ private:
 	int framerate = 60;
 
 	// audio frames per video frame
-	int afpvf = ad.sample_rate() / framerate;
+	int afpvf = _stream.sample_rate() / framerate;
 
-	// left and right spectrums
-	SpectrumDrawable
-		sd_left = sample_size,
-		sd_right = sample_size;
+	StereoSpectrum ss = sample_size;
 
 	// particle system
 	ParticleSystem ps;
 
 	// metadata-related fields
 	sf::Font font;
-	sf::Text title_text, artist_text;
+	sf::Text title_text = sf::Text(font, ""), artist_text = sf::Text(font, "");
 	struct _texture_sprite
 	{
 		sf::Texture texture;

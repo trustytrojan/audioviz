@@ -1,20 +1,17 @@
 #include "audioviz.hpp"
 #include <iostream>
+#include "../deps/libavpp/include/av/Frame.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: size(size),
-	  demuxer(media_url),
-	  decoder(demuxer.find_best_stream(AVMEDIA_TYPE_AUDIO)),
-	  ad(media_url),
+	  _format(media_url),
 	  ps(size, 50),
-	  title_text(font, ad.get_metadata_entry("title")),
-	  artist_text(font, ad.get_metadata_entry("artist")),
 	  rt(size, antialiasing)
 {
 	set_text_defaults();
 
 	// for now only stereo is supported
-	if (ad.nb_channels() != 2)
+	if (_stream.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 
 	// default margin around the target
@@ -40,9 +37,42 @@ const std::span<float> &audioviz::current_audio() const
 
 void audioviz::decoder_thread_func()
 {
+	// std::cout << "decoder thread 1\n";
 	pthread_setname_np(pthread_self(), "DecoderThread");
-	while (ad.append_to(ab.buffer()))
-		;
+	// std::cout << "decoder thread 2\n";
+	av::Frame rs_frame;
+	// std::cout << "decoder thread 3\n";
+	rs_frame->ch_layout = _stream->codecpar->ch_layout;
+	// std::cout << "decoder thread 4\n";
+	rs_frame->sample_rate = _stream->codecpar->sample_rate;
+	// std::cout << "decoder thread 5\n";
+	rs_frame->format = AV_SAMPLE_FMT_FLT;
+	// std::cout << "decoder thread 6\n";
+	_decoder.open();
+	// std::cout << "decoder thread 7\n";
+	while (const auto packet = _format.read_packet())
+	{
+		// std::cout << "decoder thread 8\n";
+		if (packet->stream_index != _stream->index)
+		{
+			std::cerr << "wrong stream\n";
+			continue;
+		}
+		// std::cout << "decoder thread 9\n";
+		if (!_decoder.send_packet(packet))
+		{
+			std::cerr << "send_packet returned false\n";
+			break;
+		}
+		// std::cout << "decoder thread 10\n";
+		while (const auto frame = _decoder.receive_frame())
+		{
+			// std::cout << "decoder thread 11\n";
+			_resampler.convert_frame(rs_frame.get(), frame);
+			// std::cout << "decoder thread 12\n";
+			ab.buffer().insert(ab.buffer().end(), (float *)rs_frame->extended_data[0], (float *)rs_frame->extended_data[0] + 2 * rs_frame->nb_samples);
+		}
+	}
 	std::cout << "decoding finished\n";
 }
 
@@ -97,6 +127,14 @@ void audioviz::set_metadata_position(const sf::Vector2f &pos)
 
 void audioviz::set_text_defaults()
 {
+	if (const auto title = _stream.metadata("title"))
+		title_text.setString(title);
+	if (const auto title = _format.metadata("title"))
+		title_text.setString(title);
+	if (const auto artist = _stream.metadata("artist"))
+		artist_text.setString(artist);
+	if (const auto artist = _format.metadata("artist"))
+		artist_text.setString(artist);
 	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
 	artist_text.setStyle(sf::Text::Italic);
 	title_text.setCharacterSize(24);
@@ -105,11 +143,15 @@ void audioviz::set_text_defaults()
 	artist_text.setFillColor({255, 255, 255, 150});
 }
 
+void audioviz::set_margin(const int margin)
+{
+	ss.set_target_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
+}
+
 void audioviz::set_framerate(int framerate)
 {
 	this->framerate = framerate;
-	// afpvf = sf.samplerate() / framerate;
-	afpvf = ad.sample_rate() / framerate;
+	afpvf = _stream.sample_rate() / framerate;
 }
 
 void audioviz::set_background(const std::filesystem::path &image_path, const EffectOptions opts)
@@ -134,40 +176,23 @@ void audioviz::set_background(const std::filesystem::path &image_path, const Eff
 		rt.bg.mult(opts.mult);
 }
 
-void audioviz::set_margin(const int margin)
-{
-	const sf::IntRect
-		left_half{
-			{margin, margin},
-			{(size.x - (2 * margin)) / 2.f - (sd_left.bar.get_spacing() / 2.f), size.y - (2 * margin)}},
-		right_half{
-			{(size.x / 2.f) + (sd_right.bar.get_spacing() / 2.f), margin},
-			{(size.x - (2 * margin)) / 2.f - (sd_right.bar.get_spacing() / 2.f), size.y - (2 * margin)}};
-
-	const auto dist_between_rects = right_half.left - (left_half.left + left_half.width);
-	assert(dist_between_rects == sd_left.bar.get_spacing());
-
-	sd_left.set_target_rect(left_half, true);
-	sd_right.set_target_rect(right_half);
-
-	assert(sd_left.data().size() == sd_right.data().size());
-}
-
 void audioviz::draw_spectrum()
 {
-	sd_left.do_fft(audio_span.data(), 2, 0, true);
-	sd_right.do_fft(audio_span.data(), 2, 1, true);
+	// ss.left().do_fft(audio_span.data(), 2, 0, true);
+	// ss.right().do_fft(audio_span.data(), 2, 1, true);
+	ss.do_fft(audio_span.data());
 	rt.spectrum.original.clear(zero_alpha);
-	rt.spectrum.original.draw(sd_left);
-	rt.spectrum.original.draw(sd_right);
+	// rt.spectrum.original.draw(ss.left());
+	// rt.spectrum.original.draw(ss.right());
+	rt.spectrum.original.draw(ss);
 	rt.spectrum.original.display();
 }
 
 // should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
-	const auto left_data = sd_left.data(),
-			   right_data = sd_right.data();
+	const auto left_data = ss.left().data(),
+			   right_data = ss.right().data();
 	assert(left_data.size() == right_data.size());
 
 	// first quarter of the spectrum is generally bass
@@ -214,8 +239,8 @@ void audioviz::actually_draw_on_target(sf::RenderTarget &target)
 	target.draw(rt.spectrum.blurred.sprite(), sf::BlendAdd);
 
 	// redraw spectrum due to anti-aliased edges retaining original background color
-	target.draw(sd_left);
-	target.draw(sd_right);
+	target.draw(ss.left());
+	target.draw(ss.right());
 
 	// draw metadata
 	if (album_cover.texture.getNativeHandle())
@@ -229,7 +254,8 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	if (enabled)
 	{
 		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, ad.sample_rate(), sample_size);
+		pa_stream.emplace(0, 2, paFloat32, _stream.sample_rate(), sample_size);
+		pa_stream->start();
 	}
 	else
 	{
@@ -288,78 +314,78 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 
 void audioviz::set_bar_width(int width)
 {
-	sd_left.bar.set_width(width);
-	sd_right.bar.set_width(width);
+	ss.left().bar.set_width(width);
+	ss.right().bar.set_width(width);
 }
 
 void audioviz::set_bar_spacing(int spacing)
 {
-	sd_left.bar.set_spacing(spacing);
-	sd_right.bar.set_spacing(spacing);
+	ss.left().bar.set_spacing(spacing);
+	ss.right().bar.set_spacing(spacing);
 }
 
 void audioviz::set_color_mode(SD::ColorMode mode)
 {
-	sd_left.color.set_mode(mode);
-	sd_right.color.set_mode(mode);
+	ss.left().color.set_mode(mode);
+	ss.right().color.set_mode(mode);
 }
 
 void audioviz::set_solid_color(sf::Color color)
 {
-	sd_left.color.set_solid_rgb(color);
-	sd_right.color.set_solid_rgb(color);
+	ss.left().color.set_solid_rgb(color);
+	ss.right().color.set_solid_rgb(color);
 }
 
 void audioviz::set_color_wheel_rate(float rate)
 {
-	sd_left.color.wheel.set_rate(rate);
-	sd_right.color.wheel.set_rate(rate);
+	ss.left().color.wheel.set_rate(rate);
+	ss.right().color.wheel.set_rate(rate);
 }
 
 void audioviz::set_color_wheel_hsv(sf::Vector3f hsv)
 {
-	sd_left.color.wheel.set_hsv(hsv);
-	sd_right.color.wheel.set_hsv(hsv);
+	ss.left().color.wheel.set_hsv(hsv);
+	ss.right().color.wheel.set_hsv(hsv);
 }
 
 void audioviz::set_multiplier(float multiplier)
 {
-	sd_left.set_multiplier(multiplier);
-	sd_right.set_multiplier(multiplier);
+	ss.left().set_multiplier(multiplier);
+	ss.right().set_multiplier(multiplier);
 }
 
 // void audioviz::set_fft_size(int fft_size)
 // {
-// 	sd_left.set_fft_size(fft_size);
-// 	sd_right.set_fft_size(fft_size);
+// 	ss.left().set_fft_size(fft_size);
+// 	ss.right().set_fft_size(fft_size);
 // }
 
 void audioviz::set_interp_type(FS::InterpolationType interp_type)
 {
-	sd_left.set_interp_type(interp_type);
-	sd_right.set_interp_type(interp_type);
+	ss.left().set_interp_type(interp_type);
+	ss.right().set_interp_type(interp_type);
 }
 
 void audioviz::set_scale(FS::Scale scale)
 {
-	sd_left.set_scale(scale);
-	sd_right.set_scale(scale);
+	ss.left().set_scale(scale);
+	ss.right().set_scale(scale);
 }
 
 void audioviz::set_nth_root(int nth_root)
 {
-	sd_left.set_nth_root(nth_root);
-	sd_right.set_nth_root(nth_root);
+	ss.left().set_nth_root(nth_root);
+	ss.right().set_nth_root(nth_root);
 }
 
 void audioviz::set_accum_method(FS::AccumulationMethod method)
 {
-	sd_left.set_accum_method(method);
-	sd_right.set_accum_method(method);
+	ss.left().set_accum_method(method);
+	ss.right().set_accum_method(method);
 }
 
 void audioviz::set_window_func(FS::WindowFunction wf)
 {
-	sd_left.set_window_func(wf);
-	sd_right.set_window_func(wf);
+	ss.left().set_window_func(wf);
+	ss.right().set_window_func(wf);
 }

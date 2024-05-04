@@ -2,6 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 
+// TODO: make a base class called `SpectrumBar`, and have `VerticalPill` implement it
+
 class VerticalPill : public sf::CircleShape
 {
 public:
