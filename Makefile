@@ -1,7 +1,7 @@
 CC = g++
 WFLAGS = -Wall -Wextra -Wno-subobject-linkage -Wno-narrowing
 CFLAGS = $(WFLAGS) -std=gnu++23 -MMD $(if $(release),-O3,-g)
-INCLUDE = -Iinclude
+INCLUDE = -Iinclude -Ideps/libavpp/include -Ideps/portaudio-pp
 LDLIBS = -lfftw3f -lportaudio -lsfml-graphics -lsfml-system -lsfml-window -lglfw -lavformat -lavcodec -lavutil -lswresample
 OBJDIR = obj
 BINDIR = bin
