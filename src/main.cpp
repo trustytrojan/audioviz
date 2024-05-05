@@ -1,7 +1,11 @@
 #include <GLFW/glfw3.h>
-#include <cmath>
 #include <iostream>
 #include "audioviz.hpp"
+
+void av::frame_free(AVFrame *_f)
+{
+	av_frame_free(&_f);
+}
 
 void play(const char *const url)
 {

@@ -1,6 +1,5 @@
 #include "audioviz.hpp"
 #include <iostream>
-#include "../deps/libavpp/include/av/Frame.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: size(size),
