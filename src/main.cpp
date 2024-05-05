@@ -1,6 +1,6 @@
 #include <GLFW/glfw3.h>
 #include <cmath>
-
+#include <iostream>
 #include "audioviz.hpp"
 
 void play(const char *const url)
@@ -38,8 +38,6 @@ void play(const char *const url)
 	}
 
 	av.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
-	// av.set_background("images/obsessed.jpg", {{}, 0.75});
-	// av.set_album_cover("images/obsessed.jpg");
 
 	// TODO: add separate method for applying effects to the background
 

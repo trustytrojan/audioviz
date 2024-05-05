@@ -4,15 +4,13 @@
 #include <optional>
 
 #include <SFML/Graphics.hpp>
+#include <portaudio.hpp>
+#include <av.hpp>
 
 #include "StereoSpectrum.hpp"
 #include "MyRenderTexture.hpp"
 #include "ParticleSystem.hpp"
 #include "InterleavedAudioBuffer.hpp"
-
-#include "../deps/portaudio-pp/portaudio.hpp"
-#include "../deps/libavpp/include/av/MediaReader.hpp"
-#include "../deps/libavpp/include/av/Resampler.hpp"
 
 // will eventually create an `audioviz` namespace,
 // move this class there and call it `stereo_spectrum`.
