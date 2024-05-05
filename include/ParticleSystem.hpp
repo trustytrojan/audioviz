@@ -29,7 +29,7 @@ class ParticleSystem
 {
 	sf::Vector2u target_size;
 	std::vector<Particle> particles;
-	unsigned max_height;
+	unsigned max_height = 0;
 
 	// debugging constructs
 	bool debug;

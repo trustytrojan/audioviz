@@ -14,7 +14,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	if (_stream.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 
-	// default margin around the target
+	// default margin around the spectrum
 	set_margin(10);
 
 	// default metadata position
@@ -37,40 +37,30 @@ const std::span<float> &audioviz::current_audio() const
 
 void audioviz::decoder_thread_func()
 {
-	// std::cout << "decoder thread 1\n";
 	pthread_setname_np(pthread_self(), "DecoderThread");
-	// std::cout << "decoder thread 2\n";
 	av::Frame rs_frame;
-	// std::cout << "decoder thread 3\n";
 	rs_frame->ch_layout = _stream->codecpar->ch_layout;
-	// std::cout << "decoder thread 4\n";
 	rs_frame->sample_rate = _stream->codecpar->sample_rate;
-	// std::cout << "decoder thread 5\n";
 	rs_frame->format = AV_SAMPLE_FMT_FLT;
-	// std::cout << "decoder thread 6\n";
 	_decoder.open();
-	// std::cout << "decoder thread 7\n";
 	while (const auto packet = _format.read_packet())
 	{
-		// std::cout << "decoder thread 8\n";
 		if (packet->stream_index != _stream->index)
 		{
 			std::cerr << "wrong stream\n";
 			continue;
 		}
-		// std::cout << "decoder thread 9\n";
 		if (!_decoder.send_packet(packet))
 		{
 			std::cerr << "send_packet returned false\n";
 			break;
 		}
-		// std::cout << "decoder thread 10\n";
 		while (const auto frame = _decoder.receive_frame())
 		{
-			// std::cout << "decoder thread 11\n";
 			_resampler.convert_frame(rs_frame.get(), frame);
-			// std::cout << "decoder thread 12\n";
-			ab.buffer().insert(ab.buffer().end(), (float *)rs_frame->extended_data[0], (float *)rs_frame->extended_data[0] + 2 * rs_frame->nb_samples);
+			const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
+			const auto nb_floats = 2 * rs_frame->nb_samples;
+			ab.buffer().insert(ab.buffer().end(), data, data + nb_floats);
 		}
 	}
 	std::cout << "decoding finished\n";
@@ -273,6 +263,10 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 
 	// get frames using a span to avoid a copy
 	const int frames_read = ab.read_frames(audio_span, sample_size);
+
+	// nothing left, we are done
+	if (!frames_read)
+		return false;
 
 	if (pa_stream)
 		try // to play the audio

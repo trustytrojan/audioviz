@@ -12,7 +12,6 @@ static _Tp random(const _Tp min, const _Tp max)
 ParticleSystem::ParticleSystem(sf::Vector2u target_size, unsigned particle_count, bool debug)
 	: target_size(target_size),
 	  particles(particle_count),
-	  max_height(target_size.y * 0.15),
 	  debug(debug)
 {
 	for (auto &p : particles)
