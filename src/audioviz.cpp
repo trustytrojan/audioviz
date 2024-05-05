@@ -19,6 +19,21 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 	// default metadata position
 	set_metadata_position({30, 30});
+
+	// if an attached pic is in the format, use it for bg and album cover
+	// clang-format off
+	if (const auto itr = std::ranges::find_if(_format.streams(), [](const av::Stream &s){ return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
+		itr != _format.streams().cend())
+	// clang-format on
+	{
+		const auto &stream = *itr;
+		if (sf::Texture txr; txr.loadFromMemory(stream->attached_pic.data, stream->attached_pic.size))
+		{
+			set_background(txr);
+			album_cover.texture = txr;
+			_set_album_cover();
+		}
+	}
 }
 
 audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
@@ -46,15 +61,9 @@ void audioviz::decoder_thread_func()
 	while (const auto packet = _format.read_packet())
 	{
 		if (packet->stream_index != _stream->index)
-		{
-			std::cerr << "wrong stream\n";
 			continue;
-		}
 		if (!_decoder.send_packet(packet))
-		{
-			std::cerr << "send_packet returned false\n";
 			break;
-		}
 		while (const auto frame = _decoder.receive_frame())
 		{
 			_resampler.convert_frame(rs_frame.get(), frame);
@@ -81,17 +90,22 @@ void audioviz::set_artist_text(const std::string &text)
 	artist_text.setString(text);
 }
 
-void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf::Vector2f desired_size)
+void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf::Vector2f scale_to)
 {
 	if (!album_cover.texture.loadFromFile(image_path))
 		throw std::runtime_error("failed to load album cover: '" + image_path.string() + '\'');
+	_set_album_cover(scale_to);
+}
+
+void audioviz::_set_album_cover(const sf::Vector2f scale_to)
+{
 	album_cover.sprite.setTexture(album_cover.texture, true);
 
 	// using `album_cover.texture`'s size, set the scale on `album_cover.sprite`
 	// such that it will only take up a certain area
 	// widescreen images will end up looking small but it's fine
 	const auto ac_tsize = album_cover.texture.getSize();
-	float scale_factor = std::min(desired_size.x / ac_tsize.x, desired_size.y / ac_tsize.y);
+	float scale_factor = std::min(scale_to.x / ac_tsize.x, scale_to.y / ac_tsize.y);
 	album_cover.sprite.setScale({scale_factor, scale_factor});
 }
 
@@ -146,19 +160,25 @@ void audioviz::set_framerate(int framerate)
 
 void audioviz::set_background(const std::filesystem::path &image_path, const EffectOptions opts)
 {
-	sf::Texture bg_texture;
-	if (!bg_texture.loadFromFile(image_path))
+	sf::Texture txr;
+	if (!txr.loadFromFile(image_path))
 		throw std::runtime_error("failed to load background image: '" + image_path.string() + '\'');
-	sf::Sprite bg_sprite(bg_texture);
+	set_background(txr, opts);
+}
+
+void audioviz::set_background(const sf::Texture &texture, const EffectOptions opts)
+{
+	sf::Sprite sprite(texture);
 
 	// make sure bgTexture fills up the whole screen, and is centered
-	const auto tsize = bg_texture.getSize();
-	bg_sprite.setOrigin({tsize.x / 2, tsize.y / 2});
-	bg_sprite.setPosition({size.x / 2, size.y / 2});
+	const auto tsize = texture.getSize();
+	sprite.setOrigin({tsize.x / 2, tsize.y / 2});
+	sprite.setPosition({size.x / 2, size.y / 2});
 	const auto scale = std::max((float)size.x / tsize.x, (float)size.y / tsize.y);
-	bg_sprite.setScale({scale, scale});
+	sprite.setScale({scale, scale});
 
-	rt.bg.draw(bg_sprite);
+	rt.bg.draw(sprite);
+	rt.bg.display();
 
 	if (opts.blur.hrad && opts.blur.vrad && opts.blur.n_passes)
 		rt.bg.blur(opts.blur.hrad, opts.blur.vrad, opts.blur.n_passes);
@@ -168,12 +188,8 @@ void audioviz::set_background(const std::filesystem::path &image_path, const Eff
 
 void audioviz::draw_spectrum()
 {
-	// ss.left().do_fft(audio_span.data(), 2, 0, true);
-	// ss.right().do_fft(audio_span.data(), 2, 1, true);
 	ss.do_fft(audio_span.data());
 	rt.spectrum.original.clear(zero_alpha);
-	// rt.spectrum.original.draw(ss.left());
-	// rt.spectrum.original.draw(ss.right());
 	rt.spectrum.original.draw(ss);
 	rt.spectrum.original.display();
 }

@@ -126,6 +126,7 @@ public:
 
 	// set background image with optional effects: blur and color-multiply
 	void set_background(const std::filesystem::path &image_path, EffectOptions options = {{10, 10, 25}, 0});
+	void set_background(const sf::Texture &texture, EffectOptions options = {{10, 10, 25}, 0});
 
 	// set margins around the output size for the spectrum to respect
 	void set_margin(int margin);
@@ -166,4 +167,5 @@ private:
 	void blur_spectrum();
 	void blur_particles();
 	void actually_draw_on_target(sf::RenderTarget &target);
+	void _set_album_cover(sf::Vector2f scale_to = {150, 150});
 };

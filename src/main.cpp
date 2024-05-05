@@ -1,7 +1,6 @@
 #include <GLFW/glfw3.h>
 #include <cmath>
 
-#include "RenderStats.hpp"
 #include "audioviz.hpp"
 
 void play(const char *const url)
@@ -14,7 +13,7 @@ void play(const char *const url)
 
 	// no need to provide context-settings for anti-aliasing
 	// anti-aliasing is built in to audioviz
-	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed);
+	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed, sf::ContextSettings(0, 0, 4));
 
 	// this is REQUIRED to ensure smooth playback
 	window.setVerticalSyncEnabled(true);
@@ -39,24 +38,21 @@ void play(const char *const url)
 	}
 
 	av.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
-	av.set_background("images/obsessed.jpg", {{}, 0.75});
-	av.set_album_cover("images/obsessed.jpg");
+	// av.set_background("images/obsessed.jpg", {{}, 0.75});
+	// av.set_album_cover("images/obsessed.jpg");
+
+	// TODO: add separate method for applying effects to the background
 
 	// need to call after setting album cover to update text position
 	// should find a way to remove this hassle
 	av.set_metadata_position({30, 30});
 
-	RenderStats stats;
-	stats.printHeader();
 	while (window.isOpen())
 	{
-		stats.restartClock();
 		window.clear();
 		if (!av.draw_frame(window))
 			break;
 		window.display();
-		stats.updateAndPrint();
-
 		while (const auto event = window.pollEvent())
 			if (event.is<sf::Event::Closed>())
 				window.close();
