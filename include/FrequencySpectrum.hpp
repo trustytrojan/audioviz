@@ -45,8 +45,6 @@ private:
 	int nth_root = 2;
 	float nthroot_inv = 1.f / nth_root;
 
-	// fftw initialization
-	fftw::dft_r2c_1d<float> fftw = fft_size;
 
 	// interpolation
 	tk::spline spline;
@@ -77,6 +75,8 @@ private:
 	} scale_max;
 
 public:
+	fftw::dft_r2c_1d<float> fftw = fft_size;
+
 	/**
 	 * Initialize frequency spectrum renderer.
 	 * @param fft_size sample chunk size fed into the `transform` method

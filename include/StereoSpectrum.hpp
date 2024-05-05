@@ -6,12 +6,12 @@ class StereoSpectrum : public sf::Drawable
 {
 	int sample_size;
 
+public:
 	// left and right spectrums
 	SpectrumDrawable
 		sd_left = sample_size,
 		sd_right = sample_size;
 
-public:
 	StereoSpectrum(int sample_size);
 	void set_target_rect(const sf::IntRect &rect);
 	void do_fft(const float *const stereo_audio);

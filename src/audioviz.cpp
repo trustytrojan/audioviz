@@ -33,6 +33,16 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 			_set_album_cover();
 		}
 	}
+
+	// audio decoding initialization
+	rs_frame->ch_layout = _stream->codecpar->ch_layout;
+	rs_frame->sample_rate = _stream->codecpar->sample_rate;
+	rs_frame->format = AV_SAMPLE_FMT_FLT;
+	_decoder.open();
+
+	// FOR SOME REASON, THIS IS NECESSARY ON WEBM/OPUS CONTAINERS
+	// OTHERWISE PACKET->PTS GOES UP WAY TOO FAST, CAUSING AN EARLY EOF
+	_format.seek_file(-1, -1, 0, 0, AVSEEK_FLAG_ANY);
 }
 
 audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
@@ -43,41 +53,6 @@ audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
 audioviz::_rt::_blur::_blur(const sf::Vector2u size, const int antialiasing)
 	: original(size, sf::ContextSettings(0, 0, antialiasing)),
 	  blurred(size) {}
-
-const std::span<float> &audioviz::current_audio() const
-{
-	return audio_span;
-}
-
-void audioviz::decoder_thread_func()
-{
-	pthread_setname_np(pthread_self(), "DecoderThread");
-	av::Frame rs_frame;
-	rs_frame->ch_layout = _stream->codecpar->ch_layout;
-	rs_frame->sample_rate = _stream->codecpar->sample_rate;
-	rs_frame->format = AV_SAMPLE_FMT_FLT;
-	_decoder.open();
-	while (const auto packet = _format.read_packet())
-	{
-		if (packet->stream_index != _stream->index)
-			continue;
-		if (!_decoder.send_packet(packet))
-			break;
-		while (const auto frame = _decoder.receive_frame())
-		{
-			_resampler.convert_frame(rs_frame.get(), frame);
-			const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
-			const auto nb_floats = 2 * rs_frame->nb_samples;
-			ab.buffer().insert(ab.buffer().end(), data, data + nb_floats);
-		}
-	}
-	std::cout << "decoding finished\n";
-}
-
-bool audioviz::decoder_thread_finished()
-{
-	return decoder_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-}
 
 void audioviz::set_title_text(const std::string &text)
 {
@@ -98,13 +73,21 @@ void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf
 
 void audioviz::_set_album_cover(const sf::Vector2f scale_to)
 {
-	album_cover.sprite.setTexture(album_cover.texture, true);
+	// if image is non-square, choose a square textureRect in the center of the image
+	auto tsize = (sf::Vector2i)album_cover.texture.getSize();
+	if (tsize.x != tsize.y)
+	{
+		const auto square_size = std::min(tsize.x, tsize.y);
+		album_cover.sprite.setTextureRect({{tsize.x / 2.f - square_size / 2.f, 0},
+										   {square_size, square_size}});
+	}
+	else
+		album_cover.sprite.setTextureRect({{}, tsize});
 
-	// using `album_cover.texture`'s size, set the scale on `album_cover.sprite`
-	// such that it will only take up a certain area
-	// widescreen images will end up looking small but it's fine
-	const auto ac_tsize = album_cover.texture.getSize();
-	float scale_factor = std::min(scale_to.x / ac_tsize.x, scale_to.y / ac_tsize.y);
+	tsize = album_cover.sprite.getTextureRect().getSize();
+
+	// scale sprite to `scale_to`
+	float scale_factor = std::min(scale_to.x / tsize.x, scale_to.y / tsize.y);
 	album_cover.sprite.setScale({scale_factor, scale_factor});
 }
 
@@ -118,12 +101,12 @@ void audioviz::set_metadata_position(const sf::Vector2f &pos)
 {
 	album_cover.sprite.setPosition(pos);
 
-	auto ac_size = album_cover.texture.getSize();
+	auto ac_size = album_cover.sprite.getTextureRect().getSize();
 	const auto ac_scale = album_cover.sprite.getScale();
 	ac_size.x *= ac_scale.x;
 	ac_size.y *= ac_scale.y;
 
-	const sf::Vector2f text_pos{pos.x + ac_size.x + 10, pos.y};
+	const sf::Vector2f text_pos{pos.x + ac_size.x + 10 * bool(ac_size.x), pos.y};
 	title_text.setPosition({text_pos.x, text_pos.y});
 	artist_text.setPosition({text_pos.x, text_pos.y + title_text.getCharacterSize() + 5});
 }
@@ -187,7 +170,7 @@ void audioviz::set_background(const sf::Texture &texture, const EffectOptions op
 
 void audioviz::draw_spectrum()
 {
-	ss.do_fft(audio_span.data());
+	ss.do_fft(audio_buffer.data());
 	rt.spectrum.original.clear(zero_alpha);
 	rt.spectrum.original.draw(ss);
 	rt.spectrum.original.display();
@@ -269,34 +252,65 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	}
 }
 
+void audioviz::prepare_audio()
+{
+	while ((int)audio_buffer.size() < 2 * sample_size)
+	{
+		const auto packet = _format.read_packet();
+
+		if (!packet)
+		{
+			std::cerr << "packet is null; format probably reached eof\n";
+			return;
+		}
+
+		if (packet->stream_index != _stream->index)
+		{
+			std::cerr << "skipping packet from stream " << packet->stream_index << '\n';
+			continue;
+		}
+
+		std::cerr << (packet->pts * av_q2d(_stream->time_base)) << '/' << (_stream.duration_sec()) << '\r';
+
+		if (!_decoder.send_packet(packet))
+		{
+			std::cerr << "decoder has been flushed\n";
+			return;
+		}
+
+		while (const auto frame = _decoder.receive_frame())
+		{
+			_resampler.convert_frame(rs_frame.get(), frame);
+			const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
+			const auto nb_floats = 2 * rs_frame->nb_samples;
+			audio_buffer.insert(audio_buffer.end(), data, data + nb_floats);
+		}
+	}
+}
+
+void audioviz::play_audio()
+{
+	try // to play the audio
+	{
+		pa_stream->write(audio_buffer.data(), afpvf);
+	}
+	catch (const pa::Error &e)
+	{
+		if (e.code != paOutputUnderflowed)
+			throw;
+		std::cerr << e.what() << '\n';
+	}
+}
+
 bool audioviz::draw_frame(sf::RenderTarget &target)
 {
-	// wait for enough audio to be decoded
-	// or, if decoding finished, just use what we can get
-	while (!decoder_thread_finished() && (int)ab.frames_available() < sample_size)
-		;
-
-	// get frames using a span to avoid a copy
-	const int frames_read = ab.read_frames(audio_span, sample_size);
-
-	// nothing left, we are done
-	if (!frames_read)
-		return false;
+	prepare_audio();
 
 	if (pa_stream)
-		try // to play the audio
-		{
-			pa_stream->write(audio_span.data(), afpvf);
-		}
-		catch (const pa::Error &e)
-		{
-			if (e.code != paOutputUnderflowed)
-				throw;
-			std::cerr << e.what() << '\n';
-		}
+		play_audio();
 
-	// stop if we don't have enough samples to produce a frame
-	if (frames_read != sample_size)
+	// we don't have enough samples for fft; end here
+	if ((int)audio_buffer.size() < 2 * sample_size)
 		return false;
 
 	draw_spectrum();
@@ -315,8 +329,8 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 
 	actually_draw_on_target(target);
 
-	// seek audio backwards
-	ab.seek(afpvf - sample_size, SEEK_CUR);
+	// THE IMPORTANT PART
+	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * afpvf);
 
 	return true;
 }

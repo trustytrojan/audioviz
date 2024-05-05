@@ -1,7 +1,7 @@
 #pragma once
 
-#include <future>
 #include <optional>
+#include <deque>
 
 #include <SFML/Graphics.hpp>
 #include <portaudio.hpp>
@@ -10,7 +10,6 @@
 #include "StereoSpectrum.hpp"
 #include "MyRenderTexture.hpp"
 #include "ParticleSystem.hpp"
-#include "InterleavedAudioBuffer.hpp"
 
 // will eventually create an `audioviz` namespace,
 // move this class there and call it `stereo_spectrum`.
@@ -34,6 +33,8 @@ private:
 
 	const sf::Vector2u size;
 	int sample_size = 3000;
+	std::vector<float> audio_buffer;
+	av::Frame rs_frame;
 
 	av::MediaReader _format;
 	av::Stream _stream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
@@ -41,14 +42,6 @@ private:
 	av::Resampler _resampler = av::Resampler(
 		&_stream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _stream.sample_rate(),
 		&_stream->codecpar->ch_layout, (AVSampleFormat)_stream->codecpar->format, _stream.sample_rate());
-
-	InterleavedAudioBuffer ab = _stream.nb_channels();
-
-	// this is a view of the decoded audio in `ab`
-	std::span<float> audio_span;
-
-	// offload audio decoding to a separate thread using `std::async`
-	std::future<void> decoder_future = std::async(std::launch::async, &audioviz::decoder_thread_func, this);
 
 	// framerate
 	int framerate = 60;
@@ -156,8 +149,7 @@ public:
 	void set_window_func(FS::WindowFunction wf);
 
 private:
-	void play_audio();
-	void decoder_thread_func();
+	// void decoder_thread_func();
 	bool decoder_thread_finished();
 	void set_text_defaults();
 	void draw_spectrum();
@@ -166,4 +158,6 @@ private:
 	void blur_particles();
 	void actually_draw_on_target(sf::RenderTarget &target);
 	void _set_album_cover(sf::Vector2f scale_to = {150, 150});
+	void prepare_audio();
+	void play_audio();
 };
