@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <deque>
+#include <list>
 
 #include <SFML/Graphics.hpp>
 #include <portaudio.hpp>
@@ -26,7 +27,7 @@ private:
 		struct
 		{
 			float hrad = 10, vrad = 10;
-			int n_passes = 25;
+			int n_passes = 20;
 		} blur;
 		float mult = 0;
 	};
@@ -37,18 +38,26 @@ private:
 	av::Frame rs_frame;
 
 	av::MediaReader _format;
-	av::Stream _stream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
-	av::Decoder _decoder = _stream.create_decoder();
+
+	av::Stream _astream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
+	av::Decoder _adecoder = _astream.create_decoder();
 	av::Resampler _resampler = av::Resampler(
-		&_stream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _stream.sample_rate(),
-		&_stream->codecpar->ch_layout, (AVSampleFormat)_stream->codecpar->format, _stream.sample_rate());
+		&_astream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _astream.sample_rate(),
+		&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate());
+
+	std::optional<av::Stream> _vstream;
+	std::optional<av::Decoder> _vdecoder;
+	std::optional<av::Scaler> _scaler;
+	std::optional<av::Frame> _scaled_frame;
+	std::optional<std::list<sf::Texture>> _frame_queue;
 
 	// framerate
 	int framerate = 60;
 
 	// audio frames per video frame
-	int afpvf = _stream.sample_rate() / framerate;
+	int afpvf = _astream.sample_rate() / framerate;
 
+	// stereo spectrum!
 	StereoSpectrum ss = sample_size;
 
 	// particle system
@@ -158,6 +167,6 @@ private:
 	void blur_particles();
 	void actually_draw_on_target(sf::RenderTarget &target);
 	void _set_album_cover(sf::Vector2f scale_to = {150, 150});
-	void prepare_audio();
+	void decode_media();
 	void play_audio();
 };

@@ -2,10 +2,8 @@
 #include <iostream>
 #include "audioviz.hpp"
 
-void av::frame_free(AVFrame *_f)
-{
-	av_frame_free(&_f);
-}
+// will fix this eventually by making libavpp a compiled library
+#include "../deps/libavpp/src/av/Util.cpp"
 
 void play(const char *const url)
 {

@@ -10,7 +10,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	set_text_defaults();
 
 	// for now only stereo is supported
-	if (_stream.nb_channels() != 2)
+	if (_astream.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 
 	// default margin around the spectrum
@@ -21,8 +21,8 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 	// if an attached pic is in the format, use it for bg and album cover
 	// clang-format off
-	if (const auto itr = std::ranges::find_if(_format.streams(), [](const av::Stream &s){ return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
-		itr != _format.streams().cend())
+	if (const auto itr = std::ranges::find_if(_format.streams, [](const av::Stream &s){ return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
+		itr != _format.streams.cend())
 	// clang-format on
 	{
 		const auto &stream = *itr;
@@ -34,15 +34,50 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 		}
 	}
 
+	try
+	{
+		auto _s = _format.find_best_stream(AVMEDIA_TYPE_VIDEO);
+		// we don't want to re-decode the attached pic stream
+		if (!(_s->disposition & AV_DISPOSITION_ATTACHED_PIC))
+		{
+			_vstream = _s;
+			_vdecoder.emplace(avcodec_find_decoder(_s->codecpar->codec_id)).open();
+			_scaler.emplace(av::nearest_multiple_8(_s->codecpar->width),
+							_s->codecpar->height,
+							(AVPixelFormat)_s->codecpar->format,
+							size.x, size.y, AV_PIX_FMT_RGBA);
+			_scaled_frame.emplace();
+			_frame_queue.emplace();
+		}
+	}
+	catch (const av::Error &e)
+	{
+		switch (e.errnum)
+		{
+		case AVERROR_STREAM_NOT_FOUND:
+			std::cerr << "video stream not found\n";
+			break;
+		case AVERROR_DECODER_NOT_FOUND:
+			std::cout << "video decoder not found\n";
+			break;
+		default:
+			throw;
+		}
+	}
+
 	// audio decoding initialization
-	rs_frame->ch_layout = _stream->codecpar->ch_layout;
-	rs_frame->sample_rate = _stream->codecpar->sample_rate;
+	rs_frame->ch_layout = _astream->codecpar->ch_layout;
+	rs_frame->sample_rate = _astream->codecpar->sample_rate;
 	rs_frame->format = AV_SAMPLE_FMT_FLT;
-	_decoder.open();
+	_adecoder.open();
 
 	// FOR SOME REASON, THIS IS NECESSARY ON WEBM/OPUS CONTAINERS
 	// OTHERWISE PACKET->PTS GOES UP WAY TOO FAST, CAUSING AN EARLY EOF
 	_format.seek_file(-1, -1, 0, 0, AVSEEK_FLAG_ANY);
+
+	std::cout << _astream->index << '\n';
+	if (_vstream)
+		std::cout << _vstream->get()->index << '\n';
 }
 
 audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
@@ -113,11 +148,11 @@ void audioviz::set_metadata_position(const sf::Vector2f &pos)
 
 void audioviz::set_text_defaults()
 {
-	if (const auto title = _stream.metadata("title"))
+	if (const auto title = _astream.metadata("title"))
 		title_text.setString(title);
 	if (const auto title = _format.metadata("title"))
 		title_text.setString(title);
-	if (const auto artist = _stream.metadata("artist"))
+	if (const auto artist = _astream.metadata("artist"))
 		artist_text.setString(artist);
 	if (const auto artist = _format.metadata("artist"))
 		artist_text.setString(artist);
@@ -137,7 +172,7 @@ void audioviz::set_margin(const int margin)
 void audioviz::set_framerate(int framerate)
 {
 	this->framerate = framerate;
-	afpvf = _stream.sample_rate() / framerate;
+	afpvf = _astream.sample_rate() / framerate;
 }
 
 void audioviz::set_background(const std::filesystem::path &image_path, const EffectOptions opts)
@@ -218,6 +253,16 @@ void audioviz::blur_particles()
 void audioviz::actually_draw_on_target(sf::RenderTarget &target)
 {
 	// layer everything together
+	if (_vstream && !_frame_queue->empty())
+	{
+		rt.bg.draw(sf::Sprite(_frame_queue->front()));
+		// _frame_queue->erase(_frame_queue->begin());
+		_frame_queue->pop_front();
+		rt.bg.display();
+		// rt.bg.blur(5, 5, 10); // anything > 10 is quite slow
+		// rt.bg.mult(0.8);
+	}
+
 	target.draw(rt.bg.sprite());
 	target.draw(rt.particles.blurred.sprite(), sf::BlendAdd);
 	target.draw(rt.particles.original.sprite(), sf::BlendAdd);
@@ -242,7 +287,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	if (enabled)
 	{
 		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, _stream.sample_rate(), sample_size);
+		pa_stream.emplace(0, 2, paFloat32, _astream.sample_rate(), sample_size);
 		pa_stream->start();
 	}
 	else
@@ -252,8 +297,9 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	}
 }
 
-void audioviz::prepare_audio()
+void audioviz::decode_media()
 {
+	// while we don't have enough audio samples
 	while ((int)audio_buffer.size() < 2 * sample_size)
 	{
 		const auto packet = _format.read_packet();
@@ -264,26 +310,48 @@ void audioviz::prepare_audio()
 			return;
 		}
 
-		if (packet->stream_index != _stream->index)
+		// const auto &stream = _format.streams[packet->stream_index];
+		// std::cerr << stream->index << ": " << (packet->pts * av_q2d(stream->time_base)) << '/' << stream.duration_sec() << '\n';
+
+		if (packet->stream_index == _astream->index)
 		{
-			std::cerr << "skipping packet from stream " << packet->stream_index << '\n';
-			continue;
+			if (!_adecoder.send_packet(packet))
+			{
+				std::cerr << "audio decoder has been flushed\n";
+				continue;
+			}
+
+			while (const auto frame = _adecoder.receive_frame())
+			{
+				_resampler.convert_frame(rs_frame.get(), frame);
+				const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
+				const auto nb_floats = 2 * rs_frame->nb_samples;
+				audio_buffer.insert(audio_buffer.end(), data, data + nb_floats);
+			}
 		}
-
-		std::cerr << (packet->pts * av_q2d(_stream->time_base)) << '/' << (_stream.duration_sec()) << '\r';
-
-		if (!_decoder.send_packet(packet))
+		else if (_vstream && packet->stream_index == _vstream->get()->index)
 		{
-			std::cerr << "decoder has been flushed\n";
-			return;
-		}
+			// we can access all of the video-related optionals in this block
 
-		while (const auto frame = _decoder.receive_frame())
-		{
-			_resampler.convert_frame(rs_frame.get(), frame);
-			const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
-			const auto nb_floats = 2 * rs_frame->nb_samples;
-			audio_buffer.insert(audio_buffer.end(), data, data + nb_floats);
+			if (!_vdecoder->send_packet(packet))
+			{
+				std::cerr << "video decoder has been flushed\n";
+				continue;
+			}
+
+			while (const auto frame = _vdecoder->receive_frame())
+			{
+				_scaler->scale_frame(_scaled_frame->get(), frame);
+				// put a frame into an sf::Texture, then put that into a frame queue.
+				// we are going to be reading more packets than usual since
+				// we need more audio samples than is provided by one audio packet.
+
+				// resize manully to use the newly allocated sf::Texture in-place
+				_frame_queue->resize(_frame_queue->size() + 1);
+				if (!_frame_queue->back().create({_scaled_frame->get()->width, _scaled_frame->get()->height}))
+					throw std::runtime_error("failed to create texture!");
+				_frame_queue->back().update(_scaled_frame->get()->data[0]);
+			}
 		}
 	}
 }
@@ -304,7 +372,7 @@ void audioviz::play_audio()
 
 bool audioviz::draw_frame(sf::RenderTarget &target)
 {
-	prepare_audio();
+	decode_media();
 
 	if (pa_stream)
 		play_audio();
@@ -318,7 +386,7 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 
 	if (framerate == 60)
 		draw_particles();
-	else if (ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60.f))
+	else if (ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60))
 	{
 		// keep the tickrate of the particles at 60hz for non-60fps output
 		draw_particles();
@@ -326,7 +394,6 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 	}
 
 	blur_particles();
-
 	actually_draw_on_target(target);
 
 	// THE IMPORTANT PART
