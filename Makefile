@@ -40,7 +40,7 @@ clear:
 install:
 	cp bin/a.out /usr/local/bin/audioviz
 
+.PHONY: all makedirs clean clear install
+
 # Include the dependency files
 -include $(DEPS)
-
-.PHONY: all makedirs clean
