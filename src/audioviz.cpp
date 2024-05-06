@@ -74,10 +74,6 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	// FOR SOME REASON, THIS IS NECESSARY ON WEBM/OPUS CONTAINERS
 	// OTHERWISE PACKET->PTS GOES UP WAY TOO FAST, CAUSING AN EARLY EOF
 	_format.seek_file(-1, -1, 0, 0, AVSEEK_FLAG_ANY);
-
-	std::cout << _astream->index << '\n';
-	if (_vstream)
-		std::cout << _vstream->get()->index << '\n';
 }
 
 audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
