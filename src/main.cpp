@@ -2,6 +2,7 @@
 #include <iostream>
 #include "audioviz.hpp"
 
+// required to fix multiple definition errors
 // will fix this eventually by making libavpp a compiled library
 #include "../deps/libavpp/src/av/Util.cpp"
 
