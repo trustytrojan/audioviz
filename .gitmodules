@@ -1,0 +1,6 @@
+[submodule "libavpp"]
+	path = deps/libavpp
+	url = https://github.com/trustytrojan/libavpp
+[submodule "deps/portaudio-pp"]
+	path = deps/portaudio-pp
+	url = https://github.com/trustytrojan/portaudio-pp
