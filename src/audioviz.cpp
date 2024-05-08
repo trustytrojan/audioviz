@@ -21,8 +21,8 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 	// if an attached pic is in the format, use it for bg and album cover
 	// clang-format off
-	if (const auto itr = std::ranges::find_if(_format.streams, [](const av::Stream &s){ return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
-		itr != _format.streams.cend())
+	if (const auto itr = std::ranges::find_if(_format.streams(), [](const av::Stream &s){ return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
+		itr != _format.streams().cend())
 	// clang-format on
 	{
 		const auto &stream = *itr;
@@ -168,7 +168,7 @@ void audioviz::set_margin(const int margin)
 void audioviz::set_framerate(int framerate)
 {
 	this->framerate = framerate;
-	afpvf = _astream.sample_rate() / framerate;
+	_afpvf = _astream.sample_rate() / framerate;
 }
 
 void audioviz::set_background(const std::filesystem::path &image_path, const EffectOptions opts)
@@ -223,7 +223,7 @@ void audioviz::draw_particles()
 	const auto avg = (left_max + right_max) / 2;
 
 	// cbrt to ease the sudden-ness of the particles' speed increase
-	const auto speed_increase = cbrtf(size.y * avg);
+	const auto speed_increase = sqrtf(size.y * avg) / 2;
 
 	rt.particles.original.clear(zero_alpha);
 	ps.draw(rt.particles.original, {0, -speed_increase});
@@ -252,7 +252,6 @@ void audioviz::actually_draw_on_target(sf::RenderTarget &target)
 	if (_vstream && !_frame_queue->empty())
 	{
 		rt.bg.draw(sf::Sprite(_frame_queue->front()));
-		// _frame_queue->erase(_frame_queue->begin());
 		_frame_queue->pop_front();
 		rt.bg.display();
 		// rt.bg.blur(5, 5, 10); // anything > 10 is quite slow
@@ -356,7 +355,7 @@ void audioviz::play_audio()
 {
 	try // to play the audio
 	{
-		pa_stream->write(audio_buffer.data(), afpvf);
+		pa_stream->write(audio_buffer.data(), _afpvf);
 	}
 	catch (const pa::Error &e)
 	{
@@ -393,7 +392,7 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 	actually_draw_on_target(target);
 
 	// THE IMPORTANT PART
-	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * afpvf);
+	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf);
 
 	return true;
 }

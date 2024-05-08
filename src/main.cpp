@@ -6,19 +6,23 @@
 // will fix this eventually by making libavpp a compiled library
 #include "../deps/libavpp/src/av/Util.cpp"
 
+std::ostream &operator<<(std::ostream &ostr, const AVRational &r)
+{
+	return ostr << r.num << '/' << r.den;
+}
+
+static const sf::ContextSettings ctx(0, 0, 4);
+
 void play(const char *const url)
 {
 	const sf::Vector2u size{1280, 720};
-	audioviz av(size, url);
 
-	// enable audio playback using portaudio
-	av.set_audio_playback_enabled(true);
+	audioviz viz(size, url);
+	viz.set_audio_playback_enabled(true);
+	viz.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	viz.set_metadata_position({30, 30});
 
-	// no need to provide context-settings for anti-aliasing
-	// anti-aliasing is built in to audioviz
-	sf::RenderWindow window(sf::VideoMode(size), "audioviz-sfml", sf::Style::Titlebar, sf::State::Windowed, sf::ContextSettings(0, 0, 4));
-
-	// this is REQUIRED to ensure smooth playback
+	sf::RenderWindow window(sf::VideoMode(size), "audioviz", sf::Style::Titlebar, sf::State::Windowed, ctx);
 	window.setVerticalSyncEnabled(true);
 
 	{ // set framerate using display refresh rate (since we need vsync)
@@ -36,33 +40,78 @@ void play(const char *const url)
 		const auto mode = glfwGetVideoMode(monitor);
 		if (!mode)
 			throwGlfwError("glfwGetVideoMode");
-		av.set_framerate(mode->refreshRate);
+		viz.set_framerate(mode->refreshRate);
 		glfwTerminate();
 	}
 
-	av.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
-
-	// TODO: add separate method for applying effects to the background
-
-	// need to call after setting album cover to update text position
-	// should find a way to remove this hassle
-	av.set_metadata_position({30, 30});
-
-	while (window.isOpen())
+	while (window.isOpen() && viz.draw_frame(window))
 	{
-		window.clear();
-		if (!av.draw_frame(window))
-			break;
 		window.display();
 		while (const auto event = window.pollEvent())
+		{
 			if (event.is<sf::Event::Closed>())
 				window.close();
+		}
 	}
 }
 
-int main(const int argc, const char *const *const argv)
+class audioviz_encoder
 {
-	if (argc < 2 || !argv[1] || !*argv[1])
+	const sf::Vector2u size;
+	audioviz viz;
+	FILE *ffmpeg;
+
+public:
+	audioviz_encoder(sf::Vector2u size, const char *const url, const char *const out_url)
+		: size(size),
+		  viz(size, url)
+	{
+		std::ostringstream ss;
+
+		// clang-format off
+		ss << "ffmpeg -hide_banner -y"
+			" -f rawvideo -pix_fmt rgba -s:v " << size.x << 'x' << size.y << " -r 60 -i -"
+			" -i '" << url << "'"
+			" -c:v h264 -c:a copy " << out_url;
+		// clang-format on
+
+		ffmpeg = popen(ss.str().c_str(), "w");
+		setbuf(ffmpeg, NULL);
+
+		viz.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+		viz.set_metadata_position({30, 30});
+	}
+
+	void start()
+	{
+		MyRenderTexture rt(size, ctx);
+
+		while (viz.draw_frame(rt))
+		{
+			rt.display();
+			fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
+		}
+	}
+
+	void start_window()
+	{
+		sf::RenderWindow window(sf::VideoMode(size), "encoder", sf::Style::Titlebar, sf::State::Windowed, ctx);
+		sf::Texture txr;
+		if (!txr.create(size))
+			throw std::runtime_error("failed to create texture");
+
+		while (viz.draw_frame(window))
+		{
+			window.display();
+			txr.update(window);
+			fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
+		}
+	}
+};
+
+int main(const int, const char *const *const argv)
+{
+	if (!argv[1])
 	{
 		std::cerr << "media url required\n";
 		return EXIT_FAILURE;
@@ -70,7 +119,10 @@ int main(const int argc, const char *const *const argv)
 
 	try
 	{
-		play(argv[1]);
+		if (argv[2] && !strcmp(argv[2], "--encode"))
+			audioviz_encoder({1280, 720}, argv[1], "out.mp4").start();
+		else
+			play(argv[1]);
 	}
 	catch (const std::exception &e)
 	{

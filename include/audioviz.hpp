@@ -12,6 +12,8 @@
 #include "MyRenderTexture.hpp"
 #include "ParticleSystem.hpp"
 
+// TODO: add separate method for applying effects to the background
+
 // will eventually create an `audioviz` namespace,
 // move this class there and call it `stereo_spectrum`.
 class audioviz
@@ -55,7 +57,7 @@ private:
 	int framerate = 60;
 
 	// audio frames per video frame
-	int afpvf = _astream.sample_rate() / framerate;
+	int _afpvf = _astream.sample_rate() / framerate;
 
 	// stereo spectrum!
 	StereoSpectrum ss = sample_size;
@@ -108,7 +110,10 @@ public:
 	/**
 	 * @return the chunk of audio used to produce the last frame
 	 */
-	const std::span<float> &current_audio() const;
+	const std::vector<float> &current_audio() const { return audio_buffer; }
+
+	const av::Stream &astream() const { return _astream; };
+	int afpvf() const { return _afpvf; }
 
 	// setters
 
