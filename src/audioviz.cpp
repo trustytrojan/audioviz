@@ -71,9 +71,21 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	rs_frame->format = AV_SAMPLE_FMT_FLT;
 	_adecoder.open();
 
-	// FOR SOME REASON, THIS IS NECESSARY ON WEBM/OPUS CONTAINERS
-	// OTHERWISE PACKET->PTS GOES UP WAY TOO FAST, CAUSING AN EARLY EOF
-	_format.seek_file(-1, -1, 0, 0, AVSEEK_FLAG_ANY);
+	// complete fucking bs!
+	// no real solution for this!
+	// will need to keep adding more cases as i test with more formats!
+	switch (_adecoder->codec_id)
+	{
+	case AV_CODEC_ID_MP3:
+		_format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
+		break;
+	case AV_CODEC_ID_OPUS:
+		if (!_vstream)
+			_format.seek_file(-1, 0, 0, 0, AVSEEK_FLAG_BYTE);
+		break;
+	default:
+		break;
+	}
 }
 
 audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
@@ -104,22 +116,8 @@ void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf
 
 void audioviz::_set_album_cover(const sf::Vector2f scale_to)
 {
-	// if image is non-square, choose a square textureRect in the center of the image
-	auto tsize = (sf::Vector2i)album_cover.texture.getSize();
-	if (tsize.x != tsize.y)
-	{
-		const auto square_size = std::min(tsize.x, tsize.y);
-		album_cover.sprite.setTextureRect({{tsize.x / 2.f - square_size / 2.f, 0},
-										   {square_size, square_size}});
-	}
-	else
-		album_cover.sprite.setTextureRect({{}, tsize});
-
-	tsize = album_cover.sprite.getTextureRect().getSize();
-
-	// scale sprite to `scale_to`
-	float scale_factor = std::min(scale_to.x / tsize.x, scale_to.y / tsize.y);
-	album_cover.sprite.setScale({scale_factor, scale_factor});
+	album_cover.sprite.capture_centered_square_view();
+	album_cover.sprite.set_size(scale_to);
 }
 
 void audioviz::set_text_font(const std::filesystem::path &path)
@@ -128,7 +126,7 @@ void audioviz::set_text_font(const std::filesystem::path &path)
 		throw std::runtime_error("failed to load font: '" + path.string() + '\'');
 }
 
-void audioviz::set_metadata_position(const sf::Vector2f &pos)
+void audioviz::set_metadata_position(const sf::Vector2f pos)
 {
 	album_cover.sprite.setPosition(pos);
 
@@ -179,24 +177,24 @@ void audioviz::set_background(const std::filesystem::path &image_path, const Eff
 	set_background(txr, opts);
 }
 
-void audioviz::set_background(const sf::Texture &texture, const EffectOptions opts)
+void audioviz::set_background(const sf::Texture &texture, const EffectOptions fx)
 {
-	sf::Sprite sprite(texture);
+	MySprite spr(texture);
+	spr.capture_centered_square_view();
+	spr.fill_screen(size);
 
-	// make sure bgTexture fills up the whole screen, and is centered
-	const auto tsize = texture.getSize();
-	sprite.setOrigin({tsize.x / 2, tsize.y / 2});
-	sprite.setPosition({size.x / 2, size.y / 2});
-	const auto scale = std::max((float)size.x / tsize.x, (float)size.y / tsize.y);
-	sprite.setScale({scale, scale});
-
-	rt.bg.draw(sprite);
+	rt.bg.draw(spr);
 	rt.bg.display();
 
-	if (opts.blur.hrad && opts.blur.vrad && opts.blur.n_passes)
-		rt.bg.blur(opts.blur.hrad, opts.blur.vrad, opts.blur.n_passes);
-	if (opts.mult)
-		rt.bg.mult(opts.mult);
+	apply_bg_fx(fx);
+}
+
+void audioviz::apply_bg_fx(const EffectOptions fx)
+{
+	if (fx.blur.hrad && fx.blur.vrad && fx.blur.n_passes)
+		rt.bg.blur(fx.blur.hrad, fx.blur.vrad, fx.blur.n_passes);
+	if (fx.mult)
+		rt.bg.mult(fx.mult);
 }
 
 void audioviz::draw_spectrum()
@@ -210,20 +208,42 @@ void audioviz::draw_spectrum()
 // should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
-	const auto left_data = ss.left().data(),
-			   right_data = ss.right().data();
+	const auto &left_data = ss.left().data(),
+			   &right_data = ss.right().data();
 	assert(left_data.size() == right_data.size());
 
 	// first quarter of the spectrum is generally bass
-	const auto amount = left_data.size() / 4.f;
+	const auto amount = left_data.size() / 3.75f;
 
-	const auto left_max = *std::max_element(left_data.begin(), left_data.begin() + amount);
-	const auto right_max = *std::max_element(right_data.begin(), right_data.begin() + amount);
+	const auto weighted_max = [](auto begin, auto end, auto weight_start)
+	{
+		float max_value = *begin;
+		float total_distance = static_cast<float>(std::distance(weight_start, end));
+		for (auto it = begin; it != end; ++it)
+		{
+			float weight = it < weight_start ? 1.0f : sqrt(std::distance(it, end) / total_distance);
+			float value = *it * weight;
+			if (value > max_value)
+				max_value = value;
+		}
+		return max_value;
+	};
 
-	const auto avg = (left_max + right_max) / 2;
+	const auto calc_max = [&](const auto &vec)
+	{
+		const auto begin = vec.begin();
+		// return *std::max_element(begin, begin + amount);
+		return weighted_max(
+			begin,
+			begin + amount,
+			begin + (amount / 2));
+	};
 
-	// cbrt to ease the sudden-ness of the particles' speed increase
-	const auto speed_increase = sqrtf(size.y * avg) / 2;
+	const auto avg = (calc_max(left_data) + calc_max(right_data)) / 2;
+	const auto scaled_avg = size.y * avg;
+
+	// the deciding factor in particle speed increase
+	const auto speed_increase = sqrtf(scaled_avg / 5);
 
 	rt.particles.original.clear(zero_alpha);
 	ps.draw(rt.particles.original, {0, -speed_increase});
@@ -254,8 +274,7 @@ void audioviz::actually_draw_on_target(sf::RenderTarget &target)
 		rt.bg.draw(sf::Sprite(_frame_queue->front()));
 		_frame_queue->pop_front();
 		rt.bg.display();
-		// rt.bg.blur(5, 5, 10); // anything > 10 is quite slow
-		// rt.bg.mult(0.8);
+		// call apply_bg_fx(); add an fx field
 	}
 
 	target.draw(rt.bg.sprite());
@@ -305,7 +324,7 @@ void audioviz::decode_media()
 			return;
 		}
 
-		// const auto &stream = _format.streams[packet->stream_index];
+		// const auto &stream = _format.streams()[packet->stream_index];
 		// std::cerr << stream->index << ": " << (packet->pts * av_q2d(stream->time_base)) << '/' << stream.duration_sec() << '\n';
 
 		if (packet->stream_index == _astream->index)

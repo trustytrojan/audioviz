@@ -52,6 +52,7 @@ void play(const char *const url)
 			if (event.is<sf::Event::Closed>())
 				window.close();
 		}
+		window.clear();
 	}
 }
 
@@ -71,8 +72,8 @@ public:
 		// clang-format off
 		ss << "ffmpeg -hide_banner -y"
 			" -f rawvideo -pix_fmt rgba -s:v " << size.x << 'x' << size.y << " -r 60 -i -"
-			" -i '" << url << "'"
-			" -c:v h264 -c:a copy " << out_url;
+			" -ss -0.1 -i '" << url << "' -map 0 -map 1:a"
+			" -c:v h264 -preset ultrafast -c:a copy " << out_url;
 		// clang-format on
 
 		ffmpeg = popen(ss.str().c_str(), "w");
@@ -120,7 +121,11 @@ int main(const int, const char *const *const argv)
 	try
 	{
 		if (argv[2] && !strcmp(argv[2], "--encode"))
-			audioviz_encoder({1280, 720}, argv[1], "out.mp4").start();
+		{
+			if (!argv[3])
+				throw std::runtime_error("output filename required!");
+			audioviz_encoder({1280, 720}, argv[1], argv[3]).start();
+		}
 		else
 			play(argv[1]);
 	}

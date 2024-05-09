@@ -11,6 +11,7 @@
 #include "StereoSpectrum.hpp"
 #include "MyRenderTexture.hpp"
 #include "ParticleSystem.hpp"
+#include "MySprite.hpp"
 
 // TODO: add separate method for applying effects to the background
 
@@ -71,7 +72,7 @@ private:
 	struct _texture_sprite
 	{
 		sf::Texture texture;
-		sf::Sprite sprite;
+		MySprite sprite;
 		_texture_sprite() : sprite(texture) {}
 	} album_cover;
 
@@ -130,21 +131,22 @@ public:
 	void set_framerate(int framerate);
 
 	// set background image with optional effects: blur and color-multiply
-	void set_background(const std::filesystem::path &image_path, EffectOptions options = {{10, 10, 25}, 0});
-	void set_background(const sf::Texture &texture, EffectOptions options = {{10, 10, 25}, 0});
+	void set_background(const std::filesystem::path &image_path, EffectOptions options = {{10, 10, 20}, 0});
+	void set_background(const sf::Texture &texture, EffectOptions options = {{10, 10, 20}, 0});
+	void apply_bg_fx(EffectOptions fx);
 
 	// set margins around the output size for the spectrum to respect
 	void set_margin(int margin);
 
 	void set_title_text(const std::string &text);
 	void set_artist_text(const std::string &text);
-	void set_album_cover(const std::filesystem::path &image_path, sf::Vector2f scale_to = {150, 150});
+	void set_album_cover(const std::filesystem::path &image_path, sf::Vector2f size = {150, 150});
 
 	// you **must** call this method in order to see text metadata!
 	void set_text_font(const std::filesystem::path &path);
 
 	// set the top-left-most position for the metadata (album cover sprite, title/artist text) to be drawn from
-	void set_metadata_position(const sf::Vector2f &pos);
+	void set_metadata_position(const sf::Vector2f pos);
 
 	// passthrough setters
 
@@ -164,14 +166,14 @@ public:
 
 private:
 	// void decoder_thread_func();
-	bool decoder_thread_finished();
+	// bool decoder_thread_finished();
 	void set_text_defaults();
 	void draw_spectrum();
 	void draw_particles();
 	void blur_spectrum();
 	void blur_particles();
 	void actually_draw_on_target(sf::RenderTarget &target);
-	void _set_album_cover(sf::Vector2f scale_to = {150, 150});
+	void _set_album_cover(sf::Vector2f size = {150, 150});
 	void decode_media();
 	void play_audio();
 };
