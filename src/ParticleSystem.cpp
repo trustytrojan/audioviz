@@ -59,8 +59,8 @@ void ParticleSystem::update(const sf::Vector2f additional_displacement)
 
 		const auto dist_to_max_height = p.getPosition().y - max_height;
 
-		// sqrt is very nice, but you can lower the root further
-		// a root of 1.5 would be nicer: pow(x, 1 / 1.5)
+		// sqrt of remaining distance to 0 causes the fading out to only start halfway up the screen
+		// linear is too sudden
 		const auto alpha_scale = sqrtf(dist_to_max_height / (target_size.y - max_height));
 
 		// decrease alpha with distance to max_height
@@ -70,7 +70,6 @@ void ParticleSystem::update(const sf::Vector2f additional_displacement)
 		// reset position to bottom of target once max_height is reached
 		if (dist_to_max_height <= 0)
 			p.setPosition({random<float>(0, target_size.x), target_size.y});
-
 	}
 }
 
