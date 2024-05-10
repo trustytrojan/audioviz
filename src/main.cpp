@@ -70,10 +70,7 @@ class audioviz_encoder
 	audioviz viz;
 	FILE *ffmpeg = nullptr;
 
-public:
-	audioviz_encoder(sf::Vector2u size, const std::string &url, const std::string &out_url)
-		: size(size),
-		  viz(size, url)
+	void ffmpeg_init(sf::Vector2u size, const std::string &url, const std::string &out_url)
 	{
 		char quote;
 		const auto choose_quote = [&](const std::string &s)
@@ -107,9 +104,24 @@ public:
 		std::cout << command << '\n';
 		ffmpeg = popen(command.c_str(), "w");
 		setbuf(ffmpeg, NULL);
+	}
 
+	void viz_init()
+	{
 		viz.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 		viz.set_metadata_position({30, 30});
+
+		viz.bg.effects.emplace_back(new fx::Mult{0.75}); // TODO: automate this based on total bg luminance!!!!!!!
+		viz.bg.apply_fx();
+	}
+
+public:
+	audioviz_encoder(sf::Vector2u size, const std::string &url, const std::string &out_url)
+		: size(size),
+		  viz(size, url)
+	{
+		ffmpeg_init(size, url, out_url);
+		viz_init();
 	}
 
 	void start()
