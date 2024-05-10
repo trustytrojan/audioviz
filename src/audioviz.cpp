@@ -5,7 +5,9 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	: size(size),
 	  _format(media_url),
 	  ps(size, 50),
-	  rt(size, antialiasing)
+	  bg(size, antialiasing),
+	  particles(size, antialiasing),
+	  spectrum(size, antialiasing)
 {
 	set_text_defaults();
 
@@ -19,6 +21,28 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	// default metadata position
 	set_metadata_position({30, 30});
 
+	// set default effects
+	bg.blur.emplace();
+	bg.blur->hrad = 10;
+	bg.blur->vrad = 10;
+	bg.blur->n_passes = 20;
+
+	particles.blur.emplace();
+	particles.blur->hrad = 1;
+	particles.blur->vrad = 1;
+	particles.blur->n_passes = 10;
+
+	spectrum.blur.emplace();
+	spectrum.blur->hrad = 1;
+	spectrum.blur->vrad = 1;
+	spectrum.blur->n_passes = 20;
+
+	// init libav stuff
+	av_init();
+}
+
+void audioviz::av_init()
+{
 	// if an attached pic is in the format, use it for bg and album cover
 	// clang-format off
 	if (const auto itr = std::ranges::find_if(_format.streams(), [](const av::Stream &s){ return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
@@ -87,15 +111,6 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 		break;
 	}
 }
-
-audioviz::_rt::_rt(const sf::Vector2u size, const int antialiasing)
-	: spectrum(size, antialiasing),
-	  particles(size, antialiasing),
-	  bg(size, sf::ContextSettings(0, 0, antialiasing)) {}
-
-audioviz::_rt::_blur::_blur(const sf::Vector2u size, const int antialiasing)
-	: original(size, sf::ContextSettings(0, 0, antialiasing)),
-	  blurred(size) {}
 
 void audioviz::set_title_text(const std::string &text)
 {
@@ -169,40 +184,32 @@ void audioviz::set_framerate(int framerate)
 	_afpvf = _astream.sample_rate() / framerate;
 }
 
-void audioviz::set_background(const std::filesystem::path &image_path, const EffectOptions opts)
+void audioviz::set_background(const std::filesystem::path &image_path)
 {
 	sf::Texture txr;
 	if (!txr.loadFromFile(image_path))
 		throw std::runtime_error("failed to load background image: '" + image_path.string() + '\'');
-	set_background(txr, opts);
+	set_background(txr);
 }
 
-void audioviz::set_background(const sf::Texture &texture, const EffectOptions fx)
+void audioviz::set_background(const sf::Texture &texture)
 {
 	MySprite spr(texture);
 	spr.capture_centered_square_view();
 	spr.fill_screen(size);
 
-	rt.bg.draw(spr);
-	rt.bg.display();
-
-	apply_bg_fx(fx);
-}
-
-void audioviz::apply_bg_fx(const EffectOptions fx)
-{
-	if (fx.blur.hrad && fx.blur.vrad && fx.blur.n_passes)
-		rt.bg.blur(fx.blur.hrad, fx.blur.vrad, fx.blur.n_passes);
-	if (fx.mult)
-		rt.bg.mult(fx.mult);
+	bg.rt.orig.draw(spr);
+	bg.rt.orig.display();
+	bg.apply_fx();
 }
 
 void audioviz::draw_spectrum()
 {
 	ss.do_fft(audio_buffer.data());
-	rt.spectrum.original.clear(zero_alpha);
-	rt.spectrum.original.draw(ss);
-	rt.spectrum.original.display();
+	spectrum.rt.orig.clear(zero_alpha);
+	spectrum.rt.orig.draw(ss);
+	spectrum.rt.orig.display();
+	spectrum.apply_fx();
 }
 
 // should be called AFTER draw_spectrum()
@@ -232,6 +239,7 @@ void audioviz::draw_particles()
 	const auto calc_max = [&](const auto &vec)
 	{
 		const auto begin = vec.begin();
+		// old behavior: non-weighted max
 		// return *std::max_element(begin, begin + amount);
 		return weighted_max(
 			begin,
@@ -245,55 +253,12 @@ void audioviz::draw_particles()
 	// the deciding factor in particle speed increase
 	const auto speed_increase = sqrtf(scaled_avg / 5);
 
-	rt.particles.original.clear(zero_alpha);
-	ps.draw(rt.particles.original, {0, -speed_increase});
-	rt.particles.original.display();
-}
+	ps.update({0, -speed_increase});
 
-void audioviz::blur_spectrum()
-{
-	rt.spectrum.blurred.clear(zero_alpha);
-	rt.spectrum.blurred.draw(rt.spectrum.original.sprite());
-	rt.spectrum.blurred.display();
-	rt.spectrum.blurred.blur(1, 1, 20);
-}
-
-void audioviz::blur_particles()
-{
-	rt.particles.blurred.clear(zero_alpha);
-	rt.particles.blurred.draw(rt.particles.original.sprite());
-	rt.particles.blurred.display();
-	rt.particles.blurred.blur(1, 1, 10);
-}
-
-void audioviz::actually_draw_on_target(sf::RenderTarget &target)
-{
-	// layer everything together
-	if (_vstream && !_frame_queue->empty())
-	{
-		rt.bg.draw(sf::Sprite(_frame_queue->front()));
-		_frame_queue->pop_front();
-		rt.bg.display();
-		// call apply_bg_fx(); add an fx field
-	}
-
-	target.draw(rt.bg.sprite());
-	target.draw(rt.particles.blurred.sprite(), sf::BlendAdd);
-	target.draw(rt.particles.original.sprite(), sf::BlendAdd);
-
-	// BlendAdd is a sane default
-	// experiment with other blend modes to make cool glows
-	target.draw(rt.spectrum.blurred.sprite(), sf::BlendAdd);
-
-	// redraw spectrum due to anti-aliased edges retaining original background color
-	target.draw(ss.left());
-	target.draw(ss.right());
-
-	// draw metadata
-	if (album_cover.texture.getNativeHandle())
-		target.draw(album_cover.sprite);
-	target.draw(title_text);
-	target.draw(artist_text);
+	particles.rt.orig.clear(zero_alpha);
+	particles.rt.orig.draw(ps);
+	particles.rt.orig.display();
+	particles.apply_fx();
 }
 
 void audioviz::set_audio_playback_enabled(bool enabled)
@@ -384,7 +349,7 @@ void audioviz::play_audio()
 	}
 }
 
-bool audioviz::draw_frame(sf::RenderTarget &target)
+bool audioviz::prepare_frame()
 {
 	decode_media();
 
@@ -395,8 +360,16 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 	if ((int)audio_buffer.size() < 2 * sample_size)
 		return false;
 
+	// get next frame from video if available
+	if (_vstream && !_frame_queue->empty())
+	{
+		bg.rt.orig.draw(sf::Sprite(_frame_queue->front()));
+		_frame_queue->pop_front();
+		bg.rt.orig.display();
+		bg.apply_fx();
+	}
+
 	draw_spectrum();
-	blur_spectrum();
 
 	if (framerate == 60)
 		draw_particles();
@@ -407,13 +380,32 @@ bool audioviz::draw_frame(sf::RenderTarget &target)
 		ps_clock.restart();
 	}
 
-	blur_particles();
-	actually_draw_on_target(target);
-
 	// THE IMPORTANT PART
 	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf);
 
 	return true;
+}
+
+void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
+{
+	target.draw(bg.rt.with_fx.sprite);
+	target.draw(particles.rt.with_fx.sprite, sf::BlendAdd);
+	target.draw(particles.rt.orig.sprite, sf::BlendAdd);
+
+	// BlendAdd is a sane default
+	// experiment with other blend modes to make cool glows
+	target.draw(spectrum.rt.with_fx.sprite, sf::BlendAdd);
+
+	// redraw spectrum due to anti-aliased edges retaining original background color
+	target.draw(ss);
+
+	// draw metadata if available (TODO: decide whether to apply effects on metadata too)
+	if (album_cover.texture.getNativeHandle())
+		target.draw(album_cover.sprite);
+	if (!title_text.getString().isEmpty())
+		target.draw(title_text);
+	if (!artist_text.getString().isEmpty())
+		target.draw(artist_text);
 }
 
 void audioviz::set_bar_width(int width)

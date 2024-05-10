@@ -25,7 +25,7 @@ public:
 	}
 };
 
-class ParticleSystem
+class ParticleSystem : public sf::Drawable
 {
 	sf::Vector2u target_size;
 	std::vector<Particle> particles;
@@ -39,5 +39,6 @@ class ParticleSystem
 public:
 	ParticleSystem(sf::Vector2u target_size, unsigned particle_count = 30, bool debug = false);
 	void set_max_height(unsigned max_height);
-	void draw(sf::RenderTarget &target, sf::Vector2f additional_displacement = {0, 0});
+	void update(sf::Vector2f additional_displacement = {0, 0});
+	void draw(sf::RenderTarget &, sf::RenderStates) const;
 };

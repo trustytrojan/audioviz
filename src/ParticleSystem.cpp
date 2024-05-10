@@ -37,10 +37,8 @@ void ParticleSystem::set_max_height(unsigned max_height)
 	this->max_height = max_height;
 }
 
-void ParticleSystem::draw(sf::RenderTarget &target, const sf::Vector2f additional_displacement)
+void ParticleSystem::update(const sf::Vector2f additional_displacement)
 {
-	assert(target.getSize() == target_size);
-
 	for (auto &p : particles)
 	{
 		p.move();
@@ -73,9 +71,14 @@ void ParticleSystem::draw(sf::RenderTarget &target, const sf::Vector2f additiona
 		if (dist_to_max_height <= 0)
 			p.setPosition({random<float>(0, target_size.x), target_size.y});
 
-		target.draw(p);
 	}
+}
 
+void ParticleSystem::draw(sf::RenderTarget &target, const sf::RenderStates states) const
+{
+	assert(target.getSize() == target_size);
+	for (const auto &p : particles)
+		target.draw(p, states);
 	if (debug)
 		target.draw(max_height_line);
 }

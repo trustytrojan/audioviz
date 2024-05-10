@@ -9,15 +9,18 @@
 #include <av.hpp>
 
 #include "StereoSpectrum.hpp"
-#include "MyRenderTexture.hpp"
 #include "ParticleSystem.hpp"
 #include "MySprite.hpp"
+
+#include "fx/RenderTexture.hpp"
+#include "fx/Blur.hpp"
+#include "fx/Mult.hpp"
 
 // TODO: add separate method for applying effects to the background
 
 // will eventually create an `audioviz` namespace,
 // move this class there and call it `stereo_spectrum`.
-class audioviz
+class audioviz : public sf::Drawable
 {
 private:
 	using SD = SpectrumDrawable;
@@ -25,20 +28,9 @@ private:
 
 	static inline const sf::Color zero_alpha{0, 0, 0, 0};
 
-	struct EffectOptions
-	{
-		struct
-		{
-			float hrad = 10, vrad = 10;
-			int n_passes = 20;
-		} blur;
-		float mult = 0;
-	};
-
 	const sf::Vector2u size;
 	int sample_size = 3000;
 	std::vector<float> audio_buffer;
-	av::Frame rs_frame;
 
 	av::MediaReader _format;
 
@@ -47,6 +39,7 @@ private:
 	av::Resampler _resampler = av::Resampler(
 		&_astream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _astream.sample_rate(),
 		&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate());
+	av::Frame rs_frame;
 
 	std::optional<av::Stream> _vstream;
 	std::optional<av::Decoder> _vdecoder;
@@ -68,26 +61,14 @@ private:
 
 	// metadata-related fields
 	sf::Font font;
-	sf::Text title_text = sf::Text(font, ""), artist_text = sf::Text(font, "");
-	struct _texture_sprite
+	sf::Text title_text = sf::Text(font, ""),
+			 artist_text = sf::Text(font, "");
+	struct _ts
 	{
 		sf::Texture texture;
 		MySprite sprite;
-		_texture_sprite() : sprite(texture) {}
+		_ts() : sprite(texture) {}
 	} album_cover;
-
-	// container to hold render-textures
-	struct _rt
-	{
-		struct _blur
-		{
-			MyRenderTexture original, blurred;
-			_blur(const sf::Vector2u size, const int antialiasing);
-		} spectrum, particles;
-
-		MyRenderTexture bg;
-		_rt(const sf::Vector2u size, const int antialiasing);
-	} rt;
 
 	// clock to time the particle system
 	sf::Clock ps_clock;
@@ -96,6 +77,35 @@ private:
 	std::optional<pa::Stream> pa_stream;
 
 public:
+	class _fx
+	{
+		friend class audioviz;
+		struct _rt_pair
+		{
+			fx::RenderTexture orig, with_fx;
+			_rt_pair(const sf::Vector2u size, const int antialiasing)
+				: orig(size, antialiasing), with_fx(size) {}
+		} rt;
+
+		_fx(const sf::Vector2u size, const int antialiasing)
+			: rt(size, antialiasing) {}
+
+	public:
+		std::optional<fx::Blur> blur;
+		std::optional<fx::Mult> mult;
+
+		// copies `orig` to `with_fx`, then applies available effects
+		void apply_fx()
+		{
+			rt.with_fx.clear(zero_alpha);
+			rt.with_fx.copy(rt.orig);
+			if (blur)
+				rt.with_fx.apply(*blur);
+			if (mult)
+				rt.with_fx.apply(*mult);
+		}
+	} bg, particles, spectrum;
+
 	/**
 	 * @param size size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media_url url to media source. must contain an audio stream
@@ -104,9 +114,11 @@ public:
 	audioviz(sf::Vector2u size, const std::string &media_url, int antialiasing = 4);
 
 	/**
-	 * @return whether the end of the audio buffer has been reached and another frame cannot be produced.
+	 * @return whether the end of the audio buffer has been reached and another frame cannot be prepared.
 	 */
-	bool draw_frame(sf::RenderTarget &target);
+	bool prepare_frame();
+
+	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
 
 	/**
 	 * @return the chunk of audio used to produce the last frame
@@ -131,9 +143,8 @@ public:
 	void set_framerate(int framerate);
 
 	// set background image with optional effects: blur and color-multiply
-	void set_background(const std::filesystem::path &image_path, EffectOptions options = {{10, 10, 20}, 0});
-	void set_background(const sf::Texture &texture, EffectOptions options = {{10, 10, 20}, 0});
-	void apply_bg_fx(EffectOptions fx);
+	void set_background(const std::filesystem::path &image_path);
+	void set_background(const sf::Texture &texture);
 
 	// set margins around the output size for the spectrum to respect
 	void set_margin(int margin);
@@ -165,14 +176,10 @@ public:
 	void set_window_func(FS::WindowFunction wf);
 
 private:
-	// void decoder_thread_func();
-	// bool decoder_thread_finished();
+	void av_init();
 	void set_text_defaults();
 	void draw_spectrum();
 	void draw_particles();
-	void blur_spectrum();
-	void blur_particles();
-	void actually_draw_on_target(sf::RenderTarget &target);
 	void _set_album_cover(sf::Vector2f size = {150, 150});
 	void decode_media();
 	void play_audio();

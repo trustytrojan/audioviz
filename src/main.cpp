@@ -44,15 +44,23 @@ void play(const char *const url)
 		glfwTerminate();
 	}
 
-	while (window.isOpen() && viz.draw_frame(window))
+	// viz.bg.mult.emplace();
+	// viz.bg.mult->factor = 0.75;
+	// viz.bg.apply_fx();
+
+	viz.bg.blur->hrad = 5;
+	viz.bg.blur->vrad = 5;
+	viz.bg.blur->n_passes = 10;
+
+	while (window.isOpen() && viz.prepare_frame())
 	{
+		window.draw(viz);
 		window.display();
 		while (const auto event = window.pollEvent())
 		{
 			if (event.is<sf::Event::Closed>())
 				window.close();
 		}
-		window.clear();
 	}
 }
 
@@ -60,7 +68,7 @@ class audioviz_encoder
 {
 	const sf::Vector2u size;
 	audioviz viz;
-	FILE *ffmpeg;
+	FILE *ffmpeg = nullptr;
 
 public:
 	audioviz_encoder(sf::Vector2u size, const char *const url, const char *const out_url)
@@ -73,7 +81,7 @@ public:
 		ss << "ffmpeg -hide_banner -y"
 			" -f rawvideo -pix_fmt rgba -s:v " << size.x << 'x' << size.y << " -r 60 -i -"
 			" -ss -0.1 -i '" << url << "' -map 0 -map 1:a"
-			" -c:v h264 -preset ultrafast -c:a copy " << out_url;
+			" -c:v h264 -c:a copy " << out_url;
 		// clang-format on
 
 		ffmpeg = popen(ss.str().c_str(), "w");
@@ -87,8 +95,9 @@ public:
 	{
 		MyRenderTexture rt(size, ctx);
 
-		while (viz.draw_frame(rt))
+		while (viz.prepare_frame())
 		{
+			rt.draw(viz);
 			rt.display();
 			fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
 		}
@@ -101,8 +110,9 @@ public:
 		if (!txr.create(size))
 			throw std::runtime_error("failed to create texture");
 
-		while (viz.draw_frame(window))
+		while (viz.prepare_frame())
 		{
+			window.draw(viz);
 			window.display();
 			txr.update(window);
 			fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
