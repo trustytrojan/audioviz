@@ -22,20 +22,9 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	set_metadata_position({30, 30});
 
 	// set default effects
-	bg.blur.emplace();
-	bg.blur->hrad = 10;
-	bg.blur->vrad = 10;
-	bg.blur->n_passes = 20;
-
-	particles.blur.emplace();
-	particles.blur->hrad = 1;
-	particles.blur->vrad = 1;
-	particles.blur->n_passes = 10;
-
-	spectrum.blur.emplace();
-	spectrum.blur->hrad = 1;
-	spectrum.blur->vrad = 1;
-	spectrum.blur->n_passes = 20;
+	bg.blur = {10, 10, 20};
+	particles.blur = {1, 1, 10};
+	spectrum.blur = {1, 1, 20};
 
 	// init libav stuff
 	av_init();

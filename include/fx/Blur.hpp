@@ -19,6 +19,9 @@ namespace fx
 		float hrad, vrad;
 		int n_passes;
 
+		Blur(float hrad, float vrad, int n_passes)
+			: hrad(hrad), vrad(vrad), n_passes(n_passes) {}
+
 		void apply(RenderTexture &rt) const override
 		{
 			for (int i = 0; i < n_passes; ++i)

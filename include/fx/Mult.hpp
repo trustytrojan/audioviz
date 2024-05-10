@@ -13,6 +13,8 @@ namespace fx
 	public:
 		float factor;
 
+		Mult(float factor) : factor(factor) {}
+
 		void apply(RenderTexture &rt) const override
 		{
 			shader.setUniform("factor", factor);

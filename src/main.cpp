@@ -44,13 +44,13 @@ void play(const char *const url)
 		glfwTerminate();
 	}
 
-	// viz.bg.mult.emplace();
-	// viz.bg.mult->factor = 0.75;
-	// viz.bg.apply_fx();
+	// setting the mult for a cover art background, and applying it
+	// (static backgrounds will not have effects applied automatically)
+	viz.bg.mult = 0.8;
+	viz.bg.apply_fx();
 
-	viz.bg.blur->hrad = 5;
-	viz.bg.blur->vrad = 5;
-	viz.bg.blur->n_passes = 10;
+	// setting the blur for a video (changing) background
+	viz.bg.blur = {5, 5, 10};
 
 	while (window.isOpen() && viz.prepare_frame())
 	{
