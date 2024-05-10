@@ -183,7 +183,7 @@ void audioviz::set_background(const sf::Texture &texture)
 {
 	tt::Sprite spr(texture);
 	// if (bg_ccsv)
-		spr.capture_centered_square_view();
+	spr.capture_centered_square_view();
 	spr.fill_screen(size);
 
 	bg.rt.orig.draw(spr);
@@ -203,12 +203,12 @@ void audioviz::draw_spectrum()
 // should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
-	const auto &left_data = ss.left().data(),
-		&right_data = ss.right().data();
+	const auto &left_data = ss.left().data();
+	const auto &right_data = ss.right().data();
 	assert(left_data.size() == right_data.size());
 
-	// first quarter of the spectrum is generally bass
-	const auto amount = left_data.size() / 3.75f;
+	// only data in the range [0, amount) will be considered
+	const auto amount = left_data.size() / 3.5f;
 
 	const auto weighted_max = [](auto begin, auto end, auto weight_start) {
 		float max_value = *begin;
