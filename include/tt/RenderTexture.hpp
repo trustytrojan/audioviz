@@ -4,6 +4,12 @@
 
 namespace tt {
 
+/**
+ * Subclass of `sf::RenderTexture` that is only meant to be created *once*.
+ * Has a public `const sf::Sprite` member to make the render-texture easily drawable.
+ * (Inheriting from `sf::Drawable` would cause a diamond-inheritance problem, so this was the better solution).
+ * Adds a `copy` method to quickly draw its contents onto another `tt::RenderTexture`.
+ */
 struct RenderTexture : public sf::RenderTexture
 {
 	const sf::Sprite sprite;

@@ -4,6 +4,11 @@
 
 namespace tt {
 
+/**
+ * A `Particle` is an object that can freely move in 2D space.
+ * The type of object that moves is up to the caller.
+ * @tparam ShapeType Must be a subclass of `sf::Transformable`.
+ */
 template <typename ShapeType>
 class Particle : public ShapeType
 {

@@ -7,6 +7,10 @@
 
 namespace tt {
 
+/**
+ * An FFTW wrapper that scales and interpolates FFT output to the caller's needs.
+ * Can't think of a better name.
+ */
 class FrequencySpectrum
 {
 public:
