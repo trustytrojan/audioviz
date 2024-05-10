@@ -3,44 +3,44 @@ WFLAGS = -Wall -Wextra -Wno-subobject-linkage -Wno-narrowing
 CFLAGS = $(WFLAGS) -std=gnu++23 -MMD $(if $(release),-O3,-g)
 INCLUDE = -Iinclude -Ideps/libavpp/include -Ideps/portaudio-pp/include
 LDLIBS = -lfftw3f -lportaudio -lsfml-graphics -lsfml-system -lsfml-window -lglfw -lavformat -lavcodec -lavutil -lswresample -lswscale
-OBJDIR = obj
-BINDIR = bin
-SRCDIR = src
 
 # List of source files
-SRCS = $(wildcard $(SRCDIR)/*.cpp)
+SRCS = $(shell find src -name "*.cpp")
 # List of object files
-OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS))
+OBJS = $(patsubst src/%.cpp,obj/%.o,$(SRCS))
 # List of dependency files
 DEPS = $(OBJS:.o=.d)
+# Directories
+DIRS = bin obj $(sort $(dir $(OBJS)))
 
 # Default target
-all: clear makedirs $(BINDIR)/a.out
+all: clear bin/audioviz
 
 # Linking
-$(BINDIR)/a.out: $(OBJS) | $(BINDIR)
+bin/audioviz: $(OBJS) | $(DIRS)
 	$(CC) $^ $(LDLIBS) -o $@
 
 # Compilation
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+obj/%.o: src/%.cpp | $(DIRS)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
 # Create necessary directories
-$(BINDIR) $(OBJDIR):
-	mkdir -p $@
+$(DIRS):
+	mkdir $@
 
 # Clean up
 clean:
-	rm -rf $(BINDIR) $(OBJDIR)
+	rm -rf bin obj
 
+# Clear terminal
 clear:
 	clear
 
 # Install to system
 install:
-	cp bin/a.out /usr/local/bin/audioviz
+	cp bin/audioviz /usr/local/bin/audioviz
 
-.PHONY: all makedirs clean clear install
+.PHONY: all clean clear install
 
 # Include the dependency files
 -include $(DEPS)

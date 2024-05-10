@@ -1,4 +1,6 @@
-#include "StereoSpectrum.hpp"
+#include "viz/StereoSpectrum.hpp"
+
+namespace viz {
 
 StereoSpectrum::StereoSpectrum(int sample_size)
 	: sample_size(sample_size) {}
@@ -36,3 +38,5 @@ void StereoSpectrum::draw(sf::RenderTarget &target, sf::RenderStates states) con
 	target.draw(sd_left, states);
 	target.draw(sd_right, states);
 }
+
+} // namespace viz

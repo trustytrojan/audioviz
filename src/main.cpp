@@ -126,7 +126,7 @@ public:
 
 	void start()
 	{
-		MyRenderTexture rt(size, ctx);
+		tt::RenderTexture rt(size, ctx);
 
 		while (viz.prepare_frame())
 		{

@@ -1,8 +1,11 @@
 #pragma once
 
-#include "FrequencySpectrum.hpp"
+#include "tt/FrequencySpectrum.hpp"
+#include "tt/ColorUtils.hpp"
+
 #include "VerticalPill.hpp"
-#include "ColorUtils.hpp"
+
+namespace viz {
 
 class SpectrumDrawable : public sf::Drawable
 {
@@ -14,7 +17,7 @@ public:
 	};
 
 private:
-	using FS = FrequencySpectrum;
+	using FS = tt::FrequencySpectrum;
 
 	// spectrum parameters
 	float multiplier = 4;
@@ -62,7 +65,7 @@ public:
 			case ColorMode::WHEEL:
 			{
 				const auto [h, s, v] = wheel.hsv;
-				return ColorUtils::hsvToRgb(index_ratio + h + wheel.time, s, v);
+				return tt::hsv2rgb(index_ratio + h + wheel.time, s, v);
 			}
 
 			case ColorMode::SOLID:
@@ -89,7 +92,7 @@ public:
 	} color;
 
 	// setters
-	
+
 	void set_multiplier(float multiplier);
 	void set_target_rect(const sf::IntRect &rect, bool backwards = false);
 
@@ -109,3 +112,5 @@ public:
 private:
 	void do_fft();
 };
+
+} // namespace viz

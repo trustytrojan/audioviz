@@ -8,9 +8,10 @@
 #include <portaudio.hpp>
 #include <av.hpp>
 
-#include "StereoSpectrum.hpp"
-#include "ParticleSystem.hpp"
-#include "MySprite.hpp"
+#include "tt/Sprite.hpp"
+
+#include "viz/StereoSpectrum.hpp"
+#include "viz/ParticleSystem.hpp"
 
 #include "fx/RenderTexture.hpp"
 #include "fx/Blur.hpp"
@@ -23,8 +24,8 @@
 class audioviz : public sf::Drawable
 {
 private:
-	using SD = SpectrumDrawable;
-	using FS = FrequencySpectrum;
+	using SD = viz::SpectrumDrawable;
+	using FS = tt::FrequencySpectrum;
 
 	static inline const sf::Color zero_alpha{0, 0, 0, 0};
 
@@ -54,10 +55,10 @@ private:
 	int _afpvf = _astream.sample_rate() / framerate;
 
 	// stereo spectrum!
-	StereoSpectrum ss = sample_size;
+	viz::StereoSpectrum ss = sample_size;
 
 	// particle system
-	ParticleSystem ps;
+	viz::ParticleSystem ps;
 
 	// metadata-related fields
 	sf::Font font;
@@ -66,7 +67,7 @@ private:
 	struct _ts
 	{
 		sf::Texture texture;
-		MySprite sprite;
+		tt::Sprite sprite;
 		_ts() : sprite(texture) {}
 	} album_cover;
 

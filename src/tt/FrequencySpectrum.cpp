@@ -1,7 +1,9 @@
-#include "FrequencySpectrum.hpp"
+#include "tt/FrequencySpectrum.hpp"
 #include <stdexcept>
 #include <cstring>
 #include <memory>
+
+namespace tt {
 
 FrequencySpectrum::FrequencySpectrum(const int fft_size)
 	: fft_size(fft_size)
@@ -181,3 +183,5 @@ void FrequencySpectrum::interpolate(std::vector<float> &spectrum)
 	for (size_t i = 0; i < spectrum.size(); ++i)
 		spectrum[i] = spectrum[i] ? spectrum[i] : spline(i);
 }
+
+} // namespace tt

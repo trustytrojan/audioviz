@@ -2,9 +2,11 @@
 
 #include <SFML/Graphics.hpp>
 
-struct MySprite : sf::Sprite
+namespace tt {
+
+struct Sprite : sf::Sprite
 {
-	MySprite(const sf::Texture &txr)
+	Sprite(const sf::Texture &txr)
 		: sf::Sprite(txr) {}
 
 	void capture_centered_square_view()
@@ -13,8 +15,7 @@ struct MySprite : sf::Sprite
 		if (tsize.x == tsize.y)
 			return;
 		const auto square_size = std::min(tsize.x, tsize.y);
-		setTextureRect({{tsize.x / 2.f - square_size / 2.f, 0},
-						{square_size, square_size}});
+		setTextureRect({{tsize.x / 2.f - square_size / 2.f, 0}, {square_size, square_size}});
 	}
 
 	void set_size(const sf::Vector2f desired)
@@ -32,3 +33,5 @@ struct MySprite : sf::Sprite
 		set_size({max_dim, max_dim});
 	}
 };
+
+} // namespace tt

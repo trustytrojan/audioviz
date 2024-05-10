@@ -1,34 +1,14 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include "tt/Particle.hpp"
 
-class Particle : public sf::CircleShape
-{
-	sf::Vector2f velocity;
-
-public:
-	Particle() : sf::CircleShape(0, 15) {}
-
-	void move()
-	{
-		setPosition(getPosition() + velocity);
-	}
-
-	sf::Vector2f getVelocity() const
-	{
-		return velocity;
-	}
-
-	void setVelocity(sf::Vector2f velocity)
-	{
-		this->velocity = velocity;
-	}
-};
+namespace viz {
 
 class ParticleSystem : public sf::Drawable
 {
 	sf::Vector2u target_size;
-	std::vector<Particle> particles;
+	std::vector<tt::Particle<sf::CircleShape>> particles;
 	unsigned max_height = 0;
 
 	// debugging constructs
@@ -42,3 +22,5 @@ public:
 	void update(sf::Vector2f additional_displacement = {0, 0});
 	void draw(sf::RenderTarget &, sf::RenderStates) const;
 };
+
+} // namespace viz

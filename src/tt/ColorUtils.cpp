@@ -1,8 +1,10 @@
 #include <stdexcept>
 #include <cmath>
-#include "ColorUtils.hpp"
+#include "tt/ColorUtils.hpp"
 
-sf::Color ColorUtils::hsvToRgb(float h, const float s, const float v)
+namespace tt {
+
+sf::Color hsv2rgb(float h, const float s, const float v)
 {
 	if (s < 0 || s > 1 || v < 0 || v > 1)
 		throw std::invalid_argument("s and v should be in the range [0, 1]");
@@ -71,11 +73,13 @@ sf::Color ColorUtils::hsvToRgb(float h, const float s, const float v)
 
 // still haven't integrated this feature yet lmao
 // just gonna let it sit on the backburner
-sf::Color ColorUtils::interpolate(float t, float h1, float s1, float v1, float h2, float s2, float v2)
+sf::Color interpolate(float t, float h1, float s1, float v1, float h2, float s2, float v2)
 {
 	float h = h1 + t * (h2 - h1);
 	float s = s1 + t * (s2 - s1);
 	float v = v1 + t * (v2 - v1);
 
-	return hsvToRgb(h, s, v);
+	return hsv2rgb(h, s, v);
 }
+
+} // namespace tt

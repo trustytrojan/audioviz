@@ -1,4 +1,4 @@
-#include "ParticleSystem.hpp"
+#include "viz/ParticleSystem.hpp"
 #include <random>
 
 template <typename _Tp>
@@ -9,6 +9,8 @@ static _Tp random(const _Tp min, const _Tp max)
 	return std::uniform_real_distribution<>(min, max)(gen);
 }
 
+namespace viz {
+
 ParticleSystem::ParticleSystem(sf::Vector2u target_size, unsigned particle_count, bool debug)
 	: target_size(target_size),
 	  particles(particle_count),
@@ -16,6 +18,9 @@ ParticleSystem::ParticleSystem(sf::Vector2u target_size, unsigned particle_count
 {
 	for (auto &p : particles)
 	{
+		// these are going to be very small circles
+		p.setPointCount(10);
+
 		p.setRadius(random<float>(2, 5));
 		p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, -2)});
 		// start some particles offscreen, so the beginning sequence feels less "sudden"
@@ -41,7 +46,7 @@ void ParticleSystem::update(const sf::Vector2f additional_displacement)
 {
 	for (auto &p : particles)
 	{
-		p.move();
+		p.updatePosition();
 
 		if (additional_displacement.lengthSq() > 0)
 		{
@@ -81,3 +86,5 @@ void ParticleSystem::draw(sf::RenderTarget &target, const sf::RenderStates state
 	if (debug)
 		target.draw(max_height_line);
 }
+
+} // namespace viz

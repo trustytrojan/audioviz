@@ -1,4 +1,6 @@
-#include "SpectrumDrawable.hpp"
+#include "viz/SpectrumDrawable.hpp"
+
+namespace viz {
 
 SpectrumDrawable::SpectrumDrawable(const int fft_size)
 	: fs(fft_size) {}
@@ -112,3 +114,5 @@ void SpectrumDrawable::do_fft()
 		pills[i].setHeight(height);
 	}
 }
+
+} // namespace viz

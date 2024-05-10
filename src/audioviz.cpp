@@ -183,7 +183,7 @@ void audioviz::set_background(const std::filesystem::path &image_path)
 
 void audioviz::set_background(const sf::Texture &texture)
 {
-	MySprite spr(texture);
+	tt::Sprite spr(texture);
 	spr.capture_centered_square_view();
 	spr.fill_screen(size);
 

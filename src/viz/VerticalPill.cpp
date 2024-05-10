@@ -1,4 +1,6 @@
-#include "VerticalPill.hpp"
+#include "viz/VerticalPill.hpp"
+
+namespace viz {
 
 VerticalPill::VerticalPill(const float width, const float height, const std::size_t pointCount)
 	: sf::CircleShape(width / 2, pointCount), width(width), height(height)
@@ -28,3 +30,5 @@ sf::Vector2f VerticalPill::getPoint(const std::size_t index) const
 		point.y += height;
 	return point;
 }
+
+} // namespace viz

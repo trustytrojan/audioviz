@@ -3,7 +3,9 @@
 #include <cstring>
 #include <vector>
 #include "spline.hpp"
-#include "fftw_dft_r2c_1d.hpp"
+#include "fftw/dft_r2c_1d.hpp"
+
+namespace tt {
 
 class FrequencySpectrum
 {
@@ -45,6 +47,7 @@ private:
 	int nth_root = 2;
 	float nthroot_inv = 1.f / nth_root;
 
+	fftw::dft_r2c_1d<float> fftw = fft_size;
 
 	// interpolation
 	tk::spline spline;
@@ -75,8 +78,6 @@ private:
 	} scale_max;
 
 public:
-	fftw::dft_r2c_1d<float> fftw = fft_size;
-
 	/**
 	 * Initialize frequency spectrum renderer.
 	 * @param fft_size sample chunk size fed into the `transform` method
@@ -144,7 +145,7 @@ public:
 
 	/**
 	 * Performs the FFT on the wave data copied via `copy_channel_to_input`.
-	 * @param spectrum 
+	 * @param spectrum
 	 */
 	void render(std::vector<float> &spectrum);
 
@@ -154,3 +155,7 @@ private:
 	float calc_index_ratio(float i);
 	void interpolate(std::vector<float> &spectrum);
 };
+
+using FreqSpec = FrequencySpectrum;
+
+} // namespace tt
