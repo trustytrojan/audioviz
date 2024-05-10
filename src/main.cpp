@@ -71,20 +71,41 @@ class audioviz_encoder
 	FILE *ffmpeg = nullptr;
 
 public:
-	audioviz_encoder(sf::Vector2u size, const char *const url, const char *const out_url)
+	audioviz_encoder(sf::Vector2u size, const std::string &url, const std::string &out_url)
 		: size(size),
 		  viz(size, url)
 	{
+		char quote;
+		const auto choose_quote = [&](const std::string &s)
+		{
+			quote = s.contains('\'') ? '"' : '\'';
+		};
+
 		std::ostringstream ss;
 
-		// clang-format off
-		ss << "ffmpeg -hide_banner -y"
-			" -f rawvideo -pix_fmt rgba -s:v " << size.x << 'x' << size.y << " -r 60 -i -"
-			" -ss -0.1 -i '" << url << "' -map 0 -map 1:a"
-			" -c:v h264 -c:a copy " << out_url;
-		// clang-format on
+		// hide banner, overwrite existing output file
+		ss << "ffmpeg -hide_banner -y ";
 
-		ffmpeg = popen(ss.str().c_str(), "w");
+		// specify input 0: raw rgba video from stdin
+		ss << "-f rawvideo -pix_fmt rgba -s:v " << size.x << 'x' << size.y << " -r 60 -i - ";
+
+		// specify input 1: media file
+		choose_quote(url);
+		ss << "-ss -0.1 -i " << quote << url << quote << ' ';
+
+		// only map the audio from input 1 to the output file
+		ss << "-map 0 -map 1:a ";
+
+		// specify video and audio encoder
+		ss << "-c:v h264 -c:a copy ";
+
+		// specify output file
+		choose_quote(out_url);
+		ss << quote << out_url << quote;
+
+		const auto command = ss.str();
+		std::cout << command << '\n';
+		ffmpeg = popen(command.c_str(), "w");
 		setbuf(ffmpeg, NULL);
 
 		viz.set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
