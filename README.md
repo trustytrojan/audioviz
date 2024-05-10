@@ -17,6 +17,7 @@ here's a demo: https://youtu.be/Avk5lRZb7To
 - [FFTW](https://fftw.org)
 - [PortAudio](https://github.com/PortAudio/portaudio)
 - [SFML](https://github.com/SFML/SFML)
+- [argparse](https://github.com/p-ranav/argparse)
 - [glfw](https://github.com/glfw/glfw) (just for getting the display refresh rate; hopefully SFML can do this soon)
 
 ## dev note

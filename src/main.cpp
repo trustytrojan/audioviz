@@ -153,24 +153,27 @@ public:
 	}
 };
 
-int main(const int, const char *const *const argv)
+#include "Main.hpp"
+
+int main(const int argc, const char *const *const argv)
 {
-	if (!argv[1])
-	{
-		std::cerr << "media url required\n";
-		return EXIT_FAILURE;
-	}
+	// if (!argv[1])
+	// {
+	// 	std::cerr << "media url required\n";
+	// 	return EXIT_FAILURE;
+	// }
 
 	try
 	{
-		if (argv[2] && !strcmp(argv[2], "--encode"))
-		{
-			if (!argv[3])
-				throw std::runtime_error("output filename required!");
-			audioviz_encoder({1280, 720}, argv[1], argv[3]).start();
-		}
-		else
-			play(argv[1]);
+		// if (argv[2] && !strcmp(argv[2], "--encode"))
+		// {
+		// 	if (!argv[3])
+		// 		throw std::runtime_error("output filename required!");
+		// 	audioviz_encoder({1280, 720}, argv[1], argv[3]).start();
+		// }
+		// else
+		// 	play(argv[1]);
+		Main(argc, argv);
 	}
 	catch (const std::exception &e)
 	{

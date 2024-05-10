@@ -1,13 +1,13 @@
 #include "audioviz.hpp"
 #include <iostream>
 
-audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
-	: size(size),
-	  _format(media_url),
-	  ps(size, 50),
-	  bg(size, antialiasing),
-	  particles(size, antialiasing),
-	  spectrum(size, antialiasing)
+audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing) :
+	size(size),
+	_format(media_url),
+	ps(size, 50),
+	bg(size, antialiasing),
+	particles(size, antialiasing),
+	spectrum(size, antialiasing)
 {
 	set_text_defaults();
 
@@ -33,10 +33,8 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 void audioviz::av_init()
 {
 	// if an attached pic is in the format, use it for bg and album cover
-	// clang-format off
-	if (const auto itr = std::ranges::find_if(_format.streams(), [](const av::Stream &s){ return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
+	if (const auto itr = std::ranges::find_if(_format.streams(), [](const av::Stream &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
 		itr != _format.streams().cend())
-	// clang-format on
 	{
 		const auto &stream = *itr;
 		if (sf::Texture txr; txr.loadFromMemory(stream->attached_pic.data, stream->attached_pic.size))
@@ -56,9 +54,9 @@ void audioviz::av_init()
 			_vstream = _s;
 			_vdecoder.emplace(avcodec_find_decoder(_s->codecpar->codec_id)).open();
 			_scaler.emplace(av::nearest_multiple_8(_s->codecpar->width),
-							_s->codecpar->height,
-							(AVPixelFormat)_s->codecpar->format,
-							size.x, size.y, AV_PIX_FMT_RGBA);
+				_s->codecpar->height,
+				(AVPixelFormat)_s->codecpar->format,
+				size.x, size.y, AV_PIX_FMT_RGBA);
 			_scaled_frame.emplace();
 			_frame_queue.emplace();
 		}
@@ -184,7 +182,8 @@ void audioviz::set_background(const std::filesystem::path &image_path)
 void audioviz::set_background(const sf::Texture &texture)
 {
 	tt::Sprite spr(texture);
-	spr.capture_centered_square_view();
+	// if (bg_ccsv)
+		spr.capture_centered_square_view();
 	spr.fill_screen(size);
 
 	bg.rt.orig.draw(spr);
@@ -205,14 +204,13 @@ void audioviz::draw_spectrum()
 void audioviz::draw_particles()
 {
 	const auto &left_data = ss.left().data(),
-			   &right_data = ss.right().data();
+		&right_data = ss.right().data();
 	assert(left_data.size() == right_data.size());
 
 	// first quarter of the spectrum is generally bass
 	const auto amount = left_data.size() / 3.75f;
 
-	const auto weighted_max = [](auto begin, auto end, auto weight_start)
-	{
+	const auto weighted_max = [](auto begin, auto end, auto weight_start) {
 		float max_value = *begin;
 		float total_distance = static_cast<float>(std::distance(weight_start, end));
 		for (auto it = begin; it != end; ++it)
@@ -223,10 +221,9 @@ void audioviz::draw_particles()
 				max_value = value;
 		}
 		return max_value;
-	};
+		};
 
-	const auto calc_max = [&](const auto &vec)
-	{
+	const auto calc_max = [&](const auto &vec) {
 		const auto begin = vec.begin();
 		// old behavior: non-weighted max
 		// return *std::max_element(begin, begin + amount);
@@ -234,7 +231,7 @@ void audioviz::draw_particles()
 			begin,
 			begin + amount,
 			begin + (amount / 2));
-	};
+		};
 
 	const auto avg = (calc_max(left_data) + calc_max(right_data)) / 2;
 	const auto scaled_avg = size.y * avg;

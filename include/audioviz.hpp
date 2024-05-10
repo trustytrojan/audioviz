@@ -23,13 +23,17 @@
 // move this class there and call it `stereo_spectrum`.
 class audioviz : public sf::Drawable
 {
-private:
+public:
+	// audioviz output size. cannot be changed, so make sure your window is not resizable.
+	const sf::Vector2u size;
+
+protected:
 	using SD = viz::SpectrumDrawable;
 	using FS = tt::FrequencySpectrum;
 
+private:
 	static inline const sf::Color zero_alpha{0, 0, 0, 0};
 
-	const sf::Vector2u size;
 	int sample_size = 3000;
 	std::vector<float> audio_buffer;
 
