@@ -91,18 +91,15 @@ public:
 			: rt(size, antialiasing) {}
 
 	public:
-		std::optional<fx::Blur> blur;
-		std::optional<fx::Mult> mult;
+		std::vector<std::unique_ptr<fx::Effect>> effects;
 
 		// copies `orig` to `with_fx`, then applies available effects
 		void apply_fx()
 		{
 			rt.with_fx.clear(zero_alpha);
 			rt.with_fx.copy(rt.orig);
-			if (blur)
-				rt.with_fx.apply(*blur);
-			if (mult)
-				rt.with_fx.apply(*mult);
+			for (const auto &effect : effects)
+				rt.with_fx.apply(*effect);
 		}
 	} bg, particles, spectrum;
 

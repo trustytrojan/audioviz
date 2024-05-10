@@ -21,10 +21,10 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	// default metadata position
 	set_metadata_position({30, 30});
 
-	// set default effects
-	bg.blur = {10, 10, 20};
-	particles.blur = {1, 1, 10};
-	spectrum.blur = {1, 1, 20};
+	// add default effects!
+	bg.effects.emplace_back(new fx::Blur{10, 10, 20});
+	particles.effects.emplace_back(new fx::Blur{1, 1, 10});
+	spectrum.effects.emplace_back(new fx::Blur{1, 1, 20});
 
 	// init libav stuff
 	av_init();

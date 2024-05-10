@@ -46,11 +46,11 @@ void play(const char *const url)
 
 	// setting the mult for a cover art background, and applying it
 	// (static backgrounds will not have effects applied automatically)
-	viz.bg.mult = 0.8;
+	viz.bg.effects.emplace_back(new fx::Mult{0.75}); // TODO: automate this based on total bg luminance!!!!!!!
 	viz.bg.apply_fx();
 
-	// setting the blur for a video (changing) background
-	viz.bg.blur = {5, 5, 10};
+	// change the default blur for a video (changing) background
+	// viz.bg.effects[0] = std::make_unique<fx::Blur>(5, 5, 10);
 
 	while (window.isOpen() && viz.prepare_frame())
 	{
