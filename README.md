@@ -2,9 +2,6 @@
 my own audio visualizer, because after effects sucks.
 for right now, audioviz only supports linux, but with the libraries i'm using, it shouldn't be hard to port to windows.
 
-the default spectrum design is inspired by [Spectrolizer](https://spectrolizer.aicore-software.com/);<br>
-the default effects are inspired by [Bass Nation](https://www.youtube.com/@808nation).
-
 here's a demo: https://youtu.be/Avk5lRZb7To
 
 ## building
