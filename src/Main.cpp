@@ -1,20 +1,18 @@
 #include "Main.hpp"
+#include <GLFW/glfw3.h>
 
-Main::Main(const int argc, const char *const *const argv) :
-	Args(argc, argv),
-	audioviz({get<uint>("--width"), get<uint>("--height")}, get("audio_file"))
+Main::Main(const int argc, const char *const *const argv)
+	: Args(argc, argv),
+	  audioviz({get<uint>("--width"), get<uint>("--height")}, get("media_url")),
+	  url(get("media_url"))
 {
 	// all of these have default values, no need to try-catch
 	// set_sample_size(get<uint>("-n"));
 	set_multiplier(get<float>("-m"));
 	set_bar_width(get<uint>("-bw"));
 	set_bar_spacing(get<uint>("-bs"));
-	// set_mono(get<int>("--mono"));
 
-	// finally i realized what `present` does
-	// no need to try-catch on `get` anymore...
-
-	if (const auto ffpath = present("--ffmpeg-path"))
+	if (const auto ffpath = present("--ffpath"))
 		ffmpeg_path = ffpath.value();
 
 	if (const auto bg = present("--bg"))
@@ -22,6 +20,9 @@ Main::Main(const int argc, const char *const *const argv) :
 
 	if (const auto album_art = present("--album-art"))
 		set_album_cover(album_art.value());
+
+	if (const auto fontpath = present("-tf"))
+		set_text_font(*fontpath);
 
 	// { // bar type
 	// 	const auto &bt_str = get("-bt");
@@ -110,43 +111,55 @@ Main::Main(const int argc, const char *const *const argv) :
 		set_nth_root(std::stoi(scale_args[1]));
 	}
 
+	viz_init();
+
 	// --encode (decides whether we render to the window or to a video)
 	switch (const auto &encode_args = get<std::vector<std::string>>("--encode"); encode_args.size())
 	{
 	case 0:
 		start();
 		break;
-		// case 2:
-		// 	encode_to_video(encode_args[0], std::atoi(encode_args[1].c_str()));
-		// 	break;
-		// case 3:
-		// 	encode_to_video(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2]);
-		// 	break;
-		// case 4:
-		// 	encode_to_video(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2], encode_args[3]);
-		// 	break;
+	case 2:
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()));
+		break;
+	case 3:
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2]);
+		break;
+	case 4:
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2], encode_args[3]);
+		break;
 	default:
 		throw std::logic_error("--encode should only have 2-4 arguments");
 	}
 }
 
-#include <GLFW/glfw3.h>
+void Main::viz_init()
+{
+	set_metadata_position({30, 30});
+
+	// setting the mult for a cover art background, and applying it
+	// (static backgrounds will not have effects applied automatically)
+	bg.effects.emplace_back(new fx::Mult{0.75}); // TODO: automate this based on total bg luminance!!!!!!!
+	bg.apply_fx();
+
+	// change the default blur for a video (changing) background
+	// bg.effects[0] = std::make_unique<fx::Blur>(5, 5, 10);
+}
 
 void Main::start()
 {
 	set_audio_playback_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
-	set_metadata_position({30, 30});
 
-	sf::RenderWindow window(sf::VideoMode(size), "audioviz", sf::Style::Titlebar, sf::State::Windowed, sf::ContextSettings{0, 0, 4});
+	sf::RenderWindow window(sf::VideoMode(size), "audioviz", sf::Style::Titlebar, sf::State::Windowed, ctx);
 	window.setVerticalSyncEnabled(true);
 
 	{ // set framerate using display refresh rate (since we need vsync)
-		const auto throwGlfwError = [](const std::string &func) {
+		const auto throwGlfwError = [](const std::string &func)
+		{
 			const char *errmsg;
 			if (glfwGetError(&errmsg) != GLFW_NO_ERROR)
 				throw std::runtime_error(func + errmsg);
-			};
+		};
 		if (!glfwInit())
 			throwGlfwError("glfwInit");
 		const auto monitor = glfwGetPrimaryMonitor();
@@ -159,14 +172,6 @@ void Main::start()
 		glfwTerminate();
 	}
 
-	// setting the mult for a cover art background, and applying it
-	// (static backgrounds will not have effects applied automatically)
-	bg.effects.emplace_back(new fx::Mult{0.75}); // TODO: automate this based on total bg luminance!!!!!!!
-	bg.apply_fx();
-
-	// change the default blur for a video (changing) background
-	// viz.bg.effects[0] = std::make_unique<fx::Blur>(5, 5, 10);
-
 	while (window.isOpen() && prepare_frame())
 	{
 		window.draw(*this);
@@ -176,5 +181,82 @@ void Main::start()
 			if (event.is<sf::Event::Closed>())
 				window.close();
 		}
+	}
+}
+
+void Main::ffmpeg_init(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
+{
+	char quote;
+	// clang-format off
+	const auto choose_quote = [&](const std::string &s) { quote = s.contains('\'') ? '"' : '\''; };
+	// clang-format on
+
+	std::ostringstream ss;
+
+	// hide banner, overwrite existing output file
+	ss << "ffmpeg -hide_banner -y ";
+
+	// specify input 0: raw rgba video from stdin
+	ss << "-f rawvideo -pix_fmt rgba ";
+
+	// size, framerate
+	ss << "-s:v " << size.x << 'x' << size.y << " -r " << framerate << " -i - ";
+
+	// specify input 1: media file
+	choose_quote(url);
+	ss << "-ss -0.1 -i " << quote << url << quote << ' ';
+
+	// only map the audio from input 1 to the output file
+	ss << "-map 0 -map 1:a ";
+
+	if (vcodec.contains("vaapi"))
+	{
+		// specify the vaapi device
+		ss << "-vaapi_device /dev/dri/renderD128 ";
+
+		// convert to nv12 and upload to gpu for hardware encoding
+		ss << "-vf 'format=nv12,hwupload' ";
+	}
+
+	// specify video and audio encoder
+	ss << "-c:v " << vcodec << " -c:a " << acodec << ' ';
+
+	// specify output file
+	choose_quote(outfile);
+	ss << quote << outfile << quote;
+
+	const auto command = ss.str();
+	std::cout << command << '\n';
+	ffmpeg = popen(command.c_str(), "w");
+	setbuf(ffmpeg, NULL);
+}
+
+void Main::encode(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
+{
+	set_framerate(framerate);
+	ffmpeg_init(outfile, framerate, vcodec, acodec);
+	tt::RenderTexture rt(size, ctx);
+	while (prepare_frame())
+	{
+		rt.draw(*this);
+		rt.display();
+		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
+	}
+}
+
+void Main::encode_with_window(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
+{
+	set_framerate(framerate);
+	ffmpeg_init(outfile, framerate, vcodec, acodec);
+	sf::RenderWindow window(sf::VideoMode(size), "encoder", sf::Style::Titlebar, sf::State::Windowed, ctx);
+	sf::Texture txr;
+	if (!txr.create(size))
+		throw std::runtime_error("failed to create texture");
+	while (prepare_frame())
+	{
+		window.draw(*this);
+		window.display();
+		txr.update(window);
+		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
 	}
 }

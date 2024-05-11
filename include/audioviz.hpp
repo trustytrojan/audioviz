@@ -177,6 +177,8 @@ public:
 	void set_accum_method(FS::AccumulationMethod method);
 	void set_window_func(FS::WindowFunction wf);
 
+	void update_metadata_text();
+
 private:
 	void av_init();
 	void set_text_defaults();

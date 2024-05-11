@@ -10,6 +10,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	spectrum(size, antialiasing)
 {
 	set_text_defaults();
+	update_metadata_text();
 
 	// for now only stereo is supported
 	if (_astream.nb_channels() != 2)
@@ -144,6 +145,16 @@ void audioviz::set_metadata_position(const sf::Vector2f pos)
 
 void audioviz::set_text_defaults()
 {
+	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
+	artist_text.setStyle(sf::Text::Italic);
+	title_text.setCharacterSize(24);
+	artist_text.setCharacterSize(24);
+	title_text.setFillColor({255, 255, 255, 150});
+	artist_text.setFillColor({255, 255, 255, 150});
+}
+
+void audioviz::update_metadata_text()
+{
 	if (const auto title = _astream.metadata("title"))
 		title_text.setString(title);
 	if (const auto title = _format.metadata("title"))
@@ -152,12 +163,6 @@ void audioviz::set_text_defaults()
 		artist_text.setString(artist);
 	if (const auto artist = _format.metadata("artist"))
 		artist_text.setString(artist);
-	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
-	artist_text.setStyle(sf::Text::Italic);
-	title_text.setCharacterSize(24);
-	artist_text.setCharacterSize(24);
-	title_text.setFillColor({255, 255, 255, 150});
-	artist_text.setFillColor({255, 255, 255, 150});
 }
 
 void audioviz::set_margin(const int margin)

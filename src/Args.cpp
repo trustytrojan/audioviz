@@ -3,14 +3,14 @@
 Args::Args(const int argc, const char *const *const argv)
 	: ArgumentParser(argv[0])
 {
-	add_argument("audio_file")
-		.help("audio file to visualize and play");
+	add_argument("media_url")
+		.help("media URL to visualize and play");
 
 	add_argument("--encode")
 		.help("encode to a video using ffmpeg! arguments: <output_file> <fps> [vcodec] [acodec]")
 		.nargs(2, 4)
 		.validate();
-	add_argument("--ffmpeg-path")
+	add_argument("--ffpath")
 		.help("specify ffmpeg path used with '--encode'");
 
 	add_argument("--mono")
@@ -105,6 +105,9 @@ Args::Args(const int argc, const char *const *const argv)
 	add_argument("-bt", "--bar-type")
 		.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
 		.default_value("pill");
+	
+	add_argument("-tf", "--text-font")
+		.help("metadata text font; must be an absolute path");
 
 	try
 	{
