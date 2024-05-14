@@ -88,18 +88,15 @@ void audioviz::av_init()
 	_adecoder.copy_params(_astream->codecpar);
 	_adecoder.open();
 
-	// complete fucking bs!
-	// no real solution for this!
-	// will need to keep adding more cases as i test with more formats!
+	// some formats/codecs have bad packet durations.
+	// no idea what is causing this. as of right now mp3 has a workaround,
+	// but anything else might end playback too early.
 	switch (_adecoder->codec_id)
 	{
 	case AV_CODEC_ID_MP3:
 		_format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
 		break;
-	case AV_CODEC_ID_OPUS:
-		if (!_vstream)
-			_format.seek_file(-1, 0, 0, 0, AVSEEK_FLAG_BYTE);
-		break;
+	// ogg/opus is now broken, will not fix. just convert to mp3
 	default:
 		break;
 	}
@@ -283,6 +280,9 @@ void audioviz::decode_media()
 			std::cerr << "packet is null; format probably reached eof\n";
 			return;
 		}
+
+		// const auto &stream = _format.streams()[packet->stream_index];
+		// std::cerr << stream->index << ": " << (packet->pts * av_q2d(stream->time_base)) << '/' << stream.duration_sec() << '\n';
 
 		if (packet->stream_index == _astream->index)
 		{
