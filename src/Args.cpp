@@ -106,7 +106,7 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
 		.default_value("pill");
 	
-	add_argument("-tf", "--text-font")
+	add_argument("--font")
 		.help("metadata text font; must be an absolute path");
 
 	try

@@ -65,6 +65,7 @@ private:
 	viz::ParticleSystem ps;
 
 	// metadata-related fields
+	bool font_loaded = false;
 	sf::Font font;
 	sf::Text title_text = sf::Text(font, ""),
 			 artist_text = sf::Text(font, "");
@@ -139,8 +140,6 @@ public:
 
 	/**
 	 * important if you are capturing frames for video encoding!
-	 * the framerate defaults to 60fps, so if you are on a high-refresh rate display,
-	 * it may be setting a higher framerate.
 	 */
 	void set_framerate(int framerate);
 
@@ -177,11 +176,9 @@ public:
 	void set_accum_method(FS::AccumulationMethod method);
 	void set_window_func(FS::WindowFunction wf);
 
-	void update_metadata_text();
-
 private:
 	void av_init();
-	void set_text_defaults();
+	void text_init();
 	void draw_spectrum();
 	void draw_particles();
 	void _set_album_cover(sf::Vector2f size = {150, 150});

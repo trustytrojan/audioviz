@@ -21,7 +21,7 @@ Main::Main(const int argc, const char *const *const argv)
 	if (const auto album_art = present("--album-art"))
 		set_album_cover(album_art.value());
 
-	if (const auto fontpath = present("-tf"))
+	if (const auto fontpath = present("--font"))
 		set_text_font(*fontpath);
 
 	// { // bar type
@@ -181,6 +181,7 @@ void Main::start()
 			if (event.is<sf::Event::Closed>())
 				window.close();
 		}
+		window.clear();
 	}
 }
 
@@ -241,6 +242,7 @@ void Main::encode(const std::string &outfile, int framerate, const std::string &
 		rt.draw(*this);
 		rt.display();
 		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
+		rt.clear();
 	}
 }
 
@@ -258,5 +260,6 @@ void Main::encode_with_window(const std::string &outfile, int framerate, const s
 		window.display();
 		txr.update(window);
 		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
+		window.clear();
 	}
 }
