@@ -1,9 +1,11 @@
-#include "tt/FrequencySpectrum.hpp"
-#include <stdexcept>
 #include <cstring>
 #include <memory>
+#include <stdexcept>
 
-namespace tt {
+#include "tt/FrequencySpectrum.hpp"
+
+namespace tt
+{
 
 FrequencySpectrum::FrequencySpectrum(const int fft_size)
 	: fft_size(fft_size)

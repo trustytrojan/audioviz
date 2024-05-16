@@ -1,5 +1,6 @@
-#include "viz/ParticleSystem.hpp"
 #include <random>
+
+#include "viz/ParticleSystem.hpp"
 
 template <typename _Tp>
 static _Tp random(const _Tp min, const _Tp max)

@@ -1,5 +1,6 @@
-#include "Main.hpp"
 #include <GLFW/glfw3.h>
+
+#include "Main.hpp"
 
 Main::Main(const int argc, const char *const *const argv)
 	: Args(argc, argv),

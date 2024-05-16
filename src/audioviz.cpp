@@ -1,5 +1,6 @@
-#include "audioviz.hpp"
 #include <iostream>
+
+#include "audioviz.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: size(size),

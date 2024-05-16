@@ -1,8 +1,10 @@
-#include <stdexcept>
 #include <cmath>
+#include <stdexcept>
+
 #include "tt/ColorUtils.hpp"
 
-namespace tt {
+namespace tt
+{
 
 sf::Color hsv2rgb(float h, const float s, const float v)
 {

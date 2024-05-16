@@ -1,6 +1,7 @@
-#include "Main.hpp"
 #include <iostream>
 #include <stacktrace>
+
+#include "Main.hpp"
 
 // required to fix multiple definition errors
 // will fix this eventually by making libavpp a compiled library
