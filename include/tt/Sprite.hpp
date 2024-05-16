@@ -2,7 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace tt {
+namespace tt
+{
 
 struct Sprite : sf::Sprite
 {

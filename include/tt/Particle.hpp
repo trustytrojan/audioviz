@@ -2,7 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace tt {
+namespace tt
+{
 
 /**
  * A `Particle` is an object that can freely move in 2D space.

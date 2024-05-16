@@ -1,6 +1,7 @@
 #include "viz/SpectrumDrawable.hpp"
 
-namespace viz {
+namespace viz
+{
 
 SpectrumDrawable::SpectrumDrawable(const int fft_size)
 	: fs(fft_size) {}

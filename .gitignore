@@ -2,7 +2,6 @@ bin
 obj
 *.out
 *.o
-.vscode/settings.json
 Music
 vgcore*
 *.mkv

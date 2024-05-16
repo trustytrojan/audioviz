@@ -4,7 +4,8 @@
 
 // TODO: make a base class called `SpectrumBar`, and have `VerticalPill` implement it
 
-namespace viz {
+namespace viz
+{
 
 class VerticalPill : public sf::CircleShape
 {

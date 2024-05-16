@@ -1,0 +1,13 @@
+CompileFlags:
+  Compiler: g++
+  Add: [
+    -Wall,
+    -Wextra,
+    -Wno-subobject-linkage,
+    -Wno-narrowing,
+    -std=gnu++23,
+    -D__STDC_CONSTANT_MACROS,
+    -Iinclude,
+    -Ideps/libavpp/include,
+    -Ideps/portaudio-pp/include
+  ]

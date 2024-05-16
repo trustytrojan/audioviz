@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+BreakBeforeBraces: Allman
+IndentCaseLabels: false
+ColumnLimit: 0
+
+# Indentation
+UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+AccessModifierOffset: -4
+
+# Namespace
+CompactNamespaces: true
+NamespaceIndentation: None
+FixNamespaceComments: true

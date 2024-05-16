@@ -3,8 +3,9 @@
 Args::Args(const int argc, const char *const *const argv)
 	: ArgumentParser(argv[0])
 {
-	add_argument("media_url")
-		.help("media URL to visualize and play");
+	add_argument("media_urls")
+		.help("media URLs to visualize and play")
+		.nargs(argparse::nargs_pattern::at_least_one);
 
 	add_argument("--encode")
 		.help("encode to a video using ffmpeg! arguments: <output_file> <fps> [vcodec] [acodec]")

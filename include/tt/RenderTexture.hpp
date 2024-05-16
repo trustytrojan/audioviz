@@ -2,7 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace tt {
+namespace tt
+{
 
 /**
  * Subclass of `sf::RenderTexture` that is only meant to be created *once*.

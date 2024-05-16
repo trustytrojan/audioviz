@@ -4,7 +4,7 @@
 Main::Main(const int argc, const char *const *const argv)
 	: Args(argc, argv),
 	  audioviz({get<uint>("--width"), get<uint>("--height")}, get("media_url")),
-	  url(get("media_url"))
+	  url(get("media_urls"))
 {
 	// all of these have default values, no need to try-catch
 	// set_sample_size(get<uint>("-n"));

@@ -2,7 +2,8 @@
 
 #include "SpectrumDrawable.hpp"
 
-namespace viz {
+namespace viz
+{
 
 class StereoSpectrum : public sf::Drawable
 {

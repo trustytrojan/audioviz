@@ -1,9 +1,10 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
 #include "tt/Particle.hpp"
+#include <SFML/Graphics.hpp>
 
-namespace viz {
+namespace viz
+{
 
 class ParticleSystem : public sf::Drawable
 {

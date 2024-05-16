@@ -1,7 +1,7 @@
 #pragma once
 
-#include "audioviz.hpp"
 #include "Args.hpp"
+#include "audioviz.hpp"
 
 class Main : Args, public audioviz
 {

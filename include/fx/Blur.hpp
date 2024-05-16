@@ -1,9 +1,10 @@
 #pragma once
 
-#include "FragShader.hpp"
 #include "Effect.hpp"
+#include "FragShader.hpp"
 
-namespace fx {
+namespace fx
+{
 
 /**
  * Perform a Gaussian blur with linear-sampling.

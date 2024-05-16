@@ -1,11 +1,12 @@
 #pragma once
 
+#include "fftw/dft_r2c_1d.hpp"
+#include "spline.hpp"
 #include <cstring>
 #include <vector>
-#include "spline.hpp"
-#include "fftw/dft_r2c_1d.hpp"
 
-namespace tt {
+namespace tt
+{
 
 /**
  * An FFTW wrapper that scales and interpolates FFT output to the caller's needs.

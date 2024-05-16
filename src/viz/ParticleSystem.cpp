@@ -9,7 +9,8 @@ static _Tp random(const _Tp min, const _Tp max)
 	return std::uniform_real_distribution<>(min, max)(gen);
 }
 
-namespace viz {
+namespace viz
+{
 
 ParticleSystem::ParticleSystem(sf::Vector2u target_size, unsigned particle_count, bool debug)
 	: target_size(target_size),
@@ -58,7 +59,7 @@ void ParticleSystem::update(const sf::Vector2f additional_displacement)
 			else if (new_pos.x + p.getRadius() < 0)
 				// teleport from left edge to right
 				new_pos.x = target_size.x;
-			
+
 			p.setPosition(new_pos);
 		}
 

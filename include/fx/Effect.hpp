@@ -4,11 +4,13 @@
 
 namespace fx
 {
-	struct RenderTexture;
 
-	class Effect
-	{
-	public:
-		virtual void apply(RenderTexture &) const = 0;
-	};
-}
+struct RenderTexture;
+
+class Effect
+{
+public:
+	virtual void apply(RenderTexture &) const = 0;
+};
+
+} // namespace fx

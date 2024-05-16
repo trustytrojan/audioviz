@@ -1,21 +1,21 @@
 #pragma once
 
-#include <optional>
 #include <deque>
 #include <list>
+#include <optional>
 
 #include <SFML/Graphics.hpp>
-#include <portaudio.hpp>
 #include <av.hpp>
+#include <portaudio.hpp>
 
 #include "tt/Sprite.hpp"
 
-#include "viz/StereoSpectrum.hpp"
 #include "viz/ParticleSystem.hpp"
+#include "viz/StereoSpectrum.hpp"
 
-#include "fx/RenderTexture.hpp"
 #include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
+#include "fx/RenderTexture.hpp"
 
 // TODO: add separate method for applying effects to the background
 
@@ -67,8 +67,8 @@ private:
 	// metadata-related fields
 	bool font_loaded = false;
 	sf::Font font;
-	sf::Text title_text = sf::Text(font, ""),
-			 artist_text = sf::Text(font, "");
+	sf::Text title_text = font,
+			 artist_text = font;
 	struct _ts
 	{
 		sf::Texture texture;
@@ -121,6 +121,9 @@ public:
 	 */
 	bool prepare_frame();
 
+	/**
+	 * Overrides `sf::Drawable::draw`.
+	 */
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
 
 	/**
@@ -128,10 +131,7 @@ public:
 	 */
 	const std::vector<float> &current_audio() const { return audio_buffer; }
 
-	const av::Stream &astream() const { return _astream; };
-	int afpvf() const { return _afpvf; }
-
-	// setters
+	/// setters
 
 	/**
 	 * @param enabled whether to play the audio used to render the spectrum using PortAudio
@@ -160,7 +160,7 @@ public:
 	// set the top-left-most position for the metadata (album cover sprite, title/artist text) to be drawn from
 	void set_metadata_position(const sf::Vector2f pos);
 
-	// passthrough setters
+	/// passthrough setters
 
 	void set_bar_width(int width);
 	void set_bar_spacing(int spacing);

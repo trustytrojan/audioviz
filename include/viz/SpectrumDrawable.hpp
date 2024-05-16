@@ -1,11 +1,12 @@
 #pragma once
 
-#include "tt/FrequencySpectrum.hpp"
 #include "tt/ColorUtils.hpp"
+#include "tt/FrequencySpectrum.hpp"
 
 #include "VerticalPill.hpp"
 
-namespace viz {
+namespace viz
+{
 
 class SpectrumDrawable : public sf::Drawable
 {

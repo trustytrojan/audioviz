@@ -1,25 +1,27 @@
 #pragma once
 
-#include "RenderTexture.hpp"
 #include "FragShader.hpp"
+#include "RenderTexture.hpp"
 
 namespace fx
 {
-	// Multiplies the entire texture by a factor.
-	class Mult : public Effect
+
+// Multiplies the entire texture by a factor.
+class Mult : public Effect
+{
+	static inline FragShader shader = "shaders/mult.frag";
+
+public:
+	float factor;
+
+	Mult(float factor) : factor(factor) {}
+
+	void apply(RenderTexture &rt) const override
 	{
-		static inline FragShader shader = "shaders/mult.frag";
+		shader.setUniform("factor", factor);
+		rt.draw(rt.sprite, &shader);
+		rt.display();
+	}
+};
 
-	public:
-		float factor;
-
-		Mult(float factor) : factor(factor) {}
-
-		void apply(RenderTexture &rt) const override
-		{
-			shader.setUniform("factor", factor);
-			rt.draw(rt.sprite, &shader);
-			rt.display();
-		}
-	};
-}
+} // namespace fx
