@@ -212,41 +212,51 @@ void audioviz::draw_particles()
 	const auto &right_data = ss.right().data();
 	assert(left_data.size() == right_data.size());
 
-	// only data in the range [0, amount) will be considered
-	const auto amount = left_data.size() / 3.5f;
+	/**
+	 * TODO: rewrite weighted max function to have slightly lower weight as frequencies approach 20hz,
+	 * aka the first spectrum bar/element in either data vector.
+	 */
 
-	const auto weighted_max = [](auto begin, auto end, auto weight_start)
+	const auto weighted_max = [](const auto begin, const auto end, const auto weight_start)
 	{
 		float max_value = *begin;
 		float total_distance = static_cast<float>(std::distance(weight_start, end));
 		for (auto it = begin; it != end; ++it)
 		{
-			float weight = it < weight_start ? 1.0f : sqrt(std::distance(it, end) / total_distance);
-			float value = *it * weight;
+			// weight each element before it is used for the max comparison
+			// clang-format off
+			const auto weight = (it < weight_start)
+				? 1.0f
+				: sqrt(std::distance(it, end) / total_distance); // subtly decrease the weight as it gets closer to end
+			// clang-format on
+			const auto value = *it * weight;
 			if (value > max_value)
 				max_value = value;
 		}
 		return max_value;
 	};
 
-	const auto calc_max = [&](const auto &vec)
+	const auto calc_max = [&](const std::vector<float> &vec)
 	{
 		const auto begin = vec.begin();
-		// old behavior: non-weighted max
-		// return *std::max_element(begin, begin + amount);
+		// generally the lower third of the frequency spectrum is considered bass
+		const auto amount = vec.size() / 3.5f;
 		return weighted_max(
 			begin,
-			begin + amount,
-			begin + (amount / 2));
+			begin + amount,		   // only the first 50% of the range will have full weight
+			begin + (amount / 2)); // these are generally the strongest bass frequencies to the ear
 	};
 
 	const auto avg = (calc_max(left_data) + calc_max(right_data)) / 2;
+
+	// scale by window size to keep movement consistent with all window sizes
 	const auto scaled_avg = size.y * avg;
 
 	// the deciding factor in particle speed increase
-	const auto speed_increase = sqrtf(scaled_avg / 5);
+	const auto additional_displacement = sqrtf(scaled_avg / 5);
 
-	ps.update({0, -speed_increase});
+	// update particle system with additional (upward) displacement
+	ps.update({0, -additional_displacement});
 
 	particles.rt.orig.clear(zero_alpha);
 	particles.rt.orig.draw(ps);

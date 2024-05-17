@@ -70,6 +70,8 @@
 		"variant": "cpp",
 		"csignal": "cpp",
 		"text_encoding": "cpp",
-		"stacktrace": "cpp"
+		"stacktrace": "cpp",
+		"any": "cpp",
+		"set": "cpp"
 	}
 }

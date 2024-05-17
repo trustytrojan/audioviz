@@ -150,7 +150,7 @@ void Main::viz_init()
 
 	// setting the mult for a cover art background, and applying it
 	// (static backgrounds will not have effects applied automatically)
-	bg.effects.emplace_back(new fx::Mult{0.85}); // TODO: automate this based on total bg luminance!!!!!!!
+	bg.effects.emplace_back(new fx::Mult{0.75}); // TODO: automate this based on total bg luminance!!!!!!!
 	bg.apply_fx();
 
 	// change the default blur for a video (changing) background
