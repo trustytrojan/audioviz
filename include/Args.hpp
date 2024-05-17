@@ -2,7 +2,7 @@
 
 using argparse::ArgumentParser;
 
-struct Args : protected ArgumentParser
+struct Args : ArgumentParser
 {
 	Args(const int argc, const char *const *const argv);
 };

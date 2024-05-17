@@ -3,9 +3,8 @@
 Args::Args(const int argc, const char *const *const argv)
 	: ArgumentParser(argv[0])
 {
-	add_argument("media_urls")
-		.help("media URLs to visualize and play")
-		.nargs(argparse::nargs_pattern::at_least_one);
+	add_argument("media_url")
+		.help("URL to media to visualize and play");
 
 	add_argument("--encode")
 		.help("encode to a video using ffmpeg! arguments: <output_file> <fps> [vcodec] [acodec]")
@@ -79,18 +78,13 @@ Args::Args(const int argc, const char *const *const argv)
 		.scan<'u', uint8_t>()
 		.validate();
 
-	add_argument("--width")
-		.help("window width in pixels")
-		.default_value(1280u)
+	add_argument("--size")
+		.help("specify window size; args: <width> <height>")
+		.default_value(std::vector<uint>{1280, 720})
+		.nargs(2)
 		.scan<'u', uint>()
 		.validate();
 
-	add_argument("--height")
-		.help("window height in pixels")
-		.default_value(720u)
-		.scan<'u', uint>()
-		.validate();
-	
 	add_argument("-bw", "--bar-width")
 		.help("bar width in pixels")
 		.default_value(10u)
@@ -106,7 +100,7 @@ Args::Args(const int argc, const char *const *const argv)
 	add_argument("-bt", "--bar-type")
 		.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
 		.default_value("pill");
-	
+
 	add_argument("--font")
 		.help("metadata text font; must be an absolute path");
 

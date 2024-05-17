@@ -7,11 +7,12 @@ class Main : Args, public audioviz
 {
 	static inline const sf::ContextSettings ctx{0, 0, 4};
 
-	const std::string url;
 	std::string ffmpeg_path;
 	FILE *ffmpeg = nullptr;
+	
 	void ffmpeg_init(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec);
 	void viz_init();
+	void use_args();
 
 public:
 	Main(const int argc, const char *const *const argv);

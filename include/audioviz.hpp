@@ -24,6 +24,9 @@
 class audioviz : public sf::Drawable
 {
 public:
+	// input media url. cannot be changed. audioviz is a one-use class
+	const std::string url;
+
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
 

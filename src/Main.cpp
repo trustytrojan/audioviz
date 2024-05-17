@@ -4,8 +4,34 @@
 
 Main::Main(const int argc, const char *const *const argv)
 	: Args(argc, argv),
-	  audioviz({get<uint>("--width"), get<uint>("--height")}, get("media_url")),
-	  url(get("media_urls"))
+	  audioviz({get<std::vector<uint>>("--size")[0],
+				get<std::vector<uint>>("--size")[1]},
+			   get("media_url"))
+{
+	use_args();
+	viz_init();
+
+	// --encode (decides whether we render to the window or to a video)
+	switch (const auto &encode_args = get<std::vector<std::string>>("--encode"); encode_args.size())
+	{
+	case 0:
+		start();
+		break;
+	case 2:
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()));
+		break;
+	case 3:
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2]);
+		break;
+	case 4:
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2], encode_args[3]);
+		break;
+	default:
+		throw std::logic_error("--encode should only have 2-4 arguments");
+	}
+}
+
+void Main::use_args()
 {
 	// all of these have default values, no need to try-catch
 	// set_sample_size(get<uint>("-n"));
@@ -110,27 +136,6 @@ Main::Main(const int argc, const char *const *const argv)
 		if (scale_args[0] != "nth-root")
 			throw std::invalid_argument("only the 'nth-root' scale takes an additional argument");
 		set_nth_root(std::stoi(scale_args[1]));
-	}
-
-	viz_init();
-
-	// --encode (decides whether we render to the window or to a video)
-	switch (const auto &encode_args = get<std::vector<std::string>>("--encode"); encode_args.size())
-	{
-	case 0:
-		start();
-		break;
-	case 2:
-		encode(encode_args[0], std::atoi(encode_args[1].c_str()));
-		break;
-	case 3:
-		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2]);
-		break;
-	case 4:
-		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2], encode_args[3]);
-		break;
-	default:
-		throw std::logic_error("--encode should only have 2-4 arguments");
 	}
 }
 

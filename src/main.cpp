@@ -1,5 +1,4 @@
 #include <iostream>
-#include <stacktrace>
 
 #include "Main.hpp"
 
@@ -15,8 +14,7 @@ int main(const int argc, const char *const *const argv)
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "audioviz: " << e.what() << '\n'
-				  << std::stacktrace::current() << '\n';
+		std::cerr << "audioviz: " << e.what() << '\n';
 		return EXIT_FAILURE;
 	}
 }

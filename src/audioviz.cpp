@@ -3,7 +3,8 @@
 #include "audioviz.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
-	: size(size),
+	: url(media_url),
+	  size(size),
 	  _format(media_url),
 	  ps(size, 50),
 	  bg(size, antialiasing),

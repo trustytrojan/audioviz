@@ -2,6 +2,7 @@
 
 #include "Effect.hpp"
 #include "FragShader.hpp"
+#include "RenderTexture.hpp"
 
 namespace fx
 {
