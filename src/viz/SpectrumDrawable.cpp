@@ -58,62 +58,92 @@ void SpectrumDrawable::do_fft(const float *const audio)
 	do_fft();
 }
 
-void SpectrumDrawable::set_target_rect(const sf::IntRect &rect, const bool backwards)
+void SpectrumDrawable::set_rect(const sf::IntRect &rect)
 {
 	// sanity check
-	assert(spectrum.size() == pills.size());
-
-	if (target_rect == rect)
-		throw std::runtime_error("same rect");
-
-	// fit pills to width of target_rect
-	const int pill_count = rect.width / (bar.width + bar.spacing);
-	spectrum.resize(pill_count);
-	pills.resize(pill_count);
-
-	for (int i = 0; i < pill_count; ++i)
-	{
-		pills[i].setFillColor(color.get((float)i / pill_count));
-		pills[i].setWidth(bar.width);
-
-		const auto x = backwards
-						   ? rect.left + rect.width - bar.width - i * (bar.width + bar.spacing)
-						   : rect.left + i * (bar.width + bar.spacing);
-
-		pills[i].setPosition({x, rect.top + rect.height});
-	}
-
-	target_rect = rect;
+	assert(spectrum.size() == bars.size());
+	if (this->rect == rect)
+		return;
+	this->rect = rect;
+	update_bars();
 }
 
-void SpectrumDrawable::draw(sf::RenderTarget &target, const sf::RenderStates) const
+void SpectrumDrawable::set_bar_width(int width)
+{
+	if (bar.width == width)
+		return;
+	bar.width = width;
+	update_bars();
+}
+
+void SpectrumDrawable::set_bar_spacing(int spacing)
+{
+	if (bar.spacing == spacing)
+		return;
+	bar.spacing = spacing;
+	update_bars();
+}
+
+void SpectrumDrawable::set_backwards(bool b)
+{
+	if (backwards == b)
+		return;
+	backwards = b;
+	update_bars();
+}
+
+void SpectrumDrawable::update_bars()
 {
 	// sanity check
-	assert(spectrum.size() == pills.size());
+	assert(spectrum.size() == bars.size());
 
-	for (const auto &pill : pills)
-		target.draw(pill);
+	const int bar_count = rect.width / (bar.width + bar.spacing);
+	spectrum.resize(bar_count);
+	bars.resize(bar_count);
+
+	for (int i = 0; i < bar_count; ++i)
+	{
+		bars[i].setFillColor(color.get((float)i / bar_count));
+		bars[i].setWidth(bar.width);
+
+		// clang-format off
+		const auto x = backwards
+			? rect.left + rect.width - bar.width - i * (bar.width + bar.spacing)
+			: rect.left + i * (bar.width + bar.spacing);
+		// clang-format on
+
+		bars[i].setPosition({x, rect.top + rect.height});
+	}
 }
 
 void SpectrumDrawable::do_fft()
 {
 	// sanity check
-	assert(spectrum.size() == pills.size());
+	assert(spectrum.size() == bars.size());
 
-	const int pill_count = spectrum.size();
+	const int bar_count = spectrum.size();
 
 	fs.render(spectrum);
 
-	for (int i = 0; i < pill_count; ++i)
+	for (int i = 0; i < bar_count; ++i)
 	{
 		// calculate new pill height (sometimes spectrum output is negative)
-		auto height = multiplier * target_rect.height * std::max(0.f, spectrum[i]);
+		auto height = multiplier * rect.height * std::max(0.f, spectrum[i]);
 
 		// don't go over the target's height
-		height = std::min((float)target_rect.height, height);
+		height = std::min((float)rect.height, height);
 
-		pills[i].setHeight(height);
+		bars[i].setHeight(height);
 	}
+}
+
+void SpectrumDrawable::draw(sf::RenderTarget &target, const sf::RenderStates) const
+{
+	// sanity check
+	assert(spectrum.size() == bars.size());
+
+	for (const auto &pill : bars)
+		target.draw(pill);
 }
 
 } // namespace viz

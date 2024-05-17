@@ -25,8 +25,9 @@ private:
 
 	// internal data
 	std::vector<float> spectrum;
-	std::vector<VerticalPill> pills;
-	sf::IntRect target_rect;
+	std::vector<VerticalPill> bars;
+	sf::IntRect rect;
+	bool backwards = false;
 
 public:
 	FS fs;
@@ -39,9 +40,6 @@ public:
 		int width = 10, spacing = 5;
 
 	public:
-		void set_width(int width) { this->width = width; }
-		void set_spacing(int spacing) { this->spacing = spacing; }
-		int get_width() const { return width; }
 		int get_spacing() const { return spacing; }
 	} bar;
 
@@ -95,7 +93,14 @@ public:
 	// setters
 
 	void set_multiplier(float multiplier);
-	void set_target_rect(const sf::IntRect &rect, bool backwards = false);
+	// set the area in which the spectrum will be drawn to
+	void set_rect(const sf::IntRect &rect);
+	void set_bar_width(int width);
+	void set_bar_spacing(int spacing);
+	void set_backwards(bool b);
+
+	// call after changing any property of the spectrum/bars that will change their positions or colors
+	void update_bars();
 
 	void do_fft(const float *const audio, int num_channels, int channel, bool interleaved);
 	void do_fft(const float *const audio);

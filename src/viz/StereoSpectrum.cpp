@@ -1,16 +1,43 @@
 #include "viz/StereoSpectrum.hpp"
 
+#include <iostream>
+
 namespace viz
 {
 
 StereoSpectrum::StereoSpectrum(int sample_size)
 	: _left(sample_size),
-	  _right(sample_size) {}
-
-void StereoSpectrum::set_target_rect(const sf::IntRect &rect)
+	  _right(sample_size)
 {
+	_left.set_backwards(true);
+}
+
+void StereoSpectrum::set_bar_spacing(int spacing)
+{
+	assert(_left.bar.get_spacing() == _right.bar.get_spacing());
+	if (_left.bar.get_spacing() == spacing)
+		return;
+	_left.set_bar_spacing(spacing);
+	_right.set_bar_spacing(spacing);
+	update_spectrums();
+}
+
+void StereoSpectrum::set_rect(const sf::IntRect &rect)
+{
+	if (this->rect == rect)
+		return;
+	this->rect = rect;
+	update_spectrums();
+}
+
+void StereoSpectrum::update_spectrums()
+{
+	assert(_left.bar.get_spacing() == _right.bar.get_spacing());
+
 	const auto half_width = rect.width / 2.f;
 	const auto half_bar_spacing = _left.bar.get_spacing() / 2.f;
+
+	std::cout << half_bar_spacing << '\n';
 
 	const sf::IntRect
 		left_half{
@@ -23,8 +50,8 @@ void StereoSpectrum::set_target_rect(const sf::IntRect &rect)
 	const auto dist_between_rects = right_half.left - (left_half.left + left_half.width);
 	assert(dist_between_rects == _left.bar.get_spacing());
 
-	_left.set_target_rect(left_half, true);
-	_right.set_target_rect(right_half);
+	_left.set_rect(left_half);
+	_right.set_rect(right_half);
 
 	assert(_left.data().size() == _right.data().size());
 }

@@ -168,7 +168,7 @@ void audioviz::text_init()
 
 void audioviz::set_margin(const int margin)
 {
-	ss.set_target_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
+	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
 }
 
 void audioviz::set_framerate(int framerate)
@@ -415,14 +415,13 @@ void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 
 void audioviz::set_bar_width(int width)
 {
-	ss.left().bar.set_width(width);
-	ss.right().bar.set_width(width);
+	ss.left().set_bar_width(width);
+	ss.right().set_bar_width(width);
 }
 
 void audioviz::set_bar_spacing(int spacing)
 {
-	ss.left().bar.set_spacing(spacing);
-	ss.right().bar.set_spacing(spacing);
+	ss.set_bar_spacing(spacing);
 }
 
 void audioviz::set_color_mode(SD::ColorMode mode)
