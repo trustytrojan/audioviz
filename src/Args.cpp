@@ -7,8 +7,8 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("URL to media to visualize and play");
 
 	add_argument("--encode")
-		.help("encode to a video using ffmpeg! arguments: <output_file> <fps> [vcodec] [acodec]")
-		.nargs(2, 4)
+		.help("encode to a video using ffmpeg! arguments: <output_file> [fps] [vcodec] [acodec]")
+		.nargs(1, 4)
 		.validate();
 	add_argument("--ffpath")
 		.help("specify ffmpeg path used with '--encode'");

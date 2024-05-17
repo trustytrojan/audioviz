@@ -11,24 +11,29 @@ Main::Main(const int argc, const char *const *const argv)
 	use_args();
 	viz_init();
 
-	// --encode (decides whether we render to the window or to a video)
-	switch (const auto &encode_args = get<std::vector<std::string>>("--encode"); encode_args.size())
+	// --encode: render to video file
+	switch (const auto &args = get<std::vector<std::string>>("--encode"); args.size())
 	{
 	case 0:
-		start();
+		break;
+	case 1:
+		encode(args[0]);
 		break;
 	case 2:
-		encode(encode_args[0], std::atoi(encode_args[1].c_str()));
+		encode(args[0], std::atoi(args[1].c_str()));
 		break;
 	case 3:
-		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2]);
+		encode(args[0], std::atoi(args[1].c_str()), args[2]);
 		break;
 	case 4:
-		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2], encode_args[3]);
+		encode(args[0], std::atoi(args[1].c_str()), args[2], args[3]);
 		break;
 	default:
-		throw std::logic_error("--encode should only have 2-4 arguments");
+		throw std::logic_error("--encode requires 1-4 arguments");
 	}
+
+	// default behavior: render to window
+	start();
 }
 
 void Main::use_args()
