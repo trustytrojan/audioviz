@@ -17,8 +17,6 @@ class Particle : public ShapeType
 	sf::Vector2f velocity;
 
 public:
-	Particle() : ShapeType() {}
-
 	void updatePosition()
 	{
 		this->setPosition(this->getPosition() + velocity);
