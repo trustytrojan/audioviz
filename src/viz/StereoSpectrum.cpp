@@ -37,8 +37,6 @@ void StereoSpectrum::update_spectrums()
 	const auto half_width = rect.width / 2.f;
 	const auto half_bar_spacing = _left.bar.get_spacing() / 2.f;
 
-	std::cout << half_bar_spacing << '\n';
-
 	const sf::IntRect
 		left_half{
 			rect.getPosition(),

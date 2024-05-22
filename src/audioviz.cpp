@@ -6,7 +6,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	: url(media_url),
 	  size(size),
 	  _format(media_url),
-	  ps(size, 50),
+	  ps({{}, (sf::Vector2i)size}, 50),
 	  bg(size, antialiasing),
 	  particles(size, antialiasing),
 	  spectrum(size, antialiasing)
