@@ -217,22 +217,23 @@ void audioviz::draw_particles()
 	 * aka the first spectrum bar/element in either data vector.
 	 */
 
-	const auto weighted_max_element = [](const auto begin, const auto end, const auto weight_start)
+	const auto weighted_max = [](const auto begin, const auto end, const auto weight_start)
 	{
-		auto max_element = begin;
+		auto max_value = *begin;
 		const auto total_distance = static_cast<float>(std::distance(weight_start, end));
-		for (auto it = begin; it != end; ++it)
+		for (auto it = begin; it < end; ++it)
 		{
 			// weight each element before it is compared
 			// clang-format off
 			const auto weight = (it < weight_start)
-				? 1.0f
-				: sqrt(std::distance(it, end) / total_distance); // subtly decrease the weight as it gets closer to end
+				? 1.f
+				: sqrtf(std::distance(it, end) / total_distance); // subtly decrease the weight as it gets closer to end
 			// clang-format on
-			if (*it * weight > *max_element)
-				max_element = it;
+			const auto value = *it * weight;
+			if (value > max_value)
+				max_value = value;
 		}
-		return max_element;
+		return max_value;
 	};
 
 	const auto calc_max = [&](const std::vector<float> &vec)
@@ -240,13 +241,15 @@ void audioviz::draw_particles()
 		const auto begin = vec.begin();
 		// generally the lower third of the frequency spectrum is considered bass
 		const auto amount = vec.size() / 3.5f;
-		return *weighted_max_element(
+		return weighted_max(
 			begin,
 			begin + amount,		   // only the first 50% of the range will have full weight
 			begin + (amount / 2)); // these are generally the strongest bass frequencies to the ear
 	};
 
 	const auto avg = (calc_max(left_data) + calc_max(right_data)) / 2;
+
+	std::cout << avg << '\n';
 
 	// scale by window size to keep movement consistent with all window sizes
 	const auto scaled_avg = size.y * avg;
