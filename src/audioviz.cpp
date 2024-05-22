@@ -249,8 +249,6 @@ void audioviz::draw_particles()
 
 	const auto avg = (calc_max(left_data) + calc_max(right_data)) / 2;
 
-	std::cout << avg << '\n';
-
 	// scale by window size to keep movement consistent with all window sizes
 	const auto scaled_avg = size.y * avg;
 
