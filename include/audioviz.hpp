@@ -31,7 +31,7 @@ public:
 	const sf::Vector2u size;
 
 protected:
-	using SD = viz::SpectrumDrawable;
+	using SD = viz::SpectrumDrawable<viz::VerticalPill>;
 	using FS = tt::FrequencySpectrum;
 
 private:
@@ -62,7 +62,7 @@ private:
 	int _afpvf = _astream.sample_rate() / framerate;
 
 	// stereo spectrum!
-	viz::StereoSpectrum ss = sample_size;
+	viz::StereoSpectrum<viz::VerticalPill> ss = sample_size;
 
 	// particle system
 	viz::ParticleSystem ps;
