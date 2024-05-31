@@ -1,0 +1,4 @@
+- [ ] implement scope visualizer
+- [ ] implement new SpectrumBar types
+- [ ] implement new effects
+- [ ] implement layering system to make effects more useful (the start of an after effects clone)
