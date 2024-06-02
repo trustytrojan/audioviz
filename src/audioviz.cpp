@@ -11,7 +11,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	  particles(size, antialiasing),
 	  spectrum(size, antialiasing)
 {
-	text_init();
+	metadata_init();
 
 	// for now only stereo is supported
 	if (_astream.nb_channels() != 2)
@@ -20,9 +20,6 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	// default margin around the spectrum
 	set_margin(10);
 
-	// default metadata position
-	set_metadata_position({30, 30});
-
 	// add default effects!
 	bg.effects.emplace_back(new fx::Blur{10, 10, 20});
 	particles.effects.emplace_back(new fx::Blur{1, 1, 10});
@@ -30,22 +27,25 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 	// init libav stuff
 	av_init();
+
+	// default metadata position
+	_metadata.set_position({30, 30});
 }
 
 void audioviz::av_init()
 {
 	// if an attached pic is in the format, use it for bg and album cover
 	// clang-format off
-	if (const auto itr = std::ranges::find_if(_format.streams(), [](const av::Stream &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
+	if (const auto itr = std::ranges::find_if(_format.streams(),
+			[](const auto &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
 		itr != _format.streams().cend())
 	// clang-format on
 	{
 		const auto &stream = *itr;
 		if (sf::Texture txr; txr.loadFromMemory(stream->attached_pic.data, stream->attached_pic.size))
 		{
+			_metadata.set_album_cover(txr, {150, 150});
 			set_background(txr);
-			album_cover.texture = txr;
-			_set_album_cover();
 		}
 	}
 
@@ -104,27 +104,12 @@ void audioviz::av_init()
 	}
 }
 
-void audioviz::set_title_text(const std::string &text)
+void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf::Vector2f size)
 {
-	title_text.setString(text);
-}
-
-void audioviz::set_artist_text(const std::string &text)
-{
-	artist_text.setString(text);
-}
-
-void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf::Vector2f scale_to)
-{
-	if (!album_cover.texture.loadFromFile(image_path))
+	sf::Texture txr;
+	if (!txr.loadFromFile(image_path))
 		throw std::runtime_error("failed to load album cover: '" + image_path.string() + '\'');
-	_set_album_cover(scale_to);
-}
-
-void audioviz::_set_album_cover(const sf::Vector2f scale_to)
-{
-	album_cover.sprite.capture_centered_square_view();
-	album_cover.sprite.set_size(scale_to);
+	_metadata.set_album_cover(txr, size);
 }
 
 void audioviz::set_text_font(const std::filesystem::path &path)
@@ -134,28 +119,20 @@ void audioviz::set_text_font(const std::filesystem::path &path)
 	font_loaded = true;
 }
 
-void audioviz::set_metadata_position(const sf::Vector2f pos)
+void audioviz::metadata_init()
 {
-	album_cover.sprite.setPosition(pos);
-
-	auto ac_size = album_cover.sprite.getTextureRect().getSize();
-	const auto ac_scale = album_cover.sprite.getScale();
-	ac_size.x *= ac_scale.x;
-	ac_size.y *= ac_scale.y;
-
-	const sf::Vector2f text_pos{pos.x + ac_size.x + 10 * bool(ac_size.x), pos.y};
-	title_text.setPosition({text_pos.x, text_pos.y});
-	artist_text.setPosition({text_pos.x, text_pos.y + title_text.getCharacterSize() + 5});
-}
-
-void audioviz::text_init()
-{
+	auto &title_text = _metadata.title_text,
+		 &artist_text = _metadata.artist_text;
+	
+	// set style, fontsize, and color
 	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
 	artist_text.setStyle(sf::Text::Italic);
 	title_text.setCharacterSize(24);
 	artist_text.setCharacterSize(24);
 	title_text.setFillColor({255, 255, 255, 150});
 	artist_text.setFillColor({255, 255, 255, 150});
+
+	// set text using stream/format metadata
 	if (const auto title = _astream.metadata("title"))
 		title_text.setString(title);
 	if (const auto title = _format.metadata("title"))
@@ -198,7 +175,7 @@ void audioviz::set_background(const sf::Texture &texture)
 
 void audioviz::draw_spectrum()
 {
-	ss.do_fft(audio_buffer.data());
+	ss.process(fs, sa, audio_buffer.data());
 	spectrum.rt.orig.clear(zero_alpha);
 	spectrum.rt.orig.draw(ss);
 	spectrum.rt.orig.display();
@@ -208,8 +185,8 @@ void audioviz::draw_spectrum()
 // should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
-	const auto &left_data = ss.left().data();
-	const auto &right_data = ss.right().data();
+	const auto &left_data = sa.left_data(),
+			   &right_data = sa.right_data();
 	assert(left_data.size() == right_data.size());
 
 	/**
@@ -402,22 +379,12 @@ void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 	// redraw spectrum due to anti-aliased edges retaining original background color
 	target.draw(ss);
 
-	// draw metadata if available (TODO: decide whether to apply effects on metadata too)
-	if (album_cover.texture.getNativeHandle())
-		target.draw(album_cover.sprite);
-	if (font_loaded)
-	{
-		if (!title_text.getString().isEmpty())
-			target.draw(title_text);
-		if (!artist_text.getString().isEmpty())
-			target.draw(artist_text);
-	}
+	target.draw(_metadata);
 }
 
 void audioviz::set_bar_width(int width)
 {
-	ss.left().set_bar_width(width);
-	ss.right().set_bar_width(width);
+	ss.set_bar_width(width);
 }
 
 void audioviz::set_bar_spacing(int spacing)
@@ -427,66 +394,55 @@ void audioviz::set_bar_spacing(int spacing)
 
 void audioviz::set_color_mode(SD::ColorMode mode)
 {
-	ss.left().color.set_mode(mode);
-	ss.right().color.set_mode(mode);
+	ss.set_color_mode(mode);
 }
 
 void audioviz::set_solid_color(sf::Color color)
 {
-	ss.left().color.set_solid_rgb(color);
-	ss.right().color.set_solid_rgb(color);
+	ss.set_solid_color(color);
 }
 
 void audioviz::set_color_wheel_rate(float rate)
 {
-	ss.left().color.wheel.set_rate(rate);
-	ss.right().color.wheel.set_rate(rate);
+	ss.set_color_wheel_rate(rate);
 }
 
 void audioviz::set_color_wheel_hsv(sf::Vector3f hsv)
 {
-	ss.left().color.wheel.set_hsv(hsv);
-	ss.right().color.wheel.set_hsv(hsv);
+	ss.set_color_wheel_hsv(hsv);
 }
 
 void audioviz::set_multiplier(float multiplier)
 {
-	ss.left().set_multiplier(multiplier);
-	ss.right().set_multiplier(multiplier);
+	ss.set_multiplier(multiplier);
 }
 
-// void audioviz::set_fft_size(int fft_size)
-// {
-// 	ss.left().set_fft_size(fft_size);
-// 	ss.right().set_fft_size(fft_size);
-// }
+void audioviz::set_fft_size(int fft_size)
+{
+	fs.set_fft_size(fft_size);
+}
 
 void audioviz::set_interp_type(FS::InterpolationType interp_type)
 {
-	ss.left().set_interp_type(interp_type);
-	ss.right().set_interp_type(interp_type);
+	fs.set_interp_type(interp_type);
 }
 
 void audioviz::set_scale(FS::Scale scale)
 {
-	ss.left().set_scale(scale);
-	ss.right().set_scale(scale);
+	fs.set_scale(scale);
 }
 
 void audioviz::set_nth_root(int nth_root)
 {
-	ss.left().set_nth_root(nth_root);
-	ss.right().set_nth_root(nth_root);
+	fs.set_nth_root(nth_root);
 }
 
 void audioviz::set_accum_method(FS::AccumulationMethod method)
 {
-	ss.left().set_accum_method(method);
-	ss.right().set_accum_method(method);
+	fs.set_accum_method(method);
 }
 
 void audioviz::set_window_func(FS::WindowFunction wf)
 {
-	ss.left().set_window_func(wf);
-	ss.right().set_window_func(wf);
+	fs.set_window_func(wf);
 }

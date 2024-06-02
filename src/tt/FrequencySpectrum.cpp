@@ -2,45 +2,45 @@
 #include <memory>
 #include <stdexcept>
 
-#include "tt/FrequencySpectrum.hpp"
+#include "tt/FrequencyAnalyzer.hpp"
 
 namespace tt
 {
 
-FrequencySpectrum::FrequencySpectrum(const int fft_size)
+FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
 	: fft_size(fft_size)
 {
 	scale_max.set(*this);
 }
 
-void FrequencySpectrum::set_fft_size(const int fft_size)
+void FrequencyAnalyzer::set_fft_size(const int fft_size)
 {
 	this->fft_size = fft_size;
 	fftw.set_n(fft_size);
 	scale_max.set(*this);
 }
 
-void FrequencySpectrum::set_interp_type(const InterpolationType interp)
+void FrequencyAnalyzer::set_interp_type(const InterpolationType interp)
 {
 	this->interp = interp;
 }
 
-void FrequencySpectrum::set_window_func(const WindowFunction wf)
+void FrequencyAnalyzer::set_window_func(const WindowFunction wf)
 {
 	this->wf = wf;
 }
 
-void FrequencySpectrum::set_accum_method(const AccumulationMethod am)
+void FrequencyAnalyzer::set_accum_method(const AccumulationMethod am)
 {
 	this->am = am;
 }
 
-void FrequencySpectrum::set_scale(const Scale scale)
+void FrequencyAnalyzer::set_scale(const Scale scale)
 {
 	this->scale = scale;
 }
 
-void FrequencySpectrum::set_nth_root(const int nth_root)
+void FrequencyAnalyzer::set_nth_root(const int nth_root)
 {
 	if (!nth_root)
 		throw std::invalid_argument("FrequencySpectrun::set_nth_root: nth_root cannot be zero!");
@@ -48,12 +48,12 @@ void FrequencySpectrum::set_nth_root(const int nth_root)
 	nthroot_inv = 1.f / nth_root;
 }
 
-void FrequencySpectrum::copy_to_input(const float *const wavedata)
+void FrequencyAnalyzer::copy_to_input(const float *const wavedata)
 {
 	memcpy(fftw.input(), wavedata, fft_size * sizeof(float));
 }
 
-void FrequencySpectrum::copy_channel_to_input(const float *const audio, const int num_channels, const int channel, const bool interleaved)
+void FrequencyAnalyzer::copy_channel_to_input(const float *const audio, const int num_channels, const int channel, const bool interleaved)
 {
 	if (num_channels <= 0)
 		throw std::invalid_argument("num_channels <= 0");
@@ -73,7 +73,7 @@ void FrequencySpectrum::copy_channel_to_input(const float *const audio, const in
 		input[i] = audio[i * num_channels + channel];
 }
 
-void FrequencySpectrum::render(std::vector<float> &spectrum)
+void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 {
 	assert(spectrum.size());
 
@@ -118,7 +118,7 @@ void FrequencySpectrum::render(std::vector<float> &spectrum)
 		interpolate(spectrum);
 }
 
-float FrequencySpectrum::window_func(const int i)
+float FrequencyAnalyzer::window_func(const int i)
 {
 	switch (wf)
 	{
@@ -133,12 +133,12 @@ float FrequencySpectrum::window_func(const int i)
 	}
 }
 
-int FrequencySpectrum::calc_index(const int i, const int max_index)
+int FrequencyAnalyzer::calc_index(const int i, const int max_index)
 {
 	return std::max(0, std::min(int(calc_index_ratio(i) * max_index), max_index - 1));
 }
 
-float FrequencySpectrum::calc_index_ratio(const float i)
+float FrequencyAnalyzer::calc_index_ratio(const float i)
 {
 	switch (scale)
 	{
@@ -163,7 +163,7 @@ float FrequencySpectrum::calc_index_ratio(const float i)
 	}
 }
 
-void FrequencySpectrum::interpolate(std::vector<float> &spectrum)
+void FrequencyAnalyzer::interpolate(std::vector<float> &spectrum)
 {
 	// separate the nonzero values (y's) and their indices (x's)
 	std::vector<double> nonzero_values, indices;

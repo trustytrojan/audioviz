@@ -72,6 +72,11 @@
 		"text_encoding": "cpp",
 		"stacktrace": "cpp",
 		"any": "cpp",
-		"set": "cpp"
+		"set": "cpp",
+		"bitset": "cpp",
+		"forward_list": "cpp",
+		"unordered_set": "cpp",
+		"future": "cpp",
+		"*.inc": "cpp"
 	}
 }

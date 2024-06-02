@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tt/StereoAnalyzer.hpp"
+
 #include "SpectrumDrawable.hpp"
 
 namespace viz
@@ -8,25 +10,59 @@ namespace viz
 template <typename BarType>
 class StereoSpectrum : public sf::Drawable
 {
-	SpectrumDrawable<BarType> _left, _right;
+	using SD = SpectrumDrawable<BarType>;
+
+	SD _left, _right;
 	sf::IntRect rect;
 
 public:
-	StereoSpectrum(int sample_size)
-		: _left(sample_size),
-		  _right(sample_size)
+	StereoSpectrum()
 	{
 		_left.set_backwards(true);
 	}
 
+	void set_bar_width(int width)
+	{
+		_left.set_bar_width(width);
+		_right.set_bar_width(width);
+		update_spectrum_rects();
+	}
+
 	void set_bar_spacing(int spacing)
 	{
-		assert(_left.bar.get_spacing() == _right.bar.get_spacing());
-		if (_left.bar.get_spacing() == spacing)
-			return;
 		_left.set_bar_spacing(spacing);
 		_right.set_bar_spacing(spacing);
-		update_spectrums();
+		update_spectrum_rects();
+	}
+
+	void set_color_mode(SD::ColorMode mode)
+	{
+		_left.color.set_mode(mode);
+		_right.color.set_mode(mode);
+	}
+
+	void set_solid_color(sf::Color color)
+	{
+		_left.color.set_solid_rgb(color);
+		_right.color.set_solid_rgb(color);
+	}
+
+	void set_color_wheel_rate(float rate)
+	{
+		_left.color.wheel.set_rate(rate);
+		_right.color.wheel.set_rate(rate);
+	}
+
+	void set_color_wheel_hsv(sf::Vector3f hsv)
+	{
+		_left.color.wheel.set_hsv(hsv);
+		_right.color.wheel.set_hsv(hsv);
+	}
+
+	void set_multiplier(float multiplier)
+	{
+		_left.set_multiplier(multiplier);
+		_right.set_multiplier(multiplier);
 	}
 
 	void set_rect(const sf::IntRect &rect)
@@ -34,13 +70,16 @@ public:
 		if (this->rect == rect)
 			return;
 		this->rect = rect;
-		update_spectrums();
+		update_spectrum_rects();
 	}
 
-	void do_fft(const float *const stereo_audio)
+	void process(tt::FrequencyAnalyzer &fa, tt::StereoAnalyzer &sa, const float *const audio)
 	{
-		_left.do_fft(stereo_audio, 2, 0, true);
-		_right.do_fft(stereo_audio, 2, 1, true);
+		assert(_left.bar_count() == _right.bar_count());
+		sa.resize(_left.bar_count());
+		sa.analyze(fa, audio);
+		_left.update_bar_heights(sa.left_data());
+		_right.update_bar_heights(sa.right_data());
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override
@@ -49,11 +88,8 @@ public:
 		target.draw(_right, states);
 	}
 
-	SpectrumDrawable<BarType> &left() { return _left; }
-	SpectrumDrawable<BarType> &right() { return _right; }
-
 private:
-	void update_spectrums()
+	void update_spectrum_rects()
 	{
 		assert(_left.bar.get_spacing() == _right.bar.get_spacing());
 
@@ -74,7 +110,7 @@ private:
 		_left.set_rect(left_half);
 		_right.set_rect(right_half);
 
-		assert(_left.data().size() == _right.data().size());
+		assert(_left.bar_count() == _right.bar_count());
 	}
 };
 

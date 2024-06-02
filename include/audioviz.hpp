@@ -12,6 +12,8 @@
 
 #include "viz/ParticleSystem.hpp"
 #include "viz/StereoSpectrum.hpp"
+#include "viz/VerticalPill.hpp"
+#include "viz/SongMetadataDrawable.hpp"
 
 #include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
@@ -32,7 +34,7 @@ public:
 
 protected:
 	using SD = viz::SpectrumDrawable<viz::VerticalPill>;
-	using FS = tt::FrequencySpectrum;
+	using FS = tt::FrequencyAnalyzer;
 
 private:
 	static inline const sf::Color zero_alpha{0, 0, 0, 0};
@@ -42,6 +44,7 @@ private:
 
 	av::MediaReader _format;
 
+	// TODO: write a AudioDecoder class in libavpp
 	av::Stream _astream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
 	av::Decoder _adecoder = _astream.create_decoder();
 	av::Resampler _resampler = av::Resampler(
@@ -49,6 +52,7 @@ private:
 		&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate());
 	av::Frame rs_frame;
 
+	// TODO: write a VideoDecoder class in libavpp
 	std::optional<av::Stream> _vstream;
 	std::optional<av::Decoder> _vdecoder;
 	std::optional<av::Scaler> _scaler;
@@ -61,8 +65,12 @@ private:
 	// audio frames per video frame
 	int _afpvf = _astream.sample_rate() / framerate;
 
+	// fft processor
+	tt::FrequencyAnalyzer fs = sample_size;
+	tt::StereoAnalyzer sa;
+
 	// stereo spectrum!
-	viz::StereoSpectrum<viz::VerticalPill> ss = sample_size;
+	viz::StereoSpectrum<viz::VerticalPill> ss;
 
 	// particle system
 	viz::ParticleSystem ps;
@@ -70,18 +78,12 @@ private:
 	// metadata-related fields
 	bool font_loaded = false;
 	sf::Font font;
-	sf::Text title_text = font,
-			 artist_text = font;
-	struct _ts
-	{
-		sf::Texture texture;
-		tt::Sprite sprite;
-		_ts() : sprite(texture) {}
-	} album_cover;
+	viz::SongMetadataDrawable _metadata = font;
 
 	// clock to time the particle system
 	sf::Clock ps_clock;
 
+	// PortAudio stuff for live playback
 	std::optional<pa::PortAudio> pa_init;
 	std::optional<pa::Stream> pa_stream;
 
@@ -120,7 +122,8 @@ public:
 	audioviz(sf::Vector2u size, const std::string &media_url, int antialiasing = 4);
 
 	/**
-	 * @return whether the end of the audio buffer has been reached and another frame cannot be prepared.
+	 * Prepare a frame to be drawn with `draw()`.
+	 * @return Whether the end of the audio buffer has been reached and another frame cannot be prepared.
 	 */
 	bool prepare_frame();
 
@@ -128,11 +131,6 @@ public:
 	 * Overrides `sf::Drawable::draw`.
 	 */
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
-
-	/**
-	 * @return the chunk of audio used to produce the last frame
-	 */
-	const std::vector<float> &current_audio() const { return audio_buffer; }
 
 	/// setters
 
@@ -153,15 +151,10 @@ public:
 	// set margins around the output size for the spectrum to respect
 	void set_margin(int margin);
 
-	void set_title_text(const std::string &text);
-	void set_artist_text(const std::string &text);
 	void set_album_cover(const std::filesystem::path &image_path, sf::Vector2f size = {150, 150});
 
 	// you **must** call this method in order to see text metadata!
 	void set_text_font(const std::filesystem::path &path);
-
-	// set the top-left-most position for the metadata (album cover sprite, title/artist text) to be drawn from
-	void set_metadata_position(const sf::Vector2f pos);
 
 	/// passthrough setters
 
@@ -172,7 +165,7 @@ public:
 	void set_color_wheel_rate(float rate);
 	void set_color_wheel_hsv(sf::Vector3f hsv);
 	void set_multiplier(float multiplier);
-	// void set_fft_size(int fft_size); // will handle this later
+	void set_fft_size(int fft_size);
 	void set_interp_type(FS::InterpolationType interp_type);
 	void set_scale(FS::Scale scale);
 	void set_nth_root(int nth_root);
@@ -181,10 +174,9 @@ public:
 
 private:
 	void av_init();
-	void text_init();
+	void metadata_init();
 	void draw_spectrum();
 	void draw_particles();
-	void _set_album_cover(sf::Vector2f size = {150, 150});
 	void decode_media();
 	void play_audio();
 };

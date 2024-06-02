@@ -19,10 +19,10 @@ struct Sprite : sf::Sprite
 		setTextureRect({{tsize.x / 2.f - square_size / 2.f, 0}, {square_size, square_size}});
 	}
 
-	void set_size(const sf::Vector2f desired)
+	void scale_to(const sf::Vector2f size)
 	{
-		const auto tsize = getTextureRect().getSize();
-		const auto scale_factor = std::min(desired.x / tsize.x, desired.y / tsize.y);
+		const auto trsize = getTextureRect().getSize();
+		const auto scale_factor = std::min(size.x / trsize.x, size.y / trsize.y);
 		setScale({scale_factor, scale_factor});
 	}
 
@@ -31,7 +31,12 @@ struct Sprite : sf::Sprite
 		setOrigin((sf::Vector2f)getTextureRect().getSize() / 2.f);
 		setPosition((sf::Vector2f)size / 2.f);
 		const float max_dim = std::max(size.x, size.y);
-		set_size({max_dim, max_dim});
+		scale_to({max_dim, max_dim});
+	}
+
+	sf::Vector2f get_size() const
+	{
+		return sf::Vector2f(getTextureRect().getSize()).cwiseMul(getScale());
 	}
 };
 

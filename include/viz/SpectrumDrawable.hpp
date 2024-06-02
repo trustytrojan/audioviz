@@ -1,9 +1,6 @@
 #pragma once
 
 #include "tt/ColorUtils.hpp"
-#include "tt/FrequencySpectrum.hpp"
-
-#include "VerticalPill.hpp"
 
 namespace viz
 {
@@ -11,8 +8,6 @@ namespace viz
 template <typename BarType>
 class SpectrumDrawable : public sf::Drawable
 {
-	// static_assert(std::is_base_of_v<SpectrumBar, BarType>, "BarType must be a subtype of SpectrumBar");
-
 public:
 	enum class ColorMode
 	{
@@ -21,22 +16,15 @@ public:
 	};
 
 private:
-	using FS = tt::FrequencySpectrum;
-
 	// spectrum parameters
 	float multiplier = 4;
 
 	// internal data
-	FS fs;
-	std::vector<float> spectrum;
 	std::vector<BarType> bars;
 	sf::IntRect rect;
 	bool backwards = false;
 
 public:
-	SpectrumDrawable(const int fft_size)
-		: fs(fft_size) {}
-
 	class
 	{
 		friend class SpectrumDrawable;
@@ -103,8 +91,6 @@ public:
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
-		// sanity check
-		assert(spectrum.size() == bars.size());
 		if (this->rect == rect)
 			return;
 		this->rect = rect;
@@ -135,14 +121,26 @@ public:
 		update_bars();
 	}
 
+	void update_bar_heights(const std::vector<float> &spectrum)
+	{
+		assert(spectrum.size() == bars.size());
+		for (int i = 0; i < (int)spectrum.size(); ++i)
+			bars[i].setHeight(std::clamp(multiplier * rect.height * spectrum[i], 0.f, (float)rect.height));
+	}
+
+	void draw(sf::RenderTarget &target, sf::RenderStates) const override
+	{
+		for (const auto &pill : bars)
+			target.draw(pill);
+	}
+
+	int bar_count() const { return bars.size(); }
+
+private:
 	// call after changing any property of the spectrum/bars that will change their positions or colors
 	void update_bars()
 	{
-		// sanity check
-		assert(spectrum.size() == bars.size());
-
 		const int bar_count = rect.width / (bar.width + bar.spacing);
-		spectrum.resize(bar_count);
 		bars.resize(bar_count);
 
 		for (int i = 0; i < bar_count; ++i)
@@ -151,65 +149,12 @@ public:
 			bars[i].setWidth(bar.width);
 
 			// clang-format off
-		const auto x = backwards
-			? rect.left + rect.width - bar.width - i * (bar.width + bar.spacing)
-			: rect.left + i * (bar.width + bar.spacing);
+			const auto x = backwards
+				? rect.left + rect.width - bar.width - i * (bar.width + bar.spacing)
+				: rect.left + i * (bar.width + bar.spacing);
 			// clang-format on
 
 			bars[i].setPosition({x, rect.top + rect.height});
-		}
-	}
-
-	void do_fft(const float *const audio, int num_channels, int channel, bool interleaved)
-	{
-		fs.copy_channel_to_input(audio, num_channels, channel, interleaved);
-		do_fft();
-	}
-
-	void do_fft(const float *const audio)
-	{
-		fs.copy_to_input(audio);
-		do_fft();
-	}
-
-	const std::vector<float> &data() const { return spectrum; }
-
-	void draw(sf::RenderTarget &target, sf::RenderStates) const override
-	{
-		// sanity check
-		assert(spectrum.size() == bars.size());
-
-		for (const auto &pill : bars)
-			target.draw(pill);
-	}
-
-	// passthrough setters for FrequencySpectrum
-	void set_fft_size(int fft_size) { fs.set_fft_size(fft_size); }
-	void set_interp_type(FS::InterpolationType interp_type) { fs.set_interp_type(interp_type); }
-	void set_scale(FS::Scale scale) { fs.set_scale(scale); }
-	void set_nth_root(int nth_root) { fs.set_nth_root(nth_root); }
-	void set_accum_method(FS::AccumulationMethod method) { fs.set_accum_method(method); }
-	void set_window_func(FS::WindowFunction wf) { fs.set_window_func(wf); }
-
-private:
-	void do_fft()
-	{
-		// sanity check
-		assert(spectrum.size() == bars.size());
-
-		const int bar_count = spectrum.size();
-
-		fs.render(spectrum);
-
-		for (int i = 0; i < bar_count; ++i)
-		{
-			// calculate new pill height (sometimes spectrum output is negative)
-			auto height = multiplier * rect.height * std::max(0.f, spectrum[i]);
-
-			// don't go over the target's height
-			height = std::min((float)rect.height, height);
-
-			bars[i].setHeight(height);
 		}
 	}
 };

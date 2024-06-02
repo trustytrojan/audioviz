@@ -9,10 +9,10 @@ namespace tt
 {
 
 /**
- * An FFTW wrapper that scales and interpolates FFT output to the caller's needs.
- * Can't think of a better name.
+ * Analyzes wave data to produce a frequency spectrum. Allows further processing
+ * of the resulting spectrum, such as scaling and interpolation.
  */
-class FrequencySpectrum
+class FrequencyAnalyzer
 {
 public:
 	enum class Scale
@@ -71,26 +71,26 @@ private:
 	struct
 	{
 		double linear, log, sqrt, cbrt, nthroot;
-		void set(const FrequencySpectrum &fs)
+		void set(const FrequencyAnalyzer &fa)
 		{
-			const auto max = fs.fftw.output_size();
+			const auto max = fa.fftw.output_size();
 			linear = max;
 			log = ::log(max);
 			sqrt = ::sqrt(max);
 			cbrt = ::cbrt(max);
-			nthroot = ::pow(max, fs.nthroot_inv);
+			nthroot = ::pow(max, fa.nthroot_inv);
 		}
 	} scale_max;
 
 public:
 	/**
 	 * Initialize frequency spectrum renderer.
-	 * @param fft_size sample chunk size fed into the `transform` method
+	 * @param fft_size sample chunk size used by FFT processor
 	 */
-	FrequencySpectrum(int fft_size);
+	FrequencyAnalyzer(int fft_size);
 
 	/**
-	 * Set the FFT size used in the `kissfft` library.
+	 * Set the FFT size used in the backend library.
 	 * @param fft_size new fft size to use
 	 * @returns reference to self
 	 * @throws `std::invalid_argument` if `fft_size` is not even
@@ -134,14 +134,13 @@ public:
 	void set_nth_root(int nth_root);
 
 	/**
-	 * Copies the `wavedata` to the FFTW input buffer for rendering.
+	 * Copies the `wavedata` to the FFT processor for rendering.
 	 * @param wavedata input wave sample data, expected to be of size `fft_size`
 	 */
 	void copy_to_input(const float *wavedata);
 
 	/**
-	 * This method is meant for audio data.
-	 * Copies a specific channel of the audio buffer to the FFTW input buffer, which is of size `fft_size`.
+	 * Copies a specific channel of the audio to the FFT processor, which is of size `fft_size`.
 	 * If `num_channels` is greater than 1, then `audio` is expected to be of size `num_channels * fft_size`.
 	 * @throws `std::invalid_argument` if `channel` is not in the range `[0, num_channels)`
 	 * @throws `std::invalid_argument` if `num_channels <= 0`
@@ -149,8 +148,10 @@ public:
 	void copy_channel_to_input(const float *audio, int num_channels, int channel, bool interleaved);
 
 	/**
-	 * Performs the FFT on the wave data copied via `copy_channel_to_input`.
-	 * @param spectrum
+	 * Renders a frequency spectrum using the stored wave data.
+	 * @note You must copy wave data to the FFT processor using
+	 * either the `copy_to_input` or `copy_channel_to_input` method.
+	 * @param spectrum Output vector to store resulting spectrum
 	 */
 	void render(std::vector<float> &spectrum);
 
@@ -161,6 +162,6 @@ private:
 	void interpolate(std::vector<float> &spectrum);
 };
 
-using FreqSpec = FrequencySpectrum;
+using FreqSpec = FrequencyAnalyzer;
 
 } // namespace tt
