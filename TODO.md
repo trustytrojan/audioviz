@@ -1,4 +1,6 @@
-- [ ] implement scope visualizer
-- [ ] implement new SpectrumBar types
-- [ ] implement new effects
-- [ ] implement layering system to make effects more useful (the start of an after effects clone)
+- [ ] Implement scope visualizer
+- [ ] Implement new SpectrumBar types
+- [ ] Implement new effects
+- [ ] Implement layering system to make effects more useful (the start of an after effects clone)
+- [ ] Extend `ParticleSystem` into `AudioReactiveParticleSystem`
+- [ ] Implement JSON configuration

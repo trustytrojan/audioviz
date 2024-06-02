@@ -66,10 +66,10 @@ private:
 	int _afpvf = _astream.sample_rate() / framerate;
 
 	// fft processor
-	tt::FrequencyAnalyzer fs = sample_size;
+	tt::FrequencyAnalyzer fa = sample_size;
 	tt::StereoAnalyzer sa;
 
-	// stereo spectrum!
+	// stereo spectrum
 	viz::StereoSpectrum<viz::VerticalPill> ss;
 
 	// particle system
@@ -135,7 +135,7 @@ public:
 	/// setters
 
 	/**
-	 * @param enabled whether to play the audio used to render the spectrum using PortAudio
+	 * @param enabled When started with `start()`, whether to play the audio used to render the spectrum
 	 */
 	void set_audio_playback_enabled(bool enabled);
 

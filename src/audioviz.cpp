@@ -175,7 +175,7 @@ void audioviz::set_background(const sf::Texture &texture)
 
 void audioviz::draw_spectrum()
 {
-	ss.process(fs, sa, audio_buffer.data());
+	ss.process(fa, sa, audio_buffer.data());
 	spectrum.rt.orig.clear(zero_alpha);
 	spectrum.rt.orig.draw(ss);
 	spectrum.rt.orig.display();
@@ -419,30 +419,30 @@ void audioviz::set_multiplier(float multiplier)
 
 void audioviz::set_fft_size(int fft_size)
 {
-	fs.set_fft_size(fft_size);
+	fa.set_fft_size(fft_size);
 }
 
 void audioviz::set_interp_type(FS::InterpolationType interp_type)
 {
-	fs.set_interp_type(interp_type);
+	fa.set_interp_type(interp_type);
 }
 
 void audioviz::set_scale(FS::Scale scale)
 {
-	fs.set_scale(scale);
+	fa.set_scale(scale);
 }
 
 void audioviz::set_nth_root(int nth_root)
 {
-	fs.set_nth_root(nth_root);
+	fa.set_nth_root(nth_root);
 }
 
 void audioviz::set_accum_method(FS::AccumulationMethod method)
 {
-	fs.set_accum_method(method);
+	fa.set_accum_method(method);
 }
 
 void audioviz::set_window_func(FS::WindowFunction wf)
 {
-	fs.set_window_func(wf);
+	fa.set_window_func(wf);
 }

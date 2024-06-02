@@ -146,9 +146,6 @@ void Main::use_args()
 
 void Main::viz_init()
 {
-	// set_metadata_position({30, 30});
-	// _metadata.set_position({30, 30});
-
 	// setting the mult for a cover art background, and applying it
 	// (static backgrounds will not have effects applied automatically)
 	bg.effects.emplace_back(new fx::Mult{0.75}); // TODO: automate this based on total bg luminance!!!!!!!
