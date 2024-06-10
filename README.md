@@ -19,6 +19,6 @@ here's a demo: https://youtu.be/Avk5lRZb7To
 
 ## dev note
 on namespaces:
-- `fx` contains classes specifically related to post-processing effects
-- `tt` contains in-house reusable classes for several purposes
-- `viz` contains classes specific to audio visualization
+- `fx`: post-processing effects
+- `tt`: utility & extensions
+- `viz`: audio visualizations & components
