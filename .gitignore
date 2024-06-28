@@ -12,3 +12,4 @@ images
 perf.data*
 run.sh
 *.json
+render*

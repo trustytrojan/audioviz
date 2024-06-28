@@ -9,11 +9,10 @@ SRCS = $(shell find src -name "*.cpp")
 # List of object files
 OBJS = $(patsubst src/%.cpp,obj/%.o,$(SRCS))
 # List of dependency files
-DEPS = $(OBJS:.o=.d)
-# Directories
+#DEPS = $(OBJS:.o=.d)
+# Output directories
 DIRS = bin obj $(sort $(dir $(OBJS)))
 
-# Default target
 all: clear bin/audioviz
 
 # Linking
@@ -24,21 +23,19 @@ bin/audioviz: $(OBJS) | $(DIRS)
 obj/%.o: src/%.cpp | $(DIRS)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
-# Create necessary directories
 $(DIRS):
 	mkdir $@
 
-# Clean up
 clean:
 	rm -rf bin obj
 
-# Clear terminal
 clear:
 	clear
 
-# Install to system
 install:
 	cp bin/audioviz /usr/local/bin/audioviz
+
+
 
 .PHONY: all clean clear install
 

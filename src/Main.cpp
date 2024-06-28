@@ -231,6 +231,9 @@ void Main::ffmpeg_init(const std::string &outfile, int framerate, const std::str
 	// specify video and audio encoder
 	ss << "-c:v " << vcodec << " -c:a " << acodec << ' ';
 
+	// end output on shortest input stream
+	ss << "-shortest ";
+
 	// specify output file
 	choose_quote(outfile);
 	ss << quote << outfile << quote;
