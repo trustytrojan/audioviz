@@ -256,6 +256,8 @@ void Main::encode(const std::string &outfile, int framerate, const std::string &
 		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
 		rt.clear();
 	}
+	if (pclose(ffmpeg) == -1)
+		perror("pclose");
 }
 
 void Main::encode_with_window(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
@@ -274,4 +276,6 @@ void Main::encode_with_window(const std::string &outfile, int framerate, const s
 		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
 		window.clear();
 	}
+	if (pclose(ffmpeg) == -1)
+		perror("pclose");
 }
