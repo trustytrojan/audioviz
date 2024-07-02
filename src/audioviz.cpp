@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "audioviz.hpp"
+#include "viz/util.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: url(media_url),
@@ -21,7 +22,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	set_margin(10);
 
 	// add default effects!
-	bg.effects.emplace_back(new fx::Blur{10, 10, 20});
+	bg.effects.emplace_back(new fx::Blur{7.5, 7.5, 15});
 	particles.effects.emplace_back(new fx::Blur{1, 1, 10});
 	spectrum.effects.emplace_back(new fx::Blur{1, 1, 20});
 
@@ -185,56 +186,7 @@ void audioviz::draw_spectrum()
 // should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
-	const auto &left_data = sa.left_data(),
-			   &right_data = sa.right_data();
-	assert(left_data.size() == right_data.size());
-
-	/**
-	 * TODO: rewrite weighted max function to have slightly lower weight as frequencies approach 20hz,
-	 * aka the first spectrum bar/element in either data vector.
-	 */
-
-	const auto weighted_max = [](const auto begin, const auto end, const auto weight_start)
-	{
-		auto max_value = *begin;
-		const auto total_distance = static_cast<float>(std::distance(weight_start, end));
-		for (auto it = begin; it < end; ++it)
-		{
-			// weight each element before it is compared
-			// clang-format off
-			const auto weight = (it < weight_start)
-				? 1.f
-				: sqrtf(std::distance(it, end) / total_distance); // subtly decrease the weight as it gets closer to end
-			// clang-format on
-			const auto value = *it * weight;
-			if (value > max_value)
-				max_value = value;
-		}
-		return max_value;
-	};
-
-	const auto calc_max = [&](const std::vector<float> &vec)
-	{
-		const auto begin = vec.begin();
-		// generally the lower third of the frequency spectrum is considered bass
-		const auto amount = vec.size() / 3.5f;
-		return weighted_max(
-			begin,
-			begin + amount,		   // only the first 50% of the range will have full weight
-			begin + (amount / 2)); // these are generally the strongest bass frequencies to the ear
-	};
-
-	const auto avg = (calc_max(left_data) + calc_max(right_data)) / 2;
-
-	// scale by window size to keep movement consistent with all window sizes
-	const auto scaled_avg = size.y * avg;
-
-	// the deciding factor in particle speed increase
-	const auto additional_displacement = sqrtf(scaled_avg / 5);
-
-	// update particle system with additional (upward) displacement
-	ps.update({0, -additional_displacement});
-
+	ps.update(sa, size.y);
 	particles.rt.orig.clear(zero_alpha);
 	particles.rt.orig.draw(ps);
 	particles.rt.orig.display();
@@ -246,7 +198,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	if (enabled)
 	{
 		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, _astream.sample_rate(), sample_size);
+		pa_stream.emplace(0, 2, paFloat32, _astream.sample_rate(), fft_size);
 		pa_stream->start();
 	}
 	else
@@ -259,7 +211,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 void audioviz::decode_media()
 {
 	// while we don't have enough audio samples
-	while ((int)audio_buffer.size() < 2 * sample_size)
+	while ((int)audio_buffer.size() < 2 * fft_size)
 	{
 		const auto packet = _format.read_packet();
 
@@ -337,7 +289,7 @@ bool audioviz::prepare_frame()
 		play_audio();
 
 	// we don't have enough samples for fft; end here
-	if ((int)audio_buffer.size() < 2 * sample_size)
+	if ((int)audio_buffer.size() < 2 * fft_size)
 		return false;
 
 	// get next frame from video if available
@@ -358,6 +310,18 @@ bool audioviz::prepare_frame()
 		// keep the tickrate of the particles at 60hz for non-60fps output
 		draw_particles();
 		ps_clock.restart();
+	}
+
+	{ // brighten up bg with bass
+		const auto &left_data = sa.left_data(),
+			       &right_data = sa.right_data();
+		assert(left_data.size() == right_data.size());
+
+		const auto avg = (viz::util::weighted_max(left_data, [](auto x){return powf(x, 1 / 8.f);}) + viz::util::weighted_max(right_data, [](auto x){return powf(x, 1 / 8.f);})) / 2;
+
+		dynamic_cast<fx::Mult &>(*bg.effects[2]).factor = 1 + avg;
+		dynamic_cast<fx::Add &>(*bg.effects[3]).addend = 0.1 * avg;
+		bg.apply_fx();
 	}
 
 	// THE IMPORTANT PART

@@ -21,8 +21,8 @@ public:
 		_right.resize(size);
 	}
 
-	const std::vector<float> &left_data() { return _left; }
-	const std::vector<float> &right_data() { return _right; }
+	const std::vector<float> &left_data() const { return _left; }
+	const std::vector<float> &right_data() const { return _right; }
 
 	void analyze(tt::FrequencyAnalyzer &fa, const float *const stereo_audio)
 	{

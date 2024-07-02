@@ -17,12 +17,9 @@
 
 #include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
+#include "fx/Add.hpp"
 #include "fx/RenderTexture.hpp"
 
-// TODO: add separate method for applying effects to the background
-
-// will eventually create an `audioviz` namespace,
-// move this class there and call it `stereo_spectrum`.
 class audioviz : public sf::Drawable
 {
 public:
@@ -36,15 +33,15 @@ protected:
 	using SD = viz::SpectrumDrawable<viz::VerticalPill>;
 	using FS = tt::FrequencyAnalyzer;
 
-private:
+protected:
 	static inline const sf::Color zero_alpha{0, 0, 0, 0};
 
-	int sample_size = 3000;
+	int fft_size = 3000;
 	std::vector<float> audio_buffer;
 
 	av::MediaReader _format;
 
-	// TODO: write a AudioDecoder class in libavpp
+	// TODO: write an AudioDecoder class in libavpp
 	av::Stream _astream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
 	av::Decoder _adecoder = _astream.create_decoder();
 	av::Resampler _resampler = av::Resampler(
@@ -66,7 +63,7 @@ private:
 	int _afpvf = _astream.sample_rate() / framerate;
 
 	// fft processor
-	tt::FrequencyAnalyzer fa = sample_size;
+	tt::FrequencyAnalyzer fa = fft_size;
 	tt::StereoAnalyzer sa;
 
 	// stereo spectrum

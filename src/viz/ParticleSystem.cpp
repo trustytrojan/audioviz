@@ -1,6 +1,7 @@
 #include <random>
 
 #include "viz/ParticleSystem.hpp"
+#include "viz/util.hpp"
 
 template <typename _Tp>
 static _Tp random(const _Tp min, const _Tp max)
@@ -63,6 +64,24 @@ void ParticleSystem::update(const sf::Vector2f additional_displacement)
 		if (new_pos.y <= rect.top)
 			p.setPosition({random<float>(rect.left, rect.left + rect.width), rect.top + rect.height});
 	}
+}
+
+void ParticleSystem::update(const tt::StereoAnalyzer &sa, const float scale)
+{
+	const auto &left_data = sa.left_data(),
+			   &right_data = sa.right_data();
+	assert(left_data.size() == right_data.size());
+
+	const auto avg = (util::weighted_max(left_data, sqrtf) + util::weighted_max(right_data, sqrtf)) / 2;
+
+	// scale by window size to keep movement consistent with all window sizes
+	const auto scaled_avg = scale * avg;
+
+	// the deciding factor in particle speed increase
+	const auto additional_displacement = sqrtf(scaled_avg / 5);
+
+	// update particle system with additional (upward) displacement
+	update({0, -additional_displacement});
 }
 
 void ParticleSystem::draw(sf::RenderTarget &target, const sf::RenderStates states) const
