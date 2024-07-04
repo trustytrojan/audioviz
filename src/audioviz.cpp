@@ -320,7 +320,7 @@ bool audioviz::prepare_frame()
 		const auto avg = (viz::util::weighted_max(left_data, [](auto x){return powf(x, 1 / 8.f);}) + viz::util::weighted_max(right_data, [](auto x){return powf(x, 1 / 8.f);})) / 2;
 
 		dynamic_cast<fx::Mult &>(*bg.effects[2]).factor = 1 + avg;
-		dynamic_cast<fx::Add &>(*bg.effects[3]).addend = 0.1 * avg;
+		// dynamic_cast<fx::Add &>(*bg.effects[3]).addend = 0.1 * avg;
 		bg.apply_fx();
 	}
 

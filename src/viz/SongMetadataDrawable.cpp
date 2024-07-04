@@ -25,7 +25,7 @@ void SongMetadataDrawable::set_position(const sf::Vector2f pos)
 
 void SongMetadataDrawable::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
-	if (ac_spr.getTexture().getNativeHandle())
+	if (ac_txr.getNativeHandle())
 		target.draw(ac_spr, states);
 	if (!title_text.getString().isEmpty())
 		target.draw(title_text, states);

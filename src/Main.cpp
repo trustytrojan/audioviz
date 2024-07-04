@@ -153,7 +153,7 @@ void Main::viz_init()
 
 	// for testing audio-reactive effects!!!!!!!!!!!!!!!!!!!!!
 	bg.effects.emplace_back(new fx::Mult{1});
-	bg.effects.emplace_back(new fx::Add{0});
+	// bg.effects.emplace_back(new fx::Add{0});
 
 	// change the default blur for a video (changing) background
 	// bg.effects[0] = std::make_unique<fx::Blur>(5, 5, 10);
