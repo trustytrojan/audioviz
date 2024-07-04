@@ -1,15 +1,10 @@
 bin
 obj
-*.out
-*.o
 Music
 vgcore*
 *.mkv
 *.mp4
-*.jpg
-media
-images
 perf.data*
-run.sh
+*.sh
 *.json
 render*
