@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FragShader.hpp"
-#include "RenderTexture.hpp"
+#include "Effect.hpp"
 
 namespace fx
 {
@@ -14,14 +14,8 @@ class Add : public Effect
 public:
 	float addend;
 
-	Add(float addend) : addend(addend) {}
-
-	void apply(RenderTexture &rt) const override
-	{
-		shader.setUniform("addend", addend);
-		rt.draw(rt.sprite, &shader);
-		rt.display();
-	}
+	Add(float addend);
+	void apply(tt::RenderTexture &rt) const override;
 };
 
 } // namespace fx

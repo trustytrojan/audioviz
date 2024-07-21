@@ -14,11 +14,7 @@
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalPill.hpp"
 #include "viz/SongMetadataDrawable.hpp"
-
-#include "fx/Blur.hpp"
-#include "fx/Mult.hpp"
-#include "fx/Add.hpp"
-#include "fx/RenderTexture.hpp"
+#include "viz/Layer.hpp"
 
 class audioviz : public sf::Drawable
 {
@@ -34,8 +30,6 @@ protected:
 	using FS = tt::FrequencyAnalyzer;
 
 protected:
-	static inline const sf::Color zero_alpha{0, 0, 0, 0};
-
 	int fft_size = 3000;
 	std::vector<float> audio_buffer;
 
@@ -85,31 +79,7 @@ protected:
 	std::optional<pa::Stream> pa_stream;
 
 public:
-	class _fx
-	{
-		friend class audioviz;
-		struct _rt_pair
-		{
-			fx::RenderTexture orig, with_fx;
-			_rt_pair(const sf::Vector2u size, const int antialiasing)
-				: orig(size, antialiasing), with_fx(size) {}
-		} rt;
-
-		_fx(const sf::Vector2u size, const int antialiasing)
-			: rt(size, antialiasing) {}
-
-	public:
-		std::vector<std::unique_ptr<fx::Effect>> effects;
-
-		// copies `orig` to `with_fx`, then applies available effects
-		void apply_fx()
-		{
-			rt.with_fx.clear(zero_alpha);
-			rt.with_fx.copy(rt.orig);
-			for (const auto &effect : effects)
-				rt.with_fx.apply(*effect);
-		}
-	} bg, particles, spectrum;
+	viz::Layer bg, particles, spectrum;
 
 	/**
 	 * @param size size of the output; recommended to match your `sf::RenderTarget`'s size

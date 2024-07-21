@@ -2,6 +2,9 @@
 
 #include "audioviz.hpp"
 #include "viz/util.hpp"
+#include "fx/Blur.hpp"
+#include "fx/Add.hpp"
+#include "fx/Mult.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: url(media_url),
@@ -124,7 +127,7 @@ void audioviz::metadata_init()
 {
 	auto &title_text = _metadata.title_text,
 		 &artist_text = _metadata.artist_text;
-	
+
 	// set style, fontsize, and color
 	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
 	artist_text.setStyle(sf::Text::Italic);
@@ -168,18 +171,16 @@ void audioviz::set_background(const sf::Texture &texture)
 	tt::Sprite spr(texture);
 	spr.capture_centered_square_view();
 	spr.fill_screen(size);
-
-	bg.rt.orig.draw(spr);
-	bg.rt.orig.display();
+	bg.orig_draw(spr);
+	// TODO: make sure static backgrounds are only blurred once
 	bg.apply_fx();
 }
 
 void audioviz::draw_spectrum()
 {
 	ss.process(fa, sa, audio_buffer.data());
-	spectrum.rt.orig.clear(zero_alpha);
-	spectrum.rt.orig.draw(ss);
-	spectrum.rt.orig.display();
+	spectrum.orig_clear();
+	spectrum.orig_draw(ss);
 	spectrum.apply_fx();
 }
 
@@ -187,9 +188,8 @@ void audioviz::draw_spectrum()
 void audioviz::draw_particles()
 {
 	ps.update(sa, size.y);
-	particles.rt.orig.clear(zero_alpha);
-	particles.rt.orig.draw(ps);
-	particles.rt.orig.display();
+	particles.orig_clear();
+	particles.orig_draw(ps);
 	particles.apply_fx();
 }
 
@@ -295,10 +295,11 @@ bool audioviz::prepare_frame()
 	// get next frame from video if available
 	if (_vstream && !_frame_queue->empty())
 	{
-		bg.rt.orig.draw(sf::Sprite(_frame_queue->front()));
-		_frame_queue->pop_front();
-		bg.rt.orig.display();
+		// bg.orig_rt.draw(sf::Sprite(_frame_queue->front()));
+		// bg.orig_rt.display();
+		bg.orig_draw(sf::Sprite(_frame_queue->front()));
 		bg.apply_fx();
+		_frame_queue->pop_front();
 	}
 
 	draw_spectrum();
@@ -314,10 +315,14 @@ bool audioviz::prepare_frame()
 
 	{ // brighten up bg with bass
 		const auto &left_data = sa.left_data(),
-			       &right_data = sa.right_data();
+				   &right_data = sa.right_data();
 		assert(left_data.size() == right_data.size());
 
-		const auto avg = (viz::util::weighted_max(left_data, [](auto x){return powf(x, 1 / 8.f);}) + viz::util::weighted_max(right_data, [](auto x){return powf(x, 1 / 8.f);})) / 2;
+		const auto avg = (viz::util::weighted_max(left_data, [](auto x)
+												  { return powf(x, 1 / 8.f); }) +
+						  viz::util::weighted_max(right_data, [](auto x)
+												  { return powf(x, 1 / 8.f); })) /
+						 2;
 
 		dynamic_cast<fx::Mult &>(*bg.effects[2]).factor = 1 + avg;
 		// dynamic_cast<fx::Add &>(*bg.effects[3]).addend = 0.1 * avg;
@@ -332,15 +337,26 @@ bool audioviz::prepare_frame()
 
 void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
-	target.draw(bg.rt.with_fx.sprite);
-	target.draw(particles.rt.with_fx.sprite, sf::BlendAdd);
-	target.draw(particles.rt.orig.sprite, sf::BlendAdd);
+	target.draw(bg.fx_rt().sprite);
+	target.draw(particles.fx_rt().sprite, sf::BlendAdd);
+	target.draw(particles.orig_rt().sprite, sf::BlendAdd);
 
 	// BlendAdd is a sane default
 	// experiment with other blend modes to make cool glows
-	target.draw(spectrum.rt.with_fx.sprite, sf::BlendAdd);
+	target.draw(spectrum.fx_rt().sprite, sf::BlendAdd);
 
-	// redraw spectrum due to anti-aliased edges retaining original background color
+	/**
+	 * this is what i WANT to do, but BlendAlpha preserves the source's color (which is black)
+	 * when blending it with the destination, causing dark edges around the spectrum bars.
+	 */
+	// target.draw(spectrum.orig_rt().sprite, sf::BlendAlpha);
+	// target.draw(spectrum.orig_rt().sprite);
+
+	/**
+	 * the workaround for now is to redraw the spectrum directly onto the target...
+	 * i haven't seen any significant performance hit because of this, but it would
+	 * be preferable to use the render texture.
+	 */
 	target.draw(ss);
 
 	target.draw(_metadata);

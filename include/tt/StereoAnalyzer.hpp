@@ -15,25 +15,10 @@ class StereoAnalyzer
 	std::vector<float> _left, _right;
 
 public:
-	void resize(int size)
-	{
-		_left.resize(size);
-		_right.resize(size);
-	}
-
+	void resize(int size);
+	void analyze(tt::FrequencyAnalyzer &fa, const float *stereo_audio);
 	const std::vector<float> &left_data() const { return _left; }
 	const std::vector<float> &right_data() const { return _right; }
-
-	void analyze(tt::FrequencyAnalyzer &fa, const float *const stereo_audio)
-	{
-		// left channel
-		fa.copy_channel_to_input(stereo_audio, 2, 0, true);
-		fa.render(_left);
-
-		// right channel
-		fa.copy_channel_to_input(stereo_audio, 2, 1, true);
-		fa.render(_right);
-	}
 };
 
 } // namespace tt

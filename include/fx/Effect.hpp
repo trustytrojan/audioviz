@@ -1,16 +1,15 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include "tt/RenderTexture.hpp"
 
 namespace fx
 {
 
-struct RenderTexture;
-
 class Effect
 {
 public:
-	virtual void apply(RenderTexture &) const = 0;
+	// Apply this effect onto a render-texture.
+	virtual void apply(tt::RenderTexture &) const = 0;
 };
 
 } // namespace fx

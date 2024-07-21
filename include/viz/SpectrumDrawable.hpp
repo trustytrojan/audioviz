@@ -130,8 +130,8 @@ public:
 
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override
 	{
-		for (const auto &pill : bars)
-			target.draw(pill);
+		for (const auto &bar : bars)
+			target.draw(bar);
 	}
 
 	int bar_count() const { return bars.size(); }

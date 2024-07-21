@@ -1,8 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-
-// TODO: make a base class called `SpectrumBar`, and have `VerticalPill` implement it
 #include "SpectrumBar.hpp"
 
 namespace viz

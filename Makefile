@@ -17,27 +17,6 @@ SUBM = deps/libavpp deps/portaudiopp deps/SFML
 
 all: clear bin/audioviz
 
-# Linking
-bin/audioviz: $(OBJS) | $(DIRS) $(SUBM) deps/SFML/build/lib
-	$(CC) $^ $(LDLIBS) -o $@
-
-# Compilation
-obj/%.o: src/%.cpp | $(DIRS) $(SUBM) deps/SFML/include
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
-
-$(DIRS):
-	mkdir $@
-
-$(SUBM):
-	git submodule update --init
-
-deps/SFML/build/lib deps/SFML/include: deps/SFML
-	cd deps/SFML && \
-	git checkout 1a40f0195788185d56eca04687a8cd793c90b2fc && \
-	cmake -DBUILD_SHARED_LIBS=1 -S. -Bbuild && \
-	cd build && \
-	make
-
 clean:
 	rm -rf bin obj
 
@@ -48,6 +27,27 @@ install:
 	cp bin/audioviz /usr/local/bin/audioviz
 
 .PHONY: all clean clear install
+
+# Linking
+bin/audioviz: $(OBJS) | $(DIRS) $(SUBM) deps/SFML/build/lib
+	$(CC) $^ $(LDLIBS) -o $@
+
+# Compilation
+obj/%.o: src/%.cpp | $(DIRS) $(SUBM)
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+
+$(DIRS):
+	mkdir $@
+
+$(SUBM):
+	git submodule update --init
+
+deps/SFML/build/lib: deps/SFML
+	cd deps/SFML && \
+	git checkout 1a40f0195788185d56eca04687a8cd793c90b2fc && \
+	cmake -DBUILD_SHARED_LIBS=1 -S. -Bbuild && \
+	cd build && \
+	make
 
 # Include the dependency files
 -include $(DEPS)

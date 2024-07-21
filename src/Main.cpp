@@ -1,6 +1,9 @@
 #include <GLFW/glfw3.h>
 
 #include "Main.hpp"
+#include "fx/Mult.hpp"
+#include "fx/Add.hpp"
+#include "fx/Blur.hpp"
 
 Main::Main(const int argc, const char *const *const argv)
 	: Args(argc, argv),

@@ -12,7 +12,7 @@ class SpectrumBar : public T
 
 public:
 	template <typename... Args>
-	SpectrumBar(Args&&... args) : T(std::forward<Args>(args)...) {}
+	SpectrumBar(Args &&...args) : T(std::forward<Args>(args)...) {}
 
 	virtual void setWidth(const float width) = 0;
 	virtual void setHeight(const float height) = 0;

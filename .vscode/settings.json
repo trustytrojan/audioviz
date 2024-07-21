@@ -77,6 +77,18 @@
 		"forward_list": "cpp",
 		"unordered_set": "cpp",
 		"future": "cpp",
-		"*.inc": "cpp"
+		"*.inc": "cpp",
+		"cassert": "cpp",
+		"cerrno": "cpp",
+		"cfloat": "cpp",
+		"climits": "cpp",
+		"filesystem": "cpp",
+		"fstream": "cpp",
+		"ios": "cpp",
+		"locale": "cpp",
+		"queue": "cpp",
+		"stdfloat": "cpp",
+		"cstdbool": "cpp",
+		"version": "cpp"
 	}
 }

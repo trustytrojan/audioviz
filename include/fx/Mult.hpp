@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FragShader.hpp"
-#include "RenderTexture.hpp"
+#include "Effect.hpp"
 
 namespace fx
 {
@@ -14,14 +14,8 @@ class Mult : public Effect
 public:
 	float factor;
 
-	Mult(float factor) : factor(factor) {}
-
-	void apply(RenderTexture &rt) const override
-	{
-		shader.setUniform("factor", factor);
-		rt.draw(rt.sprite, &shader);
-		rt.display();
-	}
+	Mult(float factor);
+	void apply(tt::RenderTexture &rt) const override;
 };
 
 } // namespace fx
