@@ -1,32 +1,12 @@
 #include "Args.hpp"
 
 Args::Args(const int argc, const char *const *const argv)
-	: ArgumentParser(argv[0])
+	: ArgumentParser(argv[0], "latest")
 {
-	add_argument("media_url")
-		.help("URL to media to visualize and play");
-
-	add_argument("--encode")
-		.help("encode to a video using ffmpeg! arguments: <output_file> [fps=60] [vcodec=h264] [acodec=copy]")
-		.nargs(1, 4)
-		.validate();
-	add_argument("--ffpath")
-		.help("specify ffmpeg path used with '--encode'");
-
-	add_argument("--mono")
-		.help("force a mono spectrum even if audio is stereo\nmust specify zero-indexed channel number to render\nnegative values disable this flag")
-		.default_value(-1)
-		.scan<'i', int>()
-		.validate();
-
-	add_argument("--bg")
-		.help("add a background image; path to image file required");
-
-	add_argument("--album-art")
-		.help("render an album-art image next to the artist and title text; path to image file required");
+	add_argument("media_url");
 
 	add_argument("-n", "--sample-size")
-		.help("number of samples to process at a time\n- higher amount increases accuracy\n- lower amount increases responsiveness")
+		.help("number of audio samples to process per frame\n- higher amount increases accuracy\n- lower amount increases responsiveness")
 		.default_value(3000u)
 		.scan<'u', uint>()
 		.validate();
@@ -55,7 +35,7 @@ Args::Args(const int argc, const char *const *const argv)
 		.default_value("cspline");
 
 	add_argument("--color")
-		.help("enable a colorful spectrum!")
+		.help("enable a colorful spectrum! possible values: 'wheel', 'solid'")
 		.default_value("wheel");
 
 	add_argument("--wheel-rate")
@@ -97,22 +77,85 @@ Args::Args(const int argc, const char *const *const argv)
 		.scan<'u', uint>()
 		.validate();
 
-	add_argument("-bt", "--bar-type")
-		.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
-		.default_value("pill");
+	// add_argument("-bt", "--bar-type")
+	// 	.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
+	// 	.default_value("pill");
+
+	add_argument("--bg")
+		.help("add a background image; path to image file required");
 
 	add_argument("--font")
 		.help("metadata text font; must be an absolute path");
+	
+	add_argument("--album-art")
+		.help("render an album-art image next to the song metadata\npath to image file required");
+
+	add_argument("-bm", "--blendmode")
+		.help("color blend mode for the spectrum; see --bm-help for help")
+		.nargs(0, 6)
+		.validate();
+
+	add_argument("--bm-help")
+		.help("show help for --blendmode")
+		.flag();
+	
+	add_argument("--encode")
+		.help("encode to a video file using ffmpeg! arguments: <output_file> [fps=60] [vcodec=h264] [acodec=copy]")
+		.nargs(1, 4)
+		.validate();
+	
+	add_argument("--enc-window")
+		.help("when used with --encode, renders the current frame being encoded to a window")
+		.flag();
+
+	add_argument("--ffpath")
+		.help("specify path to ffmpeg executable used by '--encode'");
+	
+	add_argument("-r", "--framerate")
+		.help("set visualizer framerate; spectrum analysis depends on this so setting it too high will backfire!")
+		.default_value(60u)
+		.scan<'u', uint>()
+		.validate();
+
+	add_argument("--no-vsync")
+		.help("disable vsync (not recommended)")
+		.flag();
 
 	try
 	{
 		parse_args(argc, argv);
+
+		if (get<bool>("--bm-help"))
+		{
+			std::cout << R"(possible argument cases:
+- 1 arg: 'alpha', 'add', 'mult', 'min', 'max', 'none'
+- 3 args: <srcfactor> <dstfactor> <op>
+- 6 args: <color_sf> <color_df> <op> <alpha_sf> <alpha_df> <op>
+  - factors can be one of:
+    - '0': zero
+    - '1': one
+    - 'sc': source color
+    - '1sc': 1 minus source color
+    - 'dc': destination color
+    - '1dc': 1 minus destination color
+    - 'sa': source alpha
+    - '1sa': 1 minus source alpha
+    - 'da': destination alpha
+    - '1da': 1 minus destination alpha
+  - operations can be one of:
+    - 'add'
+    - 'sub': subtract
+    - 'rs': reverse subtract (flips the sf/df order before subtracting)
+    - 'min'
+    - 'max'
+)";
+			_Exit(EXIT_SUCCESS);
+		}
 	}
 	catch (const std::exception &e)
 	{
 		// print error and help to stderr
-		std::cerr << argv[0] << ": " << e.what() << '\n'
-				  << *this;
+		std::cerr << argv[0] << ": " << e.what() << '\n';
 
 		// just exit here since we don't want to print anything after the help
 		_Exit(EXIT_FAILURE);

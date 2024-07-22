@@ -4,11 +4,14 @@
             "name": "Linux",
             "includePath": [
                 "include",
-				"deps/*/include"
+                "deps/*/include"
             ],
-            "defines": [],
+            "defines": ["PORTAUDIO", "WINDOW"],
             "compilerPath": "/bin/gcc",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4

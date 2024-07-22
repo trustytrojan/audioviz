@@ -37,26 +37,26 @@ public:
 
 	void set_color_mode(SD::ColorMode mode)
 	{
-		_left.color.set_mode(mode);
-		_right.color.set_mode(mode);
+		_left.set_color_mode(mode);
+		_right.set_color_mode(mode);
 	}
 
 	void set_solid_color(sf::Color color)
 	{
-		_left.color.set_solid_rgb(color);
-		_right.color.set_solid_rgb(color);
+		_left.set_solid_color(color);
+		_right.set_solid_color(color);
 	}
 
 	void set_color_wheel_rate(float rate)
 	{
-		_left.color.wheel.set_rate(rate);
-		_right.color.wheel.set_rate(rate);
+		_left.set_color_wheel_rate(rate);
+		_right.set_color_wheel_rate(rate);
 	}
 
 	void set_color_wheel_hsv(sf::Vector3f hsv)
 	{
-		_left.color.wheel.set_hsv(hsv);
-		_right.color.wheel.set_hsv(hsv);
+		_left.set_color_wheel_hsv(hsv);
+		_right.set_color_wheel_hsv(hsv);
 	}
 
 	void set_multiplier(float multiplier)
@@ -80,6 +80,8 @@ public:
 		sa.analyze(fa, audio);
 		_left.update_bar_heights(sa.left_data());
 		_right.update_bar_heights(sa.right_data());
+		_left.color_wheel_increment();
+		_right.color_wheel_increment();
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override

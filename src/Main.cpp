@@ -1,9 +1,7 @@
-#include <GLFW/glfw3.h>
-
 #include "Main.hpp"
-#include "fx/Mult.hpp"
 #include "fx/Add.hpp"
 #include "fx/Blur.hpp"
+#include "fx/Mult.hpp"
 
 Main::Main(const int argc, const char *const *const argv)
 	: Args(argc, argv),
@@ -41,12 +39,14 @@ Main::Main(const int argc, const char *const *const argv)
 
 void Main::use_args()
 {
-	// all of these have default values, no need to try-catch
-	// set_sample_size(get<uint>("-n"));
+	// default-value params
+	set_sample_size(get<uint>("-n"));
 	set_multiplier(get<float>("-m"));
 	set_bar_width(get<uint>("-bw"));
 	set_bar_spacing(get<uint>("-bs"));
+	set_framerate(get<uint>("-r"));
 
+	// no-default-value params
 	if (const auto ffpath = present("--ffpath"))
 		ffmpeg_path = ffpath.value();
 
@@ -127,6 +127,73 @@ void Main::use_args()
 			throw std::invalid_argument("unknown coloring type: " + color_str);
 	}
 
+	{ // spectrum blendmode
+		static const std::unordered_map<std::string, sf::BlendMode::Factor> factor_map{
+			{"0", sf::BlendMode::Factor::Zero},
+			{"1", sf::BlendMode::Factor::One},
+			{"sc", sf::BlendMode::Factor::SrcColor},
+			{"1sc", sf::BlendMode::Factor::OneMinusSrcColor},
+			{"dc", sf::BlendMode::Factor::DstColor},
+			{"1dc", sf::BlendMode::Factor::OneMinusDstColor},
+			{"sa", sf::BlendMode::Factor::SrcAlpha},
+			{"1sa", sf::BlendMode::Factor::OneMinusSrcAlpha},
+			{"da", sf::BlendMode::Factor::DstAlpha},
+			{"1da", sf::BlendMode::Factor::OneMinusDstAlpha}};
+
+		static const std::unordered_map<std::string, sf::BlendMode::Equation> op_map{
+			{"add", sf::BlendMode::Equation::Add},
+			{"sub", sf::BlendMode::Equation::Subtract},
+			{"rs", sf::BlendMode::Equation::ReverseSubtract},
+			{"max", sf::BlendMode::Equation::Max},
+			{"min", sf::BlendMode::Equation::Min}};
+
+		try
+		{
+			switch (const auto &bm_args = get<std::vector<std::string>>("-bm"); bm_args.size())
+			{
+			case 0:
+				break;
+
+			case 1:
+				// use sf::BlendMode static member
+				static const std::unordered_map<std::string, sf::BlendMode> default_blendmodes{
+					{"alpha", sf::BlendAlpha},
+					{"add", sf::BlendAdd},
+					{"mult", sf::BlendMultiply},
+					{"min", sf::BlendMin},
+					{"max", sf::BlendMax},
+					{"none", sf::BlendNone}};
+				set_spectrum_blendmode(default_blendmodes.at(bm_args[0]));
+				break;
+
+			case 3:
+				// use first BlendMode constructor
+				set_spectrum_blendmode({factor_map.at(bm_args[0]),
+										factor_map.at(bm_args[1]),
+										op_map.at(bm_args[2])});
+				break;
+
+			case 6:
+				// use second BlendMode constructor
+				set_spectrum_blendmode({factor_map.at(bm_args[0]),
+										factor_map.at(bm_args[1]),
+										op_map.at(bm_args[2]),
+										factor_map.at(bm_args[3]),
+										factor_map.at(bm_args[4]),
+										op_map.at(bm_args[5])});
+				break;
+
+			default:
+				throw std::invalid_argument("--blendmode expects 1, 3, or 6 arguments; see --bm-help");
+			}
+		}
+		catch (const std::exception &e)
+		{
+			std::cerr << "invalid argument caught; see --bm-help\n";
+			_Exit(EXIT_FAILURE);
+		}
+	}
+
 	// -s, --scale
 	switch (const auto &scale_args = get<std::vector<std::string>>("-s"); scale_args.size())
 	{
@@ -143,7 +210,11 @@ void Main::use_args()
 	case 2:
 		if (scale_args[0] != "nth-root")
 			throw std::invalid_argument("only the 'nth-root' scale takes an additional argument");
+		set_scale(FS::Scale::NTH_ROOT);
 		set_nth_root(std::stoi(scale_args[1]));
+		break;
+	default:
+		throw std::logic_error("-s, --scale: default case hit");
 	}
 }
 
@@ -164,29 +235,12 @@ void Main::viz_init()
 
 void Main::start()
 {
+#ifdef PORTAUDIO
 	set_audio_playback_enabled(true);
+#endif
 
 	sf::RenderWindow window(sf::VideoMode(size), "audioviz", sf::Style::Titlebar, sf::State::Windowed, ctx);
-	window.setVerticalSyncEnabled(true);
-
-	{ // set framerate using display refresh rate (since we need vsync)
-		const auto throwGlfwError = [](const std::string &func)
-		{
-			const char *errmsg;
-			if (glfwGetError(&errmsg) != GLFW_NO_ERROR)
-				throw std::runtime_error(func + errmsg);
-		};
-		if (!glfwInit())
-			throwGlfwError("glfwInit");
-		const auto monitor = glfwGetPrimaryMonitor();
-		if (!monitor)
-			throwGlfwError("glfwGetPrimaryMonitor");
-		const auto mode = glfwGetVideoMode(monitor);
-		if (!mode)
-			throwGlfwError("glfwGetVideoMode");
-		set_framerate(mode->refreshRate);
-		glfwTerminate();
-	}
+	window.setVerticalSyncEnabled(!get<bool>("--no-vsync"));
 
 	while (window.isOpen() && prepare_frame())
 	{
@@ -252,6 +306,14 @@ void Main::ffmpeg_init(const std::string &outfile, int framerate, const std::str
 }
 
 void Main::encode(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
+{
+	if (get<bool>("--enc-window"))
+		encode_with_window(outfile, framerate, vcodec, acodec);
+	else
+		encode_without_window(outfile, framerate, vcodec, acodec);
+}
+
+void Main::encode_without_window(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
 {
 	set_framerate(framerate);
 	ffmpeg_init(outfile, framerate, vcodec, acodec);

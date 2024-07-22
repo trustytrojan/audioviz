@@ -39,14 +39,10 @@ public:
 	{
 		friend class SpectrumDrawable;
 		ColorMode mode = ColorMode::WHEEL;
-		sf::Color solid_rgb{255, 255, 255};
-
-	public:
-		void set_mode(const ColorMode mode) { this->mode = mode; }
-		void set_solid_rgb(const sf::Color &rgb) { solid_rgb = rgb; }
+		sf::Color solid{255, 255, 255};
 
 		/**
-		 * @param index_ratio the ratio of your loop index (aka `i`) to the total number of bars to print (aka `spectrum.size()`)
+		 * @param index_ratio the ratio of your loop index (`i`) to the total number of bars to print (`bars.size()`)
 		 */
 		sf::Color get(const float index_ratio) const
 		{
@@ -59,7 +55,7 @@ public:
 			}
 
 			case ColorMode::SOLID:
-				return solid_rgb;
+				return solid;
 
 			default:
 				throw std::logic_error("SpectrumRenderer::color::get: default case hit");
@@ -71,19 +67,14 @@ public:
 		{
 			friend class SpectrumDrawable;
 			float time = 0, rate = 0;
-			// hue offset, saturation, value
 			sf::Vector3f hsv{0.9, 0.7, 1};
-
-		public:
-			void set_rate(const float rate) { this->rate = rate; }
-			void set_hsv(const sf::Vector3f &hsv) { this->hsv = hsv; }
-			void increment() { time += rate; }
+			void increment_time() { time += rate; }
 		} wheel;
 	} color;
 
 	// setters
 
-	void set_multiplier(float multiplier)
+	void set_multiplier(const float multiplier)
 	{
 		this->multiplier = multiplier;
 	}
@@ -97,7 +88,7 @@ public:
 		update_bars();
 	}
 
-	void set_bar_width(int width)
+	void set_bar_width(const int width)
 	{
 		if (bar.width == width)
 			return;
@@ -105,7 +96,7 @@ public:
 		update_bars();
 	}
 
-	void set_bar_spacing(int spacing)
+	void set_bar_spacing(const int spacing)
 	{
 		if (bar.spacing == spacing)
 			return;
@@ -113,7 +104,47 @@ public:
 		update_bars();
 	}
 
-	void set_backwards(bool b)
+	void set_color_mode(const ColorMode mode)
+	{
+		if (color.mode == mode)
+			return;
+		color.mode = mode;
+		update_bar_colors();
+	}
+
+	void set_color_wheel_hsv(const sf::Vector3f hsv)
+	{
+		if (color.wheel.hsv == hsv)
+			return;
+		color.wheel.hsv = hsv;
+		update_bar_colors();
+	}
+
+	void set_color_wheel_rate(const float rate)
+	{
+		if (color.wheel.rate == rate)
+			return;
+		color.wheel.rate = rate;
+		// bar colors aren't updated here; `color_wheel_increment` must be called instead.
+	}
+
+	void color_wheel_increment()
+	{
+		if (color.wheel.rate == 0)
+			return;
+		color.wheel.increment_time();
+		update_bar_colors();
+	}
+
+	void set_solid_color(const sf::Color rgb)
+	{
+		if (color.solid == rgb)
+			return;
+		color.solid = rgb;
+		update_bar_colors();
+	}
+
+	void set_backwards(const bool b)
 	{
 		if (backwards == b)
 			return;
@@ -145,7 +176,7 @@ private:
 
 		for (int i = 0; i < bar_count; ++i)
 		{
-			bars[i].setFillColor(color.get((float)i / bar_count));
+			update_bar_color(i);
 			bars[i].setWidth(bar.width);
 
 			// clang-format off
@@ -156,6 +187,18 @@ private:
 
 			bars[i].setPosition({x, rect.top + rect.height});
 		}
+	}
+
+	// only update bar colors
+	void update_bar_colors()
+	{
+		for (int i = 0; i < (int)bars.size(); ++i)
+			update_bar_color(i);
+	}
+
+	void update_bar_color(const int i)
+	{
+		bars[i].setFillColor(color.get((float)i / bars.size()));
 	}
 };
 

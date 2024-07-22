@@ -4,11 +4,6 @@ for right now, audioviz only supports linux, but with the libraries i'm using, i
 
 here's a demo: https://youtu.be/Avk5lRZb7To
 
-## goals/todo
-- layering/effects system (in the works)
-- configuration files that describe visualizers in either JSON or Lua
-- add build flags/`#define`s to allow for video-encode only builds of audioviz
-
 ## building
 1. install any required dependencies below
 2. run `make`
@@ -26,11 +21,16 @@ here's a demo: https://youtu.be/Avk5lRZb7To
   - note that SFML only supports X11 windows, so you will need XWayland if you use Wayland
 - [argparse](https://github.com/p-ranav/argparse)
   - header-only, included [in this repo](/include/argparse.hpp)
-- [glfw](https://github.com/glfw/glfw)
-  - just for getting the display refresh rate; hopefully SFML can do this eventually
 
 ## dev note
 on namespaces:
 - `fx`: post-processing effects
 - `tt`: utility & library extensions
 - `viz`: audio visualization
+
+## todo list
+- allow compiling without portaudio
+- `ScopeDrawable`
+- lua api
+  - modular layering/effects system
+  - remove hardcoded visualizer components

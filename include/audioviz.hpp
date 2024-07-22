@@ -6,7 +6,10 @@
 
 #include <SFML/Graphics.hpp>
 #include <av.hpp>
+
+#ifdef PORTAUDIO
 #include <portaudio.hpp>
+#endif
 
 #include "tt/Sprite.hpp"
 
@@ -62,6 +65,7 @@ protected:
 
 	// stereo spectrum
 	viz::StereoSpectrum<viz::VerticalPill> ss;
+	std::optional<sf::BlendMode> spectrum_bm;
 
 	// particle system
 	viz::ParticleSystem ps;
@@ -71,12 +75,16 @@ protected:
 	sf::Font font;
 	viz::SongMetadataDrawable _metadata = font;
 
-	// clock to time the particle system
-	sf::Clock ps_clock;
+	// clocks for timing stuff
+	sf::Clock ps_clock, tt_clock;
+	sf::Text timing_text;
+	std::ostringstream tt_ss;
 
+#ifdef PORTAUDIO
 	// PortAudio stuff for live playback
 	std::optional<pa::PortAudio> pa_init;
 	std::optional<pa::Stream> pa_stream;
+#endif
 
 public:
 	viz::Layer bg, particles, spectrum;
@@ -101,10 +109,12 @@ public:
 
 	/// setters
 
+#ifdef PORTAUDIO
 	/**
 	 * @param enabled When started with `start()`, whether to play the audio used to render the spectrum
 	 */
 	void set_audio_playback_enabled(bool enabled);
+#endif
 
 	/**
 	 * important if you are capturing frames for video encoding!
@@ -116,7 +126,10 @@ public:
 	void set_background(const sf::Texture &texture);
 
 	// set margins around the output size for the spectrum to respect
-	void set_margin(int margin);
+	void set_spectrum_margin(int margin);
+
+	// set blend mode for spectrum against target
+	void set_spectrum_blendmode(const sf::BlendMode &);
 
 	void set_album_cover(const std::filesystem::path &image_path, sf::Vector2f size = {150, 150});
 
@@ -125,6 +138,7 @@ public:
 
 	/// passthrough setters
 
+	void set_sample_size(int);
 	void set_bar_width(int width);
 	void set_bar_spacing(int spacing);
 	void set_color_mode(SD::ColorMode mode);

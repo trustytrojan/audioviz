@@ -1,16 +1,17 @@
 #include <iostream>
 
 #include "audioviz.hpp"
-#include "viz/util.hpp"
-#include "fx/Blur.hpp"
 #include "fx/Add.hpp"
+#include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
+#include "viz/util.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: url(media_url),
 	  size(size),
 	  _format(media_url),
 	  ps({{}, (sf::Vector2i)size}, 50),
+	  timing_text(font),
 	  bg(size, antialiasing),
 	  particles(size, antialiasing),
 	  spectrum(size, antialiasing)
@@ -22,7 +23,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 		throw std::runtime_error("only stereo audio is supported!");
 
 	// default margin around the spectrum
-	set_margin(10);
+	set_spectrum_margin(10);
 
 	// add default effects!
 	bg.effects.emplace_back(new fx::Blur{7.5, 7.5, 15});
@@ -34,6 +35,11 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 	// default metadata position
 	_metadata.set_position({30, 30});
+
+	timing_text.setOrigin({0, 1});
+	timing_text.setPosition({size.x / 2, 30});
+	timing_text.setCharacterSize(18);
+	timing_text.setFillColor({255, 255, 255, 150});
 }
 
 void audioviz::av_init()
@@ -147,7 +153,7 @@ void audioviz::metadata_init()
 		artist_text.setString(artist);
 }
 
-void audioviz::set_margin(const int margin)
+void audioviz::set_spectrum_margin(const int margin)
 {
 	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
 }
@@ -176,12 +182,21 @@ void audioviz::set_background(const sf::Texture &texture)
 	bg.apply_fx();
 }
 
+void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
+{
+	spectrum_bm = bm;
+}
+
 void audioviz::draw_spectrum()
 {
+	tt_clock.restart();
 	ss.process(fa, sa, audio_buffer.data());
+	tt_ss << "spectrum fft: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+
 	spectrum.orig_clear();
 	spectrum.orig_draw(ss);
 	spectrum.apply_fx();
+	tt_ss << "spectrum draw: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
 
 // should be called AFTER draw_spectrum()
@@ -193,6 +208,7 @@ void audioviz::draw_particles()
 	particles.apply_fx();
 }
 
+#ifdef PORTAUDIO
 void audioviz::set_audio_playback_enabled(bool enabled)
 {
 	if (enabled)
@@ -207,6 +223,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 		pa_init.reset();
 	}
 }
+#endif
 
 void audioviz::decode_media()
 {
@@ -267,6 +284,7 @@ void audioviz::decode_media()
 	}
 }
 
+#ifdef PORTAUDIO
 void audioviz::play_audio()
 {
 	try // to play the audio
@@ -280,13 +298,18 @@ void audioviz::play_audio()
 		std::cerr << e.what() << '\n';
 	}
 }
+#endif
 
 bool audioviz::prepare_frame()
 {
+	tt_clock.restart();
 	decode_media();
+	tt_ss << "decode_media: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 
+#ifdef PORTAUDIO
 	if (pa_stream)
 		play_audio();
+#endif
 
 	// we don't have enough samples for fft; end here
 	if ((int)audio_buffer.size() < 2 * fft_size)
@@ -295,8 +318,6 @@ bool audioviz::prepare_frame()
 	// get next frame from video if available
 	if (_vstream && !_frame_queue->empty())
 	{
-		// bg.orig_rt.draw(sf::Sprite(_frame_queue->front()));
-		// bg.orig_rt.display();
 		bg.orig_draw(sf::Sprite(_frame_queue->front()));
 		bg.apply_fx();
 		_frame_queue->pop_front();
@@ -304,33 +325,40 @@ bool audioviz::prepare_frame()
 
 	draw_spectrum();
 
-	if (framerate == 60)
+	if (framerate <= 60)
 		draw_particles();
-	else if (ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60))
+	else if (framerate > 60 && ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60))
 	{
-		// keep the tickrate of the particles at 60hz for non-60fps output
+		// lock the tickrate of the particles at 60hz for >60fps output
 		draw_particles();
 		ps_clock.restart();
 	}
 
+	tt_clock.restart();
 	{ // brighten up bg with bass
 		const auto &left_data = sa.left_data(),
 				   &right_data = sa.right_data();
 		assert(left_data.size() == right_data.size());
 
-		const auto avg = (viz::util::weighted_max(left_data, [](auto x)
-												  { return powf(x, 1 / 8.f); }) +
-						  viz::util::weighted_max(right_data, [](auto x)
-												  { return powf(x, 1 / 8.f); })) /
-						 2;
+		// clang-format off
+		const auto weight_func = [](auto x){ return powf(x, 1 / 8.f); };
+		// clang-format on
+
+		const auto avg = (viz::util::weighted_max(left_data, weight_func) + viz::util::weighted_max(right_data, weight_func)) / 2;
 
 		dynamic_cast<fx::Mult &>(*bg.effects[2]).factor = 1 + avg;
 		// dynamic_cast<fx::Add &>(*bg.effects[3]).addend = 0.1 * avg;
 		bg.apply_fx();
 	}
+	tt_ss << "bg_brighten: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 
+	tt_clock.restart();
 	// THE IMPORTANT PART
 	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf);
+	tt_ss << "audio_buffer.erase(): " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+
+	timing_text.setString(tt_ss.str());
+	tt_ss.str("");
 
 	return true;
 }
@@ -345,21 +373,24 @@ void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 	// experiment with other blend modes to make cool glows
 	target.draw(spectrum.fx_rt().sprite, sf::BlendAdd);
 
-	/**
-	 * this is what i WANT to do, but BlendAlpha preserves the source's color (which is black)
-	 * when blending it with the destination, causing dark edges around the spectrum bars.
-	 */
-	// target.draw(spectrum.orig_rt().sprite, sf::BlendAlpha);
-	// target.draw(spectrum.orig_rt().sprite);
-
-	/**
-	 * the workaround for now is to redraw the spectrum directly onto the target...
-	 * i haven't seen any significant performance hit because of this, but it would
-	 * be preferable to use the render texture.
-	 */
-	target.draw(ss);
+	if (spectrum_bm)
+		target.draw(spectrum.orig_rt().sprite, *spectrum_bm);
+	else
+		/**
+		 * since i haven't found the right blendmode that gets rid of the dark
+		 * spectrum bar edges, the default behavior (FOR NOW) is to redraw the spectrum.
+		 * users can pass --blendmode to instead blend the RT with the target above.
+		 */
+		target.draw(ss);
 
 	target.draw(_metadata);
+
+	target.draw(timing_text);
+}
+
+void audioviz::set_sample_size(int n)
+{
+	fa.set_fft_size(n);
 }
 
 void audioviz::set_bar_width(int width)
