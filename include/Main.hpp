@@ -2,17 +2,23 @@
 
 #include "Args.hpp"
 #include "audioviz.hpp"
+#include <sol.hpp>
 
-class Main : Args, public audioviz
+class Main
 {
+	using SD = viz::SpectrumDrawable<viz::VerticalPill>;
+	using FS = tt::FrequencyAnalyzer;
+
 	static inline const sf::ContextSettings ctx{0, 0, 4};
+	std::shared_ptr<audioviz> viz;
 
 	std::string ffmpeg_path;
 	FILE *ffmpeg = nullptr;
+	bool no_vsync = false, enc_window = false;
 	
+	sol::state lua_init();
 	void ffmpeg_init(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec);
-	void viz_init();
-	void use_args();
+	void use_args(const Args &);
 
 public:
 	Main(const int argc, const char *const *const argv);

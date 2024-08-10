@@ -25,39 +25,55 @@ public:
 	// input media url. cannot be changed. audioviz is a one-use class
 	const std::string url;
 
-	// audioviz output size. cannot be changed, so make sure your window is not resizable.
-	const sf::Vector2u size;
+	int framerate = 60;
 
-protected:
+private:
+	// audioviz output size. cannot be changed, so make sure your window is not resizable.
+	sf::Vector2u size;
+	int ss_margin = 10;
+
 	using SD = viz::SpectrumDrawable<viz::VerticalPill>;
 	using FS = tt::FrequencyAnalyzer;
 
-protected:
 	int fft_size = 3000;
 	std::vector<float> audio_buffer;
 
-	av::MediaReader _format;
+	struct _media
+	{
+		const std::string url;
+		av::MediaReader _format;
 
-	// TODO: write an AudioDecoder class in libavpp
-	av::Stream _astream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
-	av::Decoder _adecoder = _astream.create_decoder();
-	av::Resampler _resampler = av::Resampler(
-		&_astream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _astream.sample_rate(),
-		&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate());
-	av::Frame rs_frame;
+		// TODO: write an AudioDecoder class in libavpp
+		av::Stream _astream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
+		av::Decoder _adecoder = _astream.create_decoder();
+		av::Resampler _resampler = av::Resampler(
+			&_astream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _astream.sample_rate(),
+			&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate());
+		av::Frame rs_frame;
 
-	// TODO: write a VideoDecoder class in libavpp
-	std::optional<av::Stream> _vstream;
-	std::optional<av::Decoder> _vdecoder;
-	std::optional<av::Scaler> _scaler;
-	std::optional<av::Frame> _scaled_frame;
-	std::optional<std::list<sf::Texture>> _frame_queue;
+		// TODO: write a VideoDecoder class in libavpp
+		std::optional<av::Stream> _vstream;
+		std::optional<av::Decoder> _vdecoder;
+		std::optional<av::Scaler> _scaler;
+		std::optional<av::Frame> _scaled_frame;
+		std::optional<std::list<sf::Texture>> _frame_queue;
+
+		_media(const std::string &url) : url(url), _format(url) {}
+
+		void init(audioviz &);
+		void decode(std::vector<float> &audio_buffer, const int fft_size);
+		bool video_frame_available();
+		void draw_next_video_frame(viz::Layer &);
+	};
+	friend class _media;
+
+	// MUST be constructed in the constructor
+	std::optional<_media> media;
 
 	// framerate
-	int framerate = 60;
 
 	// audio frames per video frame
-	int _afpvf = _astream.sample_rate() / framerate;
+	int _afpvf = media->_astream.sample_rate() / framerate;
 
 	// fft processor
 	tt::FrequencyAnalyzer fa = fft_size;
@@ -97,6 +113,11 @@ public:
 	audioviz(sf::Vector2u size, const std::string &media_url, int antialiasing = 4);
 
 	/**
+	 * Add default effects to the `bg`, `spectrum`, and `particles` layers.
+	 */
+	void add_default_effects();
+
+	/**
 	 * Prepare a frame to be drawn with `draw()`.
 	 * @return Whether the end of the audio buffer has been reached and another frame cannot be prepared.
 	 */
@@ -116,13 +137,18 @@ public:
 	void set_audio_playback_enabled(bool enabled);
 #endif
 
+	sf::Vector2u get_size() const { return size; }
+
+	// ............
+	void set_size(sf::Vector2u size);
+
 	/**
 	 * important if you are capturing frames for video encoding!
 	 */
 	void set_framerate(int framerate);
 
 	// set background image with optional effects: blur and color-multiply
-	void set_background(const std::filesystem::path &image_path);
+	void set_background(const std::string &image_path);
 	void set_background(const sf::Texture &texture);
 
 	// set margins around the output size for the spectrum to respect
@@ -131,10 +157,10 @@ public:
 	// set blend mode for spectrum against target
 	void set_spectrum_blendmode(const sf::BlendMode &);
 
-	void set_album_cover(const std::filesystem::path &image_path, sf::Vector2f size = {150, 150});
+	void set_album_cover(const std::string &image_path, sf::Vector2f size = {150, 150});
 
 	// you **must** call this method in order to see text metadata!
-	void set_text_font(const std::filesystem::path &path);
+	void set_text_font(const std::string &path);
 
 	/// passthrough setters
 
@@ -154,10 +180,9 @@ public:
 	void set_window_func(FS::WindowFunction wf);
 
 private:
-	void av_init();
 	void metadata_init();
 	void draw_spectrum();
 	void draw_particles();
-	void decode_media();
 	void play_audio();
+	void capture_elapsed_time(const char *const label);
 };

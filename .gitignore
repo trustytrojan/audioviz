@@ -8,3 +8,4 @@ perf.data*
 *.sh
 *.json
 render*
+testing

@@ -4,30 +4,37 @@
 #include "fx/Mult.hpp"
 
 Main::Main(const int argc, const char *const *const argv)
-	: Args(argc, argv),
-	  audioviz({get<std::vector<uint>>("--size")[0],
-				get<std::vector<uint>>("--size")[1]},
-			   get("media_url"))
 {
-	use_args();
-	viz_init();
+	Args args(argc, argv);
+
+	if (const auto luafile = args.present("--luafile"))
+	{
+		viz = lua_init().do_file(*luafile);
+		// lua environment is still in the works!!!!!!!!!
+	}
+	else
+	{
+		const auto &size = args.get<std::vector<uint>>("--size");
+		viz = std::make_shared<audioviz>(sf::Vector2u{size[0], size[1]}, args.get("media_url"));
+		use_args(args);
+	}
 
 	// --encode: render to video file
-	switch (const auto &args = get<std::vector<std::string>>("--encode"); args.size())
+	switch (const auto &encode_args = args.get<std::vector<std::string>>("--encode"); encode_args.size())
 	{
 	case 0:
 		break;
 	case 1:
-		encode(args[0]);
+		encode(encode_args[0]);
 		break;
 	case 2:
-		encode(args[0], std::atoi(args[1].c_str()));
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()));
 		break;
 	case 3:
-		encode(args[0], std::atoi(args[1].c_str()), args[2]);
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2]);
 		break;
 	case 4:
-		encode(args[0], std::atoi(args[1].c_str()), args[2], args[3]);
+		encode(encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2], encode_args[3]);
 		break;
 	default:
 		throw std::logic_error("--encode requires 1-4 arguments");
@@ -37,27 +44,32 @@ Main::Main(const int argc, const char *const *const argv)
 	start();
 }
 
-void Main::use_args()
+void Main::use_args(const Args &args)
 {
 	// default-value params
-	set_sample_size(get<uint>("-n"));
-	set_multiplier(get<float>("-m"));
-	set_bar_width(get<uint>("-bw"));
-	set_bar_spacing(get<uint>("-bs"));
-	set_framerate(get<uint>("-r"));
+	viz->set_sample_size(args.get<uint>("-n"));
+	viz->set_multiplier(args.get<float>("-m"));
+	viz->set_bar_width(args.get<uint>("-bw"));
+	viz->set_bar_spacing(args.get<uint>("-bs"));
+	viz->set_framerate(args.get<uint>("-r"));
+	no_vsync = args.get<bool>("--no-vsync");
+	enc_window = args.get<bool>("--enc-window");
 
 	// no-default-value params
-	if (const auto ffpath = present("--ffpath"))
+	if (const auto ffpath = args.present("--ffpath"))
 		ffmpeg_path = ffpath.value();
 
-	if (const auto bg = present("--bg"))
-		set_background(bg.value());
+	if (const auto bg = args.present("--bg"))
+		viz->set_background(bg.value());
 
-	if (const auto album_art = present("--album-art"))
-		set_album_cover(album_art.value());
+	if (const auto album_art = args.present("--album-art"))
+		viz->set_album_cover(album_art.value());
 
-	if (const auto fontpath = present("--font"))
-		set_text_font(*fontpath);
+	if (const auto fontpath = args.present("--font"))
+		viz->set_text_font(*fontpath);
+	
+	if (!args.get<bool>("--no-fx"))
+		viz->add_default_effects();
 
 	// { // bar type
 	// 	const auto &bt_str = get("-bt");
@@ -70,58 +82,58 @@ void Main::use_args()
 	// }
 
 	{ // accumulation method
-		const auto &am_str = get("-a");
+		const auto &am_str = args.get("-a");
 		if (am_str == "sum")
-			set_accum_method(FS::AccumulationMethod::SUM);
+			viz->set_accum_method(FS::AccumulationMethod::SUM);
 		else if (am_str == "max")
-			set_accum_method(FS::AccumulationMethod::MAX);
+			viz->set_accum_method(FS::AccumulationMethod::MAX);
 		else
 			throw std::invalid_argument("unknown accumulation method: " + am_str);
 	}
 
 	{ // window function
-		const auto &wf_str = get("-w");
+		const auto &wf_str = args.get("-w");
 		if (wf_str == "hanning")
-			set_window_func(FS::WindowFunction::HANNING);
+			viz->set_window_func(FS::WindowFunction::HANNING);
 		else if (wf_str == "hamming")
-			set_window_func(FS::WindowFunction::HAMMING);
+			viz->set_window_func(FS::WindowFunction::HAMMING);
 		else if (wf_str == "blackman")
-			set_window_func(FS::WindowFunction::BLACKMAN);
+			viz->set_window_func(FS::WindowFunction::BLACKMAN);
 		else if (wf_str == "none")
-			set_window_func(FS::WindowFunction::NONE);
+			viz->set_window_func(FS::WindowFunction::NONE);
 		else
 			throw std::invalid_argument("unknown window function: " + wf_str);
 	}
 
 	{ // interpolation type
-		const auto &interp_str = get("-i");
+		const auto &interp_str = args.get("-i");
 		if (interp_str == "none")
-			set_interp_type(FS::InterpolationType::NONE);
+			viz->set_interp_type(FS::InterpolationType::NONE);
 		else if (interp_str == "linear")
-			set_interp_type(FS::InterpolationType::LINEAR);
+			viz->set_interp_type(FS::InterpolationType::LINEAR);
 		else if (interp_str == "cspline")
-			set_interp_type(FS::InterpolationType::CSPLINE);
+			viz->set_interp_type(FS::InterpolationType::CSPLINE);
 		else if (interp_str == "cspline_hermite")
-			set_interp_type(FS::InterpolationType::CSPLINE_HERMITE);
+			viz->set_interp_type(FS::InterpolationType::CSPLINE_HERMITE);
 		else
 			throw std::invalid_argument("unknown interpolation type: " + interp_str);
 	}
 
 	{ // spectrum coloring type
-		const auto &color_str = get("--color");
+		const auto &color_str = args.get("--color");
 		if (color_str == "wheel")
 		{
-			set_color_mode(SD::ColorMode::WHEEL);
-			const auto &hsv = get<std::vector<float>>("--hsv");
+			viz->set_color_mode(SD::ColorMode::WHEEL);
+			const auto &hsv = args.get<std::vector<float>>("--hsv");
 			assert(hsv.size() == 3);
-			set_color_wheel_hsv({hsv[0], hsv[1], hsv[2]});
-			set_color_wheel_rate(get<float>("--wheel-rate"));
+			viz->set_color_wheel_hsv({hsv[0], hsv[1], hsv[2]});
+			viz->set_color_wheel_rate(args.get<float>("--wheel-rate"));
 		}
 		else if (color_str == "solid")
 		{
-			set_color_mode(SD::ColorMode::SOLID);
-			const auto &rgb = get<std::vector<uint8_t>>("--rgb");
-			set_solid_color({rgb[0], rgb[1], rgb[2]});
+			viz->set_color_mode(SD::ColorMode::SOLID);
+			const auto &rgb = args.get<std::vector<uint8_t>>("--rgb");
+			viz->set_solid_color({rgb[0], rgb[1], rgb[2]});
 		}
 		else
 			throw std::invalid_argument("unknown coloring type: " + color_str);
@@ -149,7 +161,7 @@ void Main::use_args()
 
 		try
 		{
-			switch (const auto &bm_args = get<std::vector<std::string>>("-bm"); bm_args.size())
+			switch (const auto &bm_args = args.get<std::vector<std::string>>("-bm"); bm_args.size())
 			{
 			case 0:
 				break;
@@ -163,19 +175,19 @@ void Main::use_args()
 					{"min", sf::BlendMin},
 					{"max", sf::BlendMax},
 					{"none", sf::BlendNone}};
-				set_spectrum_blendmode(default_blendmodes.at(bm_args[0]));
+				viz->set_spectrum_blendmode(default_blendmodes.at(bm_args[0]));
 				break;
 
 			case 3:
 				// use first BlendMode constructor
-				set_spectrum_blendmode({factor_map.at(bm_args[0]),
+				viz->set_spectrum_blendmode({factor_map.at(bm_args[0]),
 										factor_map.at(bm_args[1]),
 										op_map.at(bm_args[2])});
 				break;
 
 			case 6:
 				// use second BlendMode constructor
-				set_spectrum_blendmode({factor_map.at(bm_args[0]),
+				viz->set_spectrum_blendmode({factor_map.at(bm_args[0]),
 										factor_map.at(bm_args[1]),
 										op_map.at(bm_args[2]),
 										factor_map.at(bm_args[3]),
@@ -195,56 +207,41 @@ void Main::use_args()
 	}
 
 	// -s, --scale
-	switch (const auto &scale_args = get<std::vector<std::string>>("-s"); scale_args.size())
+	switch (const auto &scale_args = args.get<std::vector<std::string>>("-s"); scale_args.size())
 	{
 	case 0:
 		break;
 	case 1:
 		if (scale_args[0] == "linear")
-			set_scale(FS::Scale::LINEAR);
+			viz->set_scale(FS::Scale::LINEAR);
 		else if (scale_args[0] == "log")
-			set_scale(FS::Scale::LOG);
+			viz->set_scale(FS::Scale::LOG);
 		else if (scale_args[0] == "nth-root")
-			set_scale(FS::Scale::NTH_ROOT);
+			viz->set_scale(FS::Scale::NTH_ROOT);
 		break;
 	case 2:
 		if (scale_args[0] != "nth-root")
 			throw std::invalid_argument("only the 'nth-root' scale takes an additional argument");
-		set_scale(FS::Scale::NTH_ROOT);
-		set_nth_root(std::stoi(scale_args[1]));
+		viz->set_scale(FS::Scale::NTH_ROOT);
+		viz->set_nth_root(std::stoi(scale_args[1]));
 		break;
 	default:
 		throw std::logic_error("-s, --scale: default case hit");
 	}
 }
 
-void Main::viz_init()
-{
-	// setting the mult for a cover art background, and applying it
-	// (static backgrounds will not have effects applied automatically)
-	bg.effects.emplace_back(new fx::Mult{0.75}); // TODO: automate this based on total bg luminance!!!!!!!
-	// bg.apply_fx();
-
-	// for testing audio-reactive effects!!!!!!!!!!!!!!!!!!!!!
-	bg.effects.emplace_back(new fx::Mult{1});
-	// bg.effects.emplace_back(new fx::Add{0});
-
-	// change the default blur for a video (changing) background
-	// bg.effects[0] = std::make_unique<fx::Blur>(5, 5, 10);
-}
-
 void Main::start()
 {
 #ifdef PORTAUDIO
-	set_audio_playback_enabled(true);
+	viz->set_audio_playback_enabled(true);
 #endif
 
-	sf::RenderWindow window(sf::VideoMode(size), "audioviz", sf::Style::Titlebar, sf::State::Windowed, ctx);
-	window.setVerticalSyncEnabled(!get<bool>("--no-vsync"));
+	sf::RenderWindow window(sf::VideoMode(viz->get_size()), "audioviz", sf::Style::Titlebar, sf::State::Windowed, ctx);
+	window.setVerticalSyncEnabled(!no_vsync);
 
-	while (window.isOpen() && prepare_frame())
+	while (window.isOpen() && viz->prepare_frame())
 	{
-		window.draw(*this);
+		window.draw(*viz);
 		window.display();
 		while (const auto event = window.pollEvent())
 		{
@@ -271,11 +268,11 @@ void Main::ffmpeg_init(const std::string &outfile, int framerate, const std::str
 	ss << "-f rawvideo -pix_fmt rgba ";
 
 	// size, framerate
-	ss << "-s:v " << size.x << 'x' << size.y << " -r " << framerate << " -i - ";
+	ss << "-s:v " << viz->get_size().x << 'x' << viz->get_size().y << " -r " << framerate << " -i - ";
 
 	// specify input 1: media file
-	choose_quote(url);
-	ss << "-ss -0.1 -i " << quote << url << quote << ' ';
+	choose_quote(viz->url);
+	ss << "-ss -0.1 -i " << quote << viz->url << quote << ' ';
 
 	// only map the audio from input 1 to the output file
 	ss << "-map 0 -map 1:a ";
@@ -307,7 +304,7 @@ void Main::ffmpeg_init(const std::string &outfile, int framerate, const std::str
 
 void Main::encode(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
 {
-	if (get<bool>("--enc-window"))
+	if (enc_window)
 		encode_with_window(outfile, framerate, vcodec, acodec);
 	else
 		encode_without_window(outfile, framerate, vcodec, acodec);
@@ -315,14 +312,14 @@ void Main::encode(const std::string &outfile, int framerate, const std::string &
 
 void Main::encode_without_window(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
 {
-	set_framerate(framerate);
+	viz->set_framerate(framerate);
 	ffmpeg_init(outfile, framerate, vcodec, acodec);
-	tt::RenderTexture rt(size, ctx);
-	while (prepare_frame())
+	tt::RenderTexture rt(viz->get_size(), ctx);
+	while (viz->prepare_frame())
 	{
-		rt.draw(*this);
+		rt.draw(*viz);
 		rt.display();
-		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
+		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * viz->get_size().x * viz->get_size().y, ffmpeg);
 		rt.clear();
 	}
 	if (pclose(ffmpeg) == -1)
@@ -331,18 +328,18 @@ void Main::encode_without_window(const std::string &outfile, int framerate, cons
 
 void Main::encode_with_window(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
 {
-	set_framerate(framerate);
+	viz->set_framerate(framerate);
 	ffmpeg_init(outfile, framerate, vcodec, acodec);
-	sf::RenderWindow window(sf::VideoMode(size), "encoder", sf::Style::Titlebar, sf::State::Windowed, ctx);
+	sf::RenderWindow window(sf::VideoMode(viz->get_size()), "encoder", sf::Style::Titlebar, sf::State::Windowed, ctx);
 	sf::Texture txr;
-	if (!txr.create(size))
+	if (!txr.create(viz->get_size()))
 		throw std::runtime_error("failed to create texture");
-	while (prepare_frame())
+	while (viz->prepare_frame())
 	{
-		window.draw(*this);
+		window.draw(*viz);
 		window.display();
 		txr.update(window);
-		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * size.x * size.y, ffmpeg);
+		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * viz->get_size().x * viz->get_size().y, ffmpeg);
 		window.clear();
 	}
 	if (pclose(ffmpeg) == -1)

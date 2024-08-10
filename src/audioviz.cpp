@@ -7,9 +7,8 @@
 #include "viz/util.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
-	: url(media_url),
-	  size(size),
-	  _format(media_url),
+	: size(size),
+	  media(media_url),
 	  ps({{}, (sf::Vector2i)size}, 50),
 	  timing_text(font),
 	  bg(size, antialiasing),
@@ -19,19 +18,14 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	metadata_init();
 
 	// for now only stereo is supported
-	if (_astream.nb_channels() != 2)
+	if (media->_astream.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 
 	// default margin around the spectrum
-	set_spectrum_margin(10);
+	set_spectrum_margin(ss_margin);
 
-	// add default effects!
-	bg.effects.emplace_back(new fx::Blur{7.5, 7.5, 15});
-	particles.effects.emplace_back(new fx::Blur{1, 1, 10});
-	spectrum.effects.emplace_back(new fx::Blur{1, 1, 20});
-
-	// init libav stuff
-	av_init();
+	// initialize libav for media decoding
+	media->init(*this);
 
 	// default metadata position
 	_metadata.set_position({30, 30});
@@ -42,7 +36,18 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	timing_text.setFillColor({255, 255, 255, 150});
 }
 
-void audioviz::av_init()
+void audioviz::add_default_effects()
+{
+	bg.effects.emplace_back(new fx::Blur{7.5, 7.5, 15});
+	bg.effects.emplace_back(new fx::Mult{0.75});
+	if (!media->_vstream)
+		// apply the effects to the static background, since it is loaded before this is called.
+		bg.apply_fx();
+	particles.effects.emplace_back(new fx::Blur{1, 1, 10});
+	spectrum.effects.emplace_back(new fx::Blur{1, 1, 20});
+}
+
+void audioviz::_media::init(audioviz &viz)
 {
 	// if an attached pic is in the format, use it for bg and album cover
 	// clang-format off
@@ -54,8 +59,8 @@ void audioviz::av_init()
 		const auto &stream = *itr;
 		if (sf::Texture txr; txr.loadFromMemory(stream->attached_pic.data, stream->attached_pic.size))
 		{
-			_metadata.set_album_cover(txr, {150, 150});
-			set_background(txr);
+			viz._metadata.set_album_cover(txr, {150, 150});
+			viz.set_background(txr);
 		}
 	}
 
@@ -70,7 +75,7 @@ void audioviz::av_init()
 			_scaler.emplace(av::nearest_multiple_8(_s->codecpar->width),
 							_s->codecpar->height,
 							(AVPixelFormat)_s->codecpar->format,
-							size.x, size.y, AV_PIX_FMT_RGBA);
+							viz.size.x, viz.size.y, AV_PIX_FMT_RGBA);
 			_scaled_frame.emplace();
 			_frame_queue.emplace();
 		}
@@ -114,18 +119,24 @@ void audioviz::av_init()
 	}
 }
 
-void audioviz::set_album_cover(const std::filesystem::path &image_path, const sf::Vector2f size)
+void audioviz::set_size(const sf::Vector2u size)
+{
+	this->size = size;
+	set_spectrum_margin(ss_margin);
+}
+
+void audioviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
 {
 	sf::Texture txr;
 	if (!txr.loadFromFile(image_path))
-		throw std::runtime_error("failed to load album cover: '" + image_path.string() + '\'');
+		throw std::runtime_error("failed to load album cover: '" + image_path + '\'');
 	_metadata.set_album_cover(txr, size);
 }
 
-void audioviz::set_text_font(const std::filesystem::path &path)
+void audioviz::set_text_font(const std::string &path)
 {
 	if (!font.loadFromFile(path))
-		throw std::runtime_error("failed to load font: '" + path.string() + '\'');
+		throw std::runtime_error("failed to load font: '" + path + '\'');
 	font_loaded = true;
 }
 
@@ -143,32 +154,33 @@ void audioviz::metadata_init()
 	artist_text.setFillColor({255, 255, 255, 150});
 
 	// set text using stream/format metadata
-	if (const auto title = _astream.metadata("title"))
+	if (const auto title = media->_astream.metadata("title"))
 		title_text.setString(title);
-	if (const auto title = _format.metadata("title"))
+	if (const auto title = media->_format.metadata("title"))
 		title_text.setString(title);
-	if (const auto artist = _astream.metadata("artist"))
+	if (const auto artist = media->_astream.metadata("artist"))
 		artist_text.setString(artist);
-	if (const auto artist = _format.metadata("artist"))
+	if (const auto artist = media->_format.metadata("artist"))
 		artist_text.setString(artist);
 }
 
 void audioviz::set_spectrum_margin(const int margin)
 {
+	ss_margin = margin;
 	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
 }
 
 void audioviz::set_framerate(int framerate)
 {
 	this->framerate = framerate;
-	_afpvf = _astream.sample_rate() / framerate;
+	_afpvf = media->_astream.sample_rate() / framerate;
 }
 
-void audioviz::set_background(const std::filesystem::path &image_path)
+void audioviz::set_background(const std::string &image_path)
 {
 	sf::Texture txr;
 	if (!txr.loadFromFile(image_path))
-		throw std::runtime_error("failed to load background image: '" + image_path.string() + '\'');
+		throw std::runtime_error("failed to load background image: '" + image_path + '\'');
 	set_background(txr);
 }
 
@@ -187,25 +199,44 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 	spectrum_bm = bm;
 }
 
+void audioviz::capture_elapsed_time(const char *const label)
+{
+	tt_ss << label << ": " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+}
+
 void audioviz::draw_spectrum()
 {
 	tt_clock.restart();
 	ss.process(fa, sa, audio_buffer.data());
-	tt_ss << "spectrum fft: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	capture_elapsed_time("ss.process()");
 
 	spectrum.orig_clear();
+
+	tt_clock.restart();
 	spectrum.orig_draw(ss);
+	capture_elapsed_time("spectrum.orig_draw()");
+
+	tt_clock.restart();
 	spectrum.apply_fx();
-	tt_ss << "spectrum draw: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	capture_elapsed_time("spectrum.apply_fx()");
 }
 
 // should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
+	tt_clock.restart();
 	ps.update(sa, size.y);
+	capture_elapsed_time("ps.update()");
+
 	particles.orig_clear();
+
+	tt_clock.restart();
 	particles.orig_draw(ps);
+	capture_elapsed_time("particles.orig_draw()");
+
+	tt_clock.restart();
 	particles.apply_fx();
+	capture_elapsed_time("particles.apply_fx()");
 }
 
 #ifdef PORTAUDIO
@@ -214,7 +245,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	if (enabled)
 	{
 		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, _astream.sample_rate(), fft_size);
+		pa_stream.emplace(0, 2, paFloat32, media->_astream.sample_rate(), fft_size);
 		pa_stream->start();
 	}
 	else
@@ -225,7 +256,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 }
 #endif
 
-void audioviz::decode_media()
+void audioviz::_media::decode(std::vector<float> &audio_buffer, const int fft_size)
 {
 	// while we don't have enough audio samples
 	while ((int)audio_buffer.size() < 2 * fft_size)
@@ -284,6 +315,18 @@ void audioviz::decode_media()
 	}
 }
 
+bool audioviz::_media::video_frame_available()
+{
+	return _vstream && !_frame_queue->empty();
+}
+
+void audioviz::_media::draw_next_video_frame(viz::Layer &layer)
+{
+	layer.orig_draw(sf::Sprite(_frame_queue->front()));
+	layer.apply_fx();
+	_frame_queue->pop_front();
+}
+
 #ifdef PORTAUDIO
 void audioviz::play_audio()
 {
@@ -302,25 +345,30 @@ void audioviz::play_audio()
 
 bool audioviz::prepare_frame()
 {
+	assert(media);
+
 	tt_clock.restart();
-	decode_media();
-	tt_ss << "decode_media: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	media->decode(audio_buffer, fft_size);
+	capture_elapsed_time("media->decode()");
 
 #ifdef PORTAUDIO
 	if (pa_stream)
+	{
+		tt_clock.restart();
 		play_audio();
+		capture_elapsed_time("play_audio()");
+	}
 #endif
 
 	// we don't have enough samples for fft; end here
 	if ((int)audio_buffer.size() < 2 * fft_size)
 		return false;
 
-	// get next frame from video if available
-	if (_vstream && !_frame_queue->empty())
+	if (media->video_frame_available())
 	{
-		bg.orig_draw(sf::Sprite(_frame_queue->front()));
-		bg.apply_fx();
-		_frame_queue->pop_front();
+		tt_clock.restart();
+		media->draw_next_video_frame(bg);
+		capture_elapsed_time("media->draw_next_video_frame()");
 	}
 
 	draw_spectrum();
@@ -334,10 +382,12 @@ bool audioviz::prepare_frame()
 		ps_clock.restart();
 	}
 
-	tt_clock.restart();
-	{ // brighten up bg with bass
+	/* brighten bg on bass - looks kinda bad, keeping code for future reference
+	if (bg.effects.size())
+	{
+		tt_clock.restart();
 		const auto &left_data = sa.left_data(),
-				   &right_data = sa.right_data();
+				&right_data = sa.right_data();
 		assert(left_data.size() == right_data.size());
 
 		// clang-format off
@@ -346,11 +396,12 @@ bool audioviz::prepare_frame()
 
 		const auto avg = (viz::util::weighted_max(left_data, weight_func) + viz::util::weighted_max(right_data, weight_func)) / 2;
 
-		dynamic_cast<fx::Mult &>(*bg.effects[2]).factor = 1 + avg;
+		// dynamic_cast<fx::Mult &>(*bg.effects[2]).factor = 1 + avg;
 		// dynamic_cast<fx::Add &>(*bg.effects[3]).addend = 0.1 * avg;
 		bg.apply_fx();
+		tt_ss << "bg_brighten: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 	}
-	tt_ss << "bg_brighten: " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	*/
 
 	tt_clock.restart();
 	// THE IMPORTANT PART

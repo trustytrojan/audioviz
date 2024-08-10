@@ -120,6 +120,13 @@ Args::Args(const int argc, const char *const *const argv)
 	add_argument("--no-vsync")
 		.help("disable vsync (not recommended)")
 		.flag();
+	
+	add_argument("--luafile")
+		.help("NEW FEATURE!!!!!! configure audioviz with a lua script!\nlua code is run BEFORE cli args are parsed!");
+
+	add_argument("--no-fx")
+		.help("don't add default effects")
+		.flag();
 
 	try
 	{

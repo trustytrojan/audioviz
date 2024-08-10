@@ -90,5 +90,8 @@
 		"stdfloat": "cpp",
 		"cstdbool": "cpp",
 		"version": "cpp"
-	}
+	},
+	"Lua.diagnostics.globals": [
+		"audioviz"
+	]
 }

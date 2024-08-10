@@ -8,7 +8,7 @@ DEFINES = $(if $(NO_PORTAUDIO),,-DPORTAUDIO)
 CFLAGS = $(WFLAGS) $(DEFINES) -std=gnu++23 -MMD $(if $(RELEASE),-O3,-g)
 INCLUDE = -Iinclude -Ideps/SFML/include -Ideps/libavpp/include $(if $(NO_PORTAUDIO),,-Ideps/portaudio-pp/include)
 LDPATHS = -Ldeps/SFML/build/lib
-LDLIBS = -lfftw3f -lsfml-graphics -lsfml-system -lsfml-window -lavformat -lavcodec -lavutil -lswresample -lswscale \
+LDLIBS = -llua -lfftw3f -lsfml-graphics -lsfml-system -lsfml-window -lavformat -lavcodec -lavutil -lswresample -lswscale \
 	$(if $(NO_PORTAUDIO),,-lportaudio)
 
 # List of source files
