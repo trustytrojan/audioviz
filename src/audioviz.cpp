@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 
 #include "audioviz.hpp"
@@ -7,7 +8,8 @@
 #include "viz/util.hpp"
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
-	: size(size),
+	: media_url(media_url),
+	  size(size),
 	  media(media_url),
 	  ps({{}, (sf::Vector2i)size}, 50),
 	  timing_text(font),
@@ -201,24 +203,25 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 
 void audioviz::capture_elapsed_time(const char *const label)
 {
-	tt_ss << label << ": " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	tt_ss << std::setw(20) << std::left
+		  << label << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
 
 void audioviz::draw_spectrum()
 {
 	tt_clock.restart();
 	ss.process(fa, sa, audio_buffer.data());
-	capture_elapsed_time("ss.process()");
+	capture_elapsed_time("spectrum_fft");
 
 	spectrum.orig_clear();
 
 	tt_clock.restart();
 	spectrum.orig_draw(ss);
-	capture_elapsed_time("spectrum.orig_draw()");
+	capture_elapsed_time("spectrum_draw");
 
 	tt_clock.restart();
 	spectrum.apply_fx();
-	capture_elapsed_time("spectrum.apply_fx()");
+	capture_elapsed_time("spectrum_fx");
 }
 
 // should be called AFTER draw_spectrum()
@@ -226,17 +229,17 @@ void audioviz::draw_particles()
 {
 	tt_clock.restart();
 	ps.update(sa, size.y);
-	capture_elapsed_time("ps.update()");
+	capture_elapsed_time("particles_update");
 
 	particles.orig_clear();
 
 	tt_clock.restart();
 	particles.orig_draw(ps);
-	capture_elapsed_time("particles.orig_draw()");
+	capture_elapsed_time("particles_draw");
 
 	tt_clock.restart();
 	particles.apply_fx();
-	capture_elapsed_time("particles.apply_fx()");
+	capture_elapsed_time("particles_fx");
 }
 
 #ifdef PORTAUDIO
@@ -349,14 +352,14 @@ bool audioviz::prepare_frame()
 
 	tt_clock.restart();
 	media->decode(audio_buffer, fft_size);
-	capture_elapsed_time("media->decode()");
+	capture_elapsed_time("media_decode");
 
 #ifdef PORTAUDIO
 	if (pa_stream)
 	{
 		tt_clock.restart();
 		play_audio();
-		capture_elapsed_time("play_audio()");
+		capture_elapsed_time("play_audio");
 	}
 #endif
 
@@ -368,7 +371,7 @@ bool audioviz::prepare_frame()
 	{
 		tt_clock.restart();
 		media->draw_next_video_frame(bg);
-		capture_elapsed_time("media->draw_next_video_frame()");
+		capture_elapsed_time("draw_next_video_frame");
 	}
 
 	draw_spectrum();
@@ -406,7 +409,7 @@ bool audioviz::prepare_frame()
 	tt_clock.restart();
 	// THE IMPORTANT PART
 	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf);
-	tt_ss << "audio_buffer.erase(): " << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	capture_elapsed_time("audio_buffer_erase");
 
 	timing_text.setString(tt_ss.str());
 	tt_ss.str("");

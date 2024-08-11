@@ -162,6 +162,4 @@ private:
 	void interpolate(std::vector<float> &spectrum);
 };
 
-using FreqSpec = FrequencyAnalyzer;
-
 } // namespace tt

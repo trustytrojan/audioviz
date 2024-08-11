@@ -6,7 +6,8 @@
 
 class Main
 {
-	using SD = viz::SpectrumDrawable<viz::VerticalPill>;
+	using BarType = viz::VerticalBar;
+	using SD = viz::SpectrumDrawable<BarType>;
 	using FS = tt::FrequencyAnalyzer;
 
 	static inline const sf::ContextSettings ctx{0, 0, 4};

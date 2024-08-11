@@ -16,6 +16,7 @@
 #include "viz/ParticleSystem.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalPill.hpp"
+#include "viz/VerticalBar.hpp"
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/Layer.hpp"
 
@@ -23,21 +24,21 @@ class audioviz : public sf::Drawable
 {
 public:
 	// input media url. cannot be changed. audioviz is a one-use class
-	const std::string url;
-
-	int framerate = 60;
+	const std::string media_url;
 
 private:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	sf::Vector2u size;
 	int ss_margin = 10;
 
-	using SD = viz::SpectrumDrawable<viz::VerticalPill>;
+	using BarType = viz::VerticalBar;
+	using SD = viz::SpectrumDrawable<BarType>;
 	using FS = tt::FrequencyAnalyzer;
 
 	int fft_size = 3000;
 	std::vector<float> audio_buffer;
 
+	// TODO: test dynamic media file changes
 	struct _media
 	{
 		const std::string url;
@@ -71,6 +72,7 @@ private:
 	std::optional<_media> media;
 
 	// framerate
+	int framerate = 60;
 
 	// audio frames per video frame
 	int _afpvf = media->_astream.sample_rate() / framerate;
@@ -80,7 +82,7 @@ private:
 	tt::StereoAnalyzer sa;
 
 	// stereo spectrum
-	viz::StereoSpectrum<viz::VerticalPill> ss;
+	viz::StereoSpectrum<BarType> ss;
 	std::optional<sf::BlendMode> spectrum_bm;
 
 	// particle system

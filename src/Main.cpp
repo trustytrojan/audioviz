@@ -23,6 +23,8 @@ Main::Main(const int argc, const char *const *const argv)
 	switch (const auto &encode_args = args.get<std::vector<std::string>>("--encode"); encode_args.size())
 	{
 	case 0:
+		// default behavior: render to window
+		start();
 		break;
 	case 1:
 		encode(encode_args[0]);
@@ -39,9 +41,6 @@ Main::Main(const int argc, const char *const *const argv)
 	default:
 		throw std::logic_error("--encode requires 1-4 arguments");
 	}
-
-	// default behavior: render to window
-	start();
 }
 
 void Main::use_args(const Args &args)
@@ -271,8 +270,8 @@ void Main::ffmpeg_init(const std::string &outfile, int framerate, const std::str
 	ss << "-s:v " << viz->get_size().x << 'x' << viz->get_size().y << " -r " << framerate << " -i - ";
 
 	// specify input 1: media file
-	choose_quote(viz->url);
-	ss << "-ss -0.1 -i " << quote << viz->url << quote << ' ';
+	choose_quote(viz->media_url);
+	ss << "-ss -0.1 -i " << quote << viz->media_url << quote << ' ';
 
 	// only map the audio from input 1 to the output file
 	ss << "-map 0 -map 1:a ";

@@ -5,6 +5,12 @@
 namespace viz
 {
 
+/**
+ * A customizable frequency spectrum visualizer.
+ *
+ * @tparam BarType A subclass of `sf::Shape` that implements
+ *                 `setWidth(float)` and `setHeight(float)`.
+ */
 template <typename BarType>
 class SpectrumDrawable : public sf::Drawable
 {

@@ -25,7 +25,7 @@ SUBM = deps/libavpp $(if $(NO_PORTAUDIO),,deps/portaudiopp) deps/SFML
 all: clear bin/audioviz
 
 clean:
-	rm -rf bin obj
+	find obj bin -type f -delete
 
 clear:
 	clear
