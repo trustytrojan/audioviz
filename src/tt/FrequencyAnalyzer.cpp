@@ -118,7 +118,7 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 		interpolate(spectrum);
 }
 
-float FrequencyAnalyzer::window_func(const int i)
+float FrequencyAnalyzer::window_func(const int i) const
 {
 	switch (wf)
 	{
@@ -133,12 +133,12 @@ float FrequencyAnalyzer::window_func(const int i)
 	}
 }
 
-int FrequencyAnalyzer::calc_index(const int i, const int max_index)
+int FrequencyAnalyzer::calc_index(const int i, const int max_index) const
 {
 	return std::max(0, std::min(int(calc_index_ratio(i) * max_index), max_index - 1));
 }
 
-float FrequencyAnalyzer::calc_index_ratio(const float i)
+float FrequencyAnalyzer::calc_index_ratio(const float i) const
 {
 	switch (scale)
 	{
@@ -183,7 +183,8 @@ void FrequencyAnalyzer::interpolate(std::vector<float> &spectrum)
 
 	// only copy spline values to fill in the gaps
 	for (size_t i = 0; i < spectrum.size(); ++i)
-		spectrum[i] = spectrum[i] ? spectrum[i] : spline(i);
+		if (spectrum[i] == 0)
+			spectrum[i] = spline(i);
 }
 
 } // namespace tt

@@ -156,9 +156,9 @@ public:
 	void render(std::vector<float> &spectrum);
 
 private:
-	float window_func(int i);
-	int calc_index(int i, int max_index);
-	float calc_index_ratio(float i);
+	float window_func(int i) const;
+	int calc_index(int i, int max_index) const;
+	float calc_index_ratio(float i) const;
 	void interpolate(std::vector<float> &spectrum);
 };
 

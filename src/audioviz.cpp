@@ -7,6 +7,13 @@
 #include "fx/Mult.hpp"
 #include "viz/util.hpp"
 
+#define capture_time(label, code) \
+	{ \
+		sf::Clock _clock; \
+		code; \
+		capture_elapsed_time(label, _clock); \
+	}
+
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
 	: media_url(media_url),
 	  size(size),
@@ -201,45 +208,27 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 	spectrum_bm = bm;
 }
 
-void audioviz::capture_elapsed_time(const char *const label)
+void audioviz::capture_elapsed_time(const char *const label, const sf::Clock &_clock)
 {
 	tt_ss << std::setw(20) << std::left
-		  << label << tt_clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+		  << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
 
 void audioviz::draw_spectrum()
 {
-	tt_clock.restart();
-	ss.process(fa, sa, audio_buffer.data());
-	capture_elapsed_time("spectrum_fft");
-
+	capture_time("spectrum_update", ss.update(sa));
 	spectrum.orig_clear();
-
-	tt_clock.restart();
-	spectrum.orig_draw(ss);
-	capture_elapsed_time("spectrum_draw");
-
-	tt_clock.restart();
-	spectrum.apply_fx();
-	capture_elapsed_time("spectrum_fx");
+	capture_time("spectrum_draw", spectrum.orig_draw(ss));
+	capture_time("spectrum_fx", spectrum.apply_fx());
 }
 
 // should be called AFTER draw_spectrum()
 void audioviz::draw_particles()
 {
-	tt_clock.restart();
-	ps.update(sa, size.y);
-	capture_elapsed_time("particles_update");
-
+	capture_time("particles_update", ps.update(sa, size.y));
 	particles.orig_clear();
-
-	tt_clock.restart();
-	particles.orig_draw(ps);
-	capture_elapsed_time("particles_draw");
-
-	tt_clock.restart();
-	particles.apply_fx();
-	capture_elapsed_time("particles_fx");
+	capture_time("particles_draw", particles.orig_draw(ps));
+	capture_time("particles_fx", particles.apply_fx());
 }
 
 #ifdef PORTAUDIO
@@ -349,18 +338,11 @@ void audioviz::play_audio()
 bool audioviz::prepare_frame()
 {
 	assert(media);
-
-	tt_clock.restart();
-	media->decode(audio_buffer, fft_size);
-	capture_elapsed_time("media_decode");
+	capture_time("media_decode", media->decode(audio_buffer, fft_size));
 
 #ifdef PORTAUDIO
 	if (pa_stream)
-	{
-		tt_clock.restart();
-		play_audio();
-		capture_elapsed_time("play_audio");
-	}
+		capture_time("play_audio", play_audio());
 #endif
 
 	// we don't have enough samples for fft; end here
@@ -368,11 +350,13 @@ bool audioviz::prepare_frame()
 		return false;
 
 	if (media->video_frame_available())
-	{
-		tt_clock.restart();
-		media->draw_next_video_frame(bg);
-		capture_elapsed_time("draw_next_video_frame");
-	}
+		capture_time("draw_next_video_frame", media->draw_next_video_frame(bg));
+
+	// resizes sa's vectors properly to fit ss's bars
+	ss.before_analyze(sa);
+	
+	// perform actual fft
+	capture_time("fft", sa.analyze(fa, audio_buffer.data()));
 
 	draw_spectrum();
 
@@ -406,10 +390,8 @@ bool audioviz::prepare_frame()
 	}
 	*/
 
-	tt_clock.restart();
 	// THE IMPORTANT PART
-	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf);
-	capture_elapsed_time("audio_buffer_erase");
+	capture_time("audio_buffer_erase", audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf));
 
 	timing_text.setString(tt_ss.str());
 	tt_ss.str("");

@@ -94,7 +94,9 @@ private:
 	viz::SongMetadataDrawable _metadata = font;
 
 	// clocks for timing stuff
-	sf::Clock ps_clock, tt_clock;
+	sf::Clock ps_clock;
+
+	// timing text
 	sf::Text timing_text;
 	std::ostringstream tt_ss;
 
@@ -186,5 +188,5 @@ private:
 	void draw_spectrum();
 	void draw_particles();
 	void play_audio();
-	void capture_elapsed_time(const char *const label);
+	void capture_elapsed_time(const char *const label, const sf::Clock &_clock);
 };

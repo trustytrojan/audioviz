@@ -66,19 +66,29 @@ void ParticleSystem::update(const sf::Vector2f additional_displacement)
 	}
 }
 
-void ParticleSystem::update(const tt::StereoAnalyzer &sa, const float scale)
+void ParticleSystem::update(const tt::MonoAnalyzer &sa, const float scale, const UpdateOptions &opts)
+{
+	const auto wmax = util::weighted_max(sa.spectrum_data(), opts.weight_func);
+	const auto scaled_wmax = wmax * scale;
+	const auto additional_displacement = opts.displacement_func(scaled_wmax / opts.calm_factor);
+	update({0, -additional_displacement});
+}
+
+void ParticleSystem::update(const tt::StereoAnalyzer &sa, const float scale, const UpdateOptions &opts)
 {
 	const auto &left_data = sa.left_data(),
 			   &right_data = sa.right_data();
 	assert(left_data.size() == right_data.size());
 
-	const auto avg = (util::weighted_max(left_data, sqrtf) + util::weighted_max(right_data, sqrtf)) / 2;
+	const auto avg = (util::weighted_max(left_data, opts.weight_func) +
+					  util::weighted_max(right_data, opts.weight_func)) /
+					 2;
 
 	// scale by window size to keep movement consistent with all window sizes
 	const auto scaled_avg = scale * avg;
 
 	// the deciding factor in particle speed increase
-	const auto additional_displacement = sqrtf(scaled_avg / 5);
+	const auto additional_displacement = opts.displacement_func(scaled_avg / opts.calm_factor);
 
 	// update particle system with additional (upward) displacement
 	update({0, -additional_displacement});

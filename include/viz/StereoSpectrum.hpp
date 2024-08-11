@@ -16,6 +16,7 @@ class StereoSpectrum : public sf::Drawable
 	sf::IntRect rect;
 
 public:
+	// TODO: make this customizable
 	StereoSpectrum()
 	{
 		_left.set_backwards(true);
@@ -73,11 +74,20 @@ public:
 		update_spectrum_rects();
 	}
 
-	void process(tt::FrequencyAnalyzer &fa, tt::StereoAnalyzer &sa, const float *const audio)
+	// this should be called BEFORE calling `sa.analyze`!!!!
+	void before_analyze(tt::StereoAnalyzer &sa)
 	{
 		assert(_left.bar_count() == _right.bar_count());
 		sa.resize(_left.bar_count());
-		sa.analyze(fa, audio);
+	}
+
+	/**
+	 * @warning It is the CALLER's responsibility to make sure that
+	 * `sa`'s spectrum buffers are properly sized for this `StereoSpectrum`!!!!
+	 * Otherwise you will get an assertion error!!! Call `before_analyze` to help you with this.
+	 */
+	void update(const tt::StereoAnalyzer &sa)
+	{
 		_left.update_bar_heights(sa.left_data());
 		_right.update_bar_heights(sa.right_data());
 		_left.color_wheel_increment();
