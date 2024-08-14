@@ -22,13 +22,8 @@
 
 class audioviz : public sf::Drawable
 {
-public:
-	// input media url. cannot be changed. audioviz is a one-use class
-	const std::string media_url;
-
-private:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
-	sf::Vector2u size;
+	const sf::Vector2u size;
 	int ss_margin = 10;
 
 	using BarType = viz::VerticalBar;
@@ -62,7 +57,7 @@ private:
 		_media(const std::string &url) : url(url), _format(url) {}
 
 		void init(audioviz &);
-		void decode(std::vector<float> &audio_buffer, const int fft_size);
+		void decode(audioviz &);
 		bool video_frame_available();
 		void draw_next_video_frame(viz::Layer &);
 	};
@@ -99,6 +94,7 @@ private:
 	// timing text
 	sf::Text timing_text;
 	std::ostringstream tt_ss;
+	bool tt_enabled = false;
 
 #ifdef PORTAUDIO
 	// PortAudio stuff for live playback
@@ -123,13 +119,10 @@ public:
 
 	/**
 	 * Prepare a frame to be drawn with `draw()`.
-	 * @return Whether the end of the audio buffer has been reached and another frame cannot be prepared.
+	 * @return Whether another frame can be prepared
 	 */
 	bool prepare_frame();
 
-	/**
-	 * Overrides `sf::Drawable::draw`.
-	 */
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
 
 	/// setters
@@ -141,10 +134,13 @@ public:
 	void set_audio_playback_enabled(bool enabled);
 #endif
 
+	void set_timing_text_enabled(bool enabled);
+
 	sf::Vector2u get_size() const { return size; }
 
-	// ............
+	/* resizable windows not happening now, too much of the codebase relies on a static window size
 	void set_size(sf::Vector2u size);
+	*/
 
 	/**
 	 * important if you are capturing frames for video encoding!
@@ -166,7 +162,12 @@ public:
 	// you **must** call this method in order to see text metadata!
 	void set_text_font(const std::string &path);
 
+	void set_media_url(const std::string &url);
+	const std::string &get_media_url() const;
+
 	/// passthrough setters
+	/// TODO: using viz::Layer, use dependency injection to get rid of these setters!!!!!
+	///       give the caller the power to customize their visualizer further!!!!!!!!!!!!!
 
 	void set_sample_size(int);
 	void set_bar_width(int width);

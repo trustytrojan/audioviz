@@ -1,11 +1,15 @@
 #include "Main.hpp"
 #include <sol.hpp>
 
-sol::state Main::lua_init()
+Main::LuaState::LuaState(Main &main)
 {
-    sol::state lua;
-	// lua.open_libraries(sol::lib::base);
-    lua.new_usertype<audioviz>("audioviz",
+	open_libraries(sol::lib::base); // for testing
+
+	set_function("start_in_window", &Main::start_in_window, main);
+	set_function("encode", &Main::encode_without_window, main);
+
+	// clang-format off
+    new_usertype<audioviz>("audioviz",
 		// custom factory to convert { width, height } to sf::Vector2u
         "new", sol::factories([](const sol::table args, const std::string &media_url)
 		{
@@ -15,16 +19,21 @@ sol::state Main::lua_init()
 			return std::make_shared<audioviz>(size, media_url);
 		}),
 		
-		// setters
-#ifdef PORTAUDIO
-        "set_audio_playback_enabled", &audioviz::set_audio_playback_enabled,
-#endif
+		// setters/customization
+		"set_timing_text_enabled", &audioviz::set_timing_text_enabled,
+		"set_media_url", &audioviz::set_media_url,
+		"add_default_effects", &audioviz::add_default_effects,
         "set_framerate", &audioviz::set_framerate,
         "set_background", static_cast<void(audioviz::*)(const std::string &)>(&audioviz::set_background),
         "set_spectrum_margin", &audioviz::set_spectrum_margin,
         "set_spectrum_blendmode", &audioviz::set_spectrum_blendmode,
         "set_album_cover", &audioviz::set_album_cover,
         "set_text_font", &audioviz::set_text_font,
+#ifdef PORTAUDIO
+        "set_audio_playback_enabled", &audioviz::set_audio_playback_enabled,
+#endif
+
+		// passthrough setters
         "set_sample_size", &audioviz::set_sample_size,
         "set_bar_width", &audioviz::set_bar_width,
         "set_bar_spacing", &audioviz::set_bar_spacing,
@@ -40,10 +49,10 @@ sol::state Main::lua_init()
         "set_accum_method", &audioviz::set_accum_method,
         "set_window_func", &audioviz::set_window_func,
 
-		// layer objects
+		// layers (no idea how to make this work)
 		"bg", &audioviz::bg,
 		"spectrum", &audioviz::spectrum,
 		"particles", &audioviz::particles
     );
-    return lua;
+	// clang-format on
 }

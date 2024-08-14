@@ -7,16 +7,15 @@
 #include "fx/Mult.hpp"
 #include "viz/util.hpp"
 
-#define capture_time(label, code) \
-	{ \
-		sf::Clock _clock; \
-		code; \
+#define capture_time(label, code)            \
+	{                                        \
+		sf::Clock _clock;                    \
+		code;                                \
 		capture_elapsed_time(label, _clock); \
 	}
 
 audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
-	: media_url(media_url),
-	  size(size),
+	: size(size),
 	  media(media_url),
 	  ps({{}, (sf::Vector2i)size}, 50),
 	  timing_text(font),
@@ -39,8 +38,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	// default metadata position
 	_metadata.set_position({30, 30});
 
-	timing_text.setOrigin({0, 1});
-	timing_text.setPosition({size.x / 2, 30});
+	timing_text.setPosition({size.x - 300, 30});
 	timing_text.setCharacterSize(18);
 	timing_text.setFillColor({255, 255, 255, 150});
 }
@@ -54,6 +52,22 @@ void audioviz::add_default_effects()
 		bg.apply_fx();
 	particles.effects.emplace_back(new fx::Blur{1, 1, 10});
 	spectrum.effects.emplace_back(new fx::Blur{1, 1, 20});
+}
+
+void audioviz::set_media_url(const std::string &url)
+{
+	media.emplace(url);
+	media->init(*this);
+}
+
+const std::string &audioviz::get_media_url() const
+{
+	return media->url;
+}
+
+void audioviz::set_timing_text_enabled(bool enabled)
+{
+	tt_enabled = enabled;
 }
 
 void audioviz::_media::init(audioviz &viz)
@@ -97,7 +111,7 @@ void audioviz::_media::init(audioviz &viz)
 			std::cerr << "video stream not found\n";
 			break;
 		case AVERROR_DECODER_NOT_FOUND:
-			std::cout << "video decoder not found\n";
+			std::cerr << "video decoder not found\n";
 			break;
 		default:
 			throw;
@@ -128,11 +142,13 @@ void audioviz::_media::init(audioviz &viz)
 	}
 }
 
+/* resizable windows not happening now, too much of the codebase relies on a static window size
 void audioviz::set_size(const sf::Vector2u size)
 {
 	this->size = size;
 	set_spectrum_margin(ss_margin);
 }
+*/
 
 void audioviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
 {
@@ -248,10 +264,10 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 }
 #endif
 
-void audioviz::_media::decode(std::vector<float> &audio_buffer, const int fft_size)
+void audioviz::_media::decode(audioviz &viz)
 {
 	// while we don't have enough audio samples
-	while ((int)audio_buffer.size() < 2 * fft_size)
+	while ((int)viz.audio_buffer.size() < 2 * viz.fft_size)
 	{
 		const auto packet = _format.read_packet();
 
@@ -277,7 +293,7 @@ void audioviz::_media::decode(std::vector<float> &audio_buffer, const int fft_si
 				_resampler.convert_frame(rs_frame.get(), frame);
 				const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
 				const auto nb_floats = 2 * rs_frame->nb_samples;
-				audio_buffer.insert(audio_buffer.end(), data, data + nb_floats);
+				viz.audio_buffer.insert(viz.audio_buffer.end(), data, data + nb_floats);
 			}
 		}
 		else if (_vstream && packet->stream_index == _vstream->get()->index)
@@ -338,7 +354,7 @@ void audioviz::play_audio()
 bool audioviz::prepare_frame()
 {
 	assert(media);
-	capture_time("media_decode", media->decode(audio_buffer, fft_size));
+	capture_time("media_decode", media->decode(*this));
 
 #ifdef PORTAUDIO
 	if (pa_stream)
@@ -354,7 +370,7 @@ bool audioviz::prepare_frame()
 
 	// resizes sa's vectors properly to fit ss's bars
 	ss.before_analyze(sa);
-	
+
 	// perform actual fft
 	capture_time("fft", sa.analyze(fa, audio_buffer.data()));
 
@@ -421,7 +437,8 @@ void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 
 	target.draw(_metadata);
 
-	target.draw(timing_text);
+	if (tt_enabled)
+		target.draw(timing_text);
 }
 
 void audioviz::set_sample_size(int n)

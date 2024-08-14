@@ -11,20 +11,24 @@ class Main
 	using FS = tt::FrequencyAnalyzer;
 
 	static inline const sf::ContextSettings ctx{0, 0, 4};
-	std::shared_ptr<audioviz> viz;
 
 	std::string ffmpeg_path;
-	FILE *ffmpeg = nullptr;
 	bool no_vsync = false, enc_window = false;
 	
-	sol::state lua_init();
-	void ffmpeg_init(const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec);
-	void use_args(const Args &);
+	struct LuaState : sol::state
+	{
+		LuaState(Main &);
+	};
+
+	FILE *ffmpeg_open(audioviz &, const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec);
+	void use_args(audioviz &, const Args &);
+
+	void start_in_window(audioviz &);
+	void encode(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_without_window(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_without_window_mt(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_with_window(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);
-	void start();
-	void encode(const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_without_window(const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_with_window(const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 };

@@ -1,3 +1,7 @@
-local viz = audioviz.new({ 960, 540 }, 'Music/be urself (feat. angelicxmei) [4sqoVyZ48F0].mp3')
+viz = audioviz.new({ 1600, 900 }, 'Music/koji kuga [bJK7fNwpRmU].mp3')
 viz:set_text_font('/usr/share/fonts/TTF/Iosevka-Regular.ttc')
-return viz
+viz:add_default_effects()
+viz:set_background('/home/t/.wallpaper.jpg')
+viz:set_timing_text_enabled(true)
+start_in_window(viz)
+-- encode(viz, 'out.mp4', 60, 'h264_vaapi', 'copy')
