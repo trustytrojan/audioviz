@@ -111,8 +111,7 @@ private:
 		const sf::IntRect
 			left_half{
 				rect.getPosition(),
-				{half_width - half_bar_spacing, rect.height}
-		},
+				{half_width - half_bar_spacing, rect.height}},
 			right_half{
 				{rect.left + half_width + half_bar_spacing, rect.top},
 				{half_width - half_bar_spacing, rect.height}};

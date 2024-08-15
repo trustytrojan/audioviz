@@ -142,25 +142,23 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 	{ // spectrum blendmode
 		static const std::unordered_map<std::string, sf::BlendMode::Factor> factor_map{
-			{"0",	  sf::BlendMode::Factor::Zero			 },
-			{"1",	  sf::BlendMode::Factor::One				},
-			{"sc",  sf::BlendMode::Factor::SrcColor		  },
+			{"0", sf::BlendMode::Factor::Zero},
+			{"1", sf::BlendMode::Factor::One},
+			{"sc", sf::BlendMode::Factor::SrcColor},
 			{"1sc", sf::BlendMode::Factor::OneMinusSrcColor},
-			{"dc",  sf::BlendMode::Factor::DstColor		  },
+			{"dc", sf::BlendMode::Factor::DstColor},
 			{"1dc", sf::BlendMode::Factor::OneMinusDstColor},
-			{"sa",  sf::BlendMode::Factor::SrcAlpha		  },
+			{"sa", sf::BlendMode::Factor::SrcAlpha},
 			{"1sa", sf::BlendMode::Factor::OneMinusSrcAlpha},
-			{"da",  sf::BlendMode::Factor::DstAlpha		  },
-			{"1da", sf::BlendMode::Factor::OneMinusDstAlpha}
-		};
+			{"da", sf::BlendMode::Factor::DstAlpha},
+			{"1da", sf::BlendMode::Factor::OneMinusDstAlpha}};
 
 		static const std::unordered_map<std::string, sf::BlendMode::Equation> op_map{
-			{"add", sf::BlendMode::Equation::Add			},
-			{"sub", sf::BlendMode::Equation::Subtract		 },
-			{"rs",  sf::BlendMode::Equation::ReverseSubtract},
-			{"max", sf::BlendMode::Equation::Max			},
-			{"min", sf::BlendMode::Equation::Min			}
-		 };
+			{"add", sf::BlendMode::Equation::Add},
+			{"sub", sf::BlendMode::Equation::Subtract},
+			{"rs", sf::BlendMode::Equation::ReverseSubtract},
+			{"max", sf::BlendMode::Equation::Max},
+			{"min", sf::BlendMode::Equation::Min}};
 
 		try
 		{
@@ -172,13 +170,12 @@ void Main::use_args(audioviz &viz, const Args &args)
 			case 1:
 				// use sf::BlendMode static member
 				static const std::unordered_map<std::string, sf::BlendMode> default_blendmodes{
-					{"alpha", sf::BlendAlpha	},
-					{"add",	sf::BlendAdd		},
-					{"mult",	 sf::BlendMultiply},
-					{"min",	sf::BlendMin		},
-					{"max",	sf::BlendMax		},
-					{"none",	 sf::BlendNone	  }
-				   };
+					{"alpha", sf::BlendAlpha},
+					{"add", sf::BlendAdd},
+					{"mult", sf::BlendMultiply},
+					{"min", sf::BlendMin},
+					{"max", sf::BlendMax},
+					{"none", sf::BlendNone}};
 				viz.set_spectrum_blendmode(default_blendmodes.at(bm_args[0]));
 				break;
 

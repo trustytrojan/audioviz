@@ -192,10 +192,7 @@ void audioviz::metadata_init()
 void audioviz::set_spectrum_margin(const int margin)
 {
 	ss_margin = margin;
-	ss.set_rect({
-		{margin,				 margin			   },
-		{size.x - 2 * margin, size.y - 2 * margin}
-	  });
+	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
 }
 
 void audioviz::set_framerate(int framerate)

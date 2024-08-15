@@ -14,10 +14,7 @@ void Sprite::capture_centered_square_view()
 	if (tsize.x == tsize.y)
 		return;
 	const auto square_size = std::min(tsize.x, tsize.y);
-	setTextureRect({
-		{tsize.x / 2.f - square_size / 2.f, 0			 },
-		{square_size,					   square_size}
-	  });
+	setTextureRect({{tsize.x / 2.f - square_size / 2.f, 0}, {square_size, square_size}});
 }
 
 void Sprite::scale_to(const sf::Vector2f size)

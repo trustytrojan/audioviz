@@ -1,10 +1,10 @@
 BasedOnStyle: LLVM
-
-# Misc
-ColumnLimit: 0
+MaxEmptyLinesToKeep: 1
+ColumnLimit: 150
+ExperimentalAutoDetectBinPacking: true
 
 # Pack
-PackConstructorInitializers: CurrentLine
+PackConstructorInitializers: Never
 BinPackParameters: false
 BinPackArguments: false
 
@@ -35,9 +35,11 @@ AlignConsecutiveShortCaseStatements:
   AcrossEmptyLines: true
   AcrossComments: true
   AlignCaseColons: false
-AlignArrayOfStructures: Left
+AlignAfterOpenBracket: AlwaysBreak
+AlignEscapedNewlines: Left
 
 # Break
 BreakBeforeBraces: Allman
 BreakBeforeTernaryOperators: true
 AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: true

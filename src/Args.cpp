@@ -4,7 +4,7 @@ Args::Args(const int argc, const char *const *const argv)
 	: ArgumentParser(argv[0], "latest")
 {
 	add_argument("media_url");
-
+	// clang-format off
 	add_argument("-n", "--sample-size")
 		.help("number of audio samples to process per frame\n- higher amount increases accuracy\n- lower amount increases responsiveness")
 		.default_value(3000u)
@@ -127,7 +127,7 @@ Args::Args(const int argc, const char *const *const argv)
 	add_argument("--no-fx")
 		.help("don't add default effects")
 		.flag();
-
+	// clang-format on
 	try
 	{
 		parse_args(argc, argv);

@@ -4,7 +4,9 @@ namespace viz
 {
 
 VerticalPill::VerticalPill(const float width, const float height, const std::size_t pointCount)
-	: sf::CircleShape(width / 2, pointCount), width(width), height(height)
+	: sf::CircleShape(width / 2, pointCount),
+	  width(width),
+	  height(height)
 {
 	setOrigin({0, height + width});
 	update();

@@ -51,7 +51,8 @@ class audioviz : public sf::Drawable
 		std::optional<std::list<sf::Texture>> _frame_queue;
 
 		_media(const std::string &url)
-			: url(url), _format(url) {}
+			: url(url),
+			  _format(url) {}
 
 		void init(audioviz &);
 		void decode(audioviz &);
