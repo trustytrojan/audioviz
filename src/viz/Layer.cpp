@@ -5,7 +5,9 @@ namespace viz
 
 Layer::Layer(const sf::Vector2u size, const int antialiasing)
 	: _orig_rt(size, antialiasing),
-	  _fx_rt(size, 0) {}
+	  _fx_rt(size, 0)
+{
+}
 
 void Layer::orig_clear(const sf::Color color)
 {

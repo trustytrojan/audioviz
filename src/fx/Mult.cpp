@@ -3,7 +3,10 @@
 namespace fx
 {
 
-Mult::Mult(const float factor) : factor(factor) {}
+Mult::Mult(const float factor)
+	: factor(factor)
+{
+}
 
 void Mult::apply(tt::RenderTexture &rt) const
 {

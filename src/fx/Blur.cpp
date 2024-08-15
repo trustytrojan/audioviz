@@ -4,7 +4,9 @@ namespace fx
 {
 
 Blur::Blur(const float hrad, const float vrad, const int n_passes)
-	: hrad(hrad), vrad(vrad), n_passes(n_passes) {}
+	: hrad(hrad), vrad(vrad), n_passes(n_passes)
+{
+}
 
 void Blur::apply(tt::RenderTexture &rt) const
 {

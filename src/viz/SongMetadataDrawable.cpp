@@ -5,7 +5,9 @@ namespace viz
 
 SongMetadataDrawable::SongMetadataDrawable(const sf::Font &font)
 	: title_text(font),
-	  artist_text(font) {}
+	  artist_text(font)
+{
+}
 
 void SongMetadataDrawable::set_album_cover(const sf::Texture &txr, const sf::Vector2f size)
 {

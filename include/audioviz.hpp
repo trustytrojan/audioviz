@@ -1,6 +1,5 @@
 #pragma once
 
-#include <deque>
 #include <list>
 #include <optional>
 
@@ -11,14 +10,12 @@
 #include <portaudio.hpp>
 #endif
 
-#include "tt/Sprite.hpp"
-
-#include "viz/ParticleSystem.hpp"
-#include "viz/StereoSpectrum.hpp"
-#include "viz/VerticalPill.hpp"
-#include "viz/VerticalBar.hpp"
-#include "viz/SongMetadataDrawable.hpp"
 #include "viz/Layer.hpp"
+#include "viz/ParticleSystem.hpp"
+#include "viz/SongMetadataDrawable.hpp"
+#include "viz/StereoSpectrum.hpp"
+#include "viz/VerticalBar.hpp"
+#include "viz/VerticalPill.hpp"
 
 class audioviz : public sf::Drawable
 {
@@ -43,8 +40,7 @@ class audioviz : public sf::Drawable
 		av::Stream _astream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
 		av::Decoder _adecoder = _astream.create_decoder();
 		av::Resampler _resampler = av::Resampler(
-			&_astream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _astream.sample_rate(),
-			&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate());
+			&_astream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _astream.sample_rate(), &_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate());
 		av::Frame rs_frame;
 
 		// TODO: write a VideoDecoder class in libavpp
@@ -54,14 +50,15 @@ class audioviz : public sf::Drawable
 		std::optional<av::Frame> _scaled_frame;
 		std::optional<std::list<sf::Texture>> _frame_queue;
 
-		_media(const std::string &url) : url(url), _format(url) {}
+		_media(const std::string &url)
+			: url(url), _format(url) {}
 
 		void init(audioviz &);
 		void decode(audioviz &);
 		bool video_frame_available();
 		void draw_next_video_frame(viz::Layer &);
 	};
-	friend class _media;
+	friend _media;
 
 	// MUST be constructed in the constructor
 	std::optional<_media> media;

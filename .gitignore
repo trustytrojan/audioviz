@@ -5,7 +5,9 @@ vgcore*
 *.mkv
 *.mp4
 perf.data*
-*.sh
 *.json
 render*
 testing
+*.txt
+.cache
+scripts

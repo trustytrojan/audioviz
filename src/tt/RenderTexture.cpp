@@ -11,7 +11,9 @@ RenderTexture::RenderTexture(const sf::Vector2u size, const sf::ContextSettings 
 }
 
 RenderTexture::RenderTexture(const sf::Vector2u size, int antialiasing)
-	: RenderTexture(size, sf::ContextSettings{0, 0, antialiasing}) {}
+	: RenderTexture(size, sf::ContextSettings{0, 0, antialiasing})
+{
+}
 
 // Copy the contents of `other` to this render-texture.
 void RenderTexture::copy(const RenderTexture &other)

@@ -3,7 +3,10 @@
 namespace fx
 {
 
-Add::Add(float addend) : addend(addend) {}
+Add::Add(float addend)
+	: addend(addend)
+{
+}
 
 void Add::apply(tt::RenderTexture &rt) const
 {

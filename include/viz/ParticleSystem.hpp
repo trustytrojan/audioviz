@@ -2,9 +2,9 @@
 
 #include <functional>
 
+#include "tt/MonoAnalyzer.hpp"
 #include "tt/Particle.hpp"
 #include "tt/StereoAnalyzer.hpp"
-#include "tt/MonoAnalyzer.hpp"
 #include <SFML/Graphics.hpp>
 
 namespace viz

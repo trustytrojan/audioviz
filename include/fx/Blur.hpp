@@ -1,7 +1,7 @@
 #pragma once
 
-#include "FragShader.hpp"
 #include "Effect.hpp"
+#include "FragShader.hpp"
 
 namespace fx
 {

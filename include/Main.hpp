@@ -14,7 +14,7 @@ class Main
 
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
-	
+
 	struct LuaState : sol::state
 	{
 		LuaState(Main &);

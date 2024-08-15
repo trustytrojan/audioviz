@@ -4,7 +4,9 @@ namespace viz
 {
 
 VerticalBar::VerticalBar(float width, float height)
-	: sf::RectangleShape({width, height}) {}
+	: sf::RectangleShape({width, height})
+{
+}
 
 void VerticalBar::setWidth(float width)
 {

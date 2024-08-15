@@ -1,15 +1,43 @@
 BasedOnStyle: LLVM
-BreakBeforeBraces: Allman
-IndentCaseLabels: false
+
+# Misc
 ColumnLimit: 0
+
+# Pack
+PackConstructorInitializers: CurrentLine
+BinPackParameters: false
+BinPackArguments: false
 
 # Indentation
 UseTab: Always
 IndentWidth: 4
+ContinuationIndentWidth: 4
 TabWidth: 4
 AccessModifierOffset: -4
+IndentCaseBlocks: false
+IndentCaseLabels: false
 
 # Namespace
 CompactNamespaces: true
 NamespaceIndentation: None
 FixNamespaceComments: true
+
+# Allow
+AllowShortLambdasOnASingleLine: Inline
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Align
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCaseColons: false
+AlignArrayOfStructures: Left
+
+# Break
+BreakBeforeBraces: Allman
+BreakBeforeTernaryOperators: true
+AlwaysBreakBeforeMultilineStrings: true

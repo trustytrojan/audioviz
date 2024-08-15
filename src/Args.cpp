@@ -86,7 +86,7 @@ Args::Args(const int argc, const char *const *const argv)
 
 	add_argument("--font")
 		.help("metadata text font; must be an absolute path");
-	
+
 	add_argument("--album-art")
 		.help("render an album-art image next to the song metadata\npath to image file required");
 
@@ -98,19 +98,19 @@ Args::Args(const int argc, const char *const *const argv)
 	add_argument("--bm-help")
 		.help("show help for --blendmode")
 		.flag();
-	
+
 	add_argument("--encode")
 		.help("encode to a video file using ffmpeg! arguments: <output_file> [fps=60] [vcodec=h264] [acodec=copy]")
 		.nargs(1, 4)
 		.validate();
-	
+
 	add_argument("--enc-window")
 		.help("when used with --encode, renders the current frame being encoded to a window")
 		.flag();
 
 	add_argument("--ffpath")
 		.help("specify path to ffmpeg executable used by '--encode'");
-	
+
 	add_argument("-r", "--framerate")
 		.help("set visualizer framerate; spectrum analysis depends on this so setting it too high will backfire!")
 		.default_value(60u)
@@ -120,7 +120,7 @@ Args::Args(const int argc, const char *const *const argv)
 	add_argument("--no-vsync")
 		.help("disable vsync (not recommended)")
 		.flag();
-	
+
 	add_argument("--luafile")
 		.help("NEW FEATURE!!!!!! configure audioviz with a lua script!\nlua code is run BEFORE cli args are parsed!");
 

@@ -2,10 +2,8 @@
 #include <iostream>
 
 #include "audioviz.hpp"
-#include "fx/Add.hpp"
 #include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
-#include "viz/util.hpp"
 
 #define capture_time(label, code)            \
 	{                                        \
@@ -98,7 +96,9 @@ void audioviz::_media::init(audioviz &viz)
 			_scaler.emplace(av::nearest_multiple_8(_s->codecpar->width),
 							_s->codecpar->height,
 							(AVPixelFormat)_s->codecpar->format,
-							viz.size.x, viz.size.y, AV_PIX_FMT_RGBA);
+							viz.size.x,
+							viz.size.y,
+							AV_PIX_FMT_RGBA);
 			_scaled_frame.emplace();
 			_frame_queue.emplace();
 		}
@@ -192,7 +192,10 @@ void audioviz::metadata_init()
 void audioviz::set_spectrum_margin(const int margin)
 {
 	ss_margin = margin;
-	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
+	ss.set_rect({
+		{margin,				 margin			   },
+		{size.x - 2 * margin, size.y - 2 * margin}
+	  });
 }
 
 void audioviz::set_framerate(int framerate)

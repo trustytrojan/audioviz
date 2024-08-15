@@ -142,23 +142,25 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 	{ // spectrum blendmode
 		static const std::unordered_map<std::string, sf::BlendMode::Factor> factor_map{
-			{"0", sf::BlendMode::Factor::Zero},
-			{"1", sf::BlendMode::Factor::One},
-			{"sc", sf::BlendMode::Factor::SrcColor},
+			{"0",	  sf::BlendMode::Factor::Zero			 },
+			{"1",	  sf::BlendMode::Factor::One				},
+			{"sc",  sf::BlendMode::Factor::SrcColor		  },
 			{"1sc", sf::BlendMode::Factor::OneMinusSrcColor},
-			{"dc", sf::BlendMode::Factor::DstColor},
+			{"dc",  sf::BlendMode::Factor::DstColor		  },
 			{"1dc", sf::BlendMode::Factor::OneMinusDstColor},
-			{"sa", sf::BlendMode::Factor::SrcAlpha},
+			{"sa",  sf::BlendMode::Factor::SrcAlpha		  },
 			{"1sa", sf::BlendMode::Factor::OneMinusSrcAlpha},
-			{"da", sf::BlendMode::Factor::DstAlpha},
-			{"1da", sf::BlendMode::Factor::OneMinusDstAlpha}};
+			{"da",  sf::BlendMode::Factor::DstAlpha		  },
+			{"1da", sf::BlendMode::Factor::OneMinusDstAlpha}
+		};
 
 		static const std::unordered_map<std::string, sf::BlendMode::Equation> op_map{
-			{"add", sf::BlendMode::Equation::Add},
-			{"sub", sf::BlendMode::Equation::Subtract},
-			{"rs", sf::BlendMode::Equation::ReverseSubtract},
-			{"max", sf::BlendMode::Equation::Max},
-			{"min", sf::BlendMode::Equation::Min}};
+			{"add", sf::BlendMode::Equation::Add			},
+			{"sub", sf::BlendMode::Equation::Subtract		 },
+			{"rs",  sf::BlendMode::Equation::ReverseSubtract},
+			{"max", sf::BlendMode::Equation::Max			},
+			{"min", sf::BlendMode::Equation::Min			}
+		 };
 
 		try
 		{
@@ -170,30 +172,31 @@ void Main::use_args(audioviz &viz, const Args &args)
 			case 1:
 				// use sf::BlendMode static member
 				static const std::unordered_map<std::string, sf::BlendMode> default_blendmodes{
-					{"alpha", sf::BlendAlpha},
-					{"add", sf::BlendAdd},
-					{"mult", sf::BlendMultiply},
-					{"min", sf::BlendMin},
-					{"max", sf::BlendMax},
-					{"none", sf::BlendNone}};
+					{"alpha", sf::BlendAlpha	},
+					{"add",	sf::BlendAdd		},
+					{"mult",	 sf::BlendMultiply},
+					{"min",	sf::BlendMin		},
+					{"max",	sf::BlendMax		},
+					{"none",	 sf::BlendNone	  }
+				   };
 				viz.set_spectrum_blendmode(default_blendmodes.at(bm_args[0]));
 				break;
 
 			case 3:
 				// use first BlendMode constructor
 				viz.set_spectrum_blendmode({factor_map.at(bm_args[0]),
-											 factor_map.at(bm_args[1]),
-											 op_map.at(bm_args[2])});
+											factor_map.at(bm_args[1]),
+											op_map.at(bm_args[2])});
 				break;
 
 			case 6:
 				// use second BlendMode constructor
 				viz.set_spectrum_blendmode({factor_map.at(bm_args[0]),
-											 factor_map.at(bm_args[1]),
-											 op_map.at(bm_args[2]),
-											 factor_map.at(bm_args[3]),
-											 factor_map.at(bm_args[4]),
-											 op_map.at(bm_args[5])});
+											factor_map.at(bm_args[1]),
+											op_map.at(bm_args[2]),
+											factor_map.at(bm_args[3]),
+											factor_map.at(bm_args[4]),
+											op_map.at(bm_args[5])});
 				break;
 
 			default:
@@ -306,7 +309,7 @@ FILE *Main::ffmpeg_open(audioviz &viz, const std::string &outfile, const int fra
 
 	const auto ffmpeg = popen(command.c_str(), "w");
 	if (!ffmpeg)
-		throw std::runtime_error(strerror(errno));
+		throw std::runtime_error(std::string{"perror: "} + strerror(errno));
 	setbuf(ffmpeg, NULL);
 	return ffmpeg;
 }
@@ -335,8 +338,8 @@ void Main::encode_without_window(audioviz &viz, const std::string &outfile, int 
 		perror("pclose");
 }
 
-#include <queue>
 #include <future>
+#include <queue>
 
 #define future_not_finished(f) f.wait_for(std::chrono::seconds(0)) != std::future_status::ready
 

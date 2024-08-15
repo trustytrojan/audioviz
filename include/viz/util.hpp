@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cmath>
-#include <vector>
 #include <functional>
+#include <vector>
 
 namespace viz::util
 {
