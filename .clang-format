@@ -41,5 +41,17 @@ AlignEscapedNewlines: Left
 # Break
 BreakBeforeBraces: Allman
 BreakBeforeTernaryOperators: true
+# BreakConstructorInitializers: AfterColon
 AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: true
+
+# Insert
+InsertBraces: false
+InsertNewlineAtEOF: true
+
+# Remove
+RemoveBracesLLVM: true
+# KeepEmptyLines: # v19 only :(
+#   AtStartOfFile: false
+#   AtStartOfBlock: false
+#   AtEndOfFile: false

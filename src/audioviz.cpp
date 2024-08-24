@@ -313,8 +313,8 @@ void audioviz::_media::decode(audioviz &viz)
 				// we are going to be reading more packets than usual since
 				// we need more audio samples than is provided by one audio packet.
 
-				// resize manully to use the newly allocated sf::Texture in-place
-				_frame_queue->resize(_frame_queue->size() + 1);
+				// create new texture object in-place at the end of the list
+				_frame_queue->emplace_back();
 				if (!_frame_queue->back().create({_scaled_frame->get()->width, _scaled_frame->get()->height}))
 					throw std::runtime_error("failed to create texture!");
 				_frame_queue->back().update(_scaled_frame->get()->data[0]);

@@ -89,7 +89,8 @@
 		"queue": "cpp",
 		"stdfloat": "cpp",
 		"cstdbool": "cpp",
-		"version": "cpp"
+		"version": "cpp",
+		"*.ipp": "cpp"
 	},
 	"Lua.diagnostics.globals": [
 		"audioviz"
