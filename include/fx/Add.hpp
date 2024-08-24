@@ -1,15 +1,14 @@
 #pragma once
 
 #include "Effect.hpp"
-#include "FragShader.hpp"
 
 namespace fx
 {
 
-// Multiplies the entire texture by a factor.
+// Adds an addend to the entire texture.
 class Add : public Effect
 {
-	static inline FragShader shader = "shaders/add.frag";
+	static inline sf::Shader shader = sf::Shader(std::filesystem::path{"shaders/add.frag"}, sf::Shader::Type::Fragment);
 
 public:
 	float addend;

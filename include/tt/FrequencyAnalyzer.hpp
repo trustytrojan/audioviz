@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fftw/dft_r2c_1d.hpp"
-#include "spline.hpp"
+#include <spline.h>
 #include <cstring>
 #include <vector>
 

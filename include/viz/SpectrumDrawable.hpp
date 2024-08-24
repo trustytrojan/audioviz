@@ -1,6 +1,8 @@
 #pragma once
 
-#include "tt/ColorUtils.hpp"
+#include <tt/ColorUtils.hpp>
+#include <SFML/Graphics.hpp>
+#include <vector>
 
 namespace viz
 {
@@ -162,7 +164,7 @@ public:
 	{
 		assert(spectrum.size() == bars.size());
 		for (int i = 0; i < (int)spectrum.size(); ++i)
-			bars[i].setHeight(std::clamp(multiplier * rect.height * spectrum[i], 0.f, (float)rect.height));
+			bars[i].setHeight(std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y));
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override
@@ -177,7 +179,7 @@ private:
 	// call after changing any property of the spectrum/bars that will change their positions or colors
 	void update_bars()
 	{
-		const int bar_count = rect.width / (bar.width + bar.spacing);
+		const int bar_count = rect.size.x / (bar.width + bar.spacing);
 		bars.resize(bar_count);
 
 		for (int i = 0; i < bar_count; ++i)
@@ -187,11 +189,11 @@ private:
 
 			// clang-format off
 			const auto x = backwards
-				? rect.left + rect.width - bar.width - i * (bar.width + bar.spacing)
-				: rect.left + i * (bar.width + bar.spacing);
+				? rect.position.x + rect.size.x - bar.width - i * (bar.width + bar.spacing)
+				: rect.position.x + i * (bar.width + bar.spacing);
 			// clang-format on
 
-			bars[i].setPosition({x, rect.top + rect.height});
+			bars[i].setPosition({x, rect.position.y + rect.size.y});
 		}
 	}
 

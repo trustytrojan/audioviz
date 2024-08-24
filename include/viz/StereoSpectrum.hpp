@@ -105,18 +105,18 @@ private:
 	{
 		assert(_left.bar.get_spacing() == _right.bar.get_spacing());
 
-		const auto half_width = rect.width / 2.f;
+		const auto half_width = rect.size.x / 2.f;
 		const auto half_bar_spacing = _left.bar.get_spacing() / 2.f;
 
 		const sf::IntRect
 			left_half{
-				rect.getPosition(),
-				{half_width - half_bar_spacing, rect.height}},
+				rect.position,
+				{half_width - half_bar_spacing, rect.size.y}},
 			right_half{
-				{rect.left + half_width + half_bar_spacing, rect.top},
-				{half_width - half_bar_spacing, rect.height}};
+				{rect.position.x + half_width + half_bar_spacing, rect.position.y},
+				{half_width - half_bar_spacing, rect.size.y}};
 
-		const auto dist_between_rects = right_half.left - (left_half.left + left_half.width);
+		const auto dist_between_rects = right_half.position.x - (left_half.position.x + left_half.size.x);
 		assert(dist_between_rects == _left.bar.get_spacing());
 
 		_left.set_rect(left_half);

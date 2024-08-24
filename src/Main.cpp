@@ -1,7 +1,4 @@
 #include "Main.hpp"
-#include "fx/Add.hpp"
-#include "fx/Blur.hpp"
-#include "fx/Mult.hpp"
 
 Main::Main(const int argc, const char *const *const argv)
 {
@@ -246,7 +243,7 @@ void Main::start_in_window(audioviz &viz)
 		window.display();
 		while (const auto event = window.pollEvent())
 		{
-			if (event.is<sf::Event::Closed>())
+			if (event->is<sf::Event::Closed>())
 				window.close();
 			/* resizable windows not happening now, too much of the codebase relies on a static window size
 			else if (const auto ev = event.getIf<sf::Event::Resized>())
@@ -377,9 +374,7 @@ void Main::encode_with_window(audioviz &viz, const std::string &outfile, int fra
 	viz.set_framerate(framerate);
 	const auto ffmpeg = ffmpeg_open(viz, outfile, framerate, vcodec, acodec);
 	sf::RenderWindow window(sf::VideoMode(viz.get_size()), "encoder", sf::Style::Titlebar, sf::State::Windowed, ctx);
-	sf::Texture txr;
-	if (!txr.create(viz.get_size()))
-		throw std::runtime_error("failed to create texture");
+	sf::Texture txr{viz.get_size()};
 	while (viz.prepare_frame())
 	{
 		window.draw(viz);

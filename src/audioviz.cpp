@@ -93,12 +93,13 @@ void audioviz::_media::init(audioviz &viz)
 		{
 			_vstream = _s;
 			_vdecoder.emplace(avcodec_find_decoder(_s->codecpar->codec_id)).open();
-			_scaler.emplace(av::nearest_multiple_8(_s->codecpar->width),
-							_s->codecpar->height,
-							(AVPixelFormat)_s->codecpar->format,
-							viz.size.x,
-							viz.size.y,
-							AV_PIX_FMT_RGBA);
+			_scaler.emplace(
+				av::SwScaler::SrcDstArgs{
+					av::nearest_multiple_8(_s->codecpar->width),
+					_s->codecpar->height,
+					(AVPixelFormat)_s->codecpar->format,
+				},
+				av::SwScaler::SrcDstArgs{viz.size.x, viz.size.y, AV_PIX_FMT_RGBA});
 			_scaled_frame.emplace();
 			_frame_queue.emplace();
 		}
@@ -160,15 +161,14 @@ void audioviz::set_album_cover(const std::string &image_path, const sf::Vector2f
 
 void audioviz::set_text_font(const std::string &path)
 {
-	if (!font.loadFromFile(path))
+	if (!font.openFromFile(path))
 		throw std::runtime_error("failed to load font: '" + path + '\'');
 	font_loaded = true;
 }
 
 void audioviz::metadata_init()
 {
-	auto &title_text = _metadata.title_text,
-		 &artist_text = _metadata.artist_text;
+	auto &title_text = _metadata.title_text, &artist_text = _metadata.artist_text;
 
 	// set style, fontsize, and color
 	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
@@ -226,8 +226,7 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 
 void audioviz::capture_elapsed_time(const char *const label, const sf::Clock &_clock)
 {
-	tt_ss << std::setw(20) << std::left
-		  << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	tt_ss << std::setw(20) << std::left << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
 
 void audioviz::draw_spectrum()
@@ -314,9 +313,9 @@ void audioviz::_media::decode(audioviz &viz)
 				// we need more audio samples than is provided by one audio packet.
 
 				// create new texture object in-place at the end of the list
-				_frame_queue->emplace_back();
-				if (!_frame_queue->back().create({_scaled_frame->get()->width, _scaled_frame->get()->height}))
-					throw std::runtime_error("failed to create texture!");
+				_frame_queue->emplace_back(sf::Vector2u{_scaled_frame->get()->width, _scaled_frame->get()->height});
+				// if (!_frame_queue->back().create({_scaled_frame->get()->width, _scaled_frame->get()->height}))
+				// throw std::runtime_error("failed to create texture!");
 				_frame_queue->back().update(_scaled_frame->get()->data[0]);
 			}
 		}

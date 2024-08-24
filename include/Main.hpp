@@ -2,7 +2,7 @@
 
 #include "Args.hpp"
 #include "audioviz.hpp"
-#include <sol.hpp>
+#include <sol/sol.hpp>
 
 class Main
 {

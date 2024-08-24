@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Effect.hpp"
-#include "FragShader.hpp"
 
 namespace fx
 {
@@ -14,7 +13,7 @@ namespace fx
  */
 class Blur : public Effect
 {
-	static inline FragShader shader = "shaders/blur.frag";
+	static inline sf::Shader shader = sf::Shader(std::filesystem::path{"shaders/blur.frag"}, sf::Shader::Type::Fragment);
 
 public:
 	float hrad, vrad;

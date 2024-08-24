@@ -28,7 +28,7 @@ ParticleSystem::ParticleSystem(const sf::IntRect &rect, unsigned particle_count)
 
 		// start some particles offscreen, so the beginning sequence feels less "sudden"
 		// otherwise all of them come out at once and it looks bad
-		p.setPosition({random<float>(rect.left, rect.left + rect.width), (rect.top + rect.height) * random<float>(1, 1.5)});
+		p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), (rect.position.y + rect.size.y) * random<float>(1, 1.5)});
 	}
 }
 
@@ -43,26 +43,26 @@ void ParticleSystem::update(const sf::Vector2f additional_displacement)
 		auto new_pos = p.getPosition() + additional_displacement;
 
 		// make sure particles don't escape the rect
-		if (new_pos.x >= (rect.left + rect.width))
+		if (new_pos.x >= (rect.position.x + rect.size.x))
 			// teleport from right edge to left
-			new_pos.x = rect.left + -p.getRadius();
+			new_pos.x = rect.position.x + -p.getRadius();
 		else if (new_pos.x + p.getRadius() < 0)
 			// teleport from left edge to right
-			new_pos.x = (rect.left + rect.width);
+			new_pos.x = (rect.position.x + rect.size.x);
 
 		p.setPosition(new_pos);
 
 		// sqrt of remaining distance to 0 causes the fading out to only start halfway up the screen
 		// linear is too sudden
-		const auto alpha_scale = sqrtf((new_pos.y - rect.top) / (rect.top + rect.height));
+		const auto alpha_scale = sqrtf((new_pos.y - rect.position.y) / (rect.position.y + rect.size.y));
 
 		// decrease alpha with distance to max_height
 		const auto [r, g, b, _] = p.getFillColor();
 		p.setFillColor({r, g, b, alpha_scale * 255});
 
 		// reset position to bottom of target once max_height is reached
-		if (new_pos.y <= rect.top)
-			p.setPosition({random<float>(rect.left, rect.left + rect.width), rect.top + rect.height});
+		if (new_pos.y <= rect.position.y)
+			p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
 	}
 }
 

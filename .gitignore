@@ -11,3 +11,4 @@ testing
 *.txt
 .cache
 scripts
+build

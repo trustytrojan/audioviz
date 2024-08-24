@@ -1,5 +1,4 @@
 #include "Main.hpp"
-#include <sol.hpp>
 
 Main::LuaState::LuaState(Main &main)
 {

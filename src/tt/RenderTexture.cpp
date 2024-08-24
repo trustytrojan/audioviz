@@ -4,10 +4,9 @@ namespace tt
 {
 
 RenderTexture::RenderTexture(const sf::Vector2u size, const sf::ContextSettings &ctx)
-	: sprite(getTexture(), {{}, (sf::Vector2i)size})
+	: sf::RenderTexture(size, ctx),
+	  sprite(getTexture(), {{}, (sf::Vector2i)size})
 {
-	if (!create(size, ctx))
-		throw std::runtime_error("failed to create render-texture!");
 }
 
 RenderTexture::RenderTexture(const sf::Vector2u size, int antialiasing)
