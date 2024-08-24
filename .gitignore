@@ -8,7 +8,6 @@ perf.data*
 *.json
 render*
 testing
-*.txt
 .cache
 scripts
 build
