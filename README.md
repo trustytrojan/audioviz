@@ -9,18 +9,18 @@ here's a demo: https://youtu.be/Avk5lRZb7To
 2. run `make`
 
 ## libraries/software used
+- [FFTW](https://fftw.org)
 - [libavpp](https://github.com/trustytrojan/libavpp)
-  - requires the [FFmpeg](https://github.com/FFmpeg/FFmpeg) libraries (`libavutil`, `libavcodec`, `libavformat`, `libswresample`, `libswscale`)
+  - requires the [FFmpeg](https://github.com/FFmpeg/FFmpeg) libraries
 - the `ffmpeg` CLI program, also part of the [FFmpeg](https://github.com/FFmpeg/FFmpeg) project
   - required for video encoding
 - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp)
   - requires [PortAudio](https://github.com/PortAudio/portaudio) (only the C library)
-- [FFTW](https://fftw.org)
 - [SFML](https://github.com/SFML/SFML)
-  - specifically [this commit](https://github.com/SFML/SFML/commit/1a40f0195788185d56eca04687a8cd793c90b2fc); this is handled by the [Makefile](/Makefile), so you don't need to install
   - note that SFML only supports X11 windows, so you will need XWayland if you use Wayland
 - [argparse](https://github.com/p-ranav/argparse)
-  - header-only, included [in this repo](/include/argparse.hpp)
+- [sol2](https://github.com/ThePhD/sol2)
+- [spline](https://github.com/ttk592/spline)
 
 ## dev note
 on namespaces:
