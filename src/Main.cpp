@@ -4,15 +4,17 @@ Main::Main(const int argc, const char *const *const argv)
 {
 	Args args(argc, argv);
 
+#ifdef AUDIOVIZ_LUA
+	// this is a hack...
 	argparse::ArgumentParser parser("audioviz");
 	parser.add_argument("--luafile");
-
 	if (const auto luafile = args.present("--luafile"))
 	{
 		LuaState(*this).do_file(*luafile);
 		return;
 		// lua environment is still in the works!!!!!!!!!
 	}
+#endif
 
 	const auto &size = args.get<std::vector<uint>>("--size");
 	audioviz viz(sf::Vector2u{size[0], size[1]}, args.get("media_url"));
@@ -29,16 +31,13 @@ Main::Main(const int argc, const char *const *const argv)
 		encode(viz, encode_args[0]);
 		break;
 	case 2:
-		encode(viz, encode_args[0], std::atoi(encode_args[1].c_str()));
+		encode(viz, encode_args[0], encode_args[1]);
 		break;
 	case 3:
-		encode(viz, encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2]);
-		break;
-	case 4:
-		encode(viz, encode_args[0], std::atoi(encode_args[1].c_str()), encode_args[2], encode_args[3]);
+		encode(viz, encode_args[0], encode_args[1], encode_args[2]);
 		break;
 	default:
-		throw std::logic_error("--encode requires 1-4 arguments");
+		throw std::logic_error("--encode requires 1-3 arguments");
 	}
 }
 
@@ -178,19 +177,19 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 			case 3:
 				// use first BlendMode constructor
-				viz.set_spectrum_blendmode({factor_map.at(bm_args[0]),
-											factor_map.at(bm_args[1]),
-											op_map.at(bm_args[2])});
+				viz.set_spectrum_blendmode({factor_map.at(bm_args[0]), factor_map.at(bm_args[1]), op_map.at(bm_args[2])});
 				break;
 
 			case 6:
 				// use second BlendMode constructor
-				viz.set_spectrum_blendmode({factor_map.at(bm_args[0]),
-											factor_map.at(bm_args[1]),
-											op_map.at(bm_args[2]),
-											factor_map.at(bm_args[3]),
-											factor_map.at(bm_args[4]),
-											op_map.at(bm_args[5])});
+				viz.set_spectrum_blendmode({
+					factor_map.at(bm_args[0]),
+					factor_map.at(bm_args[1]),
+					op_map.at(bm_args[2]),
+					factor_map.at(bm_args[3]),
+					factor_map.at(bm_args[4]),
+					op_map.at(bm_args[5]),
+				});
 				break;
 
 			default:
@@ -199,7 +198,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 		catch (const std::exception &e)
 		{
-			std::cerr << "invalid argument caught; see --bm-help\n";
+			std::cerr << "--blendmode: invalid argument caught; see --bm-help\n";
 			_Exit(EXIT_FAILURE);
 		}
 	}
@@ -230,7 +229,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 void Main::start_in_window(audioviz &viz)
 {
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
 	viz.set_audio_playback_enabled(true);
 #endif
 
@@ -252,137 +251,4 @@ void Main::start_in_window(audioviz &viz)
 		}
 		window.clear();
 	}
-}
-
-FILE *Main::ffmpeg_open(audioviz &viz, const std::string &outfile, const int framerate, const std::string &vcodec, const std::string &acodec)
-{
-	char quote;
-	// clang-format off
-	const auto choose_quote = [&](const std::string &s) { quote = s.contains('\'') ? '"' : '\''; };
-	// clang-format on
-
-	std::ostringstream ss;
-
-	// hide banner, overwrite existing output file
-	ss << "ffmpeg -hide_banner -y ";
-
-	// specify input 0: raw rgba video from stdin
-	ss << "-f rawvideo -pix_fmt rgba ";
-
-	// size, framerate
-	ss << "-s:v " << viz.get_size().x << 'x' << viz.get_size().y << " -r " << framerate << " -i - ";
-
-	// specify input 1: media file
-	choose_quote(viz.get_media_url());
-	ss << "-ss -0.1 -i " << quote << viz.get_media_url() << quote << ' ';
-
-	// only map the audio from input 1 to the output file
-	ss << "-map 0 -map 1:a ";
-
-	if (vcodec.contains("vaapi"))
-	{
-		// specify the vaapi device
-		ss << "-vaapi_device /dev/dri/renderD128 ";
-
-		// convert to nv12 and upload to gpu for hardware encoding
-		ss << "-vf 'format=nv12,hwupload' ";
-	}
-
-	// specify video and audio encoder
-	ss << "-c:v " << vcodec << " -c:a " << acodec << ' ';
-
-	// end output on shortest input stream
-	ss << "-shortest ";
-
-	// specify output file
-	choose_quote(outfile);
-	ss << quote << outfile << quote;
-
-	const auto command = ss.str();
-	std::cerr << "ffmpeg command: " << command << '\n';
-
-	const auto ffmpeg = popen(command.c_str(), "w");
-	if (!ffmpeg)
-		throw std::runtime_error(std::string{"perror: "} + strerror(errno));
-	setbuf(ffmpeg, NULL);
-	return ffmpeg;
-}
-
-void Main::encode(audioviz &viz, const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
-{
-	if (enc_window)
-		encode_with_window(viz, outfile, framerate, vcodec, acodec);
-	else
-		encode_without_window_mt(viz, outfile, framerate, vcodec, acodec);
-}
-
-void Main::encode_without_window(audioviz &viz, const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
-{
-	viz.set_framerate(framerate);
-	const auto ffmpeg = ffmpeg_open(viz, outfile, framerate, vcodec, acodec);
-	tt::RenderTexture rt(viz.get_size(), ctx);
-	while (viz.prepare_frame())
-	{
-		rt.draw(viz);
-		rt.display();
-		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * viz.get_size().x * viz.get_size().y, ffmpeg);
-		rt.clear();
-	}
-	if (pclose(ffmpeg) == -1)
-		perror("pclose");
-}
-
-#include <future>
-#include <queue>
-
-#define future_not_finished(f) f.wait_for(std::chrono::seconds(0)) != std::future_status::ready
-
-// threaded implementation, will benchmark against encode_without_window at home
-void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
-{
-	viz.set_framerate(framerate);
-	std::queue<sf::Image> images;
-
-	// clang-format off
-	const auto image_queuer = std::async(std::launch::async, [&] {
-		tt::RenderTexture rt(viz.get_size(), ctx);
-		while (viz.prepare_frame())
-		{
-			rt.draw(viz);
-			rt.display();
-			images.push(rt.getTexture().copyToImage());
-			rt.clear();
-		}
-	});
-	// clang-format on
-
-	const auto ffmpeg = ffmpeg_open(viz, outfile, framerate, vcodec, acodec);
-	while (future_not_finished(image_queuer))
-	{
-		if (images.empty())
-			continue;
-		fwrite(images.front().getPixelsPtr(), 1, 4 * viz.get_size().x * viz.get_size().y, ffmpeg);
-		images.pop();
-	}
-
-	if (pclose(ffmpeg) == -1)
-		perror("pclose");
-}
-
-void Main::encode_with_window(audioviz &viz, const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec)
-{
-	viz.set_framerate(framerate);
-	const auto ffmpeg = ffmpeg_open(viz, outfile, framerate, vcodec, acodec);
-	sf::RenderWindow window(sf::VideoMode(viz.get_size()), "encoder", sf::Style::Titlebar, sf::State::Windowed, ctx);
-	sf::Texture txr{viz.get_size()};
-	while (viz.prepare_frame())
-	{
-		window.draw(viz);
-		window.display();
-		txr.update(window);
-		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * viz.get_size().x * viz.get_size().y, ffmpeg);
-		window.clear();
-	}
-	if (pclose(ffmpeg) == -1)
-		perror("pclose");
 }

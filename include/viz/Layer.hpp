@@ -13,6 +13,10 @@ class Layer
 	tt::RenderTexture _orig_rt, _fx_rt;
 
 public:
+	/**
+	 * The effects, in order, that will be applied to the "original"
+	 * render-texture when `apply_fx()` is called.
+	 */
 	std::vector<std::unique_ptr<fx::Effect>> effects;
 
 	Layer(sf::Vector2u size, int antialiasing);

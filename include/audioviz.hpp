@@ -10,7 +10,7 @@
 #include <av/Resampler.hpp>
 #include <av/SwScaler.hpp>
 
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
 #include <portaudio.hpp>
 #endif
 
@@ -99,7 +99,7 @@ class audioviz : public sf::Drawable
 	std::ostringstream tt_ss;
 	bool tt_enabled = false;
 
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
 	// PortAudio stuff for live playback
 	std::optional<pa::PortAudio> pa_init;
 	std::optional<pa::Stream> pa_stream;
@@ -130,7 +130,7 @@ public:
 
 	/// setters
 
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
 	/**
 	 * @param enabled When started with `start()`, whether to play the audio used to render the spectrum
 	 */
@@ -145,9 +145,8 @@ public:
 	void set_size(sf::Vector2u size);
 	*/
 
-	/**
-	 * important if you are capturing frames for video encoding!
-	 */
+	// important if you are capturing frames for video encoding!
+	int get_framerate() const { return framerate; }
 	void set_framerate(int framerate);
 
 	// set background image with optional effects: blur and color-multiply

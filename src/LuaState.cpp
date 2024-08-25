@@ -1,3 +1,5 @@
+#ifdef AUDIOVIZ_LUA
+
 #include "Main.hpp"
 
 Main::LuaState::LuaState(Main &main)
@@ -28,7 +30,7 @@ Main::LuaState::LuaState(Main &main)
         "set_spectrum_blendmode", &audioviz::set_spectrum_blendmode,
         "set_album_cover", &audioviz::set_album_cover,
         "set_text_font", &audioviz::set_text_font,
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
         "set_audio_playback_enabled", &audioviz::set_audio_playback_enabled,
 #endif
 
@@ -55,3 +57,5 @@ Main::LuaState::LuaState(Main &main)
     );
 	// clang-format on
 }
+
+#endif

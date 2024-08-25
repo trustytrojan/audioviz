@@ -100,8 +100,8 @@ Args::Args(const int argc, const char *const *const argv)
 		.flag();
 
 	add_argument("--encode")
-		.help("encode to a video file using ffmpeg! arguments: <output_file> [fps=60] [vcodec=h264] [acodec=copy]")
-		.nargs(1, 4)
+		.help("encode to a video file using ffmpeg! arguments: <output_file> [vcodec=h264] [acodec=copy]\nuse -r to set the framerate!")
+		.nargs(1, 3)
 		.validate();
 
 	add_argument("--enc-window")
@@ -121,8 +121,10 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("disable vsync (not recommended)")
 		.flag();
 
+#ifdef AUDIOVIZ_LUA
 	add_argument("--luafile")
 		.help("NEW FEATURE!!!!!! configure audioviz with a lua script!\nlua code is run BEFORE cli args are parsed!");
+#endif
 
 	add_argument("--no-fx")
 		.help("don't add default effects")

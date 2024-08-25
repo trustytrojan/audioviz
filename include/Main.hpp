@@ -2,7 +2,13 @@
 
 #include "Args.hpp"
 #include "audioviz.hpp"
+
+#ifdef AUDIOVIZ_LUA
 #include <sol/sol.hpp>
+#endif
+
+#include <boost/process.hpp>
+namespace bp = boost::process;
 
 class Main
 {
@@ -15,19 +21,31 @@ class Main
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
 
+#ifdef AUDIOVIZ_LUA
 	struct LuaState : sol::state
 	{
 		LuaState(Main &);
 	};
+#endif
 
-	FILE *ffmpeg_open(audioviz &, const std::string &outfile, int framerate, const std::string &vcodec, const std::string &acodec);
+	struct FfmpegEncoder
+	{
+		bp::basic_opstream<uint8_t> std_in;
+		bp::child process;
+		FfmpegEncoder(audioviz &, const std::string &outfile, const std::string &vcodec, const std::string &acodec);
+		~FfmpegEncoder();
+	};
+
 	void use_args(audioviz &, const Args &);
 
 	void start_in_window(audioviz &);
-	void encode(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_without_window(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_without_window_mt(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_with_window(audioviz &, const std::string &outfile, int framerate = 60, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_without_window(
+		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_without_window_mt(
+		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_with_window(
+		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);

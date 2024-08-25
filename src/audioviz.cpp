@@ -246,7 +246,7 @@ void audioviz::draw_particles()
 	capture_time("particles_fx", particles.apply_fx());
 }
 
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
 void audioviz::set_audio_playback_enabled(bool enabled)
 {
 	if (enabled)
@@ -334,7 +334,7 @@ void audioviz::_media::draw_next_video_frame(viz::Layer &layer)
 	_frame_queue->pop_front();
 }
 
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
 void audioviz::play_audio()
 {
 	try // to play the audio
@@ -355,7 +355,7 @@ bool audioviz::prepare_frame()
 	assert(media);
 	capture_time("media_decode", media->decode(*this));
 
-#ifdef PORTAUDIO
+#ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream)
 		capture_time("play_audio", play_audio());
 #endif
