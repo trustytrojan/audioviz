@@ -6,7 +6,7 @@ here's a demo: https://youtu.be/Avk5lRZb7To
 
 ## building
 1. install any required dependencies below
-2. run `make`
+2. run `cmake -S. -Bbuild && cmake --build build -j$(nproc)` or use your IDE of choice with CMake support
 
 ## libraries/software used
 - [FFTW](https://fftw.org)
@@ -26,11 +26,10 @@ here's a demo: https://youtu.be/Avk5lRZb7To
 on namespaces:
 - `fx`: post-processing effects
 - `tt`: utility & library extensions
-- `viz`: audio visualization
+- `viz`: audio visualization components
 
 ## todo list
-- allow compiling without portaudio
-- `ScopeDrawable`
-- lua api
+- `viz::ScopeDrawable`
+- lua api (in progress)
   - modular layering/effects system
   - remove hardcoded visualizer components
