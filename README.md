@@ -33,3 +33,6 @@ on namespaces:
 - lua api (in progress)
   - modular layering/effects system
   - remove hardcoded visualizer components
+- make `viz::ParticleSystem` more customizable
+  - add `set_displacement_direction(sf::Vector2f)`
+  - replace `update(sf::Vector2f)` with `displace_particles(float)`

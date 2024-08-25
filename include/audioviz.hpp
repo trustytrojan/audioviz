@@ -40,19 +40,13 @@ class audioviz : public sf::Drawable
 		const std::string url;
 		av::MediaReader _format;
 
-		// TODO: write an AudioDecoder class in libavpp
 		av::Stream _astream = _format.find_best_stream(AVMEDIA_TYPE_AUDIO);
 		av::Decoder _adecoder = _astream.create_decoder();
 		av::Resampler _resampler = av::Resampler(
-			&_astream->codecpar->ch_layout,
-			AV_SAMPLE_FMT_FLT,
-			_astream.sample_rate(),
-			&_astream->codecpar->ch_layout,
-			(AVSampleFormat)_astream->codecpar->format,
-			_astream.sample_rate());
+			{&_astream->codecpar->ch_layout, AV_SAMPLE_FMT_FLT, _astream.sample_rate()},						   // output params
+			{&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate()}); // input params
 		av::Frame rs_frame;
 
-		// TODO: write a VideoDecoder class in libavpp
 		std::optional<av::Stream> _vstream;
 		std::optional<av::Decoder> _vdecoder;
 		std::optional<av::SwScaler> _scaler;
@@ -90,7 +84,7 @@ class audioviz : public sf::Drawable
 	std::optional<sf::BlendMode> spectrum_bm;
 
 	// particle system
-	viz::ParticleSystem ps;
+	viz::ParticleSystem<sf::CircleShape> ps;
 
 	// metadata-related fields
 	bool font_loaded = false;
