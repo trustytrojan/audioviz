@@ -17,12 +17,8 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	  media(media_url),
 	  ps({{}, (sf::Vector2i)size}, 50),
 	  timing_text(font),
-	  bg(size, antialiasing),
-	  particles(size, antialiasing),
-	  spectrum(size, antialiasing)
+	  final_rt(size, antialiasing)
 {
-	metadata_init();
-
 	// for now only stereo is supported
 	if (media->_astream.nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
@@ -30,26 +26,134 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	// default margin around the spectrum
 	set_spectrum_margin(ss_margin);
 
-	// initialize libav for media decoding
-	media->init(*this);
-
-	// default metadata position
-	_metadata.set_position({30, 30});
-
 	timing_text.setPosition({size.x - 300, 30});
 	timing_text.setCharacterSize(18);
 	timing_text.setFillColor({255, 255, 255, 150});
+
+	// initialize libav for media decoding
+	media->init(*this);
+
+	metadata_init();
+
+	// clang-format off
+
+	// layer setup
+	auto &bg = add_layer("bg", antialiasing);
+
+	if (media->_vstream)
+	{
+		std::cout << "media->_vstream\n";
+		bg.set_orig_cb([&](auto &orig_rt) {
+			if (media->_frame_queue->empty())
+				return;
+			capture_time("draw_next_video_frame", {
+				orig_rt.draw(sf::Sprite(media->_frame_queue->front()));
+				media->_frame_queue->pop_front();
+			});
+			orig_rt.display();
+		});
+	}
+	else
+	{
+		bg.set_auto_fx(false);
+
+		if (media->attached_pic)
+		{
+			std::cout << "media->attached_pic\n";
+			_metadata.set_album_cover(*media->attached_pic, {150, 150});
+			set_background(*media->attached_pic);
+		}
+	}
+
+
+	// default metadata position
+	// needs to be called AFTER album cover is set because it depends on AC size
+	_metadata.set_position({30, 30});
+
+	auto &particles = add_layer("particles", antialiasing);
+	particles.set_orig_cb([&](auto &orig_rt) {
+		if (framerate <= 60)
+		{
+			capture_time("particles_update", ps.update(sa));
+			orig_rt.clear(sf::Color::Transparent);
+			capture_time("particles_draw", orig_rt.draw(ps));
+			orig_rt.display();
+		}
+		else if (framerate > 60 && ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60))
+		{
+			// lock the tickrate of the particles at 60hz for >60fps output
+			capture_time("particles_update", ps.update(sa));
+			orig_rt.clear(sf::Color::Transparent);
+			capture_time("particles_draw", orig_rt.draw(ps));
+			orig_rt.display();
+			ps_clock.restart();
+		}
+	});
+	particles.set_fx_cb([&](auto &orig_rt, auto &fx_rt, auto &target) {
+		target.draw(fx_rt.sprite, sf::BlendAdd);
+		target.draw(orig_rt.sprite, sf::BlendAdd);
+	});
+
+	auto &spectrum = add_layer("spectrum", antialiasing);
+	spectrum.set_orig_cb([&](auto &orig_rt) {
+		capture_time("spectrum_update", ss.update(sa));
+		orig_rt.clear(sf::Color::Transparent);
+		capture_time("spectrum_draw", orig_rt.draw(ss));
+		orig_rt.display();
+	});
+	spectrum.set_fx_cb([&](auto &orig_rt, auto &fx_rt, auto &target) {
+		// BlendAdd is a sane default
+		// experiment with other blend modes to make cool glows
+		target.draw(fx_rt.sprite, sf::BlendAdd);
+
+		if (spectrum_bm)
+			target.draw(orig_rt.sprite, *spectrum_bm);
+		else
+			/**
+			* since i haven't found the right blendmode that gets rid of the dark
+			* spectrum bar edges, the default behavior (FOR NOW) is to redraw the spectrum.
+			* users can pass --blendmode to instead blend the RT with the target above.
+			*/
+			target.draw(ss);
+	});
+
+	// clang-format on
+}
+
+viz::Layer &audioviz::add_layer(const std::string &name, int antialiasing)
+{
+	return layers.emplace_back(std::pair<std::string, viz::Layer>{name, {size, antialiasing}}).second;
+}
+
+viz::Layer *audioviz::get_layer(const std::string &name)
+{
+	const auto &itr = std::ranges::find_if(layers, [&](const auto &p) { return p.first == name; });
+	if (itr == layers.end())
+		return nullptr;
+	return &itr->second;
+}
+
+void audioviz::use_attached_pic_as_bg()
+{
+	if (media->attached_pic)
+		set_background(*media->attached_pic);
 }
 
 void audioviz::add_default_effects()
 {
-	bg.effects.emplace_back(new fx::Blur{7.5, 7.5, 15});
-	bg.effects.emplace_back(new fx::Mult{0.75});
-	if (!media->_vstream)
-		// apply the effects to the static background, since it is loaded before this is called.
-		bg.apply_fx();
-	particles.effects.emplace_back(new fx::Blur{1, 1, 10});
-	spectrum.effects.emplace_back(new fx::Blur{1, 1, 20});
+	if (const auto bg = get_layer("bg"))
+	{
+		bg->effects.emplace_back(new fx::Blur{7.5, 7.5, 15});
+		bg->effects.emplace_back(new fx::Mult{0.75});
+		if (media->attached_pic)
+			bg->apply_fx();
+	}
+
+	if (const auto particles = get_layer("particles"))
+		particles->effects.emplace_back(new fx::Blur{1, 1, 10});
+
+	if (const auto spectrum = get_layer("spectrum"))
+		spectrum->effects.emplace_back(new fx::Blur{1, 1, 20});
 }
 
 void audioviz::set_media_url(const std::string &url)
@@ -68,7 +172,7 @@ void audioviz::set_timing_text_enabled(bool enabled)
 	tt_enabled = enabled;
 }
 
-void audioviz::_media::init(audioviz &viz)
+void audioviz::_media::init(const audioviz &viz)
 {
 	// if an attached pic is in the format, use it for bg and album cover
 	// clang-format off
@@ -78,16 +182,12 @@ void audioviz::_media::init(audioviz &viz)
 	// clang-format on
 	{
 		const auto &stream = *itr;
-		if (sf::Texture txr; txr.loadFromMemory(stream->attached_pic.data, stream->attached_pic.size))
-		{
-			viz._metadata.set_album_cover(txr, {150, 150});
-			viz.set_background(txr);
-		}
+		attached_pic = {stream->attached_pic.data, stream->attached_pic.size};
 	}
 
 	try
 	{
-		auto _s = _format.find_best_stream(AVMEDIA_TYPE_VIDEO);
+		const auto _s = _format.find_best_stream(AVMEDIA_TYPE_VIDEO);
 		// we don't want to re-decode the attached pic stream
 		if (!(_s->disposition & AV_DISPOSITION_ATTACHED_PIC))
 		{
@@ -128,6 +228,9 @@ void audioviz::_media::init(audioviz &viz)
 	rs_frame->format = AV_SAMPLE_FMT_FLT;
 	_adecoder.copy_params(_astream->codecpar);
 	_adecoder.open();
+
+	// TODO: NEED TO EXPERIMENT WITH USING THE FFMPEG CLI INSTEAD OF CALLING LIBAV
+	// IT MAY BE THE ONLY WAY TO AVOID THE MESS BELOW.
 
 	// some formats/codecs have bad packet durations.
 	// no idea what is causing this. as of right now mp3 has a workaround,
@@ -201,22 +304,22 @@ void audioviz::set_framerate(int framerate)
 	_afpvf = media->_astream.sample_rate() / framerate;
 }
 
-void audioviz::set_background(const std::string &image_path)
+void audioviz::set_background(const sf::Texture &txr)
 {
-	sf::Texture txr;
-	if (!txr.loadFromFile(image_path))
-		throw std::runtime_error("failed to load background image: '" + image_path + '\'');
-	set_background(txr);
-}
+	const auto bg = get_layer("bg");
+	if (!bg)
+		throw std::runtime_error("no background layer present!");
+	tt::Sprite spr(txr);
 
-void audioviz::set_background(const sf::Texture &texture)
-{
-	tt::Sprite spr(texture);
+	// i do this because of *widescreen* youtube thumbnails containing *square* album covers
 	spr.capture_centered_square_view();
+
 	spr.fill_screen(size);
-	bg.orig_draw(spr);
-	// TODO: make sure static backgrounds are only blurred once
-	bg.apply_fx();
+	bg->orig_draw(spr);
+	bg->orig_display();
+	bg->apply_fx();
+
+	bg->set_fx_cb([](auto &, auto &fx_rt, auto &target) { target.draw(fx_rt.sprite); });
 }
 
 void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
@@ -229,22 +332,22 @@ void audioviz::capture_elapsed_time(const char *const label, const sf::Clock &_c
 	tt_ss << std::setw(20) << std::left << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
 
-void audioviz::draw_spectrum()
-{
-	capture_time("spectrum_update", ss.update(sa));
-	spectrum.orig_clear();
-	capture_time("spectrum_draw", spectrum.orig_draw(ss));
-	capture_time("spectrum_fx", spectrum.apply_fx());
-}
+// void audioviz::draw_spectrum()
+// {
+// 	capture_time("spectrum_update", ss.update(sa));
+// 	spectrum.orig_clear();
+// 	capture_time("spectrum_draw", spectrum.orig_draw(ss));
+// 	capture_time("spectrum_fx", spectrum.apply_fx());
+// }
 
 // should be called AFTER draw_spectrum()
-void audioviz::draw_particles()
-{
-	capture_time("particles_update", ps.update(sa, size.y));
-	particles.orig_clear();
-	capture_time("particles_draw", particles.orig_draw(ps));
-	capture_time("particles_fx", particles.apply_fx());
-}
+// void audioviz::draw_particles()
+// {
+// 	capture_time("particles_update", ps.update(sa));
+// 	particles.orig_clear();
+// 	capture_time("particles_draw", particles.orig_draw(ps));
+// 	capture_time("particles_fx", particles.apply_fx());
+// }
 
 #ifdef AUDIOVIZ_PORTAUDIO
 void audioviz::set_audio_playback_enabled(bool enabled)
@@ -276,11 +379,11 @@ void audioviz::_media::decode(audioviz &viz)
 			return;
 		}
 
-		// const auto &stream = _format.streams()[packet->stream_index];
-		// std::cerr << stream->index << ": " << (packet->pts * av_q2d(stream->time_base)) << '/' << stream.duration_sec() << '\n';
-
 		if (packet->stream_index == _astream->index)
 		{
+			const auto &stream = _format.streams()[packet->stream_index];
+			std::cerr << "\e[2K\raudio: " << (packet->pts * av_q2d(stream->time_base)) << " / " << stream.duration_sec();
+
 			if (!_adecoder.send_packet(packet))
 			{
 				std::cerr << "audio decoder has been flushed\n";
@@ -327,13 +430,6 @@ bool audioviz::_media::video_frame_available()
 	return _vstream && !_frame_queue->empty();
 }
 
-void audioviz::_media::draw_next_video_frame(viz::Layer &layer)
-{
-	layer.orig_draw(sf::Sprite(_frame_queue->front()));
-	layer.apply_fx();
-	_frame_queue->pop_front();
-}
-
 #ifdef AUDIOVIZ_PORTAUDIO
 void audioviz::play_audio()
 {
@@ -364,8 +460,8 @@ bool audioviz::prepare_frame()
 	if ((int)audio_buffer.size() < 2 * fft_size)
 		return false;
 
-	if (media->video_frame_available())
-		capture_time("draw_next_video_frame", media->draw_next_video_frame(bg));
+	// if (media->video_frame_available())
+	// 	capture_time("draw_next_video_frame", media->draw_next_video_frame_onto(bg));
 
 	// resizes sa's vectors properly to fit ss's bars
 	ss.before_analyze(sa);
@@ -373,16 +469,16 @@ bool audioviz::prepare_frame()
 	// perform actual fft
 	capture_time("fft", sa.analyze(fa, audio_buffer.data()));
 
-	draw_spectrum();
+	// draw_spectrum();
 
-	if (framerate <= 60)
-		draw_particles();
-	else if (framerate > 60 && ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60))
-	{
-		// lock the tickrate of the particles at 60hz for >60fps output
-		draw_particles();
-		ps_clock.restart();
-	}
+	// if (framerate <= 60)
+	// 	draw_particles();
+	// else if (framerate > 60 && ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60))
+	// {
+	// 	// lock the tickrate of the particles at 60hz for >60fps output
+	// 	draw_particles();
+	// 	ps_clock.restart();
+	// }
 
 	/* brighten bg on bass - looks kinda bad, keeping code for future reference
 	if (bg.effects.size())
@@ -405,6 +501,11 @@ bool audioviz::prepare_frame()
 	}
 	*/
 
+	final_rt.clear();
+	for (auto &layer : layers)
+		layer.second.full_lifecycle(final_rt);
+	final_rt.display();
+
 	// THE IMPORTANT PART
 	capture_time("audio_buffer_erase", audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf));
 
@@ -416,23 +517,25 @@ bool audioviz::prepare_frame()
 
 void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
-	target.draw(bg.fx_rt().sprite);
-	target.draw(particles.fx_rt().sprite, sf::BlendAdd);
-	target.draw(particles.orig_rt().sprite, sf::BlendAdd);
+	// target.draw(bg.fx_rt().sprite);
+	// target.draw(particles.fx_rt().sprite, sf::BlendAdd);
+	// target.draw(particles.orig_rt().sprite, sf::BlendAdd);
 
-	// BlendAdd is a sane default
-	// experiment with other blend modes to make cool glows
-	target.draw(spectrum.fx_rt().sprite, sf::BlendAdd);
+	// // BlendAdd is a sane default
+	// // experiment with other blend modes to make cool glows
+	// target.draw(spectrum.fx_rt().sprite, sf::BlendAdd);
 
-	if (spectrum_bm)
-		target.draw(spectrum.orig_rt().sprite, *spectrum_bm);
-	else
-		/**
-		 * since i haven't found the right blendmode that gets rid of the dark
-		 * spectrum bar edges, the default behavior (FOR NOW) is to redraw the spectrum.
-		 * users can pass --blendmode to instead blend the RT with the target above.
-		 */
-		target.draw(ss);
+	// if (spectrum_bm)
+	// 	target.draw(spectrum.orig_rt().sprite, *spectrum_bm);
+	// else
+	// 	/**
+	// 	 * since i haven't found the right blendmode that gets rid of the dark
+	// 	 * spectrum bar edges, the default behavior (FOR NOW) is to redraw the spectrum.
+	// 	 * users can pass --blendmode to instead blend the RT with the target above.
+	// 	 */
+	// 	target.draw(ss);
+
+	target.draw(final_rt.sprite);
 
 	target.draw(_metadata);
 

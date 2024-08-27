@@ -3,6 +3,7 @@
 #include "fx/Effect.hpp"
 #include "tt/RenderTexture.hpp"
 #include <SFML/Graphics.hpp>
+#include <functional>
 #include <vector>
 
 namespace viz
@@ -10,7 +11,15 @@ namespace viz
 
 class Layer
 {
+public:
+	using OrigCb = std::function<void(tt::RenderTexture &)>;
+	using FxCb = std::function<void(const tt::RenderTexture &, const tt::RenderTexture &, sf::RenderTarget &)>;
+
+private:
 	tt::RenderTexture _orig_rt, _fx_rt;
+	bool auto_fx = true;
+	OrigCb orig_cb;
+	FxCb fx_cb;
 
 public:
 	/**
@@ -32,23 +41,21 @@ public:
 	 */
 	void orig_draw(const sf::Drawable &drawable);
 
+	void orig_display();
+
+	void set_orig_cb(const OrigCb &cb);
+	void set_auto_fx(const bool b);
+	void set_fx_cb(const FxCb &cb);
+
 	/**
 	 * @brief Copies the "original" render-texture to the "effects" render-texture
 	 *        and applies all `effects` on it.
 	 */
 	void apply_fx();
 
-	/**
-	 * @return The "original" render-texture. Contains what was drawn to it using
-	 *         `orig_clear` or `orig_draw`.
-	 */
-	const tt::RenderTexture &orig_rt() const { return _orig_rt; }
+	void full_lifecycle(sf::RenderTarget &target);
 
-	/**
-	 * @return The "effects" render-texture. Contains the result of the applied effects
-	 *         on the "original" render-texture (calling `apply_fx`).
-	 */
-	const tt::RenderTexture &fx_rt() const { return _fx_rt; }
+private:
 };
 
 } // namespace viz

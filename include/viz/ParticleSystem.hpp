@@ -89,23 +89,23 @@ public:
 		}
 	}
 
-	void update(const tt::MonoAnalyzer &ma, float scale_factor, const UpdateOptions &options = default_update_opts)
+	void update(const tt::MonoAnalyzer &ma, const UpdateOptions &options = default_update_opts)
 	{
 		const auto wmax = util::weighted_max(ma.spectrum_data(), options.weight_func);
-		const auto scaled_wmax = wmax * scale_factor;
+		const auto scaled_wmax = wmax * rect.size.y;
 		const auto additional_displacement = options.displacement_func(scaled_wmax / options.calm_factor);
 		update({0, -additional_displacement});
 	}
 
-	void update(const tt::StereoAnalyzer &sa, float scale_factor, const UpdateOptions &options = default_update_opts)
+	void update(const tt::StereoAnalyzer &sa, const UpdateOptions &options = default_update_opts)
 	{
 		const auto &left_data = sa.left_data(), &right_data = sa.right_data();
 		assert(left_data.size() == right_data.size());
 
 		const auto avg = (util::weighted_max(left_data, options.weight_func) + util::weighted_max(right_data, options.weight_func)) / 2;
 
-		// scale by window size to keep movement consistent with all window sizes
-		const auto scaled_avg = scale_factor * avg;
+		// scale by rect height to keep movement consistent
+		const auto scaled_avg = rect.size.y * avg;
 
 		// the deciding factor in particle speed increase
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);

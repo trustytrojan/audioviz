@@ -16,8 +16,6 @@ class Main
 	using SD = viz::SpectrumDrawable<BarType>;
 	using FS = tt::FrequencyAnalyzer;
 
-	static inline const sf::ContextSettings ctx{0, 0, 4};
-
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
 

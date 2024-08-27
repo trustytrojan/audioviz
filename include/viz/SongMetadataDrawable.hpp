@@ -1,10 +1,6 @@
 #pragma once
 
-#include <ranges>
-
-#include "av/MediaReader.hpp"
 #include "tt/Sprite.hpp"
-
 #include <SFML/Graphics.hpp>
 
 namespace viz

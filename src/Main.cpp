@@ -17,7 +17,7 @@ Main::Main(const int argc, const char *const *const argv)
 #endif
 
 	const auto &size = args.get<std::vector<uint>>("--size");
-	audioviz viz(sf::Vector2u{size[0], size[1]}, args.get("media_url"));
+	audioviz viz({size[0], size[1]}, args.get("media_url"));
 	use_args(viz, args);
 
 	// --encode: render to video file
@@ -56,17 +56,19 @@ void Main::use_args(audioviz &viz, const Args &args)
 	if (const auto ffpath = args.present("--ffpath"))
 		ffmpeg_path = ffpath.value();
 
-	if (const auto bg = args.present("--bg"))
-		viz.set_background(bg.value());
-
-	if (const auto album_art = args.present("--album-art"))
-		viz.set_album_cover(album_art.value());
-
-	if (const auto fontpath = args.present("--font"))
-		viz.set_text_font(*fontpath);
-
 	if (!args.get<bool>("--no-fx"))
 		viz.add_default_effects();
+
+	if (const auto bg_path = args.present("--bg"))
+		viz.set_background(sf::Texture{*bg_path});
+	else
+		viz.use_attached_pic_as_bg(); // THIS NEEDS TO BE HERE OTHERWISE THE BACKGROUND BREAKS!!!!!!!!!!!!!
+
+	if (const auto album_art_path = args.present("--album-art"))
+		viz.set_album_cover(*album_art_path);
+
+	if (const auto font_path = args.present("--font"))
+		viz.set_text_font(*font_path);
 
 	// { // bar type
 	// 	const auto &bt_str = get("-bt");
@@ -233,7 +235,7 @@ void Main::start_in_window(audioviz &viz)
 	viz.set_audio_playback_enabled(true);
 #endif
 
-	sf::RenderWindow window(sf::VideoMode(viz.get_size()), "audioviz", sf::Style::Titlebar, sf::State::Windowed, ctx);
+	sf::RenderWindow window(sf::VideoMode(viz.get_size()), "audioviz", sf::Style::Titlebar, sf::State::Windowed, {.antialiasingLevel = 4});
 	window.setVerticalSyncEnabled(!no_vsync);
 
 	while (window.isOpen() && viz.prepare_frame())

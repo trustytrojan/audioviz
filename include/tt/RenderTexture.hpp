@@ -13,13 +13,26 @@ namespace tt
 class RenderTexture : public sf::RenderTexture
 {
 public:
-	const sf::Sprite sprite;
+	sf::Sprite sprite;
 
-	RenderTexture(const sf::Vector2u size, const sf::ContextSettings &ctx = sf::ContextSettings());
-	RenderTexture(const sf::Vector2u size, int antialiasing = 0);
+	RenderTexture(const sf::Vector2u size, int antialiasing = 0)
+		: sf::RenderTexture(size, {.antialiasingLevel = antialiasing}),
+		  sprite(getTexture(), {{}, static_cast<sf::Vector2i>(size)})
+	{
+	}
+
+	void display()
+	{
+		sf::RenderTexture::display();
+		sprite.setTexture(getTexture(), true);
+	}
 
 	// Copy the contents of `other` to this render-texture.
-	void copy(const RenderTexture &other);
+	void copy(const RenderTexture &other)
+	{
+		draw(other.sprite);
+		display();
+	}
 };
 
 } // namespace tt

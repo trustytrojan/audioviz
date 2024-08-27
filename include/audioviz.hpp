@@ -9,6 +9,7 @@
 #include <av/MediaReader.hpp>
 #include <av/Resampler.hpp>
 #include <av/SwScaler.hpp>
+#include <string>
 
 #ifdef AUDIOVIZ_PORTAUDIO
 #include <portaudio.hpp>
@@ -47,6 +48,8 @@ class audioviz : public sf::Drawable
 			{&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate()}); // input params
 		av::Frame rs_frame;
 
+		std::optional<sf::Texture> attached_pic;
+
 		std::optional<av::Stream> _vstream;
 		std::optional<av::Decoder> _vdecoder;
 		std::optional<av::SwScaler> _scaler;
@@ -59,10 +62,10 @@ class audioviz : public sf::Drawable
 		{
 		}
 
-		void init(audioviz &);
+		void init(const audioviz &);
 		void decode(audioviz &);
 		bool video_frame_available();
-		void draw_next_video_frame(viz::Layer &);
+		void draw_next_video_frame_onto(viz::Layer &);
 	};
 	friend _media;
 
@@ -105,8 +108,12 @@ class audioviz : public sf::Drawable
 	std::optional<pa::Stream> pa_stream;
 #endif
 
+	std::vector<std::pair<std::string, viz::Layer>> layers;
+	tt::RenderTexture final_rt;
+
 public:
-	viz::Layer bg, particles, spectrum;
+	// viz::Layer bg, particles, spectrum;
+	void use_attached_pic_as_bg();
 
 	/**
 	 * @param size size of the output; recommended to match your `sf::RenderTarget`'s size
@@ -127,6 +134,9 @@ public:
 	bool prepare_frame();
 
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
+
+	viz::Layer &add_layer(const std::string &name, int antialiasing);
+	viz::Layer *get_layer(const std::string &name);
 
 	/// setters
 
@@ -150,7 +160,7 @@ public:
 	void set_framerate(int framerate);
 
 	// set background image with optional effects: blur and color-multiply
-	void set_background(const std::string &image_path);
+	// void set_background(const std::string &image_path);
 	void set_background(const sf::Texture &texture);
 
 	// set margins around the output size for the spectrum to respect

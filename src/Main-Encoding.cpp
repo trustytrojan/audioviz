@@ -67,7 +67,7 @@ void Main::encode(audioviz &viz, const std::string &outfile, const std::string &
 void Main::encode_without_window(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	FfmpegEncoder ffmpeg(viz, outfile, vcodec, acodec);
-	tt::RenderTexture rt(viz.get_size(), ctx);
+	tt::RenderTexture rt(viz.get_size(), 4);
 	while (viz.prepare_frame())
 	{
 		rt.draw(viz);
@@ -87,7 +87,7 @@ void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, c
 		std::launch::async,
 		[&]
 		{
-			tt::RenderTexture rt(viz.get_size(), ctx);
+			tt::RenderTexture rt(viz.get_size(), 4);
 			while (viz.prepare_frame())
 			{
 				rt.draw(viz);
@@ -110,7 +110,7 @@ void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, c
 void Main::encode_with_window(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	FfmpegEncoder ffmpeg(viz, outfile, vcodec, acodec);
-	sf::RenderWindow window(sf::VideoMode(viz.get_size()), "encoder", sf::Style::Titlebar, sf::State::Windowed, ctx);
+	sf::RenderWindow window(sf::VideoMode(viz.get_size()), "encoder", sf::Style::Titlebar, sf::State::Windowed, {.antialiasingLevel = 4});
 	sf::Texture txr{viz.get_size()};
 	while (viz.prepare_frame())
 	{
