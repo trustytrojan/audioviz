@@ -64,8 +64,6 @@ class audioviz : public sf::Drawable
 
 		void init(const audioviz &);
 		void decode(audioviz &);
-		bool video_frame_available();
-		void draw_next_video_frame_onto(viz::Layer &);
 	};
 	friend _media;
 
@@ -108,7 +106,7 @@ class audioviz : public sf::Drawable
 	std::optional<pa::Stream> pa_stream;
 #endif
 
-	std::vector<std::pair<std::string, viz::Layer>> layers;
+	std::vector<viz::Layer> layers;
 	tt::RenderTexture final_rt;
 
 public:

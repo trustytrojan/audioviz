@@ -3,10 +3,16 @@
 namespace viz
 {
 
-Layer::Layer(const sf::Vector2u size, const int antialiasing)
-	: _orig_rt(size, antialiasing),
+Layer::Layer(const std::string &name, const sf::Vector2u size, const int antialiasing)
+	: name(name),
+	  _orig_rt(size, antialiasing),
 	  _fx_rt(size, 0)
 {
+	// display something so that their sprites contain a valid texture
+	_orig_rt.clear();
+	_orig_rt.display();
+	_fx_rt.clear();
+	_fx_rt.display();
 }
 
 void Layer::orig_clear(const sf::Color color)

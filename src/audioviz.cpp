@@ -39,22 +39,22 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 	// layer setup
 	auto &bg = add_layer("bg", antialiasing);
-
-	if (media->_vstream)
+	if (media->_vstream) // set_orig_cb() to draw video frames on the layer
 	{
 		std::cout << "media->_vstream\n";
 		bg.set_orig_cb([&](auto &orig_rt) {
 			if (media->_frame_queue->empty())
 				return;
-			capture_time("draw_next_video_frame", {
-				orig_rt.draw(sf::Sprite(media->_frame_queue->front()));
-				media->_frame_queue->pop_front();
-			});
+			// the frame queue should have frames scaled to this->size! see _media::decode()
+			orig_rt.draw(sf::Sprite(media->_frame_queue->front()));
+			media->_frame_queue->pop_front();
 			orig_rt.display();
 		});
+		bg.set_fx_cb([](auto &, auto &fx_rt, auto &target) { target.draw(fx_rt.sprite); });
 	}
-	else
+	else // set_background() will apply_fx() on the bg it sets
 	{
+		// we only have one image; don't run effects in Layer::full_lifecycle
 		bg.set_auto_fx(false);
 
 		if (media->attached_pic)
@@ -63,11 +63,12 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 			_metadata.set_album_cover(*media->attached_pic, {150, 150});
 			set_background(*media->attached_pic);
 		}
+
+		// don't set_fx_cb() if there is no video stream!
 	}
 
-
 	// default metadata position
-	// needs to be called AFTER album cover is set because it depends on AC size
+	// needs to be called AFTER album cover is set because the text position depends on AC size
 	_metadata.set_position({30, 30});
 
 	auto &particles = add_layer("particles", antialiasing);
@@ -122,15 +123,15 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 viz::Layer &audioviz::add_layer(const std::string &name, int antialiasing)
 {
-	return layers.emplace_back(std::pair<std::string, viz::Layer>{name, {size, antialiasing}}).second;
+	return layers.emplace_back(viz::Layer{name, size, antialiasing});
 }
 
 viz::Layer *audioviz::get_layer(const std::string &name)
 {
-	const auto &itr = std::ranges::find_if(layers, [&](const auto &p) { return p.first == name; });
+	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.name == name; });
 	if (itr == layers.end())
 		return nullptr;
-	return &itr->second;
+	return itr.base();
 }
 
 void audioviz::use_attached_pic_as_bg()
@@ -143,7 +144,12 @@ void audioviz::add_default_effects()
 {
 	if (const auto bg = get_layer("bg"))
 	{
-		bg->effects.emplace_back(new fx::Blur{7.5, 7.5, 15});
+		// clang-format off
+		bg->effects.emplace_back(
+			media->_vstream
+				? new fx::Blur{5, 5, 10}
+				: new fx::Blur{7.5, 7.5, 15});
+		// clang-format on
 		bg->effects.emplace_back(new fx::Mult{0.75});
 		if (media->attached_pic)
 			bg->apply_fx();
@@ -170,80 +176,6 @@ const std::string &audioviz::get_media_url() const
 void audioviz::set_timing_text_enabled(bool enabled)
 {
 	tt_enabled = enabled;
-}
-
-void audioviz::_media::init(const audioviz &viz)
-{
-	// if an attached pic is in the format, use it for bg and album cover
-	// clang-format off
-	if (const auto itr = std::ranges::find_if(_format.streams(),
-			[](const auto &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
-		itr != _format.streams().cend())
-	// clang-format on
-	{
-		const auto &stream = *itr;
-		attached_pic = {stream->attached_pic.data, stream->attached_pic.size};
-	}
-
-	try
-	{
-		const auto _s = _format.find_best_stream(AVMEDIA_TYPE_VIDEO);
-		// we don't want to re-decode the attached pic stream
-		if (!(_s->disposition & AV_DISPOSITION_ATTACHED_PIC))
-		{
-			_vstream = _s;
-			_vdecoder.emplace(avcodec_find_decoder(_s->codecpar->codec_id)).open();
-			_scaler.emplace(
-				av::SwScaler::SrcDstArgs{
-					av::nearest_multiple_8(_s->codecpar->width),
-					_s->codecpar->height,
-					(AVPixelFormat)_s->codecpar->format,
-				},
-				av::SwScaler::SrcDstArgs{viz.size.x, viz.size.y, AV_PIX_FMT_RGBA});
-			_scaled_frame.emplace();
-			_frame_queue.emplace();
-		}
-	}
-	catch (const av::Error &e)
-	{
-		switch (e.errnum)
-		{
-		case AVERROR_STREAM_NOT_FOUND:
-			std::cerr << "video stream not found\n";
-			break;
-		case AVERROR_DECODER_NOT_FOUND:
-			std::cerr << "video decoder not found\n";
-			break;
-		default:
-			throw;
-		}
-	}
-
-	// audio decoding initialization
-	if (!_astream->codecpar->ch_layout.order)
-		// this check is necessary for .wav files with no channel order information
-		_astream->codecpar->ch_layout = AV_CHANNEL_LAYOUT_STEREO;
-	rs_frame->ch_layout = _astream->codecpar->ch_layout;
-	rs_frame->sample_rate = _astream->codecpar->sample_rate;
-	rs_frame->format = AV_SAMPLE_FMT_FLT;
-	_adecoder.copy_params(_astream->codecpar);
-	_adecoder.open();
-
-	// TODO: NEED TO EXPERIMENT WITH USING THE FFMPEG CLI INSTEAD OF CALLING LIBAV
-	// IT MAY BE THE ONLY WAY TO AVOID THE MESS BELOW.
-
-	// some formats/codecs have bad packet durations.
-	// no idea what is causing this. as of right now mp3 has a workaround,
-	// but anything else might end playback too early.
-	switch (_adecoder->codec_id)
-	{
-	case AV_CODEC_ID_MP3:
-		_format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
-		break;
-	// ogg/opus is now broken, will not fix. just convert to mp3
-	default:
-		break;
-	}
 }
 
 /* resizable windows not happening now, too much of the codebase relies on a static window size
@@ -366,70 +298,6 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 }
 #endif
 
-void audioviz::_media::decode(audioviz &viz)
-{
-	// while we don't have enough audio samples
-	while ((int)viz.audio_buffer.size() < 2 * viz.fft_size)
-	{
-		const auto packet = _format.read_packet();
-
-		if (!packet)
-		{
-			std::cerr << "packet is null; format probably reached eof\n";
-			return;
-		}
-
-		if (packet->stream_index == _astream->index)
-		{
-			const auto &stream = _format.streams()[packet->stream_index];
-			std::cerr << "\e[2K\raudio: " << (packet->pts * av_q2d(stream->time_base)) << " / " << stream.duration_sec();
-
-			if (!_adecoder.send_packet(packet))
-			{
-				std::cerr << "audio decoder has been flushed\n";
-				continue;
-			}
-
-			while (const auto frame = _adecoder.receive_frame())
-			{
-				_resampler.convert_frame(rs_frame.get(), frame);
-				const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
-				const auto nb_floats = 2 * rs_frame->nb_samples;
-				viz.audio_buffer.insert(viz.audio_buffer.end(), data, data + nb_floats);
-			}
-		}
-		else if (_vstream && packet->stream_index == _vstream->get()->index)
-		{
-			// we can access all of the video-related optionals in this block
-
-			if (!_vdecoder->send_packet(packet))
-			{
-				std::cerr << "video decoder has been flushed\n";
-				continue;
-			}
-
-			while (const auto frame = _vdecoder->receive_frame())
-			{
-				_scaler->scale_frame(_scaled_frame->get(), frame);
-				// put a frame into an sf::Texture, then put that into a frame queue.
-				// we are going to be reading more packets than usual since
-				// we need more audio samples than is provided by one audio packet.
-
-				// create new texture object in-place at the end of the list
-				_frame_queue->emplace_back(sf::Vector2u{_scaled_frame->get()->width, _scaled_frame->get()->height});
-				// if (!_frame_queue->back().create({_scaled_frame->get()->width, _scaled_frame->get()->height}))
-				// throw std::runtime_error("failed to create texture!");
-				_frame_queue->back().update(_scaled_frame->get()->data[0]);
-			}
-		}
-	}
-}
-
-bool audioviz::_media::video_frame_available()
-{
-	return _vstream && !_frame_queue->empty();
-}
-
 #ifdef AUDIOVIZ_PORTAUDIO
 void audioviz::play_audio()
 {
@@ -460,25 +328,11 @@ bool audioviz::prepare_frame()
 	if ((int)audio_buffer.size() < 2 * fft_size)
 		return false;
 
-	// if (media->video_frame_available())
-	// 	capture_time("draw_next_video_frame", media->draw_next_video_frame_onto(bg));
-
 	// resizes sa's vectors properly to fit ss's bars
 	ss.before_analyze(sa);
 
 	// perform actual fft
 	capture_time("fft", sa.analyze(fa, audio_buffer.data()));
-
-	// draw_spectrum();
-
-	// if (framerate <= 60)
-	// 	draw_particles();
-	// else if (framerate > 60 && ps_clock.getElapsedTime().asMilliseconds() > (1000.f / 60))
-	// {
-	// 	// lock the tickrate of the particles at 60hz for >60fps output
-	// 	draw_particles();
-	// 	ps_clock.restart();
-	// }
 
 	/* brighten bg on bass - looks kinda bad, keeping code for future reference
 	if (bg.effects.size())
@@ -503,7 +357,7 @@ bool audioviz::prepare_frame()
 
 	final_rt.clear();
 	for (auto &layer : layers)
-		layer.second.full_lifecycle(final_rt);
+		capture_time(layer.name.c_str(), layer.full_lifecycle(final_rt));
 	final_rt.display();
 
 	// THE IMPORTANT PART

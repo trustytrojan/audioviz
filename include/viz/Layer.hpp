@@ -15,6 +15,8 @@ public:
 	using OrigCb = std::function<void(tt::RenderTexture &)>;
 	using FxCb = std::function<void(const tt::RenderTexture &, const tt::RenderTexture &, sf::RenderTarget &)>;
 
+	std::string name;
+
 private:
 	tt::RenderTexture _orig_rt, _fx_rt;
 	bool auto_fx = true;
@@ -28,7 +30,7 @@ public:
 	 */
 	std::vector<std::unique_ptr<fx::Effect>> effects;
 
-	Layer(sf::Vector2u size, int antialiasing);
+	Layer(const std::string &name, sf::Vector2u size, int antialiasing);
 
 	/**
 	 * @brief Clear the "original" render-texture with `color`.
