@@ -1,7 +1,7 @@
 #pragma once
 
-#include <tt/ColorUtils.hpp>
 #include <SFML/Graphics.hpp>
+#include <tt/ColorUtils.hpp>
 #include <vector>
 
 namespace viz
@@ -82,10 +82,7 @@ public:
 
 	// setters
 
-	void set_multiplier(const float multiplier)
-	{
-		this->multiplier = multiplier;
-	}
+	void set_multiplier(const float multiplier) { this->multiplier = multiplier; }
 
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
@@ -204,10 +201,7 @@ private:
 			update_bar_color(i);
 	}
 
-	void update_bar_color(const int i)
-	{
-		bars[i].setFillColor(color.get((float)i / bars.size()));
-	}
+	void update_bar_color(const int i) { bars[i].setFillColor(color.get((float)i / bars.size())); }
 };
 
 } // namespace viz

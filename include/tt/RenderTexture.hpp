@@ -8,11 +8,12 @@ namespace tt
 /**
  * Subclass of `sf::RenderTexture`.
  * Has a public `const sf::Sprite` member to make the render-texture easily drawable.
- * Adds a `copy` method to quickly draw another `tt::RenderTexture`'s contents onto its.
+ * Adds a `copy` method to quickly `draw()` and `display()` another `tt::RenderTexture` 's sprite.
  */
 class RenderTexture : public sf::RenderTexture
 {
 public:
+	// this is accessed very frequently so i will trade a little memory for faster access
 	sf::Sprite sprite;
 
 	RenderTexture(const sf::Vector2u size, int antialiasing = 0)
@@ -21,6 +22,9 @@ public:
 	{
 	}
 
+	// for some reason the texture that `sf::RenderTexture`
+	// starts with gets replaced after the first `display()` call.
+	// so to guarantee safety i need to do this...
 	void display()
 	{
 		sf::RenderTexture::display();

@@ -332,7 +332,7 @@ bool audioviz::prepare_frame()
 	ss.before_analyze(sa);
 
 	// perform actual fft
-	capture_time("fft", sa.analyze(fa, audio_buffer.data()));
+	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
 
 	/* brighten bg on bass - looks kinda bad, keeping code for future reference
 	if (bg.effects.size())
