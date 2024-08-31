@@ -1,7 +1,8 @@
-#include "audioviz.hpp"
-#include <libavformat/avformat.h>
+#include "Media.hpp"
 
-void audioviz::_media::init(const sf::Vector2u video_frame_size)
+#include <iostream>
+
+void Media::init(const sf::Vector2u video_frame_size)
 {
 	// if an attached pic is in the format, use it for bg and album cover
 	// clang-format off
@@ -74,15 +75,15 @@ void audioviz::_media::init(const sf::Vector2u video_frame_size)
 	}
 }
 
-void audioviz::_media::audio_buffer_erase(int frames)
+void Media::audio_buffer_erase(int frames)
 {
 	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + _astream.nb_channels() * frames);
 }
 
-void audioviz::_media::decode(audioviz &viz)
+void Media::decode(int audio_frames)
 {
 	// while we don't have enough audio samples
-	while ((int)audio_buffer.size() < 2 * viz.fft_size)
+	while ((int)audio_buffer.size() < _astream.nb_channels() * audio_frames)
 	{
 		const auto packet = _format.read_packet();
 
@@ -106,7 +107,7 @@ void audioviz::_media::decode(audioviz &viz)
 			{
 				_resampler.convert_frame(rs_frame.get(), frame);
 				const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
-				const auto nb_floats = 2 * rs_frame->nb_samples;
+				const auto nb_floats = _astream.nb_channels() * rs_frame->nb_samples;
 				audio_buffer.insert(audio_buffer.end(), data, data + nb_floats);
 			}
 		}

@@ -13,7 +13,6 @@ namespace tt
 class RenderTexture : public sf::RenderTexture
 {
 public:
-	// this is accessed very frequently so i will trade a little memory for faster access
 	sf::Sprite sprite;
 
 	RenderTexture(const sf::Vector2u size, int antialiasing = 0)

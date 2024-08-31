@@ -31,7 +31,7 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	timing_text.setFillColor({255, 255, 255, 150});
 
 	// initialize libav for media decoding
-	media->init(*this);
+	media->init(size);
 
 	metadata_init();
 
@@ -147,10 +147,11 @@ void audioviz::add_default_effects()
 		// clang-format off
 		bg->effects.emplace_back(
 			media->_vstream
-				? new fx::Blur{5, 5, 10}
+				? new fx::Blur{2.5, 2.5, 5}
 				: new fx::Blur{7.5, 7.5, 15});
 		// clang-format on
-		bg->effects.emplace_back(new fx::Mult{0.75});
+		if (media->_vstream)
+			bg->effects.emplace_back(new fx::Mult{0.75});
 		if (media->attached_pic)
 			bg->apply_fx();
 	}
@@ -165,7 +166,7 @@ void audioviz::add_default_effects()
 void audioviz::set_media_url(const std::string &url)
 {
 	media.emplace(url);
-	media->init(*this);
+	media->init(size);
 }
 
 const std::string &audioviz::get_media_url() const
@@ -303,7 +304,7 @@ void audioviz::play_audio()
 {
 	try // to play the audio
 	{
-		pa_stream->write(audio_buffer.data(), _afpvf);
+		pa_stream->write(media->audio_buffer.data(), _afpvf);
 	}
 	catch (const pa::Error &e)
 	{
@@ -317,7 +318,8 @@ void audioviz::play_audio()
 bool audioviz::prepare_frame()
 {
 	assert(media);
-	capture_time("media_decode", media->decode(*this));
+	// capture_time("media_decode", media->decode(*this));
+	capture_time("media_decode", media->decode(fft_size));
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream)
@@ -325,14 +327,14 @@ bool audioviz::prepare_frame()
 #endif
 
 	// we don't have enough samples for fft; end here
-	if ((int)audio_buffer.size() < 2 * fft_size)
+	if ((int)media->audio_buffer.size() < 2 * fft_size)
 		return false;
 
 	// resizes sa's vectors properly to fit ss's bars
 	ss.before_analyze(sa);
 
 	// perform actual fft
-	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
+	capture_time("fft", sa.analyze(fa, media->audio_buffer.data(), true));
 
 	/* brighten bg on bass - looks kinda bad, keeping code for future reference
 	if (bg.effects.size())
@@ -361,7 +363,8 @@ bool audioviz::prepare_frame()
 	final_rt.display();
 
 	// THE IMPORTANT PART
-	capture_time("audio_buffer_erase", audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf));
+	// capture_time("audio_buffer_erase", audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + 2 * _afpvf));
+	capture_time("audio_buffer_erase", media->audio_buffer_erase(_afpvf));
 
 	timing_text.setString(tt_ss.str());
 	tt_ss.str("");
