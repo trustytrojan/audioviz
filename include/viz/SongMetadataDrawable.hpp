@@ -2,6 +2,7 @@
 
 #include "tt/Sprite.hpp"
 #include <SFML/Graphics.hpp>
+#include "Media.hpp"
 
 namespace viz
 {
@@ -17,6 +18,7 @@ private:
 
 public:
 	SongMetadataDrawable(const sf::Font &font);
+	void use_metadata(const Media &);
 	void set_album_cover(const sf::Texture &txr, const sf::Vector2f size);
 	void set_position(const sf::Vector2f pos);
 	void draw(sf::RenderTarget &target, const sf::RenderStates states) const override;

@@ -9,6 +9,19 @@ SongMetadataDrawable::SongMetadataDrawable(const sf::Font &font)
 {
 }
 
+void SongMetadataDrawable::use_metadata(const Media &media)
+{
+	if (const auto title = media._format.metadata("title"))
+		title_text.setString(title);
+	else if (const auto title = media._astream.metadata("title"))
+		title_text.setString(title);
+
+	if (const auto artist = media._format.metadata("artist"))
+		artist_text.setString(artist);
+	else if (const auto artist = media._astream.metadata("artist"))
+		artist_text.setString(artist);
+}
+
 void SongMetadataDrawable::set_album_cover(const sf::Texture &txr, const sf::Vector2f size)
 {
 	ac_txr = txr;

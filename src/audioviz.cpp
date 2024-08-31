@@ -150,7 +150,7 @@ void audioviz::add_default_effects()
 				? new fx::Blur{2.5, 2.5, 5}
 				: new fx::Blur{7.5, 7.5, 15});
 		// clang-format on
-		if (media->_vstream)
+		if (!media->_vstream)
 			bg->effects.emplace_back(new fx::Mult{0.75});
 		if (media->attached_pic)
 			bg->apply_fx();
@@ -204,7 +204,8 @@ void audioviz::set_text_font(const std::string &path)
 
 void audioviz::metadata_init()
 {
-	auto &title_text = _metadata.title_text, &artist_text = _metadata.artist_text;
+	auto &title_text = _metadata.title_text;
+	auto &artist_text = _metadata.artist_text;
 
 	// set style, fontsize, and color
 	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
@@ -215,14 +216,7 @@ void audioviz::metadata_init()
 	artist_text.setFillColor({255, 255, 255, 150});
 
 	// set text using stream/format metadata
-	if (const auto title = media->_astream.metadata("title"))
-		title_text.setString(title);
-	if (const auto title = media->_format.metadata("title"))
-		title_text.setString(title);
-	if (const auto artist = media->_astream.metadata("artist"))
-		artist_text.setString(artist);
-	if (const auto artist = media->_format.metadata("artist"))
-		artist_text.setString(artist);
+	_metadata.use_metadata(*media);
 }
 
 void audioviz::set_spectrum_margin(const int margin)
@@ -288,7 +282,7 @@ void audioviz::set_audio_playback_enabled(bool enabled)
 	if (enabled)
 	{
 		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, media->_astream.sample_rate(), fft_size);
+		pa_stream.emplace(0, 2, paFloat32, media->_astream.sample_rate(), _afpvf);
 		pa_stream->start();
 	}
 	else

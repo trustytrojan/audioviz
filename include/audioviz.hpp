@@ -1,8 +1,6 @@
 #pragma once
 
-#include <list>
 #include <optional>
-
 #include <SFML/Graphics.hpp>
 
 #include <av/Frame.hpp>
