@@ -35,7 +35,7 @@ Main::LuaState::LuaState(Main &main)
 #endif
 
 		// passthrough setters
-        "set_sample_size", &audioviz::set_sample_size,
+        "set_sample_size", &audioviz::set_fft_size,
         "set_bar_width", &audioviz::set_bar_width,
         "set_bar_spacing", &audioviz::set_bar_spacing,
         "set_color_mode", &audioviz::set_color_mode,

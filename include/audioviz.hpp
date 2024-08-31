@@ -146,7 +146,6 @@ public:
 	/// TODO: using viz::Layer, use dependency injection to get rid of these setters!!!!!
 	///       give the caller the power to customize their visualizer further!!!!!!!!!!!!!
 
-	void set_sample_size(int);
 	void set_bar_width(int width);
 	void set_bar_spacing(int spacing);
 	void set_color_mode(SD::ColorMode mode);

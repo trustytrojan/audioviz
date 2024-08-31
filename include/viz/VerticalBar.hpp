@@ -6,9 +6,8 @@ namespace viz
 {
 
 /**
- * An `sf::RectangleShape` whose origin is at the bottom-left
- * corner of the rectangle. Implements `setWidth(float)` and
- * `setHeight(float)` for use with `viz::SpectrumDrawable`.
+ * An `sf::RectangleShape` whose origin is at the bottom-left corner of the rectangle.
+ * Implements `setWidth(float)` and `setHeight(float)` for use with `viz::SpectrumDrawable`.
  */
 class VerticalBar : public sf::RectangleShape
 {

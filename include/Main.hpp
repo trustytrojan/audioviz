@@ -2,6 +2,8 @@
 
 #include "Args.hpp"
 #include "audioviz.hpp"
+#include "viz/StereoSpectrum.hpp"
+#include "tt/FrequencyAnalyzer.hpp"
 
 #ifdef AUDIOVIZ_LUA
 #include <sol/sol.hpp>

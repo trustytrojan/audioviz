@@ -52,6 +52,7 @@ Main::FfmpegEncoder::FfmpegEncoder(audioviz &viz, const std::string &outfile, co
 
 Main::FfmpegEncoder::~FfmpegEncoder()
 {
+	std_in.pipe().close();
 	std_in.close();
 	process.join();
 }

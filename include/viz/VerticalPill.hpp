@@ -6,9 +6,9 @@ namespace viz
 {
 
 /**
- * A vertically-aligned pill shape. It is constructed by taking
- * the points of a circle, and elevating the top half of the points
- * by `height`.
+ * A vertically-aligned pill shape.
+ * It is constructed by taking the points of a circle, and elevating the top half of the points by `height`.
+ * Implements `setWidth(float)` and `setHeight(float)` for use with `viz::SpectrumDrawable`.
  */
 class VerticalPill : public sf::CircleShape
 {

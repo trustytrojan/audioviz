@@ -44,7 +44,7 @@ Main::Main(const int argc, const char *const *const argv)
 void Main::use_args(audioviz &viz, const Args &args)
 {
 	// default-value params
-	viz.set_sample_size(args.get<uint>("-n"));
+	viz.set_fft_size(args.get<uint>("-n"));
 	viz.set_multiplier(args.get<float>("-m"));
 	viz.set_bar_width(args.get<uint>("-bw"));
 	viz.set_bar_spacing(args.get<uint>("-bs"));

@@ -394,11 +394,6 @@ void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 		target.draw(timing_text);
 }
 
-void audioviz::set_sample_size(int n)
-{
-	fa.set_fft_size(n);
-}
-
 void audioviz::set_bar_width(int width)
 {
 	ss.set_bar_width(width);
@@ -434,9 +429,10 @@ void audioviz::set_multiplier(float multiplier)
 	ss.set_multiplier(multiplier);
 }
 
-void audioviz::set_fft_size(int fft_size)
+void audioviz::set_fft_size(int n)
 {
-	fa.set_fft_size(fft_size);
+	fft_size = n;
+	fa.set_fft_size(n);
 }
 
 void audioviz::set_interp_type(FS::InterpolationType interp_type)
