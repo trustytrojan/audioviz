@@ -4,6 +4,7 @@ Args::Args(const int argc, const char *const *const argv)
 	: ArgumentParser(argv[0], "latest")
 {
 	add_argument("media_url");
+
 	// clang-format off
 	add_argument("-n", "--sample-size")
 		.help("number of audio samples to process per frame\n- higher amount increases accuracy\n- lower amount increases responsiveness")
@@ -18,24 +19,34 @@ Args::Args(const int argc, const char *const *const argv)
 		.validate();
 
 	add_argument("-s", "--scale")
-		.help("spectrum frequency scale: 'linear', 'log', 'nth-root'\nwith 'nth-root' you can specify a floating-point root\nthe default is 2, aka sqrt")
-		.nargs(1, 2)
-		.default_value(std::vector<std::string>{"log"});
+		.help("spectrum frequency scale: 'linear', 'log', 'nth-root'")
+		.choices("linear", "log", "nth-root")
+		.default_value("log");
+	
+	add_argument("--nth-root")
+		.help("when used with `--scale nth-root`, specify a floating point root")
+		.default_value(2)
+		.scan<'i', int>()
+		.validate();
 
 	add_argument("-a", "--accum-method")
 		.help("frequency bin accumulation method\n- 'sum': greater treble detail, exaggerated amplitude\n- 'max': less treble detail, true-to-waveform amplitude")
+		.choices("sum", "max")
 		.default_value("max");
 
 	add_argument("-w", "--window-func")
-		.help("window function: 'none', 'hanning', 'hamming', 'blackman'\nwindow functions can reduce 'wiggling' in bass frequencies\nhowever they can reduce overall amplitude, so adjust '-m' accordingly")
+		.help("window function: 'none', 'hamming', 'hanning', 'blackman'\ncan reduce 'wiggling' in bass frequencies\nhowever, they can reduce overall amplitude, so adjust '-m' accordingly")
+		.choices("none", "hamming", "hanning", "blackman")
 		.default_value("blackman");
 
 	add_argument("-i", "--interpolation")
 		.help("spectrum interpolation type: 'none', 'linear', 'cspline', 'cspline_hermite'")
+		.choices("none", "linear", "cspline", "cspline_hermite")
 		.default_value("cspline");
 
 	add_argument("--color")
 		.help("enable a colorful spectrum! possible values: 'wheel', 'solid'")
+		.choices("wheel", "solid")
 		.default_value("wheel");
 
 	add_argument("--wheel-rate")
@@ -45,7 +56,7 @@ Args::Args(const int argc, const char *const *const argv)
 		.validate();
 
 	add_argument("--hsv")
-		.help("requires '--color wheel'\nchoose a hue offset for the color wheel, saturation, and brightness\nvalues must be between [0, 1]")
+		.help("requires '--color wheel'\nchoose a hue offset for the color wheel, saturation, and brightness\nvalues must be in [0, 1]")
 		.nargs(3)
 		.default_value(std::vector<float>{0.9, 0.7, 1})
 		.scan<'f', float>()
@@ -77,9 +88,9 @@ Args::Args(const int argc, const char *const *const argv)
 		.scan<'u', uint>()
 		.validate();
 
-	add_argument("-bt", "--bar-type")
-		.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
-		.default_value("pill");
+	// add_argument("-bt", "--bar-type")
+	// 	.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
+	// 	.default_value("pill");
 
 	add_argument("--bg")
 		.help("add a background image; path to image file required");
@@ -130,6 +141,7 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("don't add default effects")
 		.flag();
 	// clang-format on
+
 	try
 	{
 		parse_args(argc, argv);
@@ -158,7 +170,7 @@ Args::Args(const int argc, const char *const *const argv)
     - 'min'
     - 'max'
 )";
-			_Exit(EXIT_SUCCESS);
+			exit(EXIT_SUCCESS);
 		}
 	}
 	catch (const std::exception &e)
@@ -167,6 +179,6 @@ Args::Args(const int argc, const char *const *const argv)
 		std::cerr << argv[0] << ": " << e.what() << '\n';
 
 		// just exit here since we don't want to print anything after the help
-		_Exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 }

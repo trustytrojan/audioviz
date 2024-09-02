@@ -36,3 +36,5 @@ on namespaces:
 - make `viz::ParticleSystem` more customizable
   - add `set_displacement_direction(sf::Vector2f)`
   - replace `update(sf::Vector2f)` with `displace_particles(float)`
+- make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
+  - figure out how to deal with [`fft_size`](src/audioviz.cpp#L284) and [`sa.analyze(...)`](src/audioviz.cpp#L299)

@@ -9,9 +9,7 @@ namespace viz
 
 /**
  * A customizable frequency spectrum visualizer.
- *
- * @tparam BarType A subclass of `sf::Shape` that implements
- *                 `setWidth(float)` and `setHeight(float)`.
+ * @tparam BarType A subclass of `sf::Shape` that implements `setWidth(float)` and `setHeight(float)`.
  */
 template <typename BarType>
 class SpectrumDrawable : public sf::Drawable
@@ -32,20 +30,14 @@ private:
 	sf::IntRect rect;
 	bool backwards = false;
 
-public:
-	class
+	struct
 	{
-		friend class SpectrumDrawable;
 		int width = 10, spacing = 5;
-
-	public:
-		int get_spacing() const { return spacing; }
 	} bar;
 
 	// color stuff
-	class
+	struct
 	{
-		friend class SpectrumDrawable;
 		ColorMode mode = ColorMode::WHEEL;
 		sf::Color solid{255, 255, 255};
 
@@ -71,16 +63,16 @@ public:
 		}
 
 		// wheel stuff
-		class
+		struct
 		{
-			friend class SpectrumDrawable;
 			float time = 0, rate = 0;
 			sf::Vector3f hsv{0.9, 0.7, 1};
 			void increment_time() { time += rate; }
 		} wheel;
 	} color;
 
-	// setters
+public:
+	int get_bar_spacing() const { return bar.spacing; }
 
 	void set_multiplier(const float multiplier) { this->multiplier = multiplier; }
 
@@ -164,10 +156,10 @@ public:
 			bars[i].setHeight(std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y));
 	}
 
-	void draw(sf::RenderTarget &target, sf::RenderStates) const override
+	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{
 		for (const auto &bar : bars)
-			target.draw(bar);
+			target.draw(bar, states);
 	}
 
 	int bar_count() const { return bars.size(); }

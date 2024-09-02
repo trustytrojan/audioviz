@@ -48,6 +48,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 	viz.set_multiplier(args.get<float>("-m"));
 	viz.set_bar_width(args.get<uint>("-bw"));
 	viz.set_bar_spacing(args.get<uint>("-bs"));
+
 	viz.set_framerate(args.get<uint>("-r"));
 	no_vsync = args.get<bool>("--no-vsync");
 	enc_window = args.get<bool>("--enc-window");
@@ -81,41 +82,59 @@ void Main::use_args(audioviz &viz, const Args &args)
 	// }
 
 	{ // accumulation method
+		static const std::unordered_map<std::string, FS::AccumulationMethod> am_map{
+			{"sum", FS::AccumulationMethod::SUM},
+			{"max", FS::AccumulationMethod::MAX},
+		};
+
 		const auto &am_str = args.get("-a");
-		if (am_str == "sum")
-			viz.set_accum_method(FS::AccumulationMethod::SUM);
-		else if (am_str == "max")
-			viz.set_accum_method(FS::AccumulationMethod::MAX);
-		else
-			throw std::invalid_argument("unknown accumulation method: " + am_str);
+
+		try
+		{
+			viz.set_accum_method(am_map.at(am_str));
+		}
+		catch (std::out_of_range)
+		{
+			throw std::invalid_argument{"--accum-method: unknown accumulation method: " + am_str};
+		}
 	}
 
 	{ // window function
+		static const std::unordered_map<std::string, FS::WindowFunction> wf_map{
+			{"hanning", FS::WindowFunction::HANNING},
+			{"hamming", FS::WindowFunction::HAMMING},
+			{"blackman", FS::WindowFunction::BLACKMAN},
+		};
+
 		const auto &wf_str = args.get("-w");
-		if (wf_str == "hanning")
-			viz.set_window_func(FS::WindowFunction::HANNING);
-		else if (wf_str == "hamming")
-			viz.set_window_func(FS::WindowFunction::HAMMING);
-		else if (wf_str == "blackman")
-			viz.set_window_func(FS::WindowFunction::BLACKMAN);
-		else if (wf_str == "none")
-			viz.set_window_func(FS::WindowFunction::NONE);
-		else
-			throw std::invalid_argument("unknown window function: " + wf_str);
+
+		try
+		{
+			viz.set_window_func(wf_map.at(wf_str));
+		}
+		catch (std::out_of_range)
+		{
+			throw std::invalid_argument{"--window-func: unknown window function: " + wf_str};
+		}
 	}
 
 	{ // interpolation type
-		const auto &interp_str = args.get("-i");
-		if (interp_str == "none")
-			viz.set_interp_type(FS::InterpolationType::NONE);
-		else if (interp_str == "linear")
-			viz.set_interp_type(FS::InterpolationType::LINEAR);
-		else if (interp_str == "cspline")
-			viz.set_interp_type(FS::InterpolationType::CSPLINE);
-		else if (interp_str == "cspline_hermite")
-			viz.set_interp_type(FS::InterpolationType::CSPLINE_HERMITE);
-		else
-			throw std::invalid_argument("unknown interpolation type: " + interp_str);
+		static const std::unordered_map<std::string, FS::InterpolationType> it_map{
+			{"none", FS::InterpolationType::NONE},
+			{"linear", FS::InterpolationType::LINEAR},
+			{"cspline", FS::InterpolationType::CSPLINE},
+			{"cspline_hermite", FS::InterpolationType::CSPLINE_HERMITE}};
+
+		const auto &it_str = args.get("-i");
+
+		try
+		{
+			viz.set_interp_type(it_map.at(it_str));
+		}
+		catch (std::out_of_range)
+		{
+			throw std::invalid_argument{"--interp-type: unknown interpolation type: " + it_str};
+		}
 	}
 
 	{ // spectrum coloring type
@@ -135,7 +154,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 			viz.set_solid_color({rgb[0], rgb[1], rgb[2]});
 		}
 		else
-			throw std::invalid_argument("unknown coloring type: " + color_str);
+			throw std::invalid_argument{"--color: unknown coloring type: " + color_str};
 	}
 
 	{ // spectrum blendmode
@@ -179,7 +198,11 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 			case 3:
 				// use first BlendMode constructor
-				viz.set_spectrum_blendmode({factor_map.at(bm_args[0]), factor_map.at(bm_args[1]), op_map.at(bm_args[2])});
+				viz.set_spectrum_blendmode({
+					factor_map.at(bm_args[0]),
+					factor_map.at(bm_args[1]),
+					op_map.at(bm_args[2]),
+				});
 				break;
 
 			case 6:
@@ -198,35 +221,33 @@ void Main::use_args(audioviz &viz, const Args &args)
 				throw std::invalid_argument("--blendmode expects 1, 3, or 6 arguments; see --bm-help");
 			}
 		}
-		catch (const std::exception &e)
+		catch (std::out_of_range)
 		{
-			std::cerr << "--blendmode: invalid argument caught; see --bm-help\n";
-			_Exit(EXIT_FAILURE);
+			throw std::invalid_argument("--blendmode: invalid factor/operation; see --bm-help");
 		}
 	}
 
-	// -s, --scale
-	switch (const auto &scale_args = args.get<std::vector<std::string>>("-s"); scale_args.size())
-	{
-	case 0:
-		break;
-	case 1:
-		if (scale_args[0] == "linear")
-			viz.set_scale(FS::Scale::LINEAR);
-		else if (scale_args[0] == "log")
-			viz.set_scale(FS::Scale::LOG);
-		else if (scale_args[0] == "nth-root")
-			viz.set_scale(FS::Scale::NTH_ROOT);
-		break;
-	case 2:
-		if (scale_args[0] != "nth-root")
-			throw std::invalid_argument("only the 'nth-root' scale takes an additional argument");
-		viz.set_scale(FS::Scale::NTH_ROOT);
-		viz.set_nth_root(std::stoi(scale_args[1]));
-		break;
-	default:
-		throw std::logic_error("-s, --scale: default case hit");
+	{ // -s, --scale
+		// clang-format off
+		static const std::unordered_map<std::string, FS::Scale> scale_map{
+			{"linear", FS::Scale::LINEAR},
+			{"log", FS::Scale::LOG},
+			{"nth-root", FS::Scale::NTH_ROOT}};
+		// clang-format on
+
+		const auto &scale_str = args.get("-s");
+
+		try
+		{
+			viz.set_scale(scale_map.at(scale_str));
+		}
+		catch (std::out_of_range)
+		{
+			throw std::invalid_argument("--scale: unknown scale: " + scale_str);
+		}
 	}
+
+	viz.set_nth_root(args.get<int>("--nth-root"));
 }
 
 void Main::start_in_window(audioviz &viz)
@@ -235,7 +256,13 @@ void Main::start_in_window(audioviz &viz)
 	viz.set_audio_playback_enabled(true);
 #endif
 
-	sf::RenderWindow window(sf::VideoMode(viz.get_size()), "audioviz", sf::Style::Titlebar, sf::State::Windowed, {.antialiasingLevel = 4});
+	sf::RenderWindow window{
+		sf::VideoMode{viz.get_size()},
+		"audioviz",
+		sf::Style::Titlebar,
+		sf::State::Windowed,
+		{.antialiasingLevel = 4},
+	};
 	window.setVerticalSyncEnabled(!no_vsync);
 
 	while (window.isOpen() && viz.prepare_frame())
@@ -243,14 +270,8 @@ void Main::start_in_window(audioviz &viz)
 		window.draw(viz);
 		window.display();
 		while (const auto event = window.pollEvent())
-		{
 			if (event->is<sf::Event::Closed>())
 				window.close();
-			/* resizable windows not happening now, too much of the codebase relies on a static window size
-			else if (const auto ev = event.getIf<sf::Event::Resized>())
-				viz.set_size(ev->size);
-			*/
-		}
 		window.clear();
 	}
 }

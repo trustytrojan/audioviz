@@ -16,7 +16,6 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	: size(size),
 	  media(media_url),
 	  ps({{}, (sf::Vector2i)size}, 50),
-	  timing_text(font),
 	  final_rt(size, antialiasing)
 {
 	// for now only stereo is supported
@@ -24,7 +23,10 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 		throw std::runtime_error("only stereo audio is supported!");
 
 	// default margin around the spectrum
-	set_spectrum_margin(ss_margin);
+	set_spectrum_margin(10);
+
+	// set left backwards to create "mirror" effect (not actually mirrored)
+	ss.set_left_backwards(true);
 
 	timing_text.setPosition({size.x - 300, 30});
 	timing_text.setCharacterSize(18);
@@ -41,7 +43,6 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 	auto &bg = add_layer("bg", antialiasing);
 	if (media->_vstream) // set_orig_cb() to draw video frames on the layer
 	{
-		std::cout << "media->_vstream\n";
 		bg.set_orig_cb([&](auto &orig_rt) {
 			if (media->_frame_queue->empty())
 				return;
@@ -59,7 +60,6 @@ audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const 
 
 		if (media->attached_pic)
 		{
-			std::cout << "media->attached_pic\n";
 			_metadata.set_album_cover(*media->attached_pic, {150, 150});
 			set_background(*media->attached_pic);
 		}
@@ -179,40 +179,25 @@ void audioviz::set_timing_text_enabled(bool enabled)
 	tt_enabled = enabled;
 }
 
-/* resizable windows not happening now, too much of the codebase relies on a static window size
-void audioviz::set_size(const sf::Vector2u size)
-{
-	this->size = size;
-	set_spectrum_margin(ss_margin);
-}
-*/
-
 void audioviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
 {
-	sf::Texture txr;
-	if (!txr.loadFromFile(image_path))
-		throw std::runtime_error("failed to load album cover: '" + image_path + '\'');
-	_metadata.set_album_cover(txr, size);
+	_metadata.set_album_cover(sf::Texture{image_path}, size);
 }
 
 void audioviz::set_text_font(const std::string &path)
 {
-	if (!font.openFromFile(path))
-		throw std::runtime_error("failed to load font: '" + path + '\'');
-	font_loaded = true;
+	font = {path};
 }
 
 void audioviz::metadata_init()
 {
-	auto &title_text = _metadata.title_text;
-	auto &artist_text = _metadata.artist_text;
-
 	// set style, fontsize, and color
 	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
-	artist_text.setStyle(sf::Text::Italic);
 	title_text.setCharacterSize(24);
-	artist_text.setCharacterSize(24);
 	title_text.setFillColor({255, 255, 255, 150});
+
+	artist_text.setStyle(sf::Text::Italic);
+	artist_text.setCharacterSize(24);
 	artist_text.setFillColor({255, 255, 255, 150});
 
 	// set text using stream/format metadata
@@ -221,7 +206,6 @@ void audioviz::metadata_init()
 
 void audioviz::set_spectrum_margin(const int margin)
 {
-	ss_margin = margin;
 	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
 }
 
@@ -259,23 +243,6 @@ void audioviz::capture_elapsed_time(const char *const label, const sf::Clock &_c
 	tt_ss << std::setw(20) << std::left << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
 
-// void audioviz::draw_spectrum()
-// {
-// 	capture_time("spectrum_update", ss.update(sa));
-// 	spectrum.orig_clear();
-// 	capture_time("spectrum_draw", spectrum.orig_draw(ss));
-// 	capture_time("spectrum_fx", spectrum.apply_fx());
-// }
-
-// should be called AFTER draw_spectrum()
-// void audioviz::draw_particles()
-// {
-// 	capture_time("particles_update", ps.update(sa));
-// 	particles.orig_clear();
-// 	capture_time("particles_draw", particles.orig_draw(ps));
-// 	capture_time("particles_fx", particles.apply_fx());
-// }
-
 #ifdef AUDIOVIZ_PORTAUDIO
 void audioviz::set_audio_playback_enabled(bool enabled)
 {
@@ -312,7 +279,6 @@ void audioviz::play_audio()
 bool audioviz::prepare_frame()
 {
 	assert(media);
-	// capture_time("media_decode", media->decode(*this));
 	capture_time("media_decode", media->decode(fft_size));
 
 #ifdef AUDIOVIZ_PORTAUDIO

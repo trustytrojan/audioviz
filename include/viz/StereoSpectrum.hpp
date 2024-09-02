@@ -16,10 +16,14 @@ class StereoSpectrum : public sf::Drawable
 	sf::IntRect rect;
 
 public:
-	// TODO: make this customizable
-	StereoSpectrum()
+	void set_left_backwards(const bool b)
 	{
-		_left.set_backwards(true);
+		_left.set_backwards(b);
+	}
+
+	void set_right_backwards(const bool b)
+	{
+		_right.set_backwards(b);
 	}
 
 	void set_bar_width(int width)
@@ -103,11 +107,12 @@ public:
 private:
 	void update_spectrum_rects()
 	{
-		assert(_left.bar.get_spacing() == _right.bar.get_spacing());
+		assert(_left.get_bar_spacing() == _right.get_bar_spacing());
 
 		const auto half_width = rect.size.x / 2.f;
-		const auto half_bar_spacing = _left.bar.get_spacing() / 2.f;
+		const auto half_bar_spacing = _left.get_bar_spacing() / 2.f;
 
+		// clang-format off
 		const sf::IntRect
 			left_half{
 				rect.position,
@@ -115,9 +120,10 @@ private:
 			right_half{
 				{rect.position.x + half_width + half_bar_spacing, rect.position.y},
 				{half_width - half_bar_spacing, rect.size.y}};
+		// clang-format on
 
 		const auto dist_between_rects = right_half.position.x - (left_half.position.x + left_half.size.x);
-		assert(dist_between_rects == _left.bar.get_spacing());
+		assert(dist_between_rects == _left.get_bar_spacing());
 
 		_left.set_rect(left_half);
 		_right.set_rect(right_half);

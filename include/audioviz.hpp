@@ -1,7 +1,7 @@
 #pragma once
 
-#include <optional>
 #include <SFML/Graphics.hpp>
+#include <optional>
 
 #include <av/Frame.hpp>
 #include <av/MediaReader.hpp>
@@ -26,7 +26,6 @@ class audioviz : public sf::Drawable
 {
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
-	int ss_margin = 10;
 
 	using BarType = viz::VerticalBar;
 	using SD = viz::SpectrumDrawable<BarType>;
@@ -35,6 +34,7 @@ class audioviz : public sf::Drawable
 	int fft_size = 3000;
 
 	// MUST be constructed in the constructor
+	// this is an optional because i am too lazy to write a move assignment operator and destructor
 	std::optional<Media> media;
 
 	// framerate
@@ -55,15 +55,15 @@ class audioviz : public sf::Drawable
 	viz::ParticleSystem<sf::CircleShape> ps;
 
 	// metadata-related fields
-	bool font_loaded = false;
 	sf::Font font;
-	viz::SongMetadataDrawable _metadata = font;
+	sf::Text title_text = font, artist_text = font;
+	viz::SongMetadataDrawable _metadata = viz::SongMetadataDrawable(title_text, artist_text);
 
 	// clocks for timing stuff
 	sf::Clock ps_clock;
 
 	// timing text
-	sf::Text timing_text;
+	sf::Text timing_text = font;
 	std::ostringstream tt_ss;
 	bool tt_enabled = false;
 
@@ -86,6 +86,7 @@ public:
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
 	audioviz(sf::Vector2u size, const std::string &media_url, int antialiasing = 4);
+	// audioviz(sf::Vector2u size, const std::string &media_url, tt::FrequencyAnalyzer &fa, viz::StereoSpectrum &ss, int antialiasing = 4);
 
 	/**
 	 * Add default effects to the `bg`, `spectrum`, and `particles` layers.
