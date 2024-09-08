@@ -46,11 +46,11 @@ private:
 	int _afpvf{media->_astream.sample_rate() / framerate};
 
 	// fft processor
-	tt::FrequencyAnalyzer fa{fft_size};
+	tt::FrequencyAnalyzer &fa;
 	tt::StereoAnalyzer sa;
 
 	// stereo spectrum
-	viz::StereoSpectrum<BarType> ss;
+	viz::StereoSpectrum<BarType> &ss;
 	std::optional<sf::BlendMode> spectrum_bm;
 
 	// particle system
@@ -86,8 +86,7 @@ public:
 	 * @param media_url url to media source. must contain an audio stream
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
-	audioviz(sf::Vector2u size, const std::string &media_url, int antialiasing = 4);
-	// audioviz(sf::Vector2u size, const std::string &media_url, tt::FrequencyAnalyzer &fa, viz::StereoSpectrum &ss, int antialiasing = 4);
+	audioviz(sf::Vector2u size, const std::string &media_url, tt::FrequencyAnalyzer &fa, viz::StereoSpectrum<BarType> &ss, int antialiasing = 4);
 
 	/**
 	 * Add default effects to the `bg`, `spectrum`, and `particles` layers.
@@ -105,8 +104,6 @@ public:
 	viz::Layer &add_layer(const std::string &name, int antialiasing);
 	viz::Layer *get_layer(const std::string &name);
 
-	/// setters
-
 #ifdef AUDIOVIZ_PORTAUDIO
 	/**
 	 * @param enabled When started with `start()`, whether to play the audio used to render the spectrum
@@ -121,7 +118,6 @@ public:
 	void set_framerate(int framerate);
 
 	// set background image with optional effects: blur and color-multiply
-	// void set_background(const std::string &image_path);
 	void set_background(const sf::Texture &texture);
 
 	// set margins around the output size for the spectrum to respect
@@ -138,23 +134,7 @@ public:
 	void set_media_url(const std::string &url);
 	const std::string &get_media_url() const;
 
-	/// passthrough setters
-	/// TODO: using viz::Layer, use dependency injection to get rid of these setters!!!!!
-	///       give the caller the power to customize their visualizer further!!!!!!!!!!!!!
-
-	void set_bar_width(int width);
-	void set_bar_spacing(int spacing);
-	void set_color_mode(SD::ColorMode mode);
-	void set_solid_color(sf::Color color);
-	void set_color_wheel_rate(float rate);
-	void set_color_wheel_hsv(sf::Vector3f hsv);
-	void set_multiplier(float multiplier);
 	void set_fft_size(int fft_size);
-	void set_interp_type(FS::InterpolationType interp_type);
-	void set_scale(FS::Scale scale);
-	void set_nth_root(int nth_root);
-	void set_accum_method(FS::AccumulationMethod method);
-	void set_window_func(FS::WindowFunction wf);
 
 private:
 	void metadata_init();

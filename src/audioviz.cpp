@@ -12,9 +12,11 @@
 		capture_elapsed_time(label, _clock); \
 	}
 
-audioviz::audioviz(const sf::Vector2u size, const std::string &media_url, const int antialiasing)
+audioviz::audioviz(sf::Vector2u size, const std::string &media_url, tt::FrequencyAnalyzer &fa, viz::StereoSpectrum<BarType> &ss, int antialiasing)
 	: size{size},
 	  media{media_url},
+	  fa{fa},
+	  ss{ss},
 	  ps{{{}, (sf::Vector2i)size}, 50},
 	  final_rt(size, antialiasing)
 {
@@ -353,68 +355,8 @@ void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 		target.draw(timing_text);
 }
 
-void audioviz::set_bar_width(int width)
-{
-	ss.set_bar_width(width);
-}
-
-void audioviz::set_bar_spacing(int spacing)
-{
-	ss.set_bar_spacing(spacing);
-}
-
-void audioviz::set_color_mode(SD::ColorMode mode)
-{
-	ss.set_color_mode(mode);
-}
-
-void audioviz::set_solid_color(sf::Color color)
-{
-	ss.set_solid_color(color);
-}
-
-void audioviz::set_color_wheel_rate(float rate)
-{
-	ss.set_color_wheel_rate(rate);
-}
-
-void audioviz::set_color_wheel_hsv(sf::Vector3f hsv)
-{
-	ss.set_color_wheel_hsv(hsv);
-}
-
-void audioviz::set_multiplier(float multiplier)
-{
-	ss.set_multiplier(multiplier);
-}
-
 void audioviz::set_fft_size(int n)
 {
 	fft_size = n;
 	fa.set_fft_size(n);
-}
-
-void audioviz::set_interp_type(FS::InterpolationType interp_type)
-{
-	fa.set_interp_type(interp_type);
-}
-
-void audioviz::set_scale(FS::Scale scale)
-{
-	fa.set_scale(scale);
-}
-
-void audioviz::set_nth_root(int nth_root)
-{
-	fa.set_nth_root(nth_root);
-}
-
-void audioviz::set_accum_method(FS::AccumulationMethod method)
-{
-	fa.set_accum_method(method);
-}
-
-void audioviz::set_window_func(FS::WindowFunction wf)
-{
-	fa.set_window_func(wf);
 }

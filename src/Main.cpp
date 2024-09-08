@@ -17,7 +17,7 @@ Main::Main(const int argc, const char *const *const argv)
 #endif
 
 	const auto &size = args.get<std::vector<uint>>("--size");
-	audioviz viz({size[0], size[1]}, args.get("media_url"));
+	audioviz viz{{size[0], size[1]}, args.get("media_url"), fa, ss};
 	use_args(viz, args);
 
 	// --encode: render to video file
@@ -45,9 +45,10 @@ void Main::use_args(audioviz &viz, const Args &args)
 {
 	// default-value params
 	viz.set_fft_size(args.get<uint>("-n"));
-	viz.set_multiplier(args.get<float>("-m"));
-	viz.set_bar_width(args.get<uint>("-bw"));
-	viz.set_bar_spacing(args.get<uint>("-bs"));
+
+	ss.set_multiplier(args.get<float>("-m"));
+	ss.set_bar_width(args.get<uint>("-bw"));
+	ss.set_bar_spacing(args.get<uint>("-bs"));
 
 	viz.set_framerate(args.get<uint>("-r"));
 	no_vsync = args.get<bool>("--no-vsync");
@@ -71,16 +72,6 @@ void Main::use_args(audioviz &viz, const Args &args)
 	if (const auto font_path = args.present("--font"))
 		viz.set_text_font(*font_path);
 
-	// { // bar type
-	// 	const auto &bt_str = get("-bt");
-	// 	if (bt_str == "bar")
-	// 		set_bar_type(SD::BarType::RECTANGLE);
-	// 	else if (bt_str == "pill")
-	// 		set_bar_type(SR::BarType::PILL);
-	// 	else
-	// 		throw std::invalid_argument("unknown bar type: " + bt_str);
-	// }
-
 	{ // accumulation method
 		static const std::unordered_map<std::string, FS::AccumulationMethod> am_map{
 			{"sum", FS::AccumulationMethod::SUM},
@@ -91,7 +82,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 		try
 		{
-			viz.set_accum_method(am_map.at(am_str));
+			fa.set_accum_method(am_map.at(am_str));
 		}
 		catch (std::out_of_range)
 		{
@@ -110,7 +101,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 		try
 		{
-			viz.set_window_func(wf_map.at(wf_str));
+			fa.set_window_func(wf_map.at(wf_str));
 		}
 		catch (std::out_of_range)
 		{
@@ -129,7 +120,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 		try
 		{
-			viz.set_interp_type(it_map.at(it_str));
+			fa.set_interp_type(it_map.at(it_str));
 		}
 		catch (std::out_of_range)
 		{
@@ -141,17 +132,17 @@ void Main::use_args(audioviz &viz, const Args &args)
 		const auto &color_str = args.get("--color");
 		if (color_str == "wheel")
 		{
-			viz.set_color_mode(SD::ColorMode::WHEEL);
+			ss.set_color_mode(SD::ColorMode::WHEEL);
 			const auto &hsv = args.get<std::vector<float>>("--hsv");
 			assert(hsv.size() == 3);
-			viz.set_color_wheel_hsv({hsv[0], hsv[1], hsv[2]});
-			viz.set_color_wheel_rate(args.get<float>("--wheel-rate"));
+			ss.set_color_wheel_hsv({hsv[0], hsv[1], hsv[2]});
+			ss.set_color_wheel_rate(args.get<float>("--wheel-rate"));
 		}
 		else if (color_str == "solid")
 		{
-			viz.set_color_mode(SD::ColorMode::SOLID);
+			ss.set_color_mode(SD::ColorMode::SOLID);
 			const auto &rgb = args.get<std::vector<uint8_t>>("--rgb");
-			viz.set_solid_color({rgb[0], rgb[1], rgb[2]});
+			ss.set_solid_color({rgb[0], rgb[1], rgb[2]});
 		}
 		else
 			throw std::invalid_argument{"--color: unknown coloring type: " + color_str};
@@ -239,7 +230,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 		try
 		{
-			viz.set_scale(scale_map.at(scale_str));
+			fa.set_scale(scale_map.at(scale_str));
 		}
 		catch (std::out_of_range)
 		{
@@ -247,7 +238,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 	}
 
-	viz.set_nth_root(args.get<int>("--nth-root"));
+	fa.set_nth_root(args.get<int>("--nth-root"));
 }
 
 void Main::start_in_window(audioviz &viz)

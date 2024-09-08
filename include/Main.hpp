@@ -2,8 +2,8 @@
 
 #include "Args.hpp"
 #include "audioviz.hpp"
-// #include "viz/StereoSpectrum.hpp"
-// #include "tt/FrequencyAnalyzer.hpp"
+#include "viz/StereoSpectrum.hpp"
+#include "tt/FrequencyAnalyzer.hpp"
 
 #ifdef AUDIOVIZ_LUA
 #include <sol/sol.hpp>
@@ -20,6 +20,9 @@ class Main
 
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
+
+	tt::FrequencyAnalyzer fa{3000};
+	viz::StereoSpectrum<BarType> ss;
 
 #ifdef AUDIOVIZ_LUA
 	struct LuaState : sol::state
