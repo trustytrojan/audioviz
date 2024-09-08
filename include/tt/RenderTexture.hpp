@@ -17,7 +17,7 @@ public:
 
 	RenderTexture(const sf::Vector2u size, int antialiasing = 0)
 		: sf::RenderTexture(size, {.antialiasingLevel = antialiasing}),
-		  sprite(getTexture(), {{}, static_cast<sf::Vector2i>(size)})
+		  sprite(getTexture())
 	{
 	}
 

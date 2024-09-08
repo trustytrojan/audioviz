@@ -33,13 +33,7 @@ public:
 	Layer(const std::string &name, sf::Vector2u size, int antialiasing);
 
 	/**
-	 * @brief Clear the "original" render-texture with `color`.
-	 */
-	void orig_clear(sf::Color color = sf::Color::Transparent);
-
-	/**
 	 * @brief Draw `drawable` onto the "original" render-texture.
-	 *        Immediately calls `display` on it as well.
 	 */
 	void orig_draw(const sf::Drawable &drawable);
 

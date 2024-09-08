@@ -24,27 +24,29 @@
 
 class audioviz : public sf::Drawable
 {
+public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
 
+private:
 	using BarType = viz::VerticalBar;
 	using SD = viz::SpectrumDrawable<BarType>;
 	using FS = tt::FrequencyAnalyzer;
 
-	int fft_size = 3000;
+	int fft_size{3000};
 
 	// MUST be constructed in the constructor
 	// this is an optional because i am too lazy to write a move assignment operator and destructor
 	std::optional<Media> media;
 
 	// framerate
-	int framerate = 60;
+	int framerate{60};
 
 	// audio frames per video frame
-	int _afpvf = media->_astream.sample_rate() / framerate;
+	int _afpvf{media->_astream.sample_rate() / framerate};
 
 	// fft processor
-	tt::FrequencyAnalyzer fa = fft_size;
+	tt::FrequencyAnalyzer fa{fft_size};
 	tt::StereoAnalyzer sa;
 
 	// stereo spectrum
@@ -57,13 +59,13 @@ class audioviz : public sf::Drawable
 	// metadata-related fields
 	sf::Font font;
 	sf::Text title_text = font, artist_text = font;
-	viz::SongMetadataDrawable _metadata = viz::SongMetadataDrawable(title_text, artist_text);
+	viz::SongMetadataDrawable _metadata{title_text, artist_text};
 
 	// clocks for timing stuff
 	sf::Clock ps_clock;
 
 	// timing text
-	sf::Text timing_text = font;
+	sf::Text timing_text{font};
 	std::ostringstream tt_ss;
 	bool tt_enabled = false;
 
@@ -77,7 +79,6 @@ class audioviz : public sf::Drawable
 	tt::RenderTexture final_rt;
 
 public:
-	// viz::Layer bg, particles, spectrum;
 	void use_attached_pic_as_bg();
 
 	/**
@@ -114,12 +115,6 @@ public:
 #endif
 
 	void set_timing_text_enabled(bool enabled);
-
-	sf::Vector2u get_size() const { return size; }
-
-	/* resizable windows not happening now, too much of the codebase relies on a static window size
-	void set_size(sf::Vector2u size);
-	*/
 
 	// important if you are capturing frames for video encoding!
 	int get_framerate() const { return framerate; }
@@ -167,4 +162,5 @@ private:
 	void draw_particles();
 	void play_audio();
 	void capture_elapsed_time(const char *const label, const sf::Clock &_clock);
+	void layers_init(int);
 };

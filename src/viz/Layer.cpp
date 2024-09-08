@@ -8,16 +8,6 @@ Layer::Layer(const std::string &name, const sf::Vector2u size, const int antiali
 	  _orig_rt(size, antialiasing),
 	  _fx_rt(size, 0)
 {
-	// display something so that their sprites contain a valid texture
-	_orig_rt.clear();
-	_orig_rt.display();
-	_fx_rt.clear();
-	_fx_rt.display();
-}
-
-void Layer::orig_clear(const sf::Color color)
-{
-	_orig_rt.clear(color);
 }
 
 void Layer::orig_draw(const sf::Drawable &drawable)
@@ -34,10 +24,12 @@ void Layer::set_orig_cb(const OrigCb &cb)
 {
 	orig_cb = cb;
 }
+
 void Layer::set_auto_fx(const bool b)
 {
 	this->auto_fx = b;
 }
+
 void Layer::set_fx_cb(const FxCb &cb)
 {
 	fx_cb = cb;

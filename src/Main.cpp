@@ -57,13 +57,13 @@ void Main::use_args(audioviz &viz, const Args &args)
 	if (const auto ffpath = args.present("--ffpath"))
 		ffmpeg_path = ffpath.value();
 
-	if (!args.get<bool>("--no-fx"))
-		viz.add_default_effects();
-
 	if (const auto bg_path = args.present("--bg"))
 		viz.set_background(sf::Texture{*bg_path});
 	else
 		viz.use_attached_pic_as_bg(); // THIS NEEDS TO BE HERE OTHERWISE THE BACKGROUND BREAKS!!!!!!!!!!!!!
+
+	if (!args.get<bool>("--no-fx"))
+		viz.add_default_effects();
 
 	if (const auto album_art_path = args.present("--album-art"))
 		viz.set_album_cover(*album_art_path);
@@ -257,7 +257,7 @@ void Main::start_in_window(audioviz &viz)
 #endif
 
 	sf::RenderWindow window{
-		sf::VideoMode{viz.get_size()},
+		sf::VideoMode{viz.size},
 		"audioviz",
 		sf::Style::Titlebar,
 		sf::State::Windowed,
