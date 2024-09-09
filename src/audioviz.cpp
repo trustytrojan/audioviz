@@ -145,7 +145,7 @@ viz::Layer &audioviz::add_layer(const std::string &name, const int antialiasing)
 
 viz::Layer *audioviz::get_layer(const std::string &name)
 {
-	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.name == name; });
+	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
 	if (itr == layers.end())
 		return nullptr;
 	return itr.base();
@@ -237,7 +237,7 @@ void audioviz::set_background(const sf::Texture &txr)
 	const auto bg = get_layer("bg");
 	if (!bg)
 		throw std::runtime_error("no background layer present!");
-	tt::Sprite spr(txr);
+	tt::Sprite spr{txr};
 
 	// i do this because of *widescreen* youtube thumbnails containing *square* album covers
 	spr.capture_centered_square_view();
@@ -336,7 +336,7 @@ bool audioviz::prepare_frame()
 
 	final_rt.clear();
 	for (auto &layer : layers)
-		capture_time(layer.name.c_str(), layer.full_lifecycle(final_rt));
+		capture_time(layer.get_name().c_str(), layer.full_lifecycle(final_rt));
 	final_rt.display();
 
 	// THE IMPORTANT PART

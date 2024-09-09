@@ -35,6 +35,8 @@ private:
 
 	int fft_size{3000};
 
+	int _frames_rendered{};
+
 	// MUST be constructed in the constructor
 	// this is an optional because i am too lazy to write a move assignment operator and destructor
 	std::optional<Media> media;
@@ -58,7 +60,7 @@ private:
 
 	// metadata-related fields
 	sf::Font font;
-	sf::Text title_text = font, artist_text = font;
+	sf::Text title_text{font}, artist_text{font};
 	viz::SongMetadataDrawable _metadata{title_text, artist_text};
 
 	// clocks for timing stuff
@@ -67,7 +69,7 @@ private:
 	// timing text
 	sf::Text timing_text{font};
 	std::ostringstream tt_ss;
-	bool tt_enabled = false;
+	bool tt_enabled{};
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	// PortAudio stuff for live playback
@@ -86,7 +88,12 @@ public:
 	 * @param media_url url to media source. must contain an audio stream
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
-	audioviz(sf::Vector2u size, const std::string &media_url, tt::FrequencyAnalyzer &fa, viz::StereoSpectrum<BarType> &ss, int antialiasing = 4);
+	audioviz(
+		sf::Vector2u size,
+		const std::string &media_url,
+		tt::FrequencyAnalyzer &fa,
+		viz::StereoSpectrum<BarType> &ss,
+		int antialiasing = 4);
 
 	/**
 	 * Add default effects to the `bg`, `spectrum`, and `particles` layers.
@@ -105,13 +112,10 @@ public:
 	viz::Layer *get_layer(const std::string &name);
 
 #ifdef AUDIOVIZ_PORTAUDIO
-	/**
-	 * @param enabled When started with `start()`, whether to play the audio used to render the spectrum
-	 */
-	void set_audio_playback_enabled(bool enabled);
+	void set_audio_playback_enabled(bool);
 #endif
 
-	void set_timing_text_enabled(bool enabled);
+	void set_timing_text_enabled(bool);
 
 	// important if you are capturing frames for video encoding!
 	int get_framerate() const { return framerate; }
