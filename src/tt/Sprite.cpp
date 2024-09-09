@@ -34,7 +34,7 @@ void Sprite::fill_screen(const sf::Vector2u size)
 
 sf::Vector2f Sprite::get_size() const
 {
-	return sf::Vector2f(getTextureRect().size).cwiseMul(getScale());
+	return sf::Vector2f(getTextureRect().size).componentWiseMul(getScale());
 }
 
 } // namespace tt
