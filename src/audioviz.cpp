@@ -12,13 +12,14 @@
 		capture_elapsed_time(label, _clock); \
 	}
 
-audioviz::audioviz(sf::Vector2u size, const std::string &media_url, tt::FrequencyAnalyzer &fa, viz::StereoSpectrum<BarType> &ss, int antialiasing)
+audioviz::audioviz(
+	const sf::Vector2u size, const std::string &media_url, tt::FrequencyAnalyzer &fa, viz::StereoSpectrum<BarType> &ss, const int antialiasing)
 	: size{size},
 	  media{media_url},
 	  fa{fa},
 	  ss{ss},
-	  ps{{{}, (sf::Vector2i)size}, 50},
-	  final_rt(size, antialiasing)
+	  ps{{{}, static_cast<sf::Vector2i>(size)}, 50},
+	  final_rt{size, antialiasing}
 {
 	// for now only stereo is supported
 	// this will be moved into its own class eventually
@@ -46,7 +47,7 @@ audioviz::audioviz(sf::Vector2u size, const std::string &media_url, tt::Frequenc
 	_metadata.set_position({30, 30});
 }
 
-void audioviz::layers_init(int antialiasing)
+void audioviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
@@ -137,7 +138,7 @@ void audioviz::layers_init(int antialiasing)
 	}
 }
 
-viz::Layer &audioviz::add_layer(const std::string &name, int antialiasing)
+viz::Layer &audioviz::add_layer(const std::string &name, const int antialiasing)
 {
 	return layers.emplace_back(viz::Layer{name, size, antialiasing});
 }
@@ -190,7 +191,7 @@ const std::string &audioviz::get_media_url() const
 	return media->url;
 }
 
-void audioviz::set_timing_text_enabled(bool enabled)
+void audioviz::set_timing_text_enabled(const bool enabled)
 {
 	tt_enabled = enabled;
 }
@@ -225,7 +226,7 @@ void audioviz::set_spectrum_margin(const int margin)
 	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
 }
 
-void audioviz::set_framerate(int framerate)
+void audioviz::set_framerate(const int framerate)
 {
 	this->framerate = framerate;
 	_afpvf = media->_astream.sample_rate() / framerate;
@@ -260,7 +261,7 @@ void audioviz::capture_elapsed_time(const char *const label, const sf::Clock &_c
 }
 
 #ifdef AUDIOVIZ_PORTAUDIO
-void audioviz::set_audio_playback_enabled(bool enabled)
+void audioviz::set_audio_playback_enabled(const bool enabled)
 {
 	if (enabled)
 	{
@@ -347,15 +348,15 @@ bool audioviz::prepare_frame()
 	return true;
 }
 
-void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
+void audioviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
-	target.draw(final_rt.sprite);
-	target.draw(_metadata);
+	target.draw(final_rt.sprite, states);
+	target.draw(_metadata, states);
 	if (tt_enabled)
-		target.draw(timing_text);
+		target.draw(timing_text, states);
 }
 
-void audioviz::set_fft_size(int n)
+void audioviz::set_fft_size(const int n)
 {
 	fft_size = n;
 	fa.set_fft_size(n);

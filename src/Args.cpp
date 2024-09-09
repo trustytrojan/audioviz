@@ -88,10 +88,6 @@ Args::Args(const int argc, const char *const *const argv)
 		.scan<'u', uint>()
 		.validate();
 
-	// add_argument("-bt", "--bar-type")
-	// 	.help("spectrum bar style\n- 'bar': rectangular bar\n- 'pill': bar with rounded ends")
-	// 	.default_value("pill");
-
 	add_argument("--bg")
 		.help("add a background image; path to image file required");
 
