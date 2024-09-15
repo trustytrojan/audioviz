@@ -17,18 +17,15 @@ class ParticleSystem : public sf::Drawable
 public:
 	struct UpdateOptions
 	{
-		float calm_factor;
-		std::function<float(float)> weight_func, displacement_func;
+		float calm_factor = 5, multiplier = 1;
+		std::function<float(float)> weight_func = sqrtf, displacement_func = sqrtf;
 	};
 
 private:
-	inline static const UpdateOptions default_update_opts = {5, sqrtf, sqrtf};
-
-	template <typename _Tp>
-	static _Tp random(const _Tp min, const _Tp max)
+	template <typename T>
+	static T random(const T min, const T max)
 	{
-		static std::random_device rd;
-		static std::mt19937 gen(rd());
+		static std::mt19937 gen(std::random_device{}());
 		return std::uniform_real_distribution<>(min, max)(gen);
 	}
 
@@ -88,7 +85,9 @@ public:
 		}
 	}
 
-	void update(const tt::AudioAnalyzer aa, const UpdateOptions &options = default_update_opts)
+	// uhhh.. this is bad. making `aa` pass-by-reference causes the particles to never appear on screen...
+	// figure this out!!!!!!!!!!!!!!!!!!
+	void update(const tt::AudioAnalyzer aa, const UpdateOptions &options = {})
 	{
 		float avg;
 		for (int i = 0; i < aa.get_num_channels(); ++i)
@@ -96,7 +95,7 @@ public:
 		avg /= aa.get_num_channels();
 		const auto scaled_avg = rect.size.y * avg;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
-		update({0, -additional_displacement});
+		update({0, -additional_displacement * options.multiplier});
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override

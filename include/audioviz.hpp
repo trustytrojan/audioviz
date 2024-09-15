@@ -2,11 +2,6 @@
 
 #include <SFML/Graphics.hpp>
 #include <optional>
-
-#include <av/Frame.hpp>
-#include <av/MediaReader.hpp>
-#include <av/Resampler.hpp>
-#include <av/SwScaler.hpp>
 #include <string>
 
 #ifdef AUDIOVIZ_PORTAUDIO
@@ -18,7 +13,6 @@
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
-#include "viz/VerticalPill.hpp"
 
 #include "Media.hpp"
 
@@ -30,22 +24,19 @@ public:
 
 private:
 	using BarType = viz::VerticalBar;
-	using SD = viz::SpectrumDrawable<BarType>;
-	using FS = tt::FrequencyAnalyzer;
 
 	int fft_size{3000};
+	int framerate{60};
 
-	int _frames_rendered{};
+	// used for updating the particle system at 60Hz rate when framerate > 60
+	int frame_count{};
 
 	// MUST be constructed in the constructor
 	// this is an optional because i am too lazy to write a move assignment operator and destructor
 	std::optional<Media> media;
 
-	// framerate
-	int framerate{60};
-
 	// audio frames per video frame
-	int _afpvf{media->_astream.sample_rate() / framerate};
+	int afpvf{media->_astream.sample_rate() / framerate};
 
 	// fft processor
 	tt::FrequencyAnalyzer &fa;
@@ -61,10 +52,7 @@ private:
 	// metadata-related fields
 	sf::Font font;
 	sf::Text title_text{font}, artist_text{font};
-	viz::SongMetadataDrawable _metadata{title_text, artist_text};
-
-	// clocks for timing stuff
-	sf::Clock ps_clock;
+	viz::SongMetadataDrawable metadata{title_text, artist_text};
 
 	// timing text
 	sf::Text timing_text{font};
@@ -81,11 +69,14 @@ private:
 	tt::RenderTexture final_rt;
 
 public:
+	// need to do this outside of the constructor otherwise the texture is broken?
 	void use_attached_pic_as_bg();
 
 	/**
 	 * @param size size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media_url url to media source. must contain an audio stream
+	 * @param fa reference to your own `tt::FrequencyAnalyzer`
+	 * @param ss reference to your own `viz::StereoSpectrum<BarType>`
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
 	audioviz(
@@ -102,6 +93,7 @@ public:
 
 	/**
 	 * Prepare a frame to be drawn with `draw()`.
+	 * This method does all the work to produce a frame.
 	 * @return Whether another frame can be prepared
 	 */
 	bool prepare_frame();
@@ -138,6 +130,10 @@ public:
 	void set_media_url(const std::string &url);
 	const std::string &get_media_url() const;
 
+	/**
+	 * Set the number of audio samples used for frequency analysis.
+	 * @note Calls `set_fft_size` on the `tt::FrequencyAnalyzer` you passed in the constructor.
+	 */
 	void set_fft_size(int fft_size);
 
 private:

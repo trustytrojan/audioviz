@@ -16,8 +16,8 @@ public:
 	sf::Sprite sprite;
 
 	RenderTexture(const sf::Vector2u size, int antialiasing = 0)
-		: sf::RenderTexture(size, {.antialiasingLevel = antialiasing}),
-		  sprite(getTexture())
+		: sf::RenderTexture{size, {.antiAliasingLevel = antialiasing}},
+		  sprite{getTexture()}
 	{
 	}
 

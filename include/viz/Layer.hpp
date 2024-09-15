@@ -25,7 +25,6 @@ class Layer
 	 */
 	using FxCb = std::function<void(const tt::RenderTexture &, const tt::RenderTexture &, sf::RenderTarget &)>;
 
-private:
 	std::string name;
 	tt::RenderTexture _orig_rt, _fx_rt;
 	bool auto_fx = true;
@@ -33,6 +32,11 @@ private:
 	FxCb fx_cb;
 
 public:
+	static inline const FxCb DRAW_FX_RT = [](auto &, auto &fx_rt, auto &target)
+	{
+		target.draw(fx_rt.sprite);
+	};
+
 	/**
 	 * The effects, in order, that will be applied to the "original"
 	 * render-texture when `apply_fx()` is called.

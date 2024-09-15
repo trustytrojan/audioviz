@@ -111,7 +111,7 @@ void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, c
 void Main::encode_with_window(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	FfmpegEncoder ffmpeg(viz, outfile, vcodec, acodec);
-	sf::RenderWindow window(sf::VideoMode(viz.size), "encoder", sf::Style::Titlebar, sf::State::Windowed, {.antialiasingLevel = 4});
+	sf::RenderWindow window(sf::VideoMode(viz.size), "encoder", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4});
 	sf::Texture txr{viz.size};
 	while (viz.prepare_frame())
 	{

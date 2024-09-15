@@ -36,24 +36,20 @@ FetchContent_MakeAvailable(SFML libavpp argparse spline)
 # make compile_commands.json for clangd!!!!!!
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-add_executable(audioviz ${SOURCES})
-
 # reminder: always use the target_* commands instead of their global equivalents
 
-target_compile_options(audioviz PRIVATE
+add_compile_options(
 	-Wno-subobject-linkage
 	-Wno-narrowing)
 
-target_include_directories(audioviz PRIVATE
+include_directories(
 	include
 	${libavpp_SOURCE_DIR}/include
 	${libavpp_SOURCE_DIR}/src
 	${SFML_SOURCE_DIR}/include
 	${spline_SOURCE_DIR}/src)
 
-target_link_libraries(audioviz PRIVATE
-	fftw3f sfml-graphics argparse boost_filesystem ${AV_LIBS})
+link_libraries(fftw3f sfml-graphics argparse boost_filesystem ${AV_LIBS})
 
 option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback during live rendering" ON)
 option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" ON)
@@ -63,9 +59,9 @@ if(AUDIOVIZ_PORTAUDIO)
 		GIT_REPOSITORY https://github.com/trustytrojan/portaudio-pp
 		GIT_TAG main)
 	FetchContent_MakeAvailable(portaudio-pp)
-	target_compile_definitions(audioviz PRIVATE AUDIOVIZ_PORTAUDIO)
-	target_include_directories(audioviz PRIVATE ${portaudio-pp_SOURCE_DIR}/include)
-	target_link_libraries(audioviz PRIVATE portaudio)
+	add_compile_definitions(AUDIOVIZ_PORTAUDIO)
+	include_directories(${portaudio-pp_SOURCE_DIR}/include)
+	link_libraries(portaudio)
 endif()
 
 if(AUDIOVIZ_LUA)
@@ -73,7 +69,10 @@ if(AUDIOVIZ_LUA)
 		GIT_REPOSITORY https://github.com/ThePhD/sol2
 		GIT_TAG main)
 	FetchContent_MakeAvailable(sol2)
-	target_compile_definitions(audioviz PRIVATE AUDIOVIZ_LUA)
+	add_compile_definitions(AUDIOVIZ_LUA)
 	# no need for target_include_directories since sol2 is a CMake interface library
-	target_link_libraries(audioviz PRIVATE lua sol2)
+	link_libraries(lua sol2)
 endif()
+
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+add_executable(audioviz ${SOURCES})

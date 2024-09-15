@@ -252,7 +252,7 @@ void Main::start_in_window(audioviz &viz)
 		"audioviz",
 		sf::Style::Titlebar,
 		sf::State::Windowed,
-		{.antialiasingLevel = 4},
+		{.antiAliasingLevel = 4},
 	};
 	window.setVerticalSyncEnabled(!no_vsync);
 
