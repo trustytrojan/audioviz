@@ -5,8 +5,22 @@ for right now, audioviz only supports linux, but with the libraries i'm using, i
 here's a demo: https://youtu.be/Avk5lRZb7To
 
 ## building
+### linux
 1. install any required dependencies below
 2. run `cmake -S. -Bbuild && cmake --build build -j$(nproc)` or use your IDE of choice with CMake support
+
+### windows
+1. create a directory called `windows_deps`
+2. install ffmpeg in one of two ways:
+  - run these commands in command prompt:
+    ```cmd
+    winget install gyan.ffmpeg.shared
+    mklink /D windows_deps\ffmpeg %LocalAppData%\Microsoft\WinGet\Packages\Gyan.FFmpeg.Shared_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-[version]-full_build-shared
+    ```
+  - or, go [here](https://www.gyan.dev/ffmpeg/builds/#release-builds), download the "shared" release and extract the archive to `windows_deps/ffmpeg`
+3. download [portaudio](https://files.portaudio.com/download.html) source, extract `portaudio.h` (inside `include` directory of the tarball) to `windows_deps/portaudio`
+4. download [portaudio binary](https://github.com/spatialaudio/portaudio-binaries) and copy to `windows_deps/portaudio/portaudio_x64.dll`
+5. download [fftw](https://fftw.org/install/windows.html) and place contents in `windows_deps/fftw`
 
 ## libraries/software used
 - [FFTW](https://fftw.org)
@@ -38,3 +52,4 @@ on namespaces:
   - replace `update(sf::Vector2f)` with `displace_particles(float)`
 - make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
   - figure out how to deal with [`fft_size`](src/audioviz.cpp#L284) and [`sa.analyze(...)`](src/audioviz.cpp#L299)
+- `clangd` still not configured properly on windows, it doesn't know where to find c++ headers (when using mingw). figure this out

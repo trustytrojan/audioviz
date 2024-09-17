@@ -5,56 +5,61 @@
 
 #define future_not_finished(f) f.wait_for(std::chrono::seconds(0)) != std::future_status::ready
 
-// clang-format off
 Main::FfmpegEncoder::FfmpegEncoder(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	std::vector<std::string> args{
-		bp::search_path("ffmpeg").string(),
-		"-hide_banner", "-y",
+	std::ostringstream _ss;
+	
+	_ss << "ffmpeg -hide_banner -y ";
+	
+	// input 0: raw frames from audioviz
+	_ss << "-f rawvideo ";
+	_ss << "-pix_fmt rgba ";
+	_ss << "-s:v " << viz.size.x << 'x' << viz.size.y << ' ';
+	_ss << "-r " << viz.get_framerate() << ' ';
+	_ss << "-i - ";
 
-		// input 0: raw frames from audioviz
-		"-f", "rawvideo",
-		"-pix_fmt", "rgba",
-		"-s:v", std::to_string(viz.size.x) + 'x' + std::to_string(viz.size.y),
-		"-r", std::to_string(viz.get_framerate()),
-		"-i", "-",
+	// input 1: audioviz's input media file
+	_ss << "-ss -0.1 "; // THIS IS NECE_ssARY TO AVOID A/V DESYNC: starts muxing this input 0.1 seconds earlier than the other
 
-		// input 1: audioviz's input media file
-		"-ss", "-0.1", // THIS IS NECESSARY TO AVOID A/V DESYNC: starts muxing this input 0.1 seconds earlier than the other
-		"-i", viz.get_media_url(),
+#ifdef _WIN32
+	_ss << "-i \"" << viz.get_media_url() << "\" ";
+#else
+	if (viz.get_media_url().contains('\''))
+		_ss << "-i \"" << viz.get_media_url() << "\" ";
+	else
+		_ss << "-i '" << viz.get_media_url() << "' ";
+#endif
 
-		// specific stream mapping
-		"-map", "0", // use input 0
-		"-map", "1:a", // only use the AUDIO stream of input 1 (in case it might also have a video stream)
+	// specific stream mapping
+	_ss << "-map 0 "; // use input 0
+	_ss << "-map 1:a "; // only use the AUDIO stream of input 1 (in case it might also have a video stream)
 
-		// specify encoders
-		"-c:v", vcodec,
-		"-c:a", acodec,
-		
-		// end on shortest input stream
-		"-shortest"};
+	// specify encoders
+	_ss << "-c:v " << vcodec << ' ';
+	_ss << "-c:a " << acodec << ' ';
 
+	// end on shortest input stream
+	_ss << "-shortest ";
+
+#ifdef LINUX
 	if (vcodec.contains("vaapi"))
 	{
-		// vaapi encoders require specifying a vaapi device and uploading to the gpu with nv12 pixel format
-		// i've only tested this on a linux system with intel iris xe graphics
-		args.emplace_back("-vaapi_device"); args.emplace_back("/dev/dri/renderD128");
-		args.emplace_back("-vf"); 			args.emplace_back("format=nv12,hwupload");
+		_ss << "-vaapi_device /dev/dri/render/D128 ";
+		_ss << "-vf format=nv12,hwupload ";
 	}
+#endif
 
 	// output file
-	args.emplace_back(outfile);
+	_ss << outfile;
 
-	// pass arguments, allow writing to ffmpeg's stdin
-	process = bp::child(args, bp::std_in < std_in);
+	const auto &command = _ss.str();
+	std::cout << command << '\n';
+	process = popen(command.c_str(), "w");
 }
-// clang-format on
 
 Main::FfmpegEncoder::~FfmpegEncoder()
 {
-	std_in.pipe().close();
-	std_in.close();
-	process.join();
+	pclose(process);
 }
 
 void Main::encode(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
@@ -73,7 +78,7 @@ void Main::encode_without_window(audioviz &viz, const std::string &outfile, cons
 	{
 		rt.draw(viz);
 		rt.display();
-		ffmpeg.std_in.write(rt.getTexture().copyToImage().getPixelsPtr(), 4 * viz.size.x * viz.size.y);
+		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * viz.size.x * viz.size.y, ffmpeg.process);
 		rt.clear();
 	}
 }
@@ -103,7 +108,7 @@ void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, c
 	{
 		if (images.empty())
 			continue;
-		ffmpeg.std_in.write(images.front().getPixelsPtr(), 4 * viz.size.x * viz.size.y);
+		fwrite(images.front().getPixelsPtr(), 1, 4 * viz.size.x * viz.size.y, ffmpeg.process);
 		images.pop();
 	}
 }
@@ -118,7 +123,7 @@ void Main::encode_with_window(audioviz &viz, const std::string &outfile, const s
 		window.draw(viz);
 		window.display();
 		txr.update(window);
-		ffmpeg.std_in.write(txr.copyToImage().getPixelsPtr(), 4 * viz.size.x * viz.size.y);
+		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * viz.size.x * viz.size.y, ffmpeg.process);
 		window.clear();
 	}
 }

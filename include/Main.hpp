@@ -9,8 +9,8 @@
 #include <sol/sol.hpp>
 #endif
 
-#include <boost/process.hpp>
-namespace bp = boost::process;
+#include <string>
+#include <cstdlib>
 
 class Main
 {
@@ -33,8 +33,7 @@ class Main
 
 	struct FfmpegEncoder
 	{
-		bp::basic_opstream<uint8_t> std_in;
-		bp::child process;
+		FILE *process;
 		FfmpegEncoder(audioviz &, const std::string &outfile, const std::string &vcodec, const std::string &acodec);
 		~FfmpegEncoder();
 	};
