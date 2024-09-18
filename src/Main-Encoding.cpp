@@ -120,7 +120,7 @@ void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, c
 	{
 		if (images.empty())
 			continue;
-		ffmpeg.write(images.front());
+		ffmpeg.send_frame(images.front());
 		images.pop();
 	}
 }
