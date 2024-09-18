@@ -19,7 +19,7 @@ Main::FfmpegEncoder::FfmpegEncoder(audioviz &viz, const std::string &outfile, co
 	_ss << "-i - ";
 
 	// input 1: audioviz's input media file
-	_ss << "-ss -0.1 "; // THIS IS NECE_ssARY TO AVOID A/V DESYNC: starts muxing this input 0.1 seconds earlier than the other
+	_ss << "-ss -0.1 "; // THIS IS NECESSARY TO AVOID A/V DESYNC: starts muxing this input 0.1 seconds earlier than the other
 
 #ifdef _WIN32
 	_ss << "-i \"" << viz.get_media_url() << "\" ";
@@ -59,7 +59,19 @@ Main::FfmpegEncoder::FfmpegEncoder(audioviz &viz, const std::string &outfile, co
 
 Main::FfmpegEncoder::~FfmpegEncoder()
 {
-	pclose(process);
+	if (pclose(process) == -1)
+		perror("pclose");
+}
+
+void Main::FfmpegEncoder::send_frame(const sf::Texture &txr)
+{
+	send_frame(txr.copyToImage());
+}
+
+void Main::FfmpegEncoder::send_frame(const sf::Image &img)
+{
+	const auto [x, y] = img.getSize();
+	fwrite(img.getPixelsPtr(), 4 * x * y, 1, process);
 }
 
 void Main::encode(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
@@ -72,13 +84,13 @@ void Main::encode(audioviz &viz, const std::string &outfile, const std::string &
 
 void Main::encode_without_window(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	FfmpegEncoder ffmpeg(viz, outfile, vcodec, acodec);
-	tt::RenderTexture rt(viz.size, 4);
+	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
+	tt::RenderTexture rt{viz.size, 4};
 	while (viz.prepare_frame())
 	{
 		rt.draw(viz);
 		rt.display();
-		fwrite(rt.getTexture().copyToImage().getPixelsPtr(), 1, 4 * viz.size.x * viz.size.y, ffmpeg.process);
+		ffmpeg.send_frame(rt.getTexture());
 		rt.clear();
 	}
 }
@@ -103,27 +115,27 @@ void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, c
 			}
 		});
 
-	FfmpegEncoder ffmpeg(viz, outfile, vcodec, acodec);
+	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
 	while (future_not_finished(image_queuer))
 	{
 		if (images.empty())
 			continue;
-		fwrite(images.front().getPixelsPtr(), 1, 4 * viz.size.x * viz.size.y, ffmpeg.process);
+		ffmpeg.write(images.front());
 		images.pop();
 	}
 }
 
 void Main::encode_with_window(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	FfmpegEncoder ffmpeg(viz, outfile, vcodec, acodec);
-	sf::RenderWindow window(sf::VideoMode(viz.size), "encoder", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4});
+	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
+	sf::RenderWindow window{sf::VideoMode{viz.size}, "encoder", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4}};
 	sf::Texture txr{viz.size};
 	while (viz.prepare_frame())
 	{
 		window.draw(viz);
 		window.display();
 		txr.update(window);
-		fwrite(txr.copyToImage().getPixelsPtr(), 1, 4 * viz.size.x * viz.size.y, ffmpeg.process);
+		ffmpeg.send_frame(txr);
 		window.clear();
 	}
 }

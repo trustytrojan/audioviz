@@ -2,7 +2,9 @@
 my own audio visualizer, because after effects sucks.
 for right now, audioviz only supports linux, but with the libraries i'm using, it shouldn't be hard to port to windows.
 
-here's a demo: https://youtu.be/Avk5lRZb7To
+here are some demos:
+- https://youtu.be/Avk5lRZb7To
+- https://youtu.be/RaTMz4MPqCM
 
 ## building
 ### linux
