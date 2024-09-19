@@ -53,7 +53,8 @@ void FrequencyAnalyzer::copy_to_input(const float *const wavedata)
 	memcpy(fftw.input(), wavedata, fft_size * sizeof(float));
 }
 
-void FrequencyAnalyzer::copy_channel_to_input(const float *const audio, const int num_channels, const int channel, const bool interleaved)
+void FrequencyAnalyzer::copy_channel_to_input(
+	const float *const audio, const int num_channels, const int channel, const bool interleaved)
 {
 	if (num_channels <= 0)
 		throw std::invalid_argument("num_channels <= 0");

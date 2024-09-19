@@ -1,10 +1,5 @@
 #include <iostream>
-
 #include "Main.hpp"
-
-// required to fix multiple definition errors
-// will fix this eventually by making libavpp a compiled library
-#include <av/Util.cpp>
 
 int main(const int argc, const char *const *const argv)
 {

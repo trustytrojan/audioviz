@@ -95,7 +95,8 @@ void Media::decode(int audio_frames)
 
 		if (packet->stream_index == _astream->index)
 		{
-			// std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / " << _astream.duration_sec() << '\n';
+			// std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / " <<
+			// _astream.duration_sec() << '\n';
 
 			if (!_adecoder.send_packet(packet))
 			{
@@ -114,7 +115,8 @@ void Media::decode(int audio_frames)
 		else if (_vstream && packet->stream_index == _vstream->get()->index)
 		{
 			// we can access all of the video-related optionals in this block
-			// std::cout << "\e[2K\rvideo: " << (packet->pts * av_q2d(_vstream->get()->time_base)) << " / " << _vstream->duration_sec();
+			// std::cout << "\e[2K\rvideo: " << (packet->pts * av_q2d(_vstream->get()->time_base)) << " / " <<
+			// _vstream->duration_sec();
 
 			if (!_vdecoder->send_packet(packet))
 			{

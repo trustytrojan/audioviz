@@ -98,5 +98,6 @@ if(AUDIOVIZ_LUA)
 	link_libraries(lua sol2)
 endif()
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+# we need to include av/Util.cpp from libavpp for now until i figure out a better way
+file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})

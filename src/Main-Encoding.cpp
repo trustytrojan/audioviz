@@ -5,12 +5,12 @@
 
 #define future_not_finished(f) f.wait_for(std::chrono::seconds(0)) != std::future_status::ready
 
-Main::FfmpegEncoder::FfmpegEncoder(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+Main::FfmpegEncoder::FfmpegEncoder(
+	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	std::ostringstream _ss;
-	
 	_ss << "ffmpeg -hide_banner -y ";
-	
+
 	// input 0: raw frames from audioviz
 	_ss << "-f rawvideo ";
 	_ss << "-pix_fmt rgba ";
@@ -19,7 +19,8 @@ Main::FfmpegEncoder::FfmpegEncoder(audioviz &viz, const std::string &outfile, co
 	_ss << "-i - ";
 
 	// input 1: audioviz's input media file
-	_ss << "-ss -0.1 "; // THIS IS NECESSARY TO AVOID A/V DESYNC: starts muxing this input 0.1 seconds earlier than the other
+	_ss << "-ss -0.1 "; // THIS IS NECESSARY TO AVOID A/V DESYNC
+						// starts muxing this input 0.1 seconds earlier than the other
 
 #ifdef _WIN32
 	_ss << "-i \"" << viz.get_media_url() << "\" ";
@@ -31,7 +32,7 @@ Main::FfmpegEncoder::FfmpegEncoder(audioviz &viz, const std::string &outfile, co
 #endif
 
 	// specific stream mapping
-	_ss << "-map 0 "; // use input 0
+	_ss << "-map 0 ";	// use input 0
 	_ss << "-map 1:a "; // only use the AUDIO stream of input 1 (in case it might also have a video stream)
 
 	// specify encoders
@@ -82,7 +83,8 @@ void Main::encode(audioviz &viz, const std::string &outfile, const std::string &
 		encode_without_window(viz, outfile, vcodec, acodec);
 }
 
-void Main::encode_without_window(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+void Main::encode_without_window(
+	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
 	tt::RenderTexture rt{viz.size, 4};
@@ -97,7 +99,8 @@ void Main::encode_without_window(audioviz &viz, const std::string &outfile, cons
 
 // multi-threaded implementation; has not benchmarked against single-threaded yet.
 // single-threaded will be preferred until then.
-void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+void Main::encode_without_window_mt(
+	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	std::queue<sf::Image> images;
 
@@ -125,10 +128,17 @@ void Main::encode_without_window_mt(audioviz &viz, const std::string &outfile, c
 	}
 }
 
-void Main::encode_with_window(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+void Main::encode_with_window(
+	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
-	sf::RenderWindow window{sf::VideoMode{viz.size}, "encoder", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4}};
+	sf::RenderWindow window{
+		sf::VideoMode{viz.size},
+		"encoder",
+		sf::Style::Titlebar,
+		sf::State::Windowed,
+		{.antiAliasingLevel = 4},
+	};
 	sf::Texture txr{viz.size};
 	while (viz.prepare_frame())
 	{
