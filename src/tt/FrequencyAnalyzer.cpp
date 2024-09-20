@@ -1,5 +1,4 @@
 #include <cstring>
-#include <memory>
 #include <stdexcept>
 
 #include "tt/FrequencyAnalyzer.hpp"
