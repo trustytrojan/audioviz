@@ -12,10 +12,9 @@ template <typename ShapeType>
 class ScopeDrawable : public sf::Drawable
 {
 	// spectrum parameters
-	float multiplier = 4;
+	float vert_multiplier = 20;
 
 	// internal data
-	std::vector<ShapeType> shapes;
 	sf::IntRect rect;
 	bool backwards = false;
 
@@ -25,14 +24,22 @@ class ScopeDrawable : public sf::Drawable
 	} shape;
 
 public:
-	ScopeDrawable()
+	std::vector<ShapeType> shapes;
+
+	void set_full_screen_spacing() { shape.spacing = rect.size.x / shapes.size(); }
+
+	void set_shape_spacing(int _space)
 	{
-		for (auto &shape : shapes)
-		{
-			shape.setRadius(10);
-			shape.setFillColor(sf::Color::White);
-		}
+		shape.spacing = _space;
+		update_shape_x_positions();
 	}
+	void set_shape_width(int _wid)
+	{
+		shape.width = _wid;
+		update_shape_x_positions();
+	}
+
+	void set_multiplier(int mult) { vert_multiplier = mult; }
 
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
@@ -40,33 +47,23 @@ public:
 		if (this->rect == rect)
 			return;
 		this->rect = rect;
-		// update_shapes();
+		update_shape_x_positions();
 	}
 
-	void update_shape_positions(const std::span<float> &audio)
+	void update_shape_positions(const std::vector<float> &audio)
 	{
 		if (shapes.size() != audio.size())
 		{
 			shapes.resize(audio.size());
-
-			for (int i = 0; i < audio.size(); ++i)
-			{
-				// clang-format off
-				const auto x = backwards
-					? rect.position.x + rect.size.x - shape.width - i * (shape.width + shape.spacing)
-					: rect.position.x + i * (shape.width + shape.spacing);
-				// clang-format on
-
-				shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
-			}
+			update_shape_x_positions();
 		}
 
 		for (int i = 0; i < (int)audio.size(); ++i)
 		{
-			const auto [x, y] = shapes[i].getPosition();
+			const auto middle = (rect.size.y / 2.f);
 			shapes[i].setPosition({
-				x,
-				std::clamp(y + multiplier * rect.size.y * audio[i], 0.f, (float)rect.size.y),
+				shapes[i].getPosition().x,
+				std::clamp(middle + -vert_multiplier * audio[i], 0.f, (float)rect.size.y),
 			});
 		}
 	}
@@ -75,6 +72,27 @@ public:
 	{
 		for (const auto &shape : shapes)
 			target.draw(shape, states);
+	}
+
+private:
+	void update_shape_x_positions()
+	{
+		for (int i = 0; i < shapes.size(); ++i)
+		{
+			if constexpr (std::is_base_of_v<sf::CircleShape, ShapeType>)
+				shapes[i].setRadius(shape.width);
+			else if constexpr (std::is_base_of_v<sf::RectangleShape, ShapeType>)
+				shapes[i].setSize({shape.width, shape.width});
+			else
+				shapes[i].setScale(shape.width);
+
+			// clang-format off
+			const auto x = backwards
+				? rect.position.x + rect.size.x - shape.width - i * (shape.width + shape.spacing)
+				: rect.position.x + i * (shape.width + shape.spacing);
+			// clang-format on
+			shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
+		}
 	}
 };
 
