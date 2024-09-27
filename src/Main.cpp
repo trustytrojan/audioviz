@@ -50,6 +50,9 @@ void Main::use_args(audioviz &viz, const Args &args)
 	ss.set_bar_width(args.get<uint>("-bw"));
 	ss.set_bar_spacing(args.get<uint>("-bs"));
 
+	//add particle default-value changer 
+	
+
 	viz.set_framerate(args.get<uint>("-r"));
 	no_vsync = args.get<bool>("--no-vsync");
 	enc_window = args.get<bool>("--enc-window");
