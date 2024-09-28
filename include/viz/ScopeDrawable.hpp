@@ -2,44 +2,43 @@
 
 #include <SFML/Graphics.hpp>
 
-// not finished or tested yet
-// in theory should work (need to change how audio is read in)
-
 namespace viz
 {
 
 template <typename ShapeType>
 class ScopeDrawable : public sf::Drawable
 {
-	// spectrum parameters
-	float vert_multiplier = 20;
-
-	// internal data
+	std::vector<ShapeType> shapes;
 	sf::IntRect rect;
 	bool backwards = false;
-
 	struct
 	{
 		int width = 10, spacing = 5;
 	} shape;
 
 public:
-	std::vector<ShapeType> shapes;
-
-	void set_full_screen_spacing() { shape.spacing = rect.size.x / shapes.size(); }
-
-	void set_shape_spacing(int _space)
+	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
+		: rect{rect},
+		  backwards{backwards}
 	{
-		shape.spacing = _space;
-		update_shape_x_positions();
-	}
-	void set_shape_width(int _wid)
-	{
-		shape.width = _wid;
 		update_shape_x_positions();
 	}
 
-	void set_multiplier(int mult) { vert_multiplier = mult; }
+	void set_shape_spacing(const int spacing)
+	{
+		if (shape.spacing == spacing)
+			return;
+		shape.spacing = spacing;
+		update_shape_x_positions();
+	}
+
+	void set_shape_width(const int width)
+	{
+		if (shape.width == width)
+			return;
+		shape.width = width;
+		update_shape_x_positions();
+	}
 
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
@@ -49,6 +48,10 @@ public:
 		this->rect = rect;
 		update_shape_x_positions();
 	}
+
+	void set_backwards(bool b) { backwards = b; }
+
+	size_t get_shape_count() const { return shapes.size(); }
 
 	void update_shape_positions(const std::vector<float> &audio)
 	{
@@ -60,10 +63,10 @@ public:
 
 		for (int i = 0; i < (int)audio.size(); ++i)
 		{
-			const auto middle = (rect.size.y / 2.f);
+			const auto half_height = rect.size.y / 2.f;
 			shapes[i].setPosition({
 				shapes[i].getPosition().x,
-				std::clamp(middle + -vert_multiplier * audio[i], 0.f, (float)rect.size.y),
+				std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
 			});
 		}
 	}
@@ -91,6 +94,7 @@ private:
 				? rect.position.x + rect.size.x - shape.width - i * (shape.width + shape.spacing)
 				: rect.position.x + i * (shape.width + shape.spacing);
 			// clang-format on
+
 			shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
 		}
 	}
