@@ -1,4 +1,6 @@
 #include "Main.hpp"
+#include "viz/ParticleSystem.hpp"
+#include <unordered_map>
 
 Main::Main(const int argc, const char *const *const argv)
 {
@@ -112,6 +114,26 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 	}
 
+	{ //start position of particles
+		static const std::unordered_map<std::string, viz::ParticleSystem<ParticleShapeType>::StartSide> pos_map{
+			{"top", viz::ParticleSystem<ParticleShapeType>::StartSide::TOP},
+			{"bottom", viz::ParticleSystem<ParticleShapeType>::StartSide::BOTTOM},
+			{"left", viz::ParticleSystem<ParticleShapeType>::StartSide::LEFT},
+			{"right", viz::ParticleSystem<ParticleShapeType>::StartSide::RIGHT},
+		};
+
+		const auto &pos_str = args.get("-spos");
+
+		try
+		{
+			ps.set_start_position(pos_map.at(pos_str));
+		}
+		catch (std::out_of_range)
+		{
+			throw std::invalid_argument{"--start-position: unknown start position: " + pos_str};
+		}
+	}
+
 	{ // interpolation type
 		static const std::unordered_map<std::string, FS::InterpolationType> it_map{
 			{"none", FS::InterpolationType::NONE},
@@ -150,6 +172,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 		else
 			throw std::invalid_argument{"--color: unknown coloring type: " + color_str};
 	}
+
 
 	{ // spectrum blendmode
 		static const std::unordered_map<std::string, sf::BlendMode::Factor> factor_map{

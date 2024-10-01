@@ -15,6 +15,7 @@
 class Main
 {
 	using BarType = viz::VerticalBar;
+	using ParticleShapeType = sf::CircleShape;
 	using SD = viz::SpectrumDrawable<BarType>;
 	using FS = tt::FrequencyAnalyzer;
 
@@ -23,6 +24,7 @@ class Main
 
 	tt::FrequencyAnalyzer fa{3000};
 	viz::StereoSpectrum<BarType> ss;
+	viz::ParticleSystem<ParticleShapeType> ps{{{}, static_cast<sf::Vector2i>(size)}, 50};
 
 #ifdef AUDIOVIZ_LUA
 	struct LuaState : sol::state

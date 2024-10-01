@@ -23,6 +23,14 @@ public:
 		std::function<float(float)> weight_func = sqrtf, displacement_func = sqrtf;
 	};
 
+	enum class StartSide
+	{
+		TOP,
+		BOTTOM,
+		LEFT,
+		RIGHT
+	};
+
 private:
 	template <typename T>
 	static T random(const T min, const T max)
@@ -35,15 +43,7 @@ private:
 	std::vector<tt::Particle<ParticleShape>> particles;
 	sf::Vector2f displacement_direction{0, 1};
 
-	enum class StartSide
-	{
-		TOP,
-		BOTTOM,
-		LEFT,
-		RIGHT
-	};
-
-	StartSide start_position = StartSide::TOP;
+	StartSide start_position = StartSide::BOTTOM;
 
 public:
 	ParticleSystem(const sf::IntRect &rect, unsigned particle_count)
@@ -138,6 +138,12 @@ public:
 			case StartSide::TOP:
 				a = sqrtf((rect.size.y - new_pos.y) / (rect.position.y + rect.size.y)) * 255;
 				break;
+			case StartSide::LEFT:
+				a = sqrtf((rect.size.x - new_pos.x) / (rect.position.x + rect.size.x)) * 255;
+				break;
+			case StartSide::RIGHT:
+				a = sqrtf((new_pos.x - rect.position.x) / (rect.position.x + rect.size.x)) * 255;
+				break;
 			}
 			p.setFillColor({r, g, b, a});
 
@@ -187,7 +193,7 @@ public:
 
 	void set_displacement_direction(sf::Vector2f displacement) { displacement_direction = displacement; }
 
-	void set_start_position(std::string start) { start_position = start; }
+	void set_start_position(StartSide side) { start_position = side; }
 
 private:
 	void set_initial_position(auto &p) {}
