@@ -85,6 +85,7 @@ public:
 		const std::string &media_url,
 		tt::FrequencyAnalyzer &fa,
 		viz::StereoSpectrum<BarType> &ss,
+		viz::ParticleSystem<ParticleShapeType> &ps,
 		int antialiasing = 4);
 
 	/**

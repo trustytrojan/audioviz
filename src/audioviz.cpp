@@ -23,7 +23,7 @@ audioviz::audioviz(
 	  media{media_url},
 	  fa{fa},
 	  ss{ss},
-	  ps{{{}, static_cast<sf::Vector2i>(size)}, 50},
+	  ps{ps},
 	  final_rt{size, antialiasing}
 {
 	// for now only stereo is supported

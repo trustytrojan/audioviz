@@ -24,7 +24,7 @@ class Main
 
 	tt::FrequencyAnalyzer fa{3000};
 	viz::StereoSpectrum<BarType> ss;
-	viz::ParticleSystem<ParticleShapeType> ps{{{}, static_cast<sf::Vector2i>(size)}, 50};
+	viz::ParticleSystem<ParticleShapeType> ps{50};
 
 #ifdef AUDIOVIZ_LUA
 	struct LuaState : sol::state

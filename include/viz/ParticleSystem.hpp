@@ -2,9 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <functional>
-#include <ostream>
 #include <random>
-#include <string>
 
 #include "tt/AudioAnalyzer.hpp"
 #include "tt/Particle.hpp"
@@ -46,47 +44,17 @@ private:
 	StartSide start_position = StartSide::BOTTOM;
 
 public:
-	ParticleSystem(const sf::IntRect &rect, unsigned particle_count)
-		: rect(rect),
-		  particles(particle_count)
+	ParticleSystem(const size_t particle_count)
+		: particles{particle_count}
 	{
-		for (auto &p : particles)
-		{
-			// add cases here
-			//  these are going to be very small circles, don't need many points
-			p.setPointCount(10);
-			p.setRadius(random<float>(2, 5));
+		init_particles();
+	}
 
-			// start some particles offscreen, so the beginning sequence feels less "sudden"
-			// otherwise all of them come out at once and it looks bad
-			switch (start_position)
-			{
-			case StartSide::BOTTOM:
-				p.setPosition(
-					{random<float>(rect.position.x, rect.position.x + rect.size.x),
-					 (rect.position.y + rect.size.y) * random<float>(1, 1.5)});
-				p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, -2)});
-				displacement_direction = {0, -1};
-				break;
-			case StartSide::TOP:
-				p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), random<float>(-1.5, 0)});
-				p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, 2)});
-				displacement_direction = {0, 1};
-				break;
-			case StartSide::RIGHT:
-				p.setPosition(
-					{(rect.position.x + rect.size.x) * random<float>(1, 1.5),
-					 random<float>(rect.position.y, rect.position.y + rect.size.y)});
-				p.setVelocity({random<float>(0, -2), random<float>(-0.5, 0.5)});
-				displacement_direction = {-1, 0};
-				break;
-			case StartSide::LEFT:
-				p.setPosition({random<float>(-1.5, 0), random<float>(rect.position.y, rect.position.y + rect.size.y)});
-				p.setVelocity({random<float>(0, 2), random<float>(-0.5, 0.5)});
-				displacement_direction = {1, 0};
-				break;
-			}
-		}
+	ParticleSystem(const sf::IntRect &rect, const size_t particle_count)
+		: rect{rect},
+		  particles{particle_count}
+	{
+		init_particles();
 	}
 
 	void update(sf::Vector2f additional_displacement = {0, 0})
@@ -193,10 +161,68 @@ public:
 
 	void set_displacement_direction(sf::Vector2f displacement) { displacement_direction = displacement; }
 
-	void set_start_position(StartSide side) { start_position = side; }
+	void set_start_position(StartSide side)
+	{
+		start_position = side;
+		init_particles();
+	}
+
+	void set_rect(const sf::IntRect &rect)
+	{
+		if (this->rect == rect)
+			return;
+		this->rect = rect;
+		init_particles();
+	}
+
+	void set_particle_count(const size_t count)
+	{
+		particles.resize(count);
+		init_particles();
+	}
 
 private:
-	void set_initial_position(auto &p) {}
+	void init_particles()
+	{
+		for (auto &p : particles)
+		{
+			// these are going to be very small circles, don't need many points
+			p.setPointCount(10);
+			p.setRadius(random<float>(2, 5));
+
+			// start some particles offscreen, so the beginning sequence feels less "sudden"
+			// otherwise all of them come out at once and it looks bad
+			switch (start_position)
+			{
+			case StartSide::BOTTOM:
+				p.setPosition({
+					random<float>(rect.position.x, rect.position.x + rect.size.x),
+					(rect.position.y + rect.size.y) * random<float>(1, 1.5),
+				});
+				p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, -2)});
+				displacement_direction = {0, -1};
+				break;
+			case StartSide::TOP:
+				p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), random<float>(-1.5, 0)});
+				p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, 2)});
+				displacement_direction = {0, 1};
+				break;
+			case StartSide::RIGHT:
+				p.setPosition({
+					(rect.position.x + rect.size.x) * random<float>(1, 1.5),
+					random<float>(rect.position.y, rect.position.y + rect.size.y),
+				});
+				p.setVelocity({random<float>(0, -2), random<float>(-0.5, 0.5)});
+				displacement_direction = {-1, 0};
+				break;
+			case StartSide::LEFT:
+				p.setPosition({random<float>(-1.5, 0), random<float>(rect.position.y, rect.position.y + rect.size.y)});
+				p.setVelocity({random<float>(0, 2), random<float>(-0.5, 0.5)});
+				displacement_direction = {1, 0};
+				break;
+			}
+		}
+	}
 };
 
 } // namespace viz

@@ -18,8 +18,10 @@ Main::Main(const int argc, const char *const *const argv)
 	}
 #endif
 
-	const auto &size = args.get<std::vector<uint>>("--size");
-	audioviz viz{{size[0], size[1]}, args.get("media_url"), fa, ss};
+	const auto &size_args = args.get<std::vector<uint>>("--size");
+	const sf::Vector2u size{size_args[0], size_args[1]};
+	audioviz viz{size, args.get("media_url"), fa, ss, ps};
+	ps.set_rect({{}, (sf::Vector2i)size});
 	use_args(viz, args);
 
 	// --encode: render to video file
