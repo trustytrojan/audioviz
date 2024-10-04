@@ -133,8 +133,10 @@ public:
 				break;
 			case StartSide::RIGHT:
 				if (new_pos.x <= rect.position.x)
-					p.setPosition(
-						{rect.position.x + rect.size.x, random<float>(rect.position.y, rect.position.y + rect.size.y)});
+					p.setPosition({
+						rect.position.x + rect.size.x,
+						random<float>(rect.position.y, rect.position.y + rect.size.y),
+					});
 				break;
 			}
 		}
@@ -203,7 +205,10 @@ private:
 				displacement_direction = {0, -1};
 				break;
 			case StartSide::TOP:
-				p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), random<float>(-1.5, 0)});
+				p.setPosition({
+					random<float>(rect.position.x, rect.position.x + rect.size.x),
+					(rect.position.y + rect.size.y) * random<float>(0, -.5),
+				});
 				p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, 2)});
 				displacement_direction = {0, 1};
 				break;
@@ -216,7 +221,10 @@ private:
 				displacement_direction = {-1, 0};
 				break;
 			case StartSide::LEFT:
-				p.setPosition({random<float>(-1.5, 0), random<float>(rect.position.y, rect.position.y + rect.size.y)});
+				p.setPosition({
+					(rect.position.x + rect.size.x) * random<float>(-1.5, 0),
+					random<float>(rect.position.y, rect.position.y + rect.size.y),
+				});
 				p.setVelocity({random<float>(0, 2), random<float>(-0.5, 0.5)});
 				displacement_direction = {1, 0};
 				break;

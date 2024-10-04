@@ -58,9 +58,6 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 - lua api (in progress)
   - modular layering/effects system
   - remove hardcoded visualizer components
-- make `viz::ParticleSystem` more customizable
-  - add `set_displacement_direction(sf::Vector2f)`
-  - replace `update(sf::Vector2f)` with `displace_particles(float)`
 - make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
   - figure out how to deal with [`fft_size`](src/audioviz.cpp#L284) and [`sa.analyze(...)`](src/audioviz.cpp#L299)
 - `clangd` still not configured properly on windows, it doesn't know where to find c++ headers (when using mingw). figure this out
