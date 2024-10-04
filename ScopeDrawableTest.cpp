@@ -1,5 +1,9 @@
 #include "viz/ScopeDrawable.hpp"
+#include "viz/SpectrumDrawable.hpp"
+#include "tt/AudioAnalyzer.hpp"
+#include "tt/FrequencyAnalyzer.hpp"
 #include "Media.hpp"
+#include "viz/VerticalBar.hpp"
 #include <iostream>
 #include <portaudio.hpp>
 
@@ -18,11 +22,18 @@ int main(const int argc, const char *const *const argv)
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
 
+	viz::SpectrumDrawable<viz::VerticalBar> sd;
+	sd.set_rect({{}, (sf::Vector2i)size});
+	sd.set_bar_width(1);
+	sd.set_bar_spacing(0);
+
+	tt::FrequencyAnalyzer fa{3000};
+	tt::AudioAnalyzer aa{1};
+
 	Media media{argv[3]};
 	media.init(size);
 
-	std::vector<float> left_channel;
-	left_channel.resize(size.x);
+	std::vector<float> left_channel(size.x), spectrum(size.x);
 
 	pa::PortAudio _;
 	pa::Stream pa_stream{0, media._astream.nb_channels(), paFloat32, media._astream.sample_rate()};
@@ -44,7 +55,13 @@ int main(const int argc, const char *const *const argv)
 			// copy just the left channel
 			for (int i = 0; i < size.x; ++i)
 				left_channel[i] = media.audio_buffer[i * media._astream.nb_channels() + 0 /* left channel */];
-			scope.update_shape_positions(media.audio_buffer);
+			scope.update_shape_positions(left_channel);
+			// aa.resize(size.x);
+			// aa.analyze(fa, left_channel.data(), false);
+			fa.copy_to_input(left_channel.data());
+			fa.render(spectrum);
+			// const auto &spectrum = aa.get_spectrum_data(0);
+			sd.update_bar_heights(spectrum);
 			try
 			{
 				pa_stream.write(media.audio_buffer.data(), size.x);
@@ -60,6 +77,7 @@ int main(const int argc, const char *const *const argv)
 
 		window.clear();
 		window.draw(scope);
+		window.draw(sd);
 		window.display();
 	}
 }
