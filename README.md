@@ -63,4 +63,7 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
   - replace `update(sf::Vector2f)` with `displace_particles(float)`
 - make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
   - figure out how to deal with [`fft_size`](src/audioviz.cpp#L284) and [`sa.analyze(...)`](src/audioviz.cpp#L299)
-- `clangd` still not configured properly on windows, it doesn't know where to find c++ headers (when using mingw). figure this out
+- add components/effects based on rhythm
+  - involves knowing the tempo of the song
+  - want a small translucent flash overlay that flashes to the beat of music
+  - copy the osu! stars effect
