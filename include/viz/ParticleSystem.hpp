@@ -222,7 +222,7 @@ private:
 				break;
 			case StartSide::LEFT:
 				p.setPosition({
-					(rect.position.x + rect.size.x) * random<float>(-1.5, 0),
+					(rect.position.x + rect.size.x) * random<float>(-0.25, 0),
 					random<float>(rect.position.y, rect.position.y + rect.size.y),
 				});
 				p.setVelocity({random<float>(0, 2), random<float>(-0.5, 0.5)});
