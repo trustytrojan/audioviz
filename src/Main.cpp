@@ -1,4 +1,6 @@
 #include "Main.hpp"
+#include "viz/ParticleSystem.hpp"
+#include <unordered_map>
 
 Main::Main(const int argc, const char *const *const argv)
 {
@@ -16,8 +18,10 @@ Main::Main(const int argc, const char *const *const argv)
 	}
 #endif
 
-	const auto &size = args.get<std::vector<uint>>("--size");
-	audioviz viz{{size[0], size[1]}, args.get("media_url"), fa, ss};
+	const auto &size_args = args.get<std::vector<uint>>("--size");
+	const sf::Vector2u size{size_args[0], size_args[1]};
+	audioviz viz{size, args.get("media_url"), fa, ss, ps};
+	ps.set_rect({{}, (sf::Vector2i)size});
 	use_args(viz, args);
 
 	// --encode: render to video file
@@ -49,6 +53,9 @@ void Main::use_args(audioviz &viz, const Args &args)
 	ss.set_multiplier(args.get<float>("-m"));
 	ss.set_bar_width(args.get<uint>("-bw"));
 	ss.set_bar_spacing(args.get<uint>("-bs"));
+
+	//add particle default-value changer 
+	
 
 	viz.set_framerate(args.get<uint>("-r"));
 	no_vsync = args.get<bool>("--no-vsync");
@@ -109,6 +116,26 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 	}
 
+	{ //start position of particles
+		static const std::unordered_map<std::string, viz::ParticleSystem<ParticleShapeType>::StartSide> pos_map{
+			{"top", viz::ParticleSystem<ParticleShapeType>::StartSide::TOP},
+			{"bottom", viz::ParticleSystem<ParticleShapeType>::StartSide::BOTTOM},
+			{"left", viz::ParticleSystem<ParticleShapeType>::StartSide::LEFT},
+			{"right", viz::ParticleSystem<ParticleShapeType>::StartSide::RIGHT},
+		};
+
+		const auto &pos_str = args.get("-spos");
+
+		try
+		{
+			ps.set_start_position(pos_map.at(pos_str));
+		}
+		catch (std::out_of_range)
+		{
+			throw std::invalid_argument{"--start-position: unknown start position: " + pos_str};
+		}
+	}
+
 	{ // interpolation type
 		static const std::unordered_map<std::string, FS::InterpolationType> it_map{
 			{"none", FS::InterpolationType::NONE},
@@ -147,6 +174,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 		else
 			throw std::invalid_argument{"--color: unknown coloring type: " + color_str};
 	}
+
 
 	{ // spectrum blendmode
 		static const std::unordered_map<std::string, sf::BlendMode::Factor> factor_map{

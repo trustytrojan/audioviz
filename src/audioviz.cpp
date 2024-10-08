@@ -16,13 +16,14 @@ audioviz::audioviz(
 	const sf::Vector2u size,
 	const std::string &media_url,
 	tt::FrequencyAnalyzer &fa,
-	viz::StereoSpectrum<BarType> &ss,
+	viz::StereoSpectrum<BarType> &ss, 
+	viz::ParticleSystem<ParticleShapeType> &ps,
 	const int antialiasing)
 	: size{size},
 	  media{media_url},
 	  fa{fa},
 	  ss{ss},
-	  ps{{{}, static_cast<sf::Vector2i>(size)}, 50},
+	  ps{ps},
 	  final_rt{size, antialiasing}
 {
 	// for now only stereo is supported

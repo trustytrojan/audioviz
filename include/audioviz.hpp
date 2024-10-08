@@ -24,6 +24,7 @@ public:
 
 private:
 	using BarType = viz::VerticalBar;
+	using ParticleShapeType = sf::CircleShape;
 
 	int fft_size{3000};
 	int framerate{60};
@@ -47,7 +48,7 @@ private:
 	std::optional<sf::BlendMode> spectrum_bm;
 
 	// particle system
-	viz::ParticleSystem<sf::CircleShape> ps;
+	viz::ParticleSystem<ParticleShapeType> &ps;
 
 	// metadata-related fields
 	sf::Font font;
@@ -84,6 +85,7 @@ public:
 		const std::string &media_url,
 		tt::FrequencyAnalyzer &fa,
 		viz::StereoSpectrum<BarType> &ss,
+		viz::ParticleSystem<ParticleShapeType> &ps,
 		int antialiasing = 4);
 
 	/**
