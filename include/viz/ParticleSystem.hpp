@@ -23,8 +23,8 @@ public:
 
 	enum class StartSide
 	{
-		TOP,
 		BOTTOM,
+		TOP,
 		LEFT,
 		RIGHT
 	};
@@ -68,7 +68,6 @@ public:
 			auto new_pos = p.getPosition() + additional_displacement;
 
 			// make sure particles don't escape the rect
-
 			switch (start_position)
 			{
 			case StartSide::BOTTOM:
@@ -83,10 +82,10 @@ public:
 			case StartSide::LEFT:
 			case StartSide::RIGHT:
 				if (new_pos.y >= (rect.position.y + rect.size.y))
-					// teleport from right edge to left
+					// teleport from bottom edge to top
 					new_pos.y = rect.position.y + -p.getRadius();
 				else if (new_pos.y + p.getRadius() < 0)
-					// teleport from left edge to right
+					// teleport from top edge to bottom
 					new_pos.y = (rect.position.y + rect.size.y);
 				break;
 			}
@@ -96,7 +95,7 @@ public:
 			// sqrt of remaining distance to 0 causes the fading out to only start halfway up the screen
 			// linear is too sudden
 
-			// decrease alpha with distance to max_height
+			// decrease alpha with distance from start side
 			auto [r, g, b, a] = p.getFillColor();
 			switch (start_position)
 			{
@@ -115,7 +114,7 @@ public:
 			}
 			p.setFillColor({r, g, b, a});
 
-			// reset position to bottom of target once max_height is reached
+			// reset position to start side once it reaches opposite side
 			switch (start_position)
 			{
 			case StartSide::BOTTOM:
@@ -194,6 +193,7 @@ private:
 
 			// start some particles offscreen, so the beginning sequence feels less "sudden"
 			// otherwise all of them come out at once and it looks bad
+			// sets displacement_direction based on which side we are starting on
 			switch (start_position)
 			{
 			case StartSide::BOTTOM:
@@ -207,18 +207,10 @@ private:
 			case StartSide::TOP:
 				p.setPosition({
 					random<float>(rect.position.x, rect.position.x + rect.size.x),
-					(rect.position.y + rect.size.y) * random<float>(0, -.5),
+					(rect.position.y + rect.size.y) * random<float>(-.5, 0),
 				});
 				p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, 2)});
 				displacement_direction = {0, 1};
-				break;
-			case StartSide::RIGHT:
-				p.setPosition({
-					(rect.position.x + rect.size.x) * random<float>(1, 1.5),
-					random<float>(rect.position.y, rect.position.y + rect.size.y),
-				});
-				p.setVelocity({random<float>(0, -2), random<float>(-0.5, 0.5)});
-				displacement_direction = {-1, 0};
 				break;
 			case StartSide::LEFT:
 				p.setPosition({
@@ -227,6 +219,14 @@ private:
 				});
 				p.setVelocity({random<float>(0, 2), random<float>(-0.5, 0.5)});
 				displacement_direction = {1, 0};
+				break;
+			case StartSide::RIGHT:
+				p.setPosition({
+					(rect.position.x + rect.size.x) * random<float>(1, 1.5),
+					random<float>(rect.position.y, rect.position.y + rect.size.y),
+				});
+				p.setVelocity({random<float>(0, -2), random<float>(-0.5, 0.5)});
+				displacement_direction = {-1, 0};
 				break;
 			}
 		}
