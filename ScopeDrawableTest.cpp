@@ -1,8 +1,7 @@
 #include "viz/ScopeDrawable.hpp"
-#include "viz/SpectrumDrawable.hpp"
-#include "tt/AudioAnalyzer.hpp"
-#include "tt/FrequencyAnalyzer.hpp"
 #include "Media.hpp"
+#include "tt/FrequencyAnalyzer.hpp"
+#include "viz/SpectrumDrawable.hpp"
 #include "viz/VerticalBar.hpp"
 #include <iostream>
 #include <portaudio.hpp>
@@ -17,6 +16,7 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{atoi(argv[1]), atoi(argv[2])};
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
+	window.setVerticalSyncEnabled(true);
 
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
 	scope.set_shape_spacing(0);
@@ -26,20 +26,22 @@ int main(const int argc, const char *const *const argv)
 	sd.set_rect({{}, (sf::Vector2i)size});
 	sd.set_bar_width(1);
 	sd.set_bar_spacing(0);
+	sd.set_color_mode(viz::SpectrumDrawable<viz::VerticalBar>::ColorMode::WHEEL);
 
-	tt::FrequencyAnalyzer fa{3000};
-	tt::AudioAnalyzer aa{1};
+	const auto fft_size = size.x;
+	tt::FrequencyAnalyzer fa{fft_size};
 
 	Media media{argv[3]};
 	media.init(size);
 
-	std::vector<float> left_channel(size.x), spectrum(size.x);
+	int afpvf{media._astream.sample_rate() / 60};
+
+	std::vector<float> left_channel(size.x), spectrum(fft_size);
 
 	pa::PortAudio _;
 	pa::Stream pa_stream{0, media._astream.nb_channels(), paFloat32, media._astream.sample_rate()};
 	pa_stream.start();
 
-	int i = 0;
 	while (window.isOpen())
 	{
 		while (const auto event = window.pollEvent())
@@ -56,15 +58,12 @@ int main(const int argc, const char *const *const argv)
 			for (int i = 0; i < size.x; ++i)
 				left_channel[i] = media.audio_buffer[i * media._astream.nb_channels() + 0 /* left channel */];
 			scope.update_shape_positions(left_channel);
-			// aa.resize(size.x);
-			// aa.analyze(fa, left_channel.data(), false);
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
-			// const auto &spectrum = aa.get_spectrum_data(0);
 			sd.update_bar_heights(spectrum);
 			try
 			{
-				pa_stream.write(media.audio_buffer.data(), size.x);
+				pa_stream.write(media.audio_buffer.data(), afpvf);
 			}
 			catch (const pa::Error &e)
 			{
@@ -72,7 +71,7 @@ int main(const int argc, const char *const *const argv)
 					throw;
 				std::cerr << e.what() << '\n';
 			}
-			media.audio_buffer_erase(size.x);
+			media.audio_buffer_erase(afpvf);
 		}
 
 		window.clear();
