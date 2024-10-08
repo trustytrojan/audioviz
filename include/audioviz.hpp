@@ -30,7 +30,7 @@ private:
 	int framerate{60};
 
 	// used for updating the particle system at 60Hz rate when framerate > 60
-	int frame_count{};
+	int frame_count{}, vfcount{};
 
 	// MUST be constructed in the constructor
 	// this is an optional because i am too lazy to write a move assignment operator and destructor

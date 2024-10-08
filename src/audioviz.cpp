@@ -16,7 +16,7 @@ audioviz::audioviz(
 	const sf::Vector2u size,
 	const std::string &media_url,
 	tt::FrequencyAnalyzer &fa,
-	viz::StereoSpectrum<BarType> &ss, 
+	viz::StereoSpectrum<BarType> &ss,
 	viz::ParticleSystem<ParticleShapeType> &ps,
 	const int antialiasing)
 	: size{size},
@@ -56,16 +56,22 @@ void audioviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
+		const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
+		const auto frames_to_wait = framerate / vfr;
 		if (media->_vstream) // set_orig_cb() to draw video frames on the layer
 		{
 			bg.set_orig_cb(
 				[&](auto &orig_rt)
 				{
-					if (media->_frame_queue->empty())
-						return;
-					// the frame queue should have frames scaled to this->size! see _media::decode()
-					orig_rt.draw(sf::Sprite(media->_frame_queue->front()));
-					media->_frame_queue->pop_front();
+					if (media->_frame_queue->empty() || vfcount < frames_to_wait)
+						++vfcount;
+					else
+					{
+						// the frame queue should have frames scaled to this->size! see Media::decode()
+						orig_rt.draw(sf::Sprite(media->_frame_queue->front()));
+						media->_frame_queue->pop_front();
+						vfcount = 0;
+					}
 					orig_rt.display();
 				});
 			bg.set_fx_cb(viz::Layer::DRAW_FX_RT);

@@ -64,3 +64,7 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
   - involves knowing the tempo of the song
   - want a small translucent flash overlay that flashes to the beat of music
   - copy the osu! stars effect
+- need to experiment with only using the ffmpeg CLI instead of the libraries
+  - figure out metadata parsing, then subprocessing for the audio/video streams
+  - this *might* fix all the "ending early" problems (not a guarantee)
+- figure out why particles randomly don't show on linux
