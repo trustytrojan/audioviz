@@ -11,7 +11,7 @@ Add::Add(float addend)
 void Add::apply(tt::RenderTexture &rt) const
 {
 	shader.setUniform("addend", addend);
-	rt.draw(rt.sprite, &shader);
+	rt.draw(rt.sprite(), &shader);
 	rt.display();
 }
 

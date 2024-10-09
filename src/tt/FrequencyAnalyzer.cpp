@@ -7,8 +7,9 @@ namespace tt
 {
 
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
-	: fft_size(fft_size)
+	: fft_size{fft_size}
 {
+	set_fft_size(fft_size);
 	scale_max.set(*this);
 }
 

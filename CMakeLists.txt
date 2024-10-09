@@ -72,7 +72,7 @@ elseif(LINUX)
 endif()
 
 option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback during live rendering" ON)
-option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" OFF)
+option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" ON)
 
 if(AUDIOVIZ_PORTAUDIO)
 	FetchContent_Declare(portaudio-pp

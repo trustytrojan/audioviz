@@ -8,8 +8,6 @@ Main::Main(const int argc, const char *const *const argv)
 
 #ifdef AUDIOVIZ_LUA
 	// this is a hack...
-	argparse::ArgumentParser parser("audioviz");
-	parser.add_argument("--luafile");
 	if (const auto luafile = args.present("--luafile"))
 	{
 		LuaState(*this).do_file(*luafile);

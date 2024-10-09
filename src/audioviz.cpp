@@ -56,10 +56,11 @@ void audioviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
-		const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
-		const auto frames_to_wait = framerate / vfr;
+
 		if (media->_vstream) // set_orig_cb() to draw video frames on the layer
 		{
+			const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
+			const auto frames_to_wait = framerate / vfr;
 			bg.set_orig_cb(
 				[&](auto &orig_rt)
 				{
@@ -117,8 +118,8 @@ void audioviz::layers_init(const int antialiasing)
 		particles.set_fx_cb(
 			[&](auto &orig_rt, auto &fx_rt, auto &target)
 			{
-				target.draw(fx_rt.sprite, sf::BlendAdd);
-				target.draw(orig_rt.sprite, sf::BlendAdd);
+				target.draw(fx_rt.sprite(), sf::BlendAdd);
+				target.draw(orig_rt.sprite(), sf::BlendAdd);
 			});
 	}
 
@@ -135,10 +136,10 @@ void audioviz::layers_init(const int antialiasing)
 		spectrum.set_fx_cb(
 			[&](auto &orig_rt, auto &fx_rt, auto &target)
 			{
-				target.draw(fx_rt.sprite, sf::BlendAdd);
+				target.draw(fx_rt.sprite(), sf::BlendAdd);
 
 				if (spectrum_bm)
-					target.draw(orig_rt.sprite, *spectrum_bm);
+					target.draw(orig_rt.sprite(), *spectrum_bm);
 				else
 					/**
 					 * since i haven't found the right blendmode that gets rid of the dark
@@ -181,7 +182,8 @@ void audioviz::add_default_effects()
 		if (!media->_vstream)
 			bg->effects.emplace_back(new fx::Mult{0.75});
 		if (media->attached_pic)
-			bg->apply_fx();
+			// this will reapply the effects without any bs
+			set_background(*media->attached_pic);
 	}
 
 	if (const auto particles = get_layer("particles"))
@@ -338,7 +340,7 @@ bool audioviz::prepare_frame()
 
 void audioviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
-	target.draw(final_rt.sprite, states);
+	target.draw(final_rt.sprite(), states);
 	target.draw(metadata, states);
 	if (tt_enabled)
 		target.draw(timing_text, states);

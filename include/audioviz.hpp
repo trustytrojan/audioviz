@@ -89,7 +89,7 @@ public:
 		int antialiasing = 4);
 
 	/**
-	 * Add default effects to the `bg`, `spectrum`, and `particles` layers.
+	 * Add default effects to the `bg`, `spectrum`, and `particles` layers, if they exist.
 	 */
 	void add_default_effects();
 
