@@ -64,12 +64,21 @@ public:
 		for (int i = 0; i < (int)audio.size(); ++i)
 		{
 			const auto half_height = rect.size.y / 2.f;
+			// shapes[i].setPosition({
+			// 	shapes[i].getPosition().x,
+			// 	std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
+			// });
+			
+
 			shapes[i].setPosition({
 				shapes[i].getPosition().x,
-				std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
+				std::clamp(half_height , 0.f, (float)rect.size.y),
 			});
+			shapes[i].setSize({shape.width, (-half_height * audio[i])});
 		}
 	}
+
+	
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{

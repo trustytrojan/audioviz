@@ -47,7 +47,7 @@ int main(const int argc, const char *const *const argv)
 		while (const auto event = window.pollEvent())
 			if (event->is<sf::Event::Closed>())
 				window.close();
-
+	
 		{
 			media.decode(size.x);
 
