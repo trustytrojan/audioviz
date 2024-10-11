@@ -22,6 +22,8 @@ if(WIN32)
 		windows_deps/fftw
 		windows_deps/portaudio
 		windows_deps)
+	# LuaState.cpp doesn't compile otherwise
+	add_compile_options(-Wa,-mbig-obj)
 endif()
 
 foreach(lib IN LISTS AV_LIBS)
@@ -95,8 +97,16 @@ if(AUDIOVIZ_LUA)
 		GIT_TAG main)
 	FetchContent_MakeAvailable(sol2)
 	add_compile_definitions(AUDIOVIZ_LUA)
-	# no need for target_include_directories since sol2 is a CMake interface library
-	link_libraries(lua sol2)
+
+	if(WIN32)
+		include_directories(windows_deps/lua/include)
+		link_directories(windows_deps/lua/lib)
+		link_libraries(lua54)
+	elseif(LINUX)
+		link_libraries(lua)
+	endif()
+
+	link_libraries(sol2)
 endif()
 
 # we need to include av/Util.cpp from libavpp for now until i figure out a better way

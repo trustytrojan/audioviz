@@ -24,6 +24,10 @@ here are some demos:
 3. download [portaudio](https://files.portaudio.com/download.html) source, extract `portaudio.h` (inside `include` directory of the tarball) to `windows_deps/portaudio`. i recommending using 7zip for viewing archives: you can get it by running `winget install 7zip`.
 4. download the [64bit portaudio dll](https://github.com/spatialaudio/portaudio-binaries), rename it to `portaudio_x64.dll`, and move it to `windows_deps/portaudio`
 5. download [fftw](https://fftw.org/install/windows.html), open the archive and extract `fftw3.h` and `libfftw3f-3.dll` into `windows_deps/fftw`
+6. **optionally**, create a `lua` directory in `windows_deps`, install lua with `winget install devcom.lua`, then in an an admin command prompt run:
+  ```cmd
+  mklink /D windows_deps\lua %LocalAppData%\Programs\Lua
+  ```
 
 ## libraries/software used
 - [FFTW](https://fftw.org)
