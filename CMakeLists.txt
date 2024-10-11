@@ -69,6 +69,7 @@ if(WIN32)
 	link_libraries(fftw3f-3)
 elseif(LINUX)
 	link_libraries(fftw3f)
+	add_compile_definitions(LINUX)
 endif()
 
 option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback during live rendering" ON)

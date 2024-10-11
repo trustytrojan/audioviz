@@ -3,11 +3,10 @@
 #include <unordered_map>
 
 Main::Main(const int argc, const char *const *const argv)
+	: args{argc, argv}
 {
-	Args args(argc, argv);
-
 #ifdef AUDIOVIZ_LUA
-	// this is a hack...
+	// this is how things will be for now
 	if (const auto luafile = args.present("--luafile"))
 	{
 		LuaState(*this).do_file(*luafile);
@@ -20,7 +19,7 @@ Main::Main(const int argc, const char *const *const argv)
 	const sf::Vector2u size{size_args[0], size_args[1]};
 	audioviz viz{size, args.get("media_url"), fa, ss, ps};
 	ps.set_rect({{}, (sf::Vector2i)size});
-	use_args(viz, args);
+	use_args(viz);
 
 	// --encode: render to video file
 	switch (const auto &encode_args = args.get<std::vector<std::string>>("--encode"); encode_args.size())
@@ -43,7 +42,7 @@ Main::Main(const int argc, const char *const *const argv)
 	}
 }
 
-void Main::use_args(audioviz &viz, const Args &args)
+void Main::use_args(audioviz &viz)
 {
 	// default-value params
 	viz.set_fft_size(args.get<uint>("-n"));
@@ -51,9 +50,6 @@ void Main::use_args(audioviz &viz, const Args &args)
 	ss.set_multiplier(args.get<float>("-m"));
 	ss.set_bar_width(args.get<uint>("-bw"));
 	ss.set_bar_spacing(args.get<uint>("-bs"));
-
-	//add particle default-value changer 
-	
 
 	viz.set_framerate(args.get<uint>("-r"));
 	no_vsync = args.get<bool>("--no-vsync");
@@ -78,9 +74,9 @@ void Main::use_args(audioviz &viz, const Args &args)
 		viz.set_text_font(*font_path);
 
 	{ // accumulation method
-		static const std::unordered_map<std::string, FS::AccumulationMethod> am_map{
-			{"sum", FS::AccumulationMethod::SUM},
-			{"max", FS::AccumulationMethod::MAX},
+		static const std::unordered_map<std::string, FA::AccumulationMethod> am_map{
+			{"sum", FA::AccumulationMethod::SUM},
+			{"max", FA::AccumulationMethod::MAX},
 		};
 
 		const auto &am_str = args.get("-a");
@@ -96,10 +92,10 @@ void Main::use_args(audioviz &viz, const Args &args)
 	}
 
 	{ // window function
-		static const std::unordered_map<std::string, FS::WindowFunction> wf_map{
-			{"hanning", FS::WindowFunction::HANNING},
-			{"hamming", FS::WindowFunction::HAMMING},
-			{"blackman", FS::WindowFunction::BLACKMAN},
+		static const std::unordered_map<std::string, FA::WindowFunction> wf_map{
+			{"hanning", FA::WindowFunction::HANNING},
+			{"hamming", FA::WindowFunction::HAMMING},
+			{"blackman", FA::WindowFunction::BLACKMAN},
 		};
 
 		const auto &wf_str = args.get("-w");
@@ -114,19 +110,19 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 	}
 
-	{ //start position of particles
-		static const std::unordered_map<std::string, viz::ParticleSystem<ParticleShapeType>::StartSide> pos_map{
-			{"top", viz::ParticleSystem<ParticleShapeType>::StartSide::TOP},
-			{"bottom", viz::ParticleSystem<ParticleShapeType>::StartSide::BOTTOM},
-			{"left", viz::ParticleSystem<ParticleShapeType>::StartSide::LEFT},
-			{"right", viz::ParticleSystem<ParticleShapeType>::StartSide::RIGHT},
+	{ // start position of particles
+		static const std::unordered_map<std::string, PS::StartSide> pos_map{
+			{"top", PS::StartSide::TOP},
+			{"bottom", PS::StartSide::BOTTOM},
+			{"left", PS::StartSide::LEFT},
+			{"right", PS::StartSide::RIGHT},
 		};
 
-		const auto &pos_str = args.get("-spos");
+		const auto &pos_str = args.get("--ps-startside");
 
 		try
 		{
-			ps.set_start_position(pos_map.at(pos_str));
+			ps.set_start_side(pos_map.at(pos_str));
 		}
 		catch (std::out_of_range)
 		{
@@ -135,11 +131,11 @@ void Main::use_args(audioviz &viz, const Args &args)
 	}
 
 	{ // interpolation type
-		static const std::unordered_map<std::string, FS::InterpolationType> it_map{
-			{"none", FS::InterpolationType::NONE},
-			{"linear", FS::InterpolationType::LINEAR},
-			{"cspline", FS::InterpolationType::CSPLINE},
-			{"cspline_hermite", FS::InterpolationType::CSPLINE_HERMITE}};
+		static const std::unordered_map<std::string, FA::InterpolationType> it_map{
+			{"none", FA::InterpolationType::NONE},
+			{"linear", FA::InterpolationType::LINEAR},
+			{"cspline", FA::InterpolationType::CSPLINE},
+			{"cspline_hermite", FA::InterpolationType::CSPLINE_HERMITE}};
 
 		const auto &it_str = args.get("-i");
 
@@ -172,7 +168,6 @@ void Main::use_args(audioviz &viz, const Args &args)
 		else
 			throw std::invalid_argument{"--color: unknown coloring type: " + color_str};
 	}
-
 
 	{ // spectrum blendmode
 		static const std::unordered_map<std::string, sf::BlendMode::Factor> factor_map{
@@ -246,10 +241,10 @@ void Main::use_args(audioviz &viz, const Args &args)
 
 	{ // -s, --scale
 		// clang-format off
-		static const std::unordered_map<std::string, FS::Scale> scale_map{
-			{"linear", FS::Scale::LINEAR},
-			{"log", FS::Scale::LOG},
-			{"nth-root", FS::Scale::NTH_ROOT}};
+		static const std::unordered_map<std::string, FA::Scale> scale_map{
+			{"linear", FA::Scale::LINEAR},
+			{"log", FA::Scale::LOG},
+			{"nth-root", FA::Scale::NTH_ROOT}};
 		// clang-format on
 
 		const auto &scale_str = args.get("-s");

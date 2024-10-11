@@ -20,10 +20,18 @@ sf::Vector2u table_to_vec2u(const sol::table &tb)
 
 Main::LuaState::LuaState(Main &main)
 {
-	open_libraries(sol::lib::base); // for testing
+	open_libraries(sol::lib::base, sol::lib::os); // for testing
 
-	set_function("start_in_window", &Main::start_in_window, main);
-	set_function("encode", &Main::encode, main);
+	// add more args here!!!!!!!!!
+	create_named_table("args",
+		"media_url", main.args.get("media_url")
+	);
+
+	// wrapping arguments with std::ref ensures sol2 will not copy arguments
+	set_function("start_in_window", &Main::start_in_window, std::ref(main));
+	set_function("encode_without_window", &Main::encode_without_window, std::ref(main));
+	set_function("encode_without_window_mt", &Main::encode_without_window_mt, std::ref(main));
+	set_function("encode_with_window", &Main::encode_with_window, std::ref(main));
 
 	// clang-format off
 	auto tt_namespace = create_named_table("tt"),
@@ -45,7 +53,7 @@ Main::LuaState::LuaState(Main &main)
 			return std::make_shared<viz::ParticleSystem<ParticleShapeType>>(table_to_intrect(rect), particle_count);
 		}),
 		"set_displacement_direction", &viz::ParticleSystem<ParticleShapeType>::set_displacement_direction,
-		"set_start_position", &viz::ParticleSystem<ParticleShapeType>::set_start_position,
+		"set_start_position", &viz::ParticleSystem<ParticleShapeType>::set_start_side,
 		"set_rect", &viz::ParticleSystem<ParticleShapeType>::set_rect,
 		"set_particle_count", &viz::ParticleSystem<ParticleShapeType>::set_particle_count
 	);

@@ -143,6 +143,7 @@ private:
 	void draw_spectrum();
 	void draw_particles();
 	void play_audio();
-	void capture_elapsed_time(const char *const label, const sf::Clock &_clock);
+	void capture_elapsed_time(const std::string &label, const sf::Clock &_clock);
 	void layers_init(int);
+	void perform_fft();
 };

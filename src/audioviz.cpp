@@ -52,6 +52,12 @@ audioviz::audioviz(
 	metadata.set_position({30, 30});
 }
 
+void audioviz::perform_fft()
+{
+	ss.configure_analyzer(sa);
+	capture_time("fft", sa.analyze(fa, media->audio_buffer.data(), true));
+}
+
 void audioviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
@@ -97,6 +103,10 @@ void audioviz::layers_init(const int antialiasing)
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
+				// this HAS to be done before particles or spectrum, as both depend
+				// on fft being performed on the current audio buffer for this frame
+				perform_fft();
+
 				// lock the tickrate of the particles at 60hz for non-60fps output
 
 				if (framerate < 60)
@@ -268,7 +278,7 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 	spectrum_bm = bm;
 }
 
-void audioviz::capture_elapsed_time(const char *const label, const sf::Clock &_clock)
+void audioviz::capture_elapsed_time(const std::string &label, const sf::Clock &_clock)
 {
 	tt_ss << std::setw(20) << std::left << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
@@ -318,15 +328,9 @@ bool audioviz::prepare_frame()
 	if ((int)media->audio_buffer.size() < 2 * fft_size)
 		return false;
 
-	// resizes sa's vectors properly to fit ss's bars
-	ss.before_analyze(sa);
-
-	// perform actual fft
-	capture_time("fft", sa.analyze(fa, media->audio_buffer.data(), true));
-
 	final_rt.clear();
 	for (auto &layer : layers)
-		capture_time(layer.get_name().c_str(), layer.full_lifecycle(final_rt));
+		capture_time(layer.get_name(), layer.full_lifecycle(final_rt));
 	final_rt.display();
 
 	// THE IMPORTANT PART
