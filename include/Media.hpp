@@ -39,4 +39,5 @@ struct Media
 	void init(sf::Vector2u video_frame_size);
 	void decode(int audio_frames);
 	void audio_buffer_erase(int frames);
+	void reset();
 };

@@ -22,8 +22,13 @@ ss:set_bar_spacing(1)
 -- ss:set_right_backwards(true)
 
 start_in_window(viz)
--- st_time = measure_runtime(function() encode_without_window(viz, 'out.mp4', 'h264_vaapi', 'copy') end)
--- mt_time = measure_runtime(function() encode_without_window_mt(viz, 'out.mp4', 'h264_vaapi', 'copy') end)
 
--- print('st_time = ' .. st_time)
--- print('mt_time = ' .. mt_time)
+vcodec = 'h264_qsv'
+
+function benchmark_encode(encode_func, file)
+	local time = measure_runtime(function() encode_func(viz, file, vcodec, 'copy') end)
+	print(file .. ' = ' .. time)
+end
+
+benchmark_encode(encode_without_window, 'out-mt.mp4')
+benchmark_encode(encode_without_window, 'out-st.mp4')

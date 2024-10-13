@@ -138,6 +138,9 @@ public:
 	 */
 	void set_fft_size(int fft_size);
 
+	// seek to 0
+	void reset();
+
 private:
 	void metadata_init();
 	void draw_spectrum();

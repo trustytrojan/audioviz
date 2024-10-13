@@ -108,7 +108,8 @@ Main::LuaState::LuaState(Main &main)
 		"set_spectrum_margin", &audioviz::set_spectrum_margin,
 		"set_text_font", &audioviz::set_text_font,
 		"set_media_url", &audioviz::set_media_url,
-		"set_fft_size", &audioviz::set_fft_size
+		"set_fft_size", &audioviz::set_fft_size,
+		"reset", &audioviz::reset
 	);
 	// clang-format on
 }

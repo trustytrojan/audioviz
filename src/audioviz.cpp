@@ -52,6 +52,11 @@ audioviz::audioviz(
 	metadata.set_position({30, 30});
 }
 
+void audioviz::reset()
+{
+	media->reset();
+}
+
 void audioviz::perform_fft()
 {
 	ss.configure_analyzer(sa);

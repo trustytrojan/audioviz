@@ -49,30 +49,18 @@ void Media::init(const sf::Vector2u video_frame_size)
 		}
 	}
 
-	// audio decoding initialization
-	if (!_astream->codecpar->ch_layout.order)
-		// this check is necessary for .wav files with no channel order information
-		_astream->codecpar->ch_layout = AV_CHANNEL_LAYOUT_STEREO;
+	// this check is necessary for .wav files with no channel order information
+	if (_astream->codecpar->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
+		_astream->codecpar->ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
+
+	// resampler initialization
 	rs_frame->ch_layout = _astream->codecpar->ch_layout;
 	rs_frame->sample_rate = _astream->codecpar->sample_rate;
 	rs_frame->format = AV_SAMPLE_FMT_FLT;
 	_adecoder.copy_params(_astream->codecpar);
 	_adecoder.open();
 
-	// TODO: NEED TO EXPERIMENT WITH USING THE FFMPEG CLI INSTEAD OF CALLING LIBAV
-	// IT MAY BE THE ONLY WAY TO AVOID THE MESS BELOW.
-
-	// some formats/codecs have bad packet durations.
-	// no idea what is causing this. as of right now mp3 has a workaround,
-	// but anything else might end playback too early.
-	switch (_adecoder->codec_id)
-	{
-	case AV_CODEC_ID_MP3:
-		_format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
-		break;
-	default:
-		break;
-	}
+	reset();
 }
 
 void Media::audio_buffer_erase(int frames)
@@ -95,8 +83,8 @@ void Media::decode(int audio_frames)
 
 		if (packet->stream_index == _astream->index)
 		{
-			// std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / " <<
-			// _astream.duration_sec() << '\n';
+			std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / "
+					  << _astream.duration_sec() << '\n';
 
 			if (!_adecoder.send_packet(packet))
 			{
@@ -136,5 +124,24 @@ void Media::decode(int audio_frames)
 					.update(_scaled_frame->get()->data[0]);
 			}
 		}
+	}
+}
+
+void Media::reset()
+{
+	// TODO: NEED TO EXPERIMENT WITH USING THE FFMPEG CLI INSTEAD OF CALLING LIBAV
+	// IT MAY BE THE ONLY WAY TO AVOID THE MESS BELOW.
+
+	// some formats/codecs have bad packet durations.
+	// no idea what is causing this. as of right now mp3 has a workaround,
+	// but anything else might end playback too early.
+	switch (_adecoder->codec_id)
+	{
+	case AV_CODEC_ID_MP3:
+		// _format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
+		_format.seek_frame(-1, 0, AVSEEK_FLAG_BACKWARD);
+		break;
+	default:
+		break;
 	}
 }
