@@ -56,6 +56,7 @@ void audioviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
+
 		const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
 		const auto frames_to_wait = framerate / vfr;
 		if (media->_vstream) // set_orig_cb() to draw video frames on the layer
@@ -79,7 +80,7 @@ void audioviz::layers_init(const int antialiasing)
 		else // set_background() will apply_fx() on the bg it sets
 		{
 			// we only have one image; don't run effects in Layer::full_lifecycle
-			bg.set_auto_fx(false);
+			//bg.set_auto_fx(false); comment out because we want to run bass effects
 
 			if (media->attached_pic)
 			{
@@ -96,8 +97,22 @@ void audioviz::layers_init(const int antialiasing)
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
-				// lock the tickrate of the particles at 60hz for non-60fps output
+				const auto &left_data = sa.left_data();
+				float sum{};
+				int count = left_data.size() / 4;
+				for (int i = 0; i < count; ++i)
+					sum += left_data[i];
+				const auto avg = sum / count;
 
+				const auto bg = get_layer("bg");
+				if (!bg)
+					throw std::runtime_error{"not there"};
+				auto mult = dynamic_cast<fx::Mult *>(bg->effects[1].get());
+				if (!mult)
+					throw std::runtime_error{"???"};
+				mult->factor =  pow(1+avg, 5);
+
+				// lock the tickrate of the particles at 60hz for non-60fps output
 				if (framerate < 60)
 					ps.update(sa, {.multiplier = 60.f / framerate});
 				else if (framerate == 60)
