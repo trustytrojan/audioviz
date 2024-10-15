@@ -27,6 +27,7 @@ int main(const int argc, const char *const *const argv)
 	sd.set_bar_width(1);
 	sd.set_bar_spacing(0);
 	sd.set_color_mode(viz::SpectrumDrawable<viz::VerticalBar>::ColorMode::WHEEL);
+	sd.set_color_wheel_rate(200);
 
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};
@@ -61,6 +62,8 @@ int main(const int argc, const char *const *const argv)
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
 			sd.update_bar_heights(spectrum);
+			sd.color_wheel_increment();
+			
 			try
 			{
 				pa_stream.write(media.audio_buffer.data(), afpvf);
