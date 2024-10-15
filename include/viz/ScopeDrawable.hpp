@@ -15,6 +15,8 @@ class ScopeDrawable : public sf::Drawable
 	{
 		int width = 10, spacing = 5;
 	} shape;
+	bool fill_in = false;
+
 
 public:
 	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
@@ -40,6 +42,11 @@ public:
 		update_shape_x_positions();
 	}
 
+	void set_fill_in(bool _fill){
+		fill_in = _fill;
+	}
+
+
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
@@ -64,17 +71,22 @@ public:
 		for (int i = 0; i < (int)audio.size(); ++i)
 		{
 			const auto half_height = rect.size.y / 2.f;
-			// shapes[i].setPosition({
-			// 	shapes[i].getPosition().x,
-			// 	std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
-			// });
 			
 
-			shapes[i].setPosition({
+			if(fill_in){
+				shapes[i].setPosition({
 				shapes[i].getPosition().x,
 				std::clamp(half_height , 0.f, (float)rect.size.y),
 			});
 			shapes[i].setSize({shape.width, (-half_height * audio[i])});
+			}
+			else{
+				shapes[i].setPosition({
+				shapes[i].getPosition().x,
+				std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
+			});
+			}
+			
 		}
 	}
 
