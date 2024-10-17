@@ -5,7 +5,6 @@ project(audioviz LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(BUILD_SHARED_LIBS OFF)
-
 set(CMAKE_CXX_STANDARD 23)
 set(AV_LIBS avfilter avformat avcodec avutil swresample swscale)
 
@@ -13,19 +12,29 @@ if(WIN32)
 	# check README to understand this
 	set(CMAKE_PREFIX_PATH
 		windows_deps/ffmpeg/lib)
+
 	link_directories(
 		windows_deps/ffmpeg/lib
 		windows_deps/fftw
 		windows_deps/portaudio)
+
 	include_directories(
 		windows_deps/ffmpeg/include
 		windows_deps/fftw
 		windows_deps/portaudio
 		windows_deps)
+
 	# LuaState.cpp doesn't compile otherwise
 	add_compile_options(-Wa,-mbig-obj)
+
+	# this took an unnecessary amount of time to figure out...
+	# since the cmakelists.txt of boost.log DOESN'T mkdir the directories where windmc
+	# will output files, windmc fails, bringing the entire build down with it.
+	# i could fix this with a simple mkdir, but i don't need boost.log anyway.
+	set(BOOST_LOG_WITHOUT_EVENT_LOG ON)
 endif()
 
+# do it in a loop so we know exactly which lib may not be found
 foreach(lib IN LISTS AV_LIBS)
 	find_library(_ NAMES ${lib} REQUIRED)
 endforeach()
@@ -39,17 +48,20 @@ FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 3.0.0-rc.1)
 
+FetchContent_Declare(Boost
+	URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z)
+
 FetchContent_Declare(libavpp
 	GIT_REPOSITORY https://github.com/trustytrojan/libavpp
 	GIT_TAG main)
 
 FetchContent_Declare(argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse.git)
+    GIT_REPOSITORY https://github.com/p-ranav/argparse)
 
 FetchContent_Declare(spline
 	GIT_REPOSITORY https://github.com/ttk592/spline)
 
-FetchContent_MakeAvailable(SFML libavpp argparse spline)
+FetchContent_MakeAvailable(SFML Boost libavpp argparse spline)
 
 # make compile_commands.json for clangd!!!!!!
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -65,7 +77,7 @@ include_directories(
 	${SFML_SOURCE_DIR}/include
 	${spline_SOURCE_DIR}/src)
 
-link_libraries(sfml-graphics argparse ${AV_LIBS})
+link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process Boost::json)
 
 if(WIN32)
 	link_libraries(fftw3f-3)
