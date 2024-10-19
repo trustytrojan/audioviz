@@ -26,12 +26,6 @@ if(WIN32)
 
 	# LuaState.cpp doesn't compile otherwise
 	add_compile_options(-Wa,-mbig-obj)
-
-	# this took an unnecessary amount of time to figure out...
-	# since the cmakelists.txt of boost.log DOESN'T mkdir the directories where windmc
-	# will output files, windmc fails, bringing the entire build down with it.
-	# i could fix this with a simple mkdir, but i don't need boost.log anyway.
-	set(BOOST_LOG_WITHOUT_EVENT_LOG ON)
 endif()
 
 # do it in a loop so we know exactly which lib may not be found
@@ -43,6 +37,9 @@ find_library(_ NAMES fftw3f REQUIRED)
 # don't build SFML's audio or network libs
 set(SFML_BUILD_AUDIO FALSE CACHE BOOL "" FORCE)
 set(SFML_BUILD_NETWORK FALSE CACHE BOOL "" FORCE)
+
+# NEED THIS HERE to prevent building every other boost lib
+set(BOOST_INCLUDE_LIBRARIES "process;json")
 
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
@@ -124,3 +121,5 @@ endif()
 # we need to include av/Util.cpp from libavpp for now until i figure out a better way
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})
+
+add_executable(test-player test-player.cpp)
