@@ -21,13 +21,14 @@ int main(const int argc, const char *const *const argv)
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
+	scope.set_flipped_side(true);
 
 	viz::SpectrumDrawable<viz::VerticalBar> sd;
 	sd.set_rect({{}, (sf::Vector2i)size});
 	sd.set_bar_width(1);
 	sd.set_bar_spacing(0);
 	sd.set_color_mode(viz::SpectrumDrawable<viz::VerticalBar>::ColorMode::WHEEL);
-	sd.set_color_wheel_rate(200);
+	sd.set_color_wheel_rate(0.005);
 
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};
@@ -64,6 +65,7 @@ int main(const int argc, const char *const *const argv)
 			sd.update_bar_heights(spectrum);
 			sd.color_wheel_increment();
 			
+
 			try
 			{
 				pa_stream.write(media.audio_buffer.data(), afpvf);
@@ -76,6 +78,7 @@ int main(const int argc, const char *const *const argv)
 			}
 			media.audio_buffer_erase(afpvf);
 		}
+
 
 		window.clear();
 		window.draw(scope);

@@ -16,6 +16,7 @@ class ScopeDrawable : public sf::Drawable
 		int width = 10, spacing = 5;
 	} shape;
 	bool fill_in = false;
+	bool flipped = false;
 
 public:
 	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
@@ -43,6 +44,7 @@ public:
 
 	void set_fill_in(bool _fill) { fill_in = _fill; }
 
+	void set_flipped_side(bool flip) { flipped = flip; }
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
@@ -67,14 +69,28 @@ public:
 		for (int i = 0; i < (int)audio.size(); ++i)
 		{
 			const auto half_height = rect.size.y / 2.f;
+			const auto half_heightx = rect.size.x / 2.f;
 
 			if (fill_in)
 			{
-				shapes[i].setPosition({
-					shapes[i].getPosition().x,
-					std::clamp(half_height, 0.f, (float)rect.size.y),
-				});
-				shapes[i].setSize({shape.width, (-half_height * audio[i])});
+				if (flipped)
+				{
+					assert("not_yet");
+				}
+				else
+				{
+					shapes[i].setPosition({
+						shapes[i].getPosition().x,
+						std::clamp(half_height, 0.f, (float)rect.size.y),
+					});
+					shapes[i].setSize({shape.width, (-half_height * audio[i])});
+				}
+			}
+			else if (flipped)
+			{
+				shapes[i].setPosition(
+					{std::clamp(half_heightx + (-half_heightx * audio[i]), 0.f, (float)rect.size.x),
+					 shapes[i].getPosition().y});
 			}
 			else
 			{
@@ -108,9 +124,14 @@ private:
 			const auto x = backwards
 				? rect.position.x + rect.size.x - shape.width - i * (shape.width + shape.spacing)
 				: rect.position.x + i * (shape.width + shape.spacing);
+			const auto y = backwards
+				? rect.position.y + rect.size.y - shape.width - i * (shape.width + shape.spacing)
+				: rect.position.y + i * (shape.width + shape.spacing);
 			// clang-format on
-
-			shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
+			if (flipped)
+				shapes[i].setPosition({rect.position.x + rect.size.x / 2, y});
+			else
+				shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
 		}
 	}
 };
