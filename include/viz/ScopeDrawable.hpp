@@ -16,7 +16,7 @@ class ScopeDrawable : public sf::Drawable
 		int width = 10, spacing = 5;
 	} shape;
 	bool fill_in = false;
-	bool flipped = false;
+	bool vert = false;
 
 public:
 	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
@@ -44,7 +44,7 @@ public:
 
 	void set_fill_in(bool _fill) { fill_in = _fill; }
 
-	void set_flipped_side(bool flip) { flipped = flip; }
+	void set_vert(bool _vert) { vert = _vert; }
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
@@ -71,33 +71,35 @@ public:
 			const auto half_height = rect.size.y / 2.f;
 			const auto half_heightx = rect.size.x / 2.f;
 
-			if (fill_in)
-			{
-				if (flipped)
-				{
-					assert("not_yet");
-				}
-				else
-				{
-					shapes[i].setPosition({
-						shapes[i].getPosition().x,
-						std::clamp(half_height, 0.f, (float)rect.size.y),
-					});
-					shapes[i].setSize({shape.width, (-half_height * audio[i])});
-				}
-			}
-			else if (flipped)
-			{
-				shapes[i].setPosition(
-					{std::clamp(half_heightx + (-half_heightx * audio[i]), 0.f, (float)rect.size.x),
-					 shapes[i].getPosition().y});
-			}
-			else
+			if (!fill_in && !vert)
 			{
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
 					std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
 				});
+			}
+			else if (fill_in && !vert)
+			{
+				shapes[i].setPosition({
+					shapes[i].getPosition().x,
+					std::clamp(half_height, 0.f, (float)rect.size.y),
+				});
+				shapes[i].setSize({shape.width, (-half_height * audio[i])});
+			}
+			else if (!fill_in && vert)
+			{
+				shapes[i].setPosition({
+					std::clamp(half_heightx + (-half_heightx * audio[i]), 0.f, (float)rect.size.x),
+					shapes[i].getPosition().y,
+				});
+			}
+			else
+			{
+				shapes[i].setPosition({
+					std::clamp(half_heightx, 0.f, (float)rect.size.x),
+					shapes[i].getPosition().y,
+				});
+				shapes[i].setSize({(-half_height * audio[i]), shape.width});
 			}
 		}
 	}
@@ -128,7 +130,7 @@ private:
 				? rect.position.y + rect.size.y - shape.width - i * (shape.width + shape.spacing)
 				: rect.position.y + i * (shape.width + shape.spacing);
 			// clang-format on
-			if (flipped)
+			if (vert)
 				shapes[i].setPosition({rect.position.x + rect.size.x / 2, y});
 			else
 				shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
