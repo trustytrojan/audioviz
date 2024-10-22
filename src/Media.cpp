@@ -2,7 +2,9 @@
 
 #include <iostream>
 
-void Media::init(const sf::Vector2u video_frame_size)
+Media::Media(const std::string &url, const sf::Vector2u vsize)
+	: url{url},
+	  _format{url}
 {
 	// if an attached pic is in the format, use it for bg and album cover
 	if (const auto itr = std::ranges::find_if(
@@ -10,7 +12,7 @@ void Media::init(const sf::Vector2u video_frame_size)
 		itr != _format.streams().cend())
 	{
 		const auto &stream = *itr;
-		attached_pic = {stream->attached_pic.data, stream->attached_pic.size};
+		_attached_pic = {stream->attached_pic.data, stream->attached_pic.size};
 	}
 
 	try
@@ -27,7 +29,7 @@ void Media::init(const sf::Vector2u video_frame_size)
 					_s->codecpar->height,
 					(AVPixelFormat)_s->codecpar->format,
 				},
-				av::SwScaler::SrcDstArgs{video_frame_size.x, video_frame_size.y, AV_PIX_FMT_RGBA});
+				av::SwScaler::SrcDstArgs{vsize.x, vsize.y, AV_PIX_FMT_RGBA});
 			_scaled_frame.emplace();
 			_frame_queue.emplace();
 		}
@@ -58,18 +60,34 @@ void Media::init(const sf::Vector2u video_frame_size)
 	_adecoder.copy_params(_astream->codecpar);
 	_adecoder.open();
 
-	reset();
+	// TODO: NEED TO EXPERIMENT WITH USING THE FFMPEG CLI INSTEAD OF CALLING LIBAV
+	// IT MAY BE THE ONLY WAY TO AVOID THE MESS BELOW.
+
+	// some formats/codecs have bad packet durations.
+	// no idea what is causing this. as of right now mp3 has a workaround,
+	// but anything else might end playback too early.
+	switch (_adecoder->codec_id)
+	{
+	case AV_CODEC_ID_MP3:
+		// _format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
+		_format.seek_frame(-1, 0, AVSEEK_FLAG_BACKWARD);
+		break;
+	default:
+		break;
+	}
 }
 
-void Media::audio_buffer_erase(int frames)
+void Media::audio_buffer_erase(const int frames)
 {
-	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + _astream.nb_channels() * frames);
+	const auto begin = _audio_buffer.begin();
+	const auto samples = frames * _astream.nb_channels();
+	_audio_buffer.erase(begin, begin + samples);
 }
 
-void Media::decode(int audio_frames)
+void Media::decode_audio(const int frames)
 {
-	// while we don't have enough audio samples
-	while ((int)audio_buffer.size() < _astream.nb_channels() * audio_frames)
+	const auto samples = frames * _astream.nb_channels();
+	while (_audio_buffer.size() < samples)
 	{
 		const auto packet = _format.read_packet();
 
@@ -95,7 +113,7 @@ void Media::decode(int audio_frames)
 				_resampler.convert_frame(rs_frame.get(), frame);
 				const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
 				const auto nb_floats = _astream.nb_channels() * rs_frame->nb_samples;
-				audio_buffer.insert(audio_buffer.end(), data, data + nb_floats);
+				_audio_buffer.insert(_audio_buffer.end(), data, data + nb_floats);
 			}
 		}
 		else if (_vstream && packet->stream_index == _vstream->get()->index)
@@ -122,24 +140,5 @@ void Media::decode(int audio_frames)
 					.update(_scaled_frame->get()->data[0]);
 			}
 		}
-	}
-}
-
-void Media::reset()
-{
-	// TODO: NEED TO EXPERIMENT WITH USING THE FFMPEG CLI INSTEAD OF CALLING LIBAV
-	// IT MAY BE THE ONLY WAY TO AVOID THE MESS BELOW.
-
-	// some formats/codecs have bad packet durations.
-	// no idea what is causing this. as of right now mp3 has a workaround,
-	// but anything else might end playback too early.
-	switch (_adecoder->codec_id)
-	{
-	case AV_CODEC_ID_MP3:
-		// _format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
-		_format.seek_frame(-1, 0, AVSEEK_FLAG_BACKWARD);
-		break;
-	default:
-		break;
 	}
 }

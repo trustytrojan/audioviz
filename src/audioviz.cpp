@@ -52,11 +52,6 @@ audioviz::audioviz(
 	metadata.set_position({30, 30});
 }
 
-void audioviz::reset()
-{
-	
-}
-
 void audioviz::perform_fft()
 {
 	ss.configure_analyzer(sa);
@@ -206,12 +201,6 @@ void audioviz::add_default_effects()
 	if (const auto spectrum = get_layer("spectrum"))
 		spectrum->effects.emplace_back(new fx::Blur{1, 1, 20});
 }
-
-// void audioviz::set_media_url(const std::string &url)
-// {
-// 	media.emplace(url);
-// 	media.init(size);
-// }
 
 const std::string audioviz::get_media_url() const
 {

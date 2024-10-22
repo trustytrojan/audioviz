@@ -95,7 +95,6 @@ void Main::encode_without_window(
 {
 	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
 	tt::RenderTexture rt{viz.size, 4};
-	viz.reset();
 	while (viz.prepare_frame())
 	{
 		rt.draw(viz);
@@ -116,7 +115,6 @@ void Main::encode_without_window_mt(
 	const auto image_queuer = std::async(std::launch::async, [&]
 	{
 		tt::RenderTexture rt{viz.size, 4};
-		viz.reset();
 		while (viz.prepare_frame())
 		{
 			rt.draw(viz);
@@ -149,7 +147,6 @@ void Main::encode_with_window(
 		{.antiAliasingLevel = 4},
 	};
 	sf::Texture txr{viz.size};
-	viz.reset();
 	while (viz.prepare_frame())
 	{
 		window.draw(viz);
