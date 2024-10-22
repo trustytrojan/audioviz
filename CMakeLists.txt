@@ -114,10 +114,11 @@ endif()
 
 # we need to include av/Util.cpp from libavpp for now until i figure out a better way
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
-# add_executable(audioviz ${SOURCES})
+add_executable(audioviz ${SOURCES})
 
 add_executable(test-player test-player.cpp
 	src/viz/VerticalBar.cpp
 	src/tt/FrequencyAnalyzer.cpp
 	src/tt/AudioAnalyzer.cpp
-	src/tt/ColorUtils.cpp)
+	src/tt/ColorUtils.cpp
+	src/Media3.cpp)

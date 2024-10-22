@@ -83,8 +83,8 @@ void Media::decode(int audio_frames)
 
 		if (packet->stream_index == _astream->index)
 		{
-			std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / "
-					  << _astream.duration_sec() << '\n';
+			// std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / "
+			// 		  << _astream.duration_sec() << '\n';
 
 			if (!_adecoder.send_packet(packet))
 			{

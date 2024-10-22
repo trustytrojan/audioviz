@@ -14,7 +14,7 @@
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
 
-#include "Media.hpp"
+#include "Media3.hpp"
 
 class audioviz : public sf::Drawable
 {
@@ -32,12 +32,10 @@ private:
 	// used for updating the particle system at 60Hz rate when framerate > 60
 	int frame_count{}, vfcount{};
 
-	// MUST be constructed in the constructor
-	// this is an optional because i am too lazy to write a move assignment operator and destructor
-	std::optional<Media> media;
+	Media3 media;
 
 	// audio frames per video frame
-	int afpvf{media->_astream.sample_rate() / framerate};
+	int afpvf{media.astream().sample_rate() / framerate};
 
 	// fft processor
 	tt::FrequencyAnalyzer &fa;
@@ -68,6 +66,8 @@ private:
 
 	std::vector<viz::Layer> layers;
 	tt::RenderTexture final_rt;
+
+	sf::Texture video_bg;
 
 public:
 	// need to do this outside of the constructor otherwise the texture is broken?
@@ -129,8 +129,8 @@ public:
 	// you **must** call this method in order to see text metadata!
 	void set_text_font(const std::string &path);
 
-	void set_media_url(const std::string &url);
-	const std::string &get_media_url() const;
+	// void set_media_url(const std::string &url);
+	const std::string get_media_url() const;
 
 	/**
 	 * Set the number of audio samples used for frequency analysis.

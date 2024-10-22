@@ -9,16 +9,16 @@ SongMetadataDrawable::SongMetadataDrawable(sf::Text &title_text, sf::Text &artis
 {
 }
 
-void SongMetadataDrawable::use_metadata(const Media &media)
+void SongMetadataDrawable::use_metadata(const Media3 &media)
 {
-	if (const auto title = media._format.metadata("title"))
+	if (const auto title = media.format().metadata("title"))
 		title_text.setString(title);
-	else if (const auto title = media._astream.metadata("title"))
+	else if (const auto title = media.astream().metadata("title"))
 		title_text.setString(title);
 
-	if (const auto artist = media._format.metadata("artist"))
+	if (const auto artist = media.format().metadata("artist"))
 		artist_text.setString(artist);
-	else if (const auto artist = media._astream.metadata("artist"))
+	else if (const auto artist = media.astream().metadata("artist"))
 		artist_text.setString(artist);
 }
 
