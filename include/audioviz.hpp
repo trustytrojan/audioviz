@@ -39,6 +39,8 @@ private:
 	// audio frames per video frame
 	int afpvf{media->_astream.sample_rate() / framerate};
 
+	sf::RectangleShape rectangle{sf::Vector2f(92, 50)};
+
 	// fft processor
 	tt::FrequencyAnalyzer &fa;
 	tt::StereoAnalyzer sa;

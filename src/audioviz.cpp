@@ -81,6 +81,35 @@ void audioviz::layers_init(const int antialiasing)
 		{
 			// we only have one image; don't run effects in Layer::full_lifecycle
 			//bg.set_auto_fx(false); comment out because we want to run bass effects
+			rectangle.setPosition({10, 10});
+			rectangle.setFillColor(sf::Color(100, 10, 100));
+			bg.set_orig_cb([&](auto &orig_rt)
+			{
+				const auto &left_data = sa.left_data();
+				float sum{};
+				int count = left_data.size() / 4;
+				for (int i = 0; i < count; ++i)
+					sum += left_data[i];
+				const auto avg = sum / count;
+
+				const auto bg = get_layer("bg");
+				if (!bg)
+					throw "iudehoidewhf";
+
+				//std::cout << avg << '\n';
+				// std::cout << bg->effects.size() << '\n';
+
+				auto mult = dynamic_cast<fx::Mult *>(bg->effects[1].get());
+				if (!mult)
+					throw std::runtime_error{"???"};
+				mult->factor =  pow(1+avg, 5);
+
+				sf::Sprite spr{*media->attached_pic};
+				spr.setPosition({500 * avg, 500 * avg});
+				rectangle.setSize({10000*avg,10000*avg});
+				orig_rt.draw(spr);
+
+			});
 
 			if (media->attached_pic)
 			{
@@ -97,20 +126,6 @@ void audioviz::layers_init(const int antialiasing)
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
-				const auto &left_data = sa.left_data();
-				float sum{};
-				int count = left_data.size() / 4;
-				for (int i = 0; i < count; ++i)
-					sum += left_data[i];
-				const auto avg = sum / count;
-
-				const auto bg = get_layer("bg");
-				if (!bg)
-					throw std::runtime_error{"not there"};
-				auto mult = dynamic_cast<fx::Mult *>(bg->effects[1].get());
-				if (!mult)
-					throw std::runtime_error{"???"};
-				mult->factor =  pow(1+avg, 5);
 
 				// lock the tickrate of the particles at 60hz for non-60fps output
 				if (framerate < 60)
@@ -127,6 +142,7 @@ void audioviz::layers_init(const int antialiasing)
 
 				orig_rt.clear(sf::Color::Transparent);
 				orig_rt.draw(ps);
+				orig_rt.draw(rectangle);
 				orig_rt.display();
 			});
 		particles.set_fx_cb(
