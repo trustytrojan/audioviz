@@ -5,11 +5,9 @@
 void Media::init(const sf::Vector2u video_frame_size)
 {
 	// if an attached pic is in the format, use it for bg and album cover
-	// clang-format off
-	if (const auto itr = std::ranges::find_if(_format.streams(),
-			[](const auto &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
+	if (const auto itr = std::ranges::find_if(
+			_format.streams(), [](const auto &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
 		itr != _format.streams().cend())
-	// clang-format on
 	{
 		const auto &stream = *itr;
 		attached_pic = {stream->attached_pic.data, stream->attached_pic.size};
