@@ -32,21 +32,21 @@ Media3::Media3(const std::string &url, const sf::Vector2u video_size)
 
 	{ // create audio decoder
 		std::ostringstream ss;
-		ss << "ffmpeg ";
-		ss << "-v warning ";
-		ss << "-hwaccel auto ";
+		ss << "ffmpeg -v warning -hwaccel auto ";
 
 		if (url.contains("http"))
 			ss << "-reconnect 1 ";
 
+#ifdef _WIN32
+		ss << "-i \"" << url << "\" ";
+#else
 		if (url.contains('\''))
 			ss << "-i \"" << url << "\" ";
 		else
 			ss << "-i '" << url << "' ";
+#endif
 
-		ss << "-f f32le ";
-		ss << "-acodec pcm_f32le ";
-		ss << "-";
+		ss << "-f f32le - ";
 
 		if (!(audio = popen(ss.str().c_str(), "r")))
 			throw std::runtime_error{std::string{"popen: "} + strerror(errno)};
@@ -99,7 +99,10 @@ size_t Media3::read_audio_samples(float *const buf, const int samples) const
 {
 	if (!audio)
 		throw std::logic_error{"no audio stream"};
-	return fread(buf, sizeof(float), samples, audio);
+	const auto samples_read = fread(buf, sizeof(float), samples, audio);
+	if (const auto err = ferror(audio))
+		std::cerr << "audio stream error: " << strerror(errno) << '\n';
+	return samples_read;
 }
 
 bool Media3::read_video_frame(sf::Texture &txr) const
@@ -111,20 +114,26 @@ bool Media3::read_video_frame(sf::Texture &txr) const
 	const auto bytes_to_read = 4 * video_size.x * video_size.y;
 	uint8_t buf[bytes_to_read];
 	if (fread(buf, sizeof(uint8_t), bytes_to_read, video) < bytes_to_read)
+	{
+		if (const auto err = ferror(video))
+			std::cerr << "video error: " << strerror(err) << '\n';
 		return false;
+	}
 	txr.update(buf);
 	return true;
 }
 
 void Media3::decode_audio(const int frames)
 {
-	const auto samples = frames * _astream.nb_channels();
-	while (_audio_buffer.size() < samples)
+	const auto samples_to_read = frames * _astream.nb_channels();
+	while (_audio_buffer.size() < samples_to_read)
 	{
-		float buf[samples];
-		if (read_audio_samples(buf, samples) < samples)
-			return;
-		_audio_buffer.insert(_audio_buffer.end(), buf, buf + samples);
+		float buf[samples_to_read];
+		const auto samples_read = read_audio_samples(buf, samples_to_read);
+		std::cout << "read " << samples_read << " samples\n";
+		// if (!samples_read)
+			// return;
+		_audio_buffer.insert(_audio_buffer.end(), buf, buf + samples_read);
 	}
 }
 
