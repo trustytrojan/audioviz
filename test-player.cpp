@@ -1,6 +1,6 @@
-#include "Media2.hpp"
+#include "Media3.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
-#include "viz/SpectrumDrawable.hpp"
+#include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
 #include <iostream>
 #include <portaudio.hpp>
@@ -13,66 +13,82 @@ int main(const int argc, const char *const *const argv)
 		return EXIT_FAILURE;
 	}
 
-	const sf::Vector2u size{atoi(argv[1]), atoi(argv[2])};
+	const sf::Vector2u size{std::stoi(argv[1]), std::stoi(argv[2])};
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
 	window.setVerticalSyncEnabled(true);
 
-	viz::SpectrumDrawable<viz::VerticalBar> sd;
-	sd.set_rect({{}, (sf::Vector2i)size});
-	sd.set_bar_width(1);
-	sd.set_bar_spacing(0);
-	sd.set_color_mode(viz::SpectrumDrawable<viz::VerticalBar>::ColorMode::WHEEL);
-	sd.set_color_wheel_rate(200);
+	const auto framerate = 60;
 
-	const auto fft_size = size.x;
+	viz::StereoSpectrum<viz::VerticalBar> ss;
+	ss.set_left_backwards(true);
+	ss.set_rect({{}, (sf::Vector2i)size});
+	ss.set_bar_width(10);
+	ss.set_bar_spacing(5);
+
+	// number of audio FRAMES needed for fft
+	const auto fft_size = 3000;
 	tt::FrequencyAnalyzer fa{fft_size};
+	tt::StereoAnalyzer sa;
 
-	Media2 media{argv[3]};
-	// media.init(size);
+	Media3 media{argv[3], false};
+	const auto &astream = media.astream();
 
-	int afpvf{media._astream.sample_rate() / 60};
+	// number of audio FRAMES per video frame
+	const int afpvf{astream.sample_rate() / framerate};
 
-	std::vector<float> left_channel(size.x), spectrum(fft_size);
+	// number of audio SAMPLES per video frame
+	const int aspvf{afpvf * astream.nb_channels()};
+
+	// number of audio SAMPLES needed for fft
+	const auto fft_samples = fft_size * astream.nb_channels();
+
+	// remember this stores SAMPLES not FRAMES
+	// one audio FRAME is nb_channels SAMPLES long
+	std::vector<float> audio_buffer(fft_samples);
 
 	pa::PortAudio _;
-	pa::Stream pa_stream{0, media._astream.nb_channels(), paFloat32, media._astream.sample_rate()};
+	pa::Stream pa_stream{0, astream.nb_channels(), paFloat32, astream.sample_rate(), afpvf};
 	pa_stream.start();
 
 	while (window.isOpen())
 	{
+		// handle events
 		while (const auto event = window.pollEvent())
 			if (event->is<sf::Event::Closed>())
 				window.close();
-	
+
+		// ensure we have at least fft_samples samples
+		if (audio_buffer.size() < fft_samples)
 		{
-			media.decode(size.x);
-
-			if (media.audio_buffer.size() < size.x)
+			float buf[fft_samples];
+			if (media.read_audio_samples(buf, fft_samples) < fft_samples)
+			{
+				std::cout << "not enough audio for fft, breaking loop\n";
 				break;
-
-			// copy just the left channel
-			for (int i = 0; i < size.x; ++i)
-				left_channel[i] = media.audio_buffer[i * media._astream.nb_channels() + 0 /* left channel */];
-			fa.copy_to_input(left_channel.data());
-			fa.render(spectrum);
-			sd.update_bar_heights(spectrum);
-			sd.color_wheel_increment();
-			
-			try
-			{
-				pa_stream.write(media.audio_buffer.data(), afpvf);
 			}
-			catch (const pa::Error &e)
-			{
-				if (e.code != paOutputUnderflowed)
-					throw;
-				std::cerr << e.what() << '\n';
-			}
-			media.audio_buffer_erase(afpvf);
+			audio_buffer.insert(audio_buffer.end(), buf, buf + fft_samples);
 		}
 
+		ss.configure_analyzer(sa);
+		sa.analyze(fa, audio_buffer.data(), true);
+		ss.update(sa);
+
+		try
+		{
+			pa_stream.write(audio_buffer.data(), afpvf);
+		}
+		catch (const pa::Error &e)
+		{
+			if (e.code != paOutputUnderflowed)
+				throw;
+			std::cerr << e.what() << '\n';
+		}
+
+		const auto begin = audio_buffer.begin();
+		audio_buffer.erase(begin, begin + afpvf * astream.nb_channels());
+
 		window.clear();
-		window.draw(sd);
+		window.draw(ss);
 		window.display();
 	}
 }

@@ -38,15 +38,9 @@ find_library(_ NAMES fftw3f REQUIRED)
 set(SFML_BUILD_AUDIO FALSE CACHE BOOL "" FORCE)
 set(SFML_BUILD_NETWORK FALSE CACHE BOOL "" FORCE)
 
-# NEED THIS HERE to prevent building every other boost lib
-set(BOOST_INCLUDE_LIBRARIES "process;json")
-
 FetchContent_Declare(SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
     GIT_TAG 3.0.0-rc.1)
-
-FetchContent_Declare(Boost
-	URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z)
 
 FetchContent_Declare(libavpp
 	GIT_REPOSITORY https://github.com/trustytrojan/libavpp
@@ -58,7 +52,7 @@ FetchContent_Declare(argparse
 FetchContent_Declare(spline
 	GIT_REPOSITORY https://github.com/ttk592/spline)
 
-FetchContent_MakeAvailable(SFML Boost libavpp argparse spline)
+FetchContent_MakeAvailable(SFML libavpp argparse spline)
 
 # make compile_commands.json for clangd!!!!!!
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -74,7 +68,7 @@ include_directories(
 	${SFML_SOURCE_DIR}/include
 	${spline_SOURCE_DIR}/src)
 
-link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process Boost::json)
+link_libraries(sfml-graphics argparse ${AV_LIBS})
 
 if(WIN32)
 	link_libraries(fftw3f-3)
@@ -120,6 +114,10 @@ endif()
 
 # we need to include av/Util.cpp from libavpp for now until i figure out a better way
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
-add_executable(audioviz ${SOURCES})
+# add_executable(audioviz ${SOURCES})
 
-add_executable(test-player test-player.cpp)
+add_executable(test-player test-player.cpp
+	src/viz/VerticalBar.cpp
+	src/tt/FrequencyAnalyzer.cpp
+	src/tt/AudioAnalyzer.cpp
+	src/tt/ColorUtils.cpp)
