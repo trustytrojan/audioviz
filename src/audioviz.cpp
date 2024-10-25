@@ -89,22 +89,6 @@ void audioviz::layers_init(const int antialiasing)
 			// we only have one image; don't run effects in Layer::full_lifecycle
 			//bg.set_auto_fx(false); comment out because we want to run bass effects
 			//Draws square with size based on avg bass value
-			star.setPointCount(10);
-			star.setFillColor(sf::Color(100, 10, 100, 100));
-			int width = 90;
-			int width_3rd = 30;
-			int theta_0 = 270;
-			star.setPoint(0, sf::Vector2f(width*(cos(0.314159)), width*(sin(0.314159))));
-			star.setPoint(1, sf::Vector2f(width_3rd*(cos(0.942478)), width_3rd*(sin(0.942478))));
-			star.setPoint(2, sf::Vector2f(width*(cos(1.5708)), width*(sin(1.5708))));
-			star.setPoint(3, sf::Vector2f(width_3rd*(cos(2.19911)), width_3rd*(sin(2.19911))));
-			star.setPoint(4, sf::Vector2f(width*(cos(2.82743)), width*(sin(2.82743))));
-			star.setPoint(5, sf::Vector2f(width_3rd*(cos(3.45575)), width_3rd*(sin(3.45575))));
-			star.setPoint(6, sf::Vector2f(width*(cos(4.08407)), width*(sin(4.08407))));
-			star.setPoint(7, sf::Vector2f(width_3rd*(cos(4.71239)), width_3rd*(sin(4.71239))));
-			star.setPoint(8, sf::Vector2f(width*(cos(5.34071)), width*(sin(5.34071))));
-			star.setPoint(9, sf::Vector2f(width_3rd*(cos(5.96903)), width_3rd*(sin(5.96903))));
-			star.setPosition({500, 500});
 			bg.set_orig_cb([&](auto &orig_rt)
 			{
 				const auto &left_data = sa.left_data();
@@ -118,25 +102,20 @@ void audioviz::layers_init(const int antialiasing)
 				if (!bg)
 					throw "iudehoidewhf";
 
-				//std::cout << avg << '\n';
-				// std::cout << bg->effects.size() << '\n';
-
 				auto mult = dynamic_cast<fx::Mult *>(bg->effects[1].get());
 				if (!mult)
 					throw std::runtime_error{"???"};
 				mult->factor =  pow(1+avg, 5);
 
 				sf::Sprite spr{*media->attached_pic};
-				float width =  500 * avg;
-				float width_3rd = width/3;
-				spr.setPosition({width, width});
-				if (avg >= .01 )
+				int outerR = 5000 * avg;
+				int innerR = outerR / 3;
+				spr.setPosition({outerR, outerR});
+				if (avg >= .001 )
 				{
-
-					// int random_x = random<int>(50, size.x - 50);
-					// int random_y = random<int>(50, size.y - 50);
-
-					
+					star.setPosition({500, 500});
+					star.setRadii(outerR, innerR);
+					star.setFillColor(sf::Color(100, 10, 100, 100));
 				}
 				orig_rt.draw(spr);
 

@@ -13,6 +13,7 @@
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
+#include "viz/StarShape.hpp"
 
 #include "Media.hpp"
 
@@ -39,7 +40,7 @@ private:
 	// audio frames per video frame
 	int afpvf{media->_astream.sample_rate() / framerate};
 
-	sf::ConvexShape star;	
+	viz::StarShape star;	
 
 	// fft processor
 	tt::FrequencyAnalyzer &fa;
