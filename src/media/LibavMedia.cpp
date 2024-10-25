@@ -1,8 +1,8 @@
-#include "Media.hpp"
+#include "media/LibavMedia.hpp"
 
 #include <iostream>
 
-Media::Media(const std::string &url, const sf::Vector2u vsize)
+LibavMedia::LibavMedia(const std::string &url, const sf::Vector2u vsize)
 	: url{url},
 	  _format{url}
 {
@@ -77,14 +77,14 @@ Media::Media(const std::string &url, const sf::Vector2u vsize)
 	}
 }
 
-void Media::audio_buffer_erase(const int frames)
+void LibavMedia::audio_buffer_erase(const int frames)
 {
 	const auto begin = _audio_buffer.begin();
 	const auto samples = frames * _astream.nb_channels();
 	_audio_buffer.erase(begin, begin + samples);
 }
 
-void Media::decode_audio(const int frames)
+void LibavMedia::decode_audio(const int frames)
 {
 	const auto samples = frames * _astream.nb_channels();
 	while (_audio_buffer.size() < samples)

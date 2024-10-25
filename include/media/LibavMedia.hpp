@@ -9,7 +9,7 @@
 #include "av/Resampler.hpp"
 #include "av/SwScaler.hpp"
 
-class Media
+class LibavMedia
 {
 	const std::string url;
 	av::MediaReader _format;
@@ -33,7 +33,7 @@ class Media
 	std::optional<std::list<sf::Texture>> _frame_queue;
 
 public:
-	Media(const std::string &url, sf::Vector2u vsize);
+	LibavMedia(const std::string &url, sf::Vector2u vsize);
 	void decode_audio(int audio_frames);
 	void audio_buffer_erase(int frames);
 

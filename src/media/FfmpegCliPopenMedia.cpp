@@ -1,8 +1,8 @@
-#include "Media3.hpp"
+#include "media/FfmpegCliPopenMedia.hpp"
 
 #include <iostream>
 
-Media3::Media3(const std::string &url, const sf::Vector2u video_size)
+FfmpegCliMedia::FfmpegCliMedia(const std::string &url, const sf::Vector2u video_size)
 	: url{url},
 	  video_size{video_size},
 	  _format{url}
@@ -87,7 +87,7 @@ Media3::Media3(const std::string &url, const sf::Vector2u video_size)
 	}
 }
 
-Media3::~Media3()
+FfmpegCliMedia::~FfmpegCliMedia()
 {
 	if (audio && pclose(audio) == -1)
 		perror("pclose");
@@ -95,7 +95,7 @@ Media3::~Media3()
 		perror("pclose");
 }
 
-size_t Media3::read_audio_samples(float *const buf, const int samples) const
+size_t FfmpegCliMedia::read_audio_samples(float *const buf, const int samples) const
 {
 	if (!audio)
 		throw std::logic_error{"no audio stream"};
@@ -105,7 +105,7 @@ size_t Media3::read_audio_samples(float *const buf, const int samples) const
 	return samples_read;
 }
 
-bool Media3::read_video_frame(sf::Texture &txr) const
+bool FfmpegCliMedia::read_video_frame(sf::Texture &txr) const
 {
 	if (!video)
 		throw std::runtime_error{"no video stream available!"};
@@ -123,21 +123,20 @@ bool Media3::read_video_frame(sf::Texture &txr) const
 	return true;
 }
 
-void Media3::decode_audio(const int frames)
+void FfmpegCliMedia::decode_audio(const int frames)
 {
 	const auto samples_to_read = frames * _astream.nb_channels();
 	while (_audio_buffer.size() < samples_to_read)
 	{
 		float buf[samples_to_read];
 		const auto samples_read = read_audio_samples(buf, samples_to_read);
-		std::cout << "read " << samples_read << " samples\n";
-		// if (!samples_read)
-			// return;
+		if (!samples_read)
+			return;
 		_audio_buffer.insert(_audio_buffer.end(), buf, buf + samples_read);
 	}
 }
 
-void Media3::audio_buffer_erase(const int frames)
+void FfmpegCliMedia::audio_buffer_erase(const int frames)
 {
 	const auto begin = _audio_buffer.begin();
 	const auto samples = frames * _astream.nb_channels();

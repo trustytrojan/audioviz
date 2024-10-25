@@ -3,7 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <av/MediaReader.hpp>
 
-class Media3
+class FfmpegCliMedia
 {
 public:
 	const std::string url;
@@ -11,7 +11,6 @@ public:
 
 private:
 	FILE *audio{nullptr}, *video{nullptr};
-	// std::string audio_cmd, video_cmd;
 
 	av::MediaReader _format;
 
@@ -22,8 +21,8 @@ private:
 	std::optional<sf::Texture> _attached_pic;
 
 public:
-	Media3(const std::string &url, sf::Vector2u video_size = {});
-	~Media3();
+	FfmpegCliMedia(const std::string &url, sf::Vector2u video_size = {});
+	~FfmpegCliMedia();
 
 	size_t read_audio_samples(float *buf, int samples) const;
 	bool read_video_frame(sf::Texture &txr) const;

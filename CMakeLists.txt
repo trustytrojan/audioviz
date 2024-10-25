@@ -54,6 +54,15 @@ FetchContent_Declare(spline
 
 FetchContent_MakeAvailable(SFML libavpp argparse spline)
 
+find_package(Boost COMPONENTS process json)
+if(NOT Boost_FOUND)
+	message("Boost not found, using FetchContent...")
+	set(BOOST_INCLUDE_LIBRARIES "process;json")
+	FetchContent_Declare(Boost
+		URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z)
+	FetchContent_MakeAvailable(Boost)
+endif()
+
 # make compile_commands.json for clangd!!!!!!
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -68,7 +77,7 @@ include_directories(
 	${SFML_SOURCE_DIR}/include
 	${spline_SOURCE_DIR}/src)
 
-link_libraries(sfml-graphics argparse ${AV_LIBS})
+link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process Boost::json)
 
 if(WIN32)
 	link_libraries(fftw3f-3)
@@ -116,9 +125,9 @@ endif()
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})
 
-add_executable(test-player test-player.cpp
+add_executable(test-player test/test-player.cpp
 	src/viz/VerticalBar.cpp
 	src/tt/FrequencyAnalyzer.cpp
 	src/tt/AudioAnalyzer.cpp
 	src/tt/ColorUtils.cpp
-	src/Media3.cpp)
+	src/media/FfmpegCliPopenMedia.cpp)

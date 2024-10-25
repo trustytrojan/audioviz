@@ -1,4 +1,4 @@
-#include "Media3.hpp"
+#include "media/FfmpegCliPopenMedia.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
@@ -30,7 +30,7 @@ int main(const int argc, const char *const *const argv)
 	tt::FrequencyAnalyzer fa{fft_size};
 	tt::StereoAnalyzer sa;
 
-	Media3 media{argv[3]};
+	FfmpegCliMedia media{argv[3]};
 	const auto &astream = media.astream();
 
 	// number of audio FRAMES per video frame
