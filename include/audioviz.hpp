@@ -39,7 +39,7 @@ private:
 	// audio frames per video frame
 	int afpvf{media->_astream.sample_rate() / framerate};
 
-	sf::RectangleShape rectangle{sf::Vector2f(92, 50)};
+	sf::ConvexShape star;	
 
 	// fft processor
 	tt::FrequencyAnalyzer &fa;
