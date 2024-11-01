@@ -8,7 +8,6 @@ namespace viz
 template <typename ShapeType>
 class ScopeDrawable : public sf::Drawable
 {
-	std::vector<ShapeType> shapes;
 	sf::IntRect rect;
 	bool backwards = false;
 	struct
@@ -18,7 +17,11 @@ class ScopeDrawable : public sf::Drawable
 	bool fill_in = false;
 	bool vert = false;
 
+	sf::Angle angle = sf::degrees(0);
+
 public:
+	std::vector<ShapeType> shapes;
+
 	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
 		: rect{rect},
 		  backwards{backwards}
