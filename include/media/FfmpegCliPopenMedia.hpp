@@ -1,38 +1,16 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <av/MediaReader.hpp>
+#include "Media.hpp"
 
-class FfmpegCliMedia
+class FfmpegCliPopenMedia : public Media
 {
-public:
-	const std::string url;
-	const sf::Vector2u video_size;
-
 private:
 	FILE *audio{nullptr}, *video{nullptr};
 
-	av::MediaReader _format;
-
-	av::Stream _astream{_format.find_best_stream(AVMEDIA_TYPE_AUDIO)};
-	std::vector<float> _audio_buffer;
-
-	std::optional<av::Stream> _vstream;
-	std::optional<sf::Texture> _attached_pic;
-
 public:
-	FfmpegCliMedia(const std::string &url, sf::Vector2u video_size = {});
-	~FfmpegCliMedia();
+	FfmpegCliPopenMedia(const std::string &url, sf::Vector2u video_size = {});
+	~FfmpegCliPopenMedia();
 
-	size_t read_audio_samples(float *buf, int samples) const;
-	bool read_video_frame(sf::Texture &txr) const;
-
-	void decode_audio(int frames);
-	void audio_buffer_erase(int frames);
-
-	inline const av::MediaReader &format() const { return _format; }
-	inline const av::Stream &astream() const { return _astream; }
-	inline const std::optional<av::Stream> &vstream() const { return _vstream; }
-	inline const std::optional<sf::Texture> &attached_pic() const { return _attached_pic; }
-	inline const std::vector<float> &audio_buffer() const { return _audio_buffer; }
+	size_t read_audio_samples(float *buf, int samples) override;
+	bool read_video_frame(sf::Texture &txr) override;
 };

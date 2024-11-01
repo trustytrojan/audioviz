@@ -1,11 +1,8 @@
 #include "media/FfmpegCliPopenMedia.hpp"
-
 #include <iostream>
 
-FfmpegCliMedia::FfmpegCliMedia(const std::string &url, const sf::Vector2u video_size)
-	: url{url},
-	  video_size{video_size},
-	  _format{url}
+FfmpegCliPopenMedia::FfmpegCliPopenMedia(const std::string &url, const sf::Vector2u video_size)
+	: Media{url, video_size}
 {
 	{ // read attached pic
 		const auto &streams = _format.streams();
@@ -87,7 +84,7 @@ FfmpegCliMedia::FfmpegCliMedia(const std::string &url, const sf::Vector2u video_
 	}
 }
 
-FfmpegCliMedia::~FfmpegCliMedia()
+FfmpegCliPopenMedia::~FfmpegCliPopenMedia()
 {
 	if (audio && pclose(audio) == -1)
 		perror("pclose");
@@ -95,7 +92,7 @@ FfmpegCliMedia::~FfmpegCliMedia()
 		perror("pclose");
 }
 
-size_t FfmpegCliMedia::read_audio_samples(float *const buf, const int samples) const
+size_t FfmpegCliPopenMedia::read_audio_samples(float *const buf, const int samples)
 {
 	if (!audio)
 		throw std::logic_error{"no audio stream"};
@@ -105,7 +102,7 @@ size_t FfmpegCliMedia::read_audio_samples(float *const buf, const int samples) c
 	return samples_read;
 }
 
-bool FfmpegCliMedia::read_video_frame(sf::Texture &txr) const
+bool FfmpegCliPopenMedia::read_video_frame(sf::Texture &txr)
 {
 	if (!video)
 		throw std::runtime_error{"no video stream available!"};
@@ -121,24 +118,4 @@ bool FfmpegCliMedia::read_video_frame(sf::Texture &txr) const
 	}
 	txr.update(buf);
 	return true;
-}
-
-void FfmpegCliMedia::decode_audio(const int frames)
-{
-	const auto samples_to_read = frames * _astream.nb_channels();
-	while (_audio_buffer.size() < samples_to_read)
-	{
-		float buf[samples_to_read];
-		const auto samples_read = read_audio_samples(buf, samples_to_read);
-		if (!samples_read)
-			return;
-		_audio_buffer.insert(_audio_buffer.end(), buf, buf + samples_read);
-	}
-}
-
-void FfmpegCliMedia::audio_buffer_erase(const int frames)
-{
-	const auto begin = _audio_buffer.begin();
-	const auto samples = frames * _astream.nb_channels();
-	_audio_buffer.erase(begin, begin + samples);
 }

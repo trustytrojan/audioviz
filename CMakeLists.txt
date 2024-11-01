@@ -130,4 +130,6 @@ add_executable(test-player test/test-player.cpp
 	src/tt/FrequencyAnalyzer.cpp
 	src/tt/AudioAnalyzer.cpp
 	src/tt/ColorUtils.cpp
+	src/media/Media.cpp
+	src/media/FfmpegCliBoostMedia.cpp
 	src/media/FfmpegCliPopenMedia.cpp)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "media/FfmpegCliPopenMedia.hpp"
+#include "media/Media.hpp"
 #include "tt/Sprite.hpp"
 #include <SFML/Graphics.hpp>
 
@@ -20,7 +20,7 @@ class SongMetadataDrawable : public sf::Drawable
 
 public:
 	SongMetadataDrawable(sf::Text &title_text, sf::Text &artist_text);
-	void use_metadata(const FfmpegCliMedia &);
+	void use_metadata(const Media &);
 	void set_album_cover(const sf::Texture &txr, const sf::Vector2f size);
 	void set_position(const sf::Vector2f pos);
 	void draw(sf::RenderTarget &target, const sf::RenderStates states) const override;

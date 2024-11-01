@@ -1,4 +1,6 @@
-#include "media/FfmpegCliPopenMedia.hpp"
+#include "media/Media.hpp"
+#include "media/FfmpegCliBoostMedia.hpp"
+// #include "media/FfmpegCliPopenMedia.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
@@ -30,8 +32,8 @@ int main(const int argc, const char *const *const argv)
 	tt::FrequencyAnalyzer fa{fft_size};
 	tt::StereoAnalyzer sa;
 
-	FfmpegCliMedia media{argv[3]};
-	const auto &astream = media.astream();
+	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
+	const auto &astream = media->astream();
 
 	// number of audio FRAMES per video frame
 	const int afpvf{astream.sample_rate() / framerate};
@@ -61,7 +63,7 @@ int main(const int argc, const char *const *const argv)
 		if (audio_buffer.size() < fft_samples)
 		{
 			float buf[fft_samples];
-			if (media.read_audio_samples(buf, fft_samples) < fft_samples)
+			if (media->read_audio_samples(buf, fft_samples) < fft_samples)
 			{
 				std::cout << "not enough audio for fft, breaking loop\n";
 				break;

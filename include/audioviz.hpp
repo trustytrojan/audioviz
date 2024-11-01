@@ -14,7 +14,7 @@
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
 
-#include "media/FfmpegCliPopenMedia.hpp"
+#include "media/Media.hpp"
 
 class audioviz : public sf::Drawable
 {
@@ -30,12 +30,12 @@ private:
 	int framerate{60};
 
 	// used for updating the particle system at 60Hz rate when framerate > 60
-	int frame_count{}, vfcount{};
+	int frame_count{}, vfcount{1};
 
-	FfmpegCliMedia media;
+	std::unique_ptr<Media> media;
 
 	// audio frames per video frame
-	int afpvf{media.astream().sample_rate() / framerate};
+	int afpvf{media->astream().sample_rate() / framerate};
 
 	// fft processor
 	tt::FrequencyAnalyzer &fa;
