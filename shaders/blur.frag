@@ -5,7 +5,7 @@ const float[] offset = float[](0, 1.3846153846, 3.2307692308);
 const float[] weight = float[](0.2270270270, 0.3162162162, 0.0702702703);
 
 uniform sampler2D image;
-uniform vec2 size;
+uniform vec2 size; // in 1.20 we have to pass the size manually
 
 // (x, 0) = horizontal
 // (0, y) = vertical
@@ -14,12 +14,9 @@ uniform vec2 size;
 // x, y = blur strength/radius
 uniform vec2 direction;
 
-// out vec4 color;
-
 void main()
 {
 	vec2 coord = gl_FragCoord.xy;
-	// const ivec2 size = textureSize(image, 0);
 
 	// start with original color.
 	gl_FragColor = texture2D(image, coord / size) * weight[0];

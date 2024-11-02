@@ -1,11 +1,10 @@
 #version 120
 
 uniform sampler2D image;
-uniform vec2 size;
+uniform vec2 size; // in 1.20 we have to pass the size manually
 uniform float factor;
 
 void main()
 {
-	vec2 coord = gl_FragCoord.xy;
-	gl_FragColor = texture2D(image, coord / size) * factor;
+	gl_FragColor = texture2D(image, gl_FragCoord.xy / size) * factor;
 }
