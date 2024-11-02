@@ -12,6 +12,7 @@ Blur::Blur(const float hrad, const float vrad, const int n_passes)
 
 void Blur::apply(tt::RenderTexture &rt) const
 {
+	shader.setUniform("size", sf::Glsl::Vec2{rt.getSize()});
 	for (int i = 0; i < n_passes; ++i)
 	{
 		shader.setUniform("direction", sf::Glsl::Vec2{hrad, 0}); // horizontal blur

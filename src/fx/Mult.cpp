@@ -11,6 +11,7 @@ Mult::Mult(const float factor)
 void Mult::apply(tt::RenderTexture &rt) const
 {
 	shader.setUniform("factor", factor);
+	shader.setUniform("size", sf::Glsl::Vec2{rt.getSize()});
 	rt.draw(rt.sprite, &shader);
 	rt.display();
 }
