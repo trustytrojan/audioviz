@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include "viz/SpectrumDrawable.hpp" 
 
 namespace viz
 {
@@ -19,6 +20,13 @@ class ScopeDrawable : public sf::Drawable
 	bool vert = false;
 
 public:
+
+	enum class ColorMode
+	{
+		WHEEL,
+		SOLID
+	};
+
 	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
 		: rect{rect},
 		  backwards{backwards}
@@ -106,8 +114,9 @@ public:
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{
-		for (const auto &shape : shapes)
-			target.draw(shape, states);
+		for (int i = 0; i < (int)shapes.size(); ++i) {
+			target.draw(shapes[i], states);
+		}
 	}
 
 private:
@@ -121,6 +130,8 @@ private:
 				shapes[i].setSize({shape.width, shape.width});
 			else
 				shapes[i].setScale(shape.width);
+
+			shapes[i].setFillColor(color.get((float)i / shapes.size()));
 
 			// clang-format off
 			const auto x = backwards
@@ -136,6 +147,41 @@ private:
 				shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
 		}
 	}
+
+	struct
+	{
+		ColorMode mode = ColorMode::WHEEL;
+		sf::Color solid{255, 255, 255};
+
+		/**
+		 * @param index_ratio the ratio of your loop index (`i`) to the total number of bars to print (`bars.size()`)
+		 */
+		sf::Color get(const float index_ratio)
+		{
+			switch (mode)
+			{
+			case ColorMode::WHEEL:
+			{
+				const auto [h, s, v] = wheel.hsv;
+				return tt::hsv2rgb(index_ratio + h + wheel.time, s, v);
+			}
+
+			case ColorMode::SOLID:
+				return solid;
+
+			default:
+				throw std::logic_error("SpectrumRenderer::color::get: default case hit");
+			}
+		}
+
+		// wheel stuff
+		struct
+		{
+			float time = 0, rate = 0;
+			sf::Vector3f hsv{0.9, 0.7, 1};
+			void increment_time() { time += rate; }
+		} wheel;
+	} color;
 };
 
 } // namespace viz

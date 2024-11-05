@@ -21,7 +21,7 @@ int main(const int argc, const char *const *const argv)
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
-	scope.set_vert(true);
+	scope.set_vert(false);
 	scope.set_fill_in(true);
 
 	viz::SpectrumDrawable<viz::VerticalBar> sd;
