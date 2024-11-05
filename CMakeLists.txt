@@ -9,23 +9,17 @@ set(CMAKE_CXX_STANDARD 23)
 set(AV_LIBS avfilter avformat avcodec avutil swresample swscale)
 
 if(WIN32)
-	# check README to understand this
-	set(CMAKE_PREFIX_PATH
-		windows_deps/ffmpeg/lib)
-
 	link_directories(
 		windows_deps/ffmpeg/lib
 		windows_deps/fftw
-		windows_deps/portaudio)
-
+		windows_deps/portaudio
+	)
 	include_directories(
 		windows_deps/ffmpeg/include
 		windows_deps/fftw
 		windows_deps/portaudio
-		windows_deps)
-
-	# LuaState.cpp doesn't compile otherwise
-	add_compile_options(-Wa,-mbig-obj)
+	)
+	add_compile_options(-Wa,-mbig-obj) # LuaState.cpp doesn't compile otherwise
 endif()
 
 # do it in a loop so we know exactly which lib may not be found
@@ -54,13 +48,16 @@ FetchContent_Declare(spline
 
 FetchContent_MakeAvailable(SFML libavpp argparse spline)
 
-find_package(Boost COMPONENTS process json)
+find_package(Boost COMPONENTS process)
 if(NOT Boost_FOUND)
 	message("Boost not found, using FetchContent...")
 	set(BOOST_INCLUDE_LIBRARIES "process")
 	FetchContent_Declare(Boost
 		URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z)
 	FetchContent_MakeAvailable(Boost)
+	if(WIN32)
+		link_libraries(ws2_32) # winsock library required by boost.asio
+	endif()
 endif()
 
 # make compile_commands.json for clangd!!!!!!
@@ -147,11 +144,13 @@ endif()
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})
 
-add_executable(test-player test/test-player.cpp
+add_executable(test-player
+	test/test-player.cpp
 	src/viz/VerticalBar.cpp
 	src/tt/FrequencyAnalyzer.cpp
 	src/tt/AudioAnalyzer.cpp
 	src/tt/ColorUtils.cpp
 	src/media/Media.cpp
 	src/media/FfmpegCliBoostMedia.cpp
-	src/media/FfmpegCliPopenMedia.cpp)
+	src/media/FfmpegCliPopenMedia.cpp
+)

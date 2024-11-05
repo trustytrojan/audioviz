@@ -20,7 +20,6 @@ protected:
 
 public:
 	Media(const std::string &url, sf::Vector2u video_size);
-	// virtual ~Media() = 0;
 
 	virtual size_t read_audio_samples(float *buf, int samples) = 0;
 	virtual bool read_video_frame(sf::Texture &txr) = 0;

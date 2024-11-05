@@ -10,6 +10,7 @@ class FfmpegCliBoostMedia : public Media
 	bp::child audioc, videoc;
 	bp::basic_pipe<float> audio;
 	bp::basic_pipe<uint8_t> video;
+	std::vector<uint8_t> video_buffer;
 
 public:
 	FfmpegCliBoostMedia(const std::string &url, sf::Vector2u video_size = {});

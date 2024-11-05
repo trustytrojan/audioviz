@@ -1,9 +1,9 @@
 #include "media/FfmpegCliBoostMedia.hpp"
 #include <iostream>
-#include <array>
 
 FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vector2u video_size)
-	: Media{url, video_size}
+	: Media{url, video_size},
+	  video_buffer(4 * video_size.x * video_size.y)
 {
 	{ // read attached pic
 		const auto &streams = _format.streams();
@@ -59,7 +59,7 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 		});
 		// clang-format on
 #else
-		args.insert(args.end(), {"-s", std::to_string(video_size.x), "x", std::to_string(video_size.y)});
+		args.insert(args.end(), {"-s", std::to_string(video_size.x) + "x" + std::to_string(video_size.y)});
 #endif
 
 		args.insert(args.end(), {"-pix_fmt", "rgba", "-f", "rawvideo", "-"});
@@ -92,15 +92,14 @@ bool FfmpegCliBoostMedia::read_video_frame(sf::Texture &txr)
 	if (!txr.resize(video_size))
 		throw std::runtime_error{"texture resize failed!"};
 	const auto bytes_to_read = 4 * video_size.x * video_size.y;
-	uint8_t buf[bytes_to_read];
 	int bytes_read = 0;
 	while (bytes_read < bytes_to_read)
 	{
-		const auto _bytes_read = video.read(buf + bytes_read, bytes_to_read - bytes_read);
+		const auto _bytes_read = video.read(video_buffer.data() + bytes_read, bytes_to_read - bytes_read);
 		if (!_bytes_read)
 			return false;
 		bytes_read += _bytes_read;
 	}
-	txr.update(buf);
+	txr.update(video_buffer.data());
 	return true;
 }
