@@ -11,7 +11,7 @@ Mult::Mult(const float factor)
 void Mult::apply(tt::RenderTexture &rt) const
 {
 	shader.setUniform("factor", factor);
-	rt.draw(rt.sprite, &shader);
+	rt.draw(rt.sprite(), &shader);
 	rt.display();
 }
 

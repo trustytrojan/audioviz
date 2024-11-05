@@ -78,8 +78,13 @@ public:
 		update_spectrum_rects();
 	}
 
-	// this should be called BEFORE calling `sa.analyze`!!!!
-	void before_analyze(tt::StereoAnalyzer &sa)
+	/**
+	 * Resizes `sa` 's spectrum vectors to be the same size as
+	 * the number of bars that this `StereoSpectrum` is setup to
+	 * render. You MUST call this before analyzing audio, otherwise
+	 * you might get an assertion error from `tt::AudioAnalyzer::analyze`.
+	 */
+	void configure_analyzer(tt::StereoAnalyzer &sa)
 	{
 		assert(_left.bar_count() == _right.bar_count());
 		sa.resize(_left.bar_count());

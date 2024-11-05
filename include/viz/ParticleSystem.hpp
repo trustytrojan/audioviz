@@ -41,7 +41,7 @@ private:
 	std::vector<tt::Particle<ParticleShape>> particles;
 	sf::Vector2f displacement_direction{0, 1};
 
-	StartSide start_position = StartSide::BOTTOM;
+	StartSide start_side = StartSide::BOTTOM;
 
 public:
 	ParticleSystem(const size_t particle_count)
@@ -68,7 +68,7 @@ public:
 			auto new_pos = p.getPosition() + additional_displacement;
 
 			// make sure particles don't escape the rect
-			switch (start_position)
+			switch (start_side)
 			{
 			case StartSide::BOTTOM:
 			case StartSide::TOP:
@@ -97,7 +97,7 @@ public:
 
 			// decrease alpha with distance from start side
 			auto [r, g, b, a] = p.getFillColor();
-			switch (start_position)
+			switch (start_side)
 			{
 			case StartSide::BOTTOM:
 				a = sqrtf((new_pos.y - rect.position.y) / (rect.position.y + rect.size.y)) * 255;
@@ -115,7 +115,7 @@ public:
 			p.setFillColor({r, g, b, a});
 
 			// reset position to start side once it reaches opposite side
-			switch (start_position)
+			switch (start_side)
 			{
 			case StartSide::BOTTOM:
 				if (new_pos.y <= rect.position.y)
@@ -162,9 +162,9 @@ public:
 
 	void set_displacement_direction(sf::Vector2f displacement) { displacement_direction = displacement; }
 
-	void set_start_position(StartSide side)
+	void set_start_side(StartSide side)
 	{
-		start_position = side;
+		start_side = side;
 		init_particles();
 	}
 
@@ -194,7 +194,7 @@ private:
 			// start some particles offscreen, so the beginning sequence feels less "sudden"
 			// otherwise all of them come out at once and it looks bad
 			// sets displacement_direction based on which side we are starting on
-			switch (start_position)
+			switch (start_side)
 			{
 			case StartSide::BOTTOM:
 				p.setPosition({

@@ -5,7 +5,6 @@ project(audioviz LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(BUILD_SHARED_LIBS OFF)
-
 set(CMAKE_CXX_STANDARD 23)
 set(AV_LIBS avfilter avformat avcodec avutil swresample swscale)
 
@@ -13,17 +12,23 @@ if(WIN32)
 	# check README to understand this
 	set(CMAKE_PREFIX_PATH
 		windows_deps/ffmpeg/lib)
+
 	link_directories(
 		windows_deps/ffmpeg/lib
 		windows_deps/fftw
-	)
+		windows_deps/portaudio)
+
 	include_directories(
 		windows_deps/ffmpeg/include
 		windows_deps/fftw
 		windows_deps/portaudio
-	)
+		windows_deps)
+
+	# LuaState.cpp doesn't compile otherwise
+	add_compile_options(-Wa,-mbig-obj)
 endif()
 
+# do it in a loop so we know exactly which lib may not be found
 foreach(lib IN LISTS AV_LIBS)
 	find_library(_ NAMES ${lib} REQUIRED)
 endforeach()
@@ -42,12 +47,21 @@ FetchContent_Declare(libavpp
 	GIT_TAG main)
 
 FetchContent_Declare(argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse.git)
+    GIT_REPOSITORY https://github.com/p-ranav/argparse)
 
 FetchContent_Declare(spline
 	GIT_REPOSITORY https://github.com/ttk592/spline)
 
 FetchContent_MakeAvailable(SFML libavpp argparse spline)
+
+find_package(Boost COMPONENTS process json)
+if(NOT Boost_FOUND)
+	message("Boost not found, using FetchContent...")
+	set(BOOST_INCLUDE_LIBRARIES "process;json")
+	FetchContent_Declare(Boost
+		URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z)
+	FetchContent_MakeAvailable(Boost)
+endif()
 
 # make compile_commands.json for clangd!!!!!!
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -65,16 +79,17 @@ include_directories(
 	${spline_SOURCE_DIR}/src
 )
 
-link_libraries(sfml-graphics argparse ${AV_LIBS})
+link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process Boost::json)
 
 if(WIN32)
 	link_libraries(fftw3f-3)
 elseif(LINUX)
 	link_libraries(fftw3f)
+	add_compile_definitions(LINUX)
 endif()
 
 option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback during live rendering" ON)
-option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" OFF)
+option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" ON)
 
 if(AUDIOVIZ_PORTAUDIO)
 	if(WIN32)
@@ -117,10 +132,26 @@ if(AUDIOVIZ_LUA)
 	FetchContent_MakeAvailable(sol2)
 	add_compile_definitions(AUDIOVIZ_LUA)
 
-	# no need for target_include_directories since sol2 is a CMake interface library
-	link_libraries(lua sol2)
+	if(WIN32)
+		include_directories(windows_deps/lua/include)
+		link_directories(windows_deps/lua/lib)
+		link_libraries(lua54)
+	elseif(LINUX)
+		link_libraries(lua)
+	endif()
+
+	link_libraries(sol2)
 endif()
 
 # we need to include av/Util.cpp from libavpp for now until i figure out a better way
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})
+
+add_executable(test-player test/test-player.cpp
+	src/viz/VerticalBar.cpp
+	src/tt/FrequencyAnalyzer.cpp
+	src/tt/AudioAnalyzer.cpp
+	src/tt/ColorUtils.cpp
+	src/media/Media.cpp
+	src/media/FfmpegCliBoostMedia.cpp
+	src/media/FfmpegCliPopenMedia.cpp)

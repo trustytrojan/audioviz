@@ -4,6 +4,7 @@
 #include "audioviz.hpp"
 #include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
+#include "media/FfmpegCliBoostMedia.hpp"
 
 #define capture_time(label, code)            \
 	{                                        \
@@ -20,15 +21,16 @@ audioviz::audioviz(
 	viz::ParticleSystem<ParticleShapeType> &ps,
 	const int antialiasing)
 	: size{size},
-	  media{media_url},
+	  media{new FfmpegCliBoostMedia{media_url, size}},
 	  fa{fa},
 	  ss{ss},
 	  ps{ps},
-	  final_rt{size, antialiasing}
+	  final_rt{size, antialiasing},
+	  video_bg{size}
 {
 	// for now only stereo is supported
 	// this will be moved into its own class eventually
-	if (media->_astream.nb_channels() != 2)
+	if (media->astream().nb_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 
 	// default spectrum margin
@@ -43,7 +45,6 @@ audioviz::audioviz(
 	timing_text.setFillColor({255, 255, 255, 150});
 	set_timing_text_enabled(true);
 
-	media->init(size);
 	metadata_init();
 	layers_init(antialiasing);
 
@@ -52,25 +53,33 @@ audioviz::audioviz(
 	metadata.set_position({30, 30});
 }
 
+void audioviz::perform_fft()
+{
+	ss.configure_analyzer(sa);
+	capture_time("fft", sa.analyze(fa, media->audio_buffer().data(), true));
+}
+
 void audioviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
-		const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
-		const auto frames_to_wait = framerate / vfr;
-		if (media->_vstream) // set_orig_cb() to draw video frames on the layer
+
+		if (media->vstream()) // set_orig_cb() to draw video frames on the layer
 		{
+			// round the framerate bc sometimes it's 29.97
+			const int video_framerate = std::round(av_q2d(media->vstream()->get()->avg_frame_rate));
 			bg.set_orig_cb(
-				[&](auto &orig_rt)
+				[this, frames_to_wait{framerate / video_framerate}](auto &orig_rt)
 				{
-					if (media->_frame_queue->empty() || vfcount < frames_to_wait)
+					if (vfcount < frames_to_wait)
 						++vfcount;
 					else
 					{
-						// the frame queue should have frames scaled to this->size! see Media::decode()
-						orig_rt.draw(sf::Sprite(media->_frame_queue->front()));
-						media->_frame_queue->pop_front();
-						vfcount = 0;
+						if (media->read_video_frame(video_bg))
+							orig_rt.draw(sf::Sprite{video_bg});
+						else
+							std::cout << "media->read_video_frame returned false????????\n";
+						vfcount = 1; // ALWAYS RESET TO 1 OTHERWISE THE IF CHECK ABOVE DOESN'T MAKE SENSE
 					}
 					orig_rt.display();
 				});
@@ -81,10 +90,10 @@ void audioviz::layers_init(const int antialiasing)
 			// we only have one image; don't run effects in Layer::full_lifecycle
 			bg.set_auto_fx(false);
 
-			if (media->attached_pic)
+			if (media->attached_pic())
 			{
-				metadata.set_album_cover(*media->attached_pic, {150, 150});
-				set_background(*media->attached_pic);
+				metadata.set_album_cover(*media->attached_pic(), {150, 150});
+				set_background(*media->attached_pic());
 			}
 
 			// don't set_fx_cb() if there is no video stream!
@@ -96,6 +105,10 @@ void audioviz::layers_init(const int antialiasing)
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
+				// this HAS to be done before particles or spectrum, as both depend
+				// on fft being performed on the current audio buffer for this frame
+				perform_fft();
+
 				// lock the tickrate of the particles at 60hz for non-60fps output
 
 				if (framerate < 60)
@@ -117,8 +130,8 @@ void audioviz::layers_init(const int antialiasing)
 		particles.set_fx_cb(
 			[&](auto &orig_rt, auto &fx_rt, auto &target)
 			{
-				target.draw(fx_rt.sprite, sf::BlendAdd);
-				target.draw(orig_rt.sprite, sf::BlendAdd);
+				target.draw(fx_rt.sprite(), sf::BlendAdd);
+				target.draw(orig_rt.sprite(), sf::BlendAdd);
 			});
 	}
 
@@ -135,10 +148,10 @@ void audioviz::layers_init(const int antialiasing)
 		spectrum.set_fx_cb(
 			[&](auto &orig_rt, auto &fx_rt, auto &target)
 			{
-				target.draw(fx_rt.sprite, sf::BlendAdd);
+				target.draw(fx_rt.sprite(), sf::BlendAdd);
 
 				if (spectrum_bm)
-					target.draw(orig_rt.sprite, *spectrum_bm);
+					target.draw(orig_rt.sprite(), *spectrum_bm);
 				else
 					/**
 					 * since i haven't found the right blendmode that gets rid of the dark
@@ -164,8 +177,8 @@ viz::Layer *audioviz::get_layer(const std::string &name)
 // need to do this outside of the constructor otherwise the texture is broken?
 void audioviz::use_attached_pic_as_bg()
 {
-	if (media->attached_pic)
-		set_background(*media->attached_pic);
+	if (media->attached_pic())
+		set_background(*media->attached_pic());
 }
 
 void audioviz::add_default_effects()
@@ -174,14 +187,15 @@ void audioviz::add_default_effects()
 	{
 		// clang-format off
 		bg->effects.emplace_back(
-			media->_vstream
+			media->vstream()
 				? new fx::Blur{2.5, 2.5, 5}
 				: new fx::Blur{7.5, 7.5, 15});
 		// clang-format on
-		if (!media->_vstream)
+		if (!media->vstream())
 			bg->effects.emplace_back(new fx::Mult{0.75});
-		if (media->attached_pic)
-			bg->apply_fx();
+		if (media->attached_pic())
+			// this will reapply the effects without any bs
+			set_background(*media->attached_pic());
 	}
 
 	if (const auto particles = get_layer("particles"))
@@ -191,15 +205,9 @@ void audioviz::add_default_effects()
 		spectrum->effects.emplace_back(new fx::Blur{1, 1, 20});
 }
 
-void audioviz::set_media_url(const std::string &url)
+const std::string audioviz::get_media_url() const
 {
-	media.emplace(url);
-	media->init(size);
-}
-
-const std::string &audioviz::get_media_url() const
-{
-	return media->url;
+	return media->format()->url;
 }
 
 void audioviz::set_timing_text_enabled(const bool enabled)
@@ -240,7 +248,7 @@ void audioviz::set_spectrum_margin(const int margin)
 void audioviz::set_framerate(const int framerate)
 {
 	this->framerate = framerate;
-	afpvf = media->_astream.sample_rate() / framerate;
+	afpvf = media->astream().sample_rate() / framerate;
 }
 
 void audioviz::set_background(const sf::Texture &txr)
@@ -266,7 +274,7 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 	spectrum_bm = bm;
 }
 
-void audioviz::capture_elapsed_time(const char *const label, const sf::Clock &_clock)
+void audioviz::capture_elapsed_time(const std::string &label, const sf::Clock &_clock)
 {
 	tt_ss << std::setw(20) << std::left << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
@@ -277,7 +285,7 @@ void audioviz::set_audio_playback_enabled(const bool enabled)
 	if (enabled)
 	{
 		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, media->_astream.sample_rate(), afpvf);
+		pa_stream.emplace(0, 2, paFloat32, media->astream().sample_rate(), afpvf);
 		pa_stream->start();
 	}
 	else
@@ -291,7 +299,7 @@ void audioviz::play_audio()
 {
 	try // to play the audio
 	{
-		pa_stream->write(media->audio_buffer.data(), afpvf);
+		pa_stream->write(media->audio_buffer().data(), afpvf);
 	}
 	catch (const pa::Error &e)
 	{
@@ -304,8 +312,7 @@ void audioviz::play_audio()
 
 bool audioviz::prepare_frame()
 {
-	assert(media);
-	capture_time("media_decode", media->decode(fft_size));
+	capture_time("media_decode", media->decode_audio(fft_size));
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream)
@@ -313,18 +320,12 @@ bool audioviz::prepare_frame()
 #endif
 
 	// we don't have enough samples for fft; end here
-	if ((int)media->audio_buffer.size() < 2 * fft_size)
+	if ((int)media->audio_buffer().size() < 2 * fft_size)
 		return false;
-
-	// resizes sa's vectors properly to fit ss's bars
-	ss.before_analyze(sa);
-
-	// perform actual fft
-	capture_time("fft", sa.analyze(fa, media->audio_buffer.data(), true));
 
 	final_rt.clear();
 	for (auto &layer : layers)
-		capture_time(layer.get_name().c_str(), layer.full_lifecycle(final_rt));
+		capture_time(layer.get_name(), layer.full_lifecycle(final_rt));
 	final_rt.display();
 
 	// THE IMPORTANT PART
@@ -338,7 +339,7 @@ bool audioviz::prepare_frame()
 
 void audioviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
-	target.draw(final_rt.sprite, states);
+	target.draw(final_rt.sprite(), states);
 	target.draw(metadata, states);
 	if (tt_enabled)
 		target.draw(timing_text, states);

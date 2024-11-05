@@ -1,18 +1,18 @@
-#include "Media.hpp"
+#include "media/LibavMedia.hpp"
 
 #include <iostream>
 
-void Media::init(const sf::Vector2u video_frame_size)
+LibavMedia::LibavMedia(const std::string &url, const sf::Vector2u vsize)
+	: url{url},
+	  _format{url}
 {
 	// if an attached pic is in the format, use it for bg and album cover
-	// clang-format off
-	if (const auto itr = std::ranges::find_if(_format.streams(),
-			[](const auto &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
+	if (const auto itr = std::ranges::find_if(
+			_format.streams(), [](const auto &s) { return s->disposition & AV_DISPOSITION_ATTACHED_PIC; });
 		itr != _format.streams().cend())
-	// clang-format on
 	{
 		const auto &stream = *itr;
-		attached_pic = {stream->attached_pic.data, stream->attached_pic.size};
+		_attached_pic = {stream->attached_pic.data, stream->attached_pic.size};
 	}
 
 	try
@@ -29,7 +29,7 @@ void Media::init(const sf::Vector2u video_frame_size)
 					_s->codecpar->height,
 					(AVPixelFormat)_s->codecpar->format,
 				},
-				av::SwScaler::SrcDstArgs{video_frame_size.x, video_frame_size.y, AV_PIX_FMT_RGBA});
+				av::SwScaler::SrcDstArgs{vsize.x, vsize.y, AV_PIX_FMT_RGBA});
 			_scaled_frame.emplace();
 			_frame_queue.emplace();
 		}
@@ -49,10 +49,11 @@ void Media::init(const sf::Vector2u video_frame_size)
 		}
 	}
 
-	// audio decoding initialization
-	if (!_astream->codecpar->ch_layout.order)
-		// this check is necessary for .wav files with no channel order information
-		_astream->codecpar->ch_layout = AV_CHANNEL_LAYOUT_STEREO;
+	// this check is necessary for .wav files with no channel order information
+	if (_astream->codecpar->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
+		_astream->codecpar->ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
+
+	// resampler initialization
 	rs_frame->ch_layout = _astream->codecpar->ch_layout;
 	rs_frame->sample_rate = _astream->codecpar->sample_rate;
 	rs_frame->format = AV_SAMPLE_FMT_FLT;
@@ -68,22 +69,25 @@ void Media::init(const sf::Vector2u video_frame_size)
 	switch (_adecoder->codec_id)
 	{
 	case AV_CODEC_ID_MP3:
-		_format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
+		// _format.seek_file(-1, 1, 1, 1, AVSEEK_FLAG_FRAME);
+		_format.seek_frame(-1, 0, AVSEEK_FLAG_BACKWARD);
 		break;
 	default:
 		break;
 	}
 }
 
-void Media::audio_buffer_erase(int frames)
+void LibavMedia::audio_buffer_erase(const int frames)
 {
-	audio_buffer.erase(audio_buffer.begin(), audio_buffer.begin() + _astream.nb_channels() * frames);
+	const auto begin = _audio_buffer.begin();
+	const auto samples = frames * _astream.nb_channels();
+	_audio_buffer.erase(begin, begin + samples);
 }
 
-void Media::decode(int audio_frames)
+void LibavMedia::decode_audio(const int frames)
 {
-	// while we don't have enough audio samples
-	while ((int)audio_buffer.size() < _astream.nb_channels() * audio_frames)
+	const auto samples = frames * _astream.nb_channels();
+	while (_audio_buffer.size() < samples)
 	{
 		const auto packet = _format.read_packet();
 
@@ -95,8 +99,8 @@ void Media::decode(int audio_frames)
 
 		if (packet->stream_index == _astream->index)
 		{
-			// std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / " <<
-			// _astream.duration_sec() << '\n';
+			// std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / "
+			// 		  << _astream.duration_sec() << '\n';
 
 			if (!_adecoder.send_packet(packet))
 			{
@@ -109,7 +113,7 @@ void Media::decode(int audio_frames)
 				_resampler.convert_frame(rs_frame.get(), frame);
 				const auto data = reinterpret_cast<const float *>(rs_frame->extended_data[0]);
 				const auto nb_floats = _astream.nb_channels() * rs_frame->nb_samples;
-				audio_buffer.insert(audio_buffer.end(), data, data + nb_floats);
+				_audio_buffer.insert(_audio_buffer.end(), data, data + nb_floats);
 			}
 		}
 		else if (_vstream && packet->stream_index == _vstream->get()->index)
