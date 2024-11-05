@@ -41,12 +41,13 @@ private:
 	int afpvf{media->_astream.sample_rate() / framerate};
 
 	viz::StarShape star;	
-	sf::CircleShape c;
-	bool star_is_shrinking = false;
-	int prev_average = 0;
-	int shrinkink_outer_R = 0;
-	int shrinkink_inner_R = 0;
-
+	// sf::CircleShape c;
+	// struct{
+	// bool star_is_shrinking = false;
+	// int prev_average = 0;
+	// int shrinkink_outer_R = 0;
+	// int shrinkink_inner_R = 0;
+	// } star_struct;
 
 
 	// fft processor

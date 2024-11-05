@@ -89,7 +89,6 @@ void audioviz::layers_init(const int antialiasing)
 			// we only have one image; don't run effects in Layer::full_lifecycle
 			//bg.set_auto_fx(false); comment out because we want to run bass effects
 			//Draws square with size based on avg bass value
-			// star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
 			bg.set_orig_cb([&](auto &orig_rt)
 			{
 				const auto &left_data = sa.left_data();
@@ -112,12 +111,17 @@ void audioviz::layers_init(const int antialiasing)
 				int outerR = 5000 * avg;
 				int innerR = outerR / 3;
 				spr.setPosition({outerR, outerR});
-				// star.setRadii(outerR, innerR);
-				// star.setFillColor(sf::Color(100, 10, 100, 255));
+				
+				if (avg >= .001 )
+				{
+				star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
+				star.setRadii(outerR, innerR);
+				star.setFillColor(sf::Color(100, 10, 100, 255));
+				}
 
-				c.setPosition({100, 100});
-				c.setRadius(100);
-				c.setFillColor(sf::Color(100, 10, 100));
+				// c.setFillColor(sf::Color(100, 10, 100));
+				// c.setRadius(100);
+				// c.setPosition({100, 100});
 
 				// if (avg >= .01 && !star_is_shrinking)
 				// {
@@ -152,7 +156,7 @@ void audioviz::layers_init(const int antialiasing)
 
 				// }
 				orig_rt.draw(spr);
-				orig_rt.draw(c);
+				// orig_rt.draw(c);
 
 
 			});
@@ -187,7 +191,7 @@ void audioviz::layers_init(const int antialiasing)
 				++frame_count;
 
 				orig_rt.clear(sf::Color::Transparent);
-				// orig_rt.draw(star);
+				orig_rt.draw(star);
 				orig_rt.draw(ps);
 				orig_rt.display();
 			});
