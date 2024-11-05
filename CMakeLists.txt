@@ -57,7 +57,7 @@ FetchContent_MakeAvailable(SFML libavpp argparse spline)
 find_package(Boost COMPONENTS process json)
 if(NOT Boost_FOUND)
 	message("Boost not found, using FetchContent...")
-	set(BOOST_INCLUDE_LIBRARIES "process;json")
+	set(BOOST_INCLUDE_LIBRARIES "process")
 	FetchContent_Declare(Boost
 		URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z)
 	FetchContent_MakeAvailable(Boost)
@@ -79,7 +79,7 @@ include_directories(
 	${spline_SOURCE_DIR}/src
 )
 
-link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process Boost::json)
+link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process)
 
 if(WIN32)
 	link_libraries(fftw3f-3)
