@@ -68,14 +68,16 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_options(
 	-Wno-subobject-linkage
-	-Wno-narrowing)
+	-Wno-narrowing
+)
 
 include_directories(
 	include
 	${libavpp_SOURCE_DIR}/include
 	${libavpp_SOURCE_DIR}/src
 	${SFML_SOURCE_DIR}/include
-	${spline_SOURCE_DIR}/src)
+	${spline_SOURCE_DIR}/src
+)
 
 link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process Boost::json)
 
@@ -90,12 +92,24 @@ option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback 
 option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" ON)
 
 if(AUDIOVIZ_PORTAUDIO)
+	if(WIN32)
+		find_library(PORTAUDIO portaudio_x64)
+		if(NOT PORTAUDIO_FOUND)
+			set(DLL_URL https://github.com/spatialaudio/portaudio-binaries/raw/refs/heads/master/libportaudio64bit.dll)
+			file(DOWNLOAD ${DLL_URL} portaudio_x64.dll)
+		endif()
+		find_library(_ portaudio_x64 REQUIRED)
+	else()
+		find_library(_ portaudio REQUIRED)
+	endif()
+
 	FetchContent_Declare(portaudio-pp
 		GIT_REPOSITORY https://github.com/trustytrojan/portaudio-pp
 		GIT_TAG main)
 	FetchContent_MakeAvailable(portaudio-pp)
 	add_compile_definitions(AUDIOVIZ_PORTAUDIO)
 	include_directories(${portaudio-pp_SOURCE_DIR}/include)
+
 	if(WIN32)
 		link_libraries(portaudio_x64)
 	elseif(LINUX)
@@ -104,6 +118,14 @@ if(AUDIOVIZ_PORTAUDIO)
 endif()
 
 if(AUDIOVIZ_LUA)
+	if(WIN32)
+		# usual place that lua is installed via winget
+		set(LUA_WINGET_PATH $ENV{localappdata}/programs/lua/lib)
+		find_library(LUA lua54 PATHS ${LUA_WINGET_PATH})
+	else()
+		find_library(_ lua REQUIRED)
+	endif()
+
 	FetchContent_Declare(sol2
 		GIT_REPOSITORY https://github.com/ThePhD/sol2
 		GIT_TAG main)
