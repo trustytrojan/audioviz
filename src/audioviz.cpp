@@ -89,6 +89,7 @@ void audioviz::layers_init(const int antialiasing)
 			// we only have one image; don't run effects in Layer::full_lifecycle
 			//bg.set_auto_fx(false); comment out because we want to run bass effects
 			//Draws square with size based on avg bass value
+			// star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
 			bg.set_orig_cb([&](auto &orig_rt)
 			{
 				const auto &left_data = sa.left_data();
@@ -111,13 +112,48 @@ void audioviz::layers_init(const int antialiasing)
 				int outerR = 5000 * avg;
 				int innerR = outerR / 3;
 				spr.setPosition({outerR, outerR});
-				if (avg >= .001 )
-				{
-					star.setPosition({500, 500});
-					star.setRadii(outerR, innerR);
-					star.setFillColor(sf::Color(100, 10, 100, 100));
-				}
+				// star.setRadii(outerR, innerR);
+				// star.setFillColor(sf::Color(100, 10, 100, 255));
+
+				c.setPosition({100, 100});
+				c.setRadius(100);
+				c.setFillColor(sf::Color(100, 10, 100));
+
+				// if (avg >= .01 && !star_is_shrinking)
+				// {
+				// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
+				// 	star.setRadii(outerR, innerR);
+				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
+				// 	star_is_shrinking = true;
+				// 	std::cout<<"In creating star";
+				// }
+				// else if (star_is_shrinking and shrinkink_inner_R <= 0.01)
+				// {
+				// 	shrinkink_outer_R = 0;
+				// 	shrinkink_inner_R = 0;
+				// 	star_is_shrinking = false;
+				// 	std::cout<<"In shrinking star";
+
+				// }
+				// else if(star_is_shrinking)
+				// {
+				// 	shrinkink_outer_R -= 0.1;
+				// 	shrinkink_inner_R -= shrinkink_outer_R / 3;
+
+				// 	star.setRadii(shrinkink_outer_R, shrinkink_inner_R);
+				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
+
+				// }
+				// else
+				// {
+				// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
+				// 	star.setRadii(outerR, innerR);
+				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
+
+				// }
 				orig_rt.draw(spr);
+				orig_rt.draw(c);
+
 
 			});
 
@@ -151,7 +187,7 @@ void audioviz::layers_init(const int antialiasing)
 				++frame_count;
 
 				orig_rt.clear(sf::Color::Transparent);
-				orig_rt.draw(star);
+				// orig_rt.draw(star);
 				orig_rt.draw(ps);
 				orig_rt.display();
 			});
