@@ -2,7 +2,7 @@
 #include <iostream>
 
 FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vector2u video_size)
-	: Media{url, video_size},
+	: FfmpegCliMedia{url, video_size},
 	  video_buffer(4 * video_size.x * video_size.y)
 {
 	{ // read attached pic
@@ -54,7 +54,10 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 #ifdef LINUX
 		// clang-format off
 		args.insert(args.end(), {
+			// really should not hardcode this!!!!!!!!!!!!!!!!
 			"-vaapi_device", "/dev/dri/renderD129",
+
+			// va-api hardware accelerated scaling!
 			"-vf", "format=nv12,hwupload,scale_vaapi=" + std::to_string(video_size.x) + ':' + std::to_string(video_size.y) + ",hwdownload"
 		});
 		// clang-format on

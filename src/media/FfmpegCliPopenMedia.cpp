@@ -2,7 +2,7 @@
 #include <iostream>
 
 FfmpegCliPopenMedia::FfmpegCliPopenMedia(const std::string &url, const sf::Vector2u video_size)
-	: Media{url, video_size}
+	: FfmpegCliMedia{url, video_size}
 {
 	{ // read attached pic
 		const auto &streams = _format.streams();

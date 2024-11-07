@@ -23,8 +23,7 @@ public:
 
 	virtual size_t read_audio_samples(float *buf, int samples) = 0;
 	virtual bool read_video_frame(sf::Texture &txr) = 0;
-
-	void decode_audio(int frames);
+	virtual void decode_audio(int frames) = 0;
 	void audio_buffer_erase(int frames);
 
 	inline const av::MediaReader &format() const { return _format; }

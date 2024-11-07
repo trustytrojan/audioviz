@@ -4,17 +4,13 @@
 #include <list>
 #include <optional>
 
+#include "Media.hpp"
 #include "av/Frame.hpp"
-#include "av/MediaReader.hpp"
 #include "av/Resampler.hpp"
 #include "av/SwScaler.hpp"
 
-class LibavMedia
+class LibavMedia : public Media
 {
-	const std::string url;
-	av::MediaReader _format;
-
-	av::Stream _astream{_format.find_best_stream(AVMEDIA_TYPE_AUDIO)};
 	av::Decoder _adecoder{_astream.create_decoder()};
 	av::Resampler _resampler{
 		// output params
@@ -22,11 +18,7 @@ class LibavMedia
 		// input params
 		{&_astream->codecpar->ch_layout, (AVSampleFormat)_astream->codecpar->format, _astream.sample_rate()}};
 	av::Frame rs_frame;
-	std::vector<float> _audio_buffer;
 
-	std::optional<sf::Texture> _attached_pic;
-
-	std::optional<av::Stream> _vstream;
 	std::optional<av::Decoder> _vdecoder;
 	std::optional<av::SwScaler> _scaler;
 	std::optional<av::Frame> _scaled_frame;
@@ -34,12 +26,7 @@ class LibavMedia
 
 public:
 	LibavMedia(const std::string &url, sf::Vector2u vsize);
-	void decode_audio(int audio_frames);
-	void audio_buffer_erase(int frames);
-
-	inline const av::MediaReader &format() const { return _format; }
-	inline const av::Stream &astream() const { return _astream; }
-	inline const std::optional<av::Stream> &vstream() const { return _vstream; }
-	inline const std::optional<sf::Texture> &attached_pic() const { return _attached_pic; }
-	inline const std::vector<float> &audio_buffer() const { return _audio_buffer; }
+	inline size_t read_audio_samples(float *buf, int samples) override { return 0; }
+	bool read_video_frame(sf::Texture &txr) override;
+	void decode_audio(int audio_frames) override;
 };

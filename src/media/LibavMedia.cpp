@@ -3,8 +3,7 @@
 #include <iostream>
 
 LibavMedia::LibavMedia(const std::string &url, const sf::Vector2u vsize)
-	: url{url},
-	  _format{url}
+	: Media{url, vsize}
 {
 	// if an attached pic is in the format, use it for bg and album cover
 	if (const auto itr = std::ranges::find_if(
@@ -77,13 +76,6 @@ LibavMedia::LibavMedia(const std::string &url, const sf::Vector2u vsize)
 	}
 }
 
-void LibavMedia::audio_buffer_erase(const int frames)
-{
-	const auto begin = _audio_buffer.begin();
-	const auto samples = frames * _astream.nb_channels();
-	_audio_buffer.erase(begin, begin + samples);
-}
-
 void LibavMedia::decode_audio(const int frames)
 {
 	const auto samples = frames * _astream.nb_channels();
@@ -99,8 +91,8 @@ void LibavMedia::decode_audio(const int frames)
 
 		if (packet->stream_index == _astream->index)
 		{
-			// std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / "
-			// 		  << _astream.duration_sec() << '\n';
+			std::cout << "\e[1A\e[2K\raudio: " << (packet->pts * av_q2d(_astream->time_base)) << " / "
+					  << _astream.duration_sec() << '\n';
 
 			if (!_adecoder.send_packet(packet))
 			{
@@ -119,8 +111,8 @@ void LibavMedia::decode_audio(const int frames)
 		else if (_vstream && packet->stream_index == _vstream->get()->index)
 		{
 			// we can access all of the video-related optionals in this block
-			// std::cout << "\e[2K\rvideo: " << (packet->pts * av_q2d(_vstream->get()->time_base)) << " / " <<
-			// _vstream->duration_sec();
+			std::cout << "\e[2K\rvideo: " << (packet->pts * av_q2d(_vstream->get()->time_base)) << " / "
+					  << _vstream->duration_sec();
 
 			if (!_vdecoder->send_packet(packet))
 			{
@@ -141,4 +133,17 @@ void LibavMedia::decode_audio(const int frames)
 			}
 		}
 	}
+}
+
+bool LibavMedia::read_video_frame(sf::Texture &txr)
+{
+	if (!_frame_queue)
+		throw std::runtime_error{"no video stream!"};
+	if (!txr.resize(video_size))
+		throw std::runtime_error{"texture resize failed!"};
+	if (_frame_queue->empty())
+		return false;
+	txr.update(_frame_queue->front());
+	_frame_queue->pop_front();
+	return true;
 }
