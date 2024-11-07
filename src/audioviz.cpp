@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <ranges>
 
 #include "audioviz.hpp"
 #include "fx/Blur.hpp"
@@ -53,21 +54,21 @@ audioviz::audioviz(
 }
 
 template <typename T>
-	static T random(const T min, const T max)
-	{
-		static std::mt19937 gen(std::random_device{}());
-		return std::uniform_real_distribution<>(min, max)(gen);
-	}
+static T random(const T min, const T max)
+{
+	static std::mt19937 gen(std::random_device{}());
+	return std::uniform_real_distribution<>(min, max)(gen);
+}
 
 void audioviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
 
-		const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
-		const auto frames_to_wait = framerate / vfr;
 		if (media->_vstream) // set_orig_cb() to draw video frames on the layer
 		{
+			const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
+			const auto frames_to_wait = framerate / vfr;
 			bg.set_orig_cb(
 				[&](auto &orig_rt)
 				{
@@ -87,79 +88,73 @@ void audioviz::layers_init(const int antialiasing)
 		else // set_background() will apply_fx() on the bg it sets
 		{
 			// we only have one image; don't run effects in Layer::full_lifecycle
-			//bg.set_auto_fx(false); comment out because we want to run bass effects
-			//Draws square with size based on avg bass value
-			bg.set_orig_cb([&](auto &orig_rt)
-			{
-				const auto &left_data = sa.left_data();
-				float sum{};
-				int count = left_data.size() / 4;
-				for (int i = 0; i < count; ++i)
-					sum += left_data[i];
-				const auto avg = sum / count;
-
-				const auto bg = get_layer("bg");
-				if (!bg)
-					throw "iudehoidewhf";
-
-				auto mult = dynamic_cast<fx::Mult *>(bg->effects[1].get());
-				if (!mult)
-					throw std::runtime_error{"???"};
-				mult->factor =  pow(1+avg, 5);
-
-				sf::Sprite spr{*media->attached_pic};
-				int outerR = 5000 * avg;
-				int innerR = outerR / 3;
-				spr.setPosition({outerR, outerR});
-				
-				if (avg >= .001 )
+			// bg.set_auto_fx(false); comment out because we want to run bass effects
+			// Draws square with size based on avg bass value
+			bg.set_orig_cb(
+				[&](auto &orig_rt)
 				{
-				star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-				star.setRadii(outerR, innerR);
-				star.setFillColor(sf::Color(100, 10, 100, 255));
-				}
+					const auto &left_data = sa.left_data();
+					const auto count = left_data.size() / 4;
+					const auto sum = std::accumulate(left_data.cbegin(), left_data.cbegin() + count, 0.f);
+					const auto avg = sum / count;
 
-				// c.setFillColor(sf::Color(100, 10, 100));
-				// c.setRadius(100);
-				// c.setPosition({100, 100});
+					const auto bg = get_layer("bg");
+					const auto mult = dynamic_cast<fx::Mult *>(bg->effects[1].get());
+					if (!mult)
+						throw std::runtime_error{"dynamic_cast<fx::Mult *>() failed"};
+					mult->factor = pow(1 + avg, 5);
 
-				// if (avg >= .01 && !star_is_shrinking)
-				// {
-				// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-				// 	star.setRadii(outerR, innerR);
-				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
-				// 	star_is_shrinking = true;
-				// 	std::cout<<"In creating star";
-				// }
-				// else if (star_is_shrinking and shrinkink_inner_R <= 0.01)
-				// {
-				// 	shrinkink_outer_R = 0;
-				// 	shrinkink_inner_R = 0;
-				// 	star_is_shrinking = false;
-				// 	std::cout<<"In shrinking star";
+					sf::Sprite spr{*media->attached_pic};
+					int outerR = 5000 * avg;
+					int innerR = outerR / 3;
+					spr.setPosition({outerR, outerR});
 
-				// }
-				// else if(star_is_shrinking)
-				// {
-				// 	shrinkink_outer_R -= 0.1;
-				// 	shrinkink_inner_R -= shrinkink_outer_R / 3;
+					if (avg >= .001)
+					{
+						star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
+						star.setRadii(outerR, innerR);
+						star.setFillColor(sf::Color(100, 10, 100, 255));
+					}
 
-				// 	star.setRadii(shrinkink_outer_R, shrinkink_inner_R);
-				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
+					// c.setFillColor(sf::Color(100, 10, 100));
+					// c.setRadius(100);
+					// c.setPosition({100, 100});
 
-				// }
-				// else
-				// {
-				// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-				// 	star.setRadii(outerR, innerR);
-				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
+					// if (avg >= .01 && !star_is_shrinking)
+					// {
+					// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
+					// 	star.setRadii(outerR, innerR);
+					// 	star.setFillColor(sf::Color(100, 10, 100, 100));
+					// 	star_is_shrinking = true;
+					// 	std::cout<<"In creating star";
+					// }
+					// else if (star_is_shrinking and shrinkink_inner_R <= 0.01)
+					// {
+					// 	shrinkink_outer_R = 0;
+					// 	shrinkink_inner_R = 0;
+					// 	star_is_shrinking = false;
+					// 	std::cout<<"In shrinking star";
 
-				// }
-				orig_rt.draw(spr);
-				// orig_rt.draw(c);
+					// }
+					// else if(star_is_shrinking)
+					// {
+					// 	shrinkink_outer_R -= 0.1;
+					// 	shrinkink_inner_R -= shrinkink_outer_R / 3;
 
+					// 	star.setRadii(shrinkink_outer_R, shrinkink_inner_R);
+					// 	star.setFillColor(sf::Color(100, 10, 100, 100));
 
-			});
+					// }
+					// else
+					// {
+					// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
+					// 	star.setRadii(outerR, innerR);
+					// 	star.setFillColor(sf::Color(100, 10, 100, 100));
+
+					// }
+					orig_rt.draw(spr);
+					// orig_rt.draw(c);
+				});
 
 			if (media->attached_pic)
 			{
@@ -176,7 +171,6 @@ void audioviz::layers_init(const int antialiasing)
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
-
 				// lock the tickrate of the particles at 60hz for non-60fps output
 				if (framerate < 60)
 					ps.update(sa, {.multiplier = 60.f / framerate});
