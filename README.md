@@ -58,9 +58,9 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 ```
 
 ## todo list
-- `viz::ScopeDrawable`
+- 🔄 `viz::ScopeDrawable`
 - lua api (in progress)
-  - modular layering/effects system
+  - ✅️ modular layering/effects system
   - remove hardcoded visualizer components
 - make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
   - figure out how to deal with [`fft_size`](src/audioviz.cpp#L284) and [`sa.analyze(...)`](src/audioviz.cpp#L299)
@@ -69,6 +69,8 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
   - want a small translucent flash overlay that flashes to the beat of music
   - copy the osu! stars effect
 - need to experiment with only using the ffmpeg CLI instead of the libraries
-  - figure out metadata parsing, then subprocessing for the audio/video streams
-  - this *might* fix all the "ending early" problems (not a guarantee)
-- figure out why particles randomly don't show on linux
+  - ✅️ figure out metadata parsing, then subprocessing for the audio/video streams
+  - ✅️ this *might* fix all the "ending early" problems (not a guarantee)
+  - try using `basic_ipstream` over `basic_pipe`
+  - try to have one `ffmpeg` process output both streams
+- ⁉️ figure out why particles randomly don't show on linux
