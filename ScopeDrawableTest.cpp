@@ -3,10 +3,9 @@
 #include "tt/FrequencyAnalyzer.hpp"
 #include "viz/SpectrumDrawable.hpp"
 #include "viz/VerticalBar.hpp"
+#include <cmath>
 #include <iostream>
 #include <portaudio.hpp>
-#include <cmath>
-
 
 int main(const int argc, const char *const *const argv)
 {
@@ -49,16 +48,10 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2f _origin{size.x / 2.f, size.y / 2.f};
 
-	
-	sf::Transformable tf;
-	tf.setOrigin(_origin);
-	tf.setPosition(_origin);
-	
-
 	const auto rad = 15;
 	sf::CircleShape origincircle{rad};
 	origincircle.setFillColor(sf::Color::Red);
-	origincircle.setOrigin({rad/2.f, rad/2.f});
+	origincircle.setOrigin({rad / 2.f, rad / 2.f});
 
 	double cur = 0;
 
@@ -81,7 +74,7 @@ int main(const int argc, const char *const *const argv)
 			for (int i = 0; i < size.x; ++i)
 				left_channel[i] = media.audio_buffer[i * media._astream.nb_channels() + 0 /* left channel */];
 			scope.update_shape_positions(left_channel);
-			
+
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
 			sd.update_bar_heights(spectrum);
@@ -101,15 +94,18 @@ int main(const int argc, const char *const *const argv)
 		}
 		double spin_arc = 360;
 		double speed = 20;
-		//tf.setRotation(sf::degrees(spin_arc*sin(cur/speed)));  
-		//tf.setRotation(sf::degrees(speed*sin(cur) + speed*cur));
-		//tf.setRotation(sf::degrees(exp(cur/5 + 2*sin(cur))));
-		//tf.setRotation(sf::degrees(2*sin(cur)*exp(2*sin(cur))));
 
+		// tf.setRotation(sf::degrees(spin_arc*sin(cur/speed)));
+		// tf.setRotation(sf::degrees(speed*sin(cur) + speed*cur));
+		// tf.setRotation(sf::degrees(exp(cur/5 + 2*sin(cur))));
+		// tf.setRotation(sf::degrees(2*sin(cur)*exp(2*sin(cur))));
+		// float max_channel = *std::max_element(left_channel.begin(), left_channel.end());
+		// tf.setRotation(5*sf::degrees(max_channel));
+		scope.set_rotation_angle(cur);
 
 		window.clear();
-		window.draw(scope, tf.getTransform());
-		window.draw(sd, tf.getTransform());
+		window.draw(scope);
+		// window.draw(sd, tf.getTransform());
 		window.draw(origincircle);
 		window.display();
 	}

@@ -17,7 +17,8 @@ class ScopeDrawable : public sf::Drawable
 	bool fill_in = false;
 	bool vert = false;
 
-	sf::Angle angle = sf::degrees(0);
+	sf::Angle angle = sf::degrees(20);
+	sf::Transformable tf;
 
 public:
 	std::vector<ShapeType> shapes;
@@ -27,6 +28,11 @@ public:
 		  backwards{backwards}
 	{
 		update_shape_x_positions();
+
+		const sf::Vector2f _origin{rect.size.x / 2.f, rect.size.y / 2.f};
+		tf.setOrigin(_origin);
+		tf.setPosition(_origin);
+		tf.setRotation(angle);
 	}
 
 	void set_shape_spacing(const int spacing)
@@ -58,6 +64,8 @@ public:
 	}
 
 	void set_backwards(bool b) { backwards = b; }
+
+	void set_rotation_angle(double degree) { tf.setRotation(sf::degrees(degree)); }
 
 	size_t get_shape_count() const { return shapes.size(); }
 
@@ -110,7 +118,7 @@ public:
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{
 		for (const auto &shape : shapes)
-			target.draw(shape, states);
+			target.draw(shape, tf.getTransform());
 	}
 
 private:
