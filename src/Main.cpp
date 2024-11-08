@@ -132,7 +132,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 		const auto &color_str = args.get("--color");
 		if (color_str == "wheel")
 		{
-			ss.set_color_mode(SD::ColorMode::WHEEL);
+			ss.set_color_mode(SD::Mode::WHEEL);
 			const auto &hsv = args.get<std::vector<float>>("--hsv");
 			assert(hsv.size() == 3);
 			ss.set_color_wheel_hsv({hsv[0], hsv[1], hsv[2]});
@@ -140,7 +140,7 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 		else if (color_str == "solid")
 		{
-			ss.set_color_mode(SD::ColorMode::SOLID);
+			ss.set_color_mode(SD::Mode::SOLID);
 			const auto &rgb = args.get<std::vector<uint8_t>>("--rgb");
 			ss.set_solid_color({rgb[0], rgb[1], rgb[2]});
 		}

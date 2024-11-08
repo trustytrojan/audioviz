@@ -5,6 +5,7 @@
 #include "viz/VerticalBar.hpp"
 #include <iostream>
 #include <portaudio.hpp>
+#include "viz/ColorSettings.hpp"
 
 int main(const int argc, const char *const *const argv)
 {
@@ -18,19 +19,22 @@ int main(const int argc, const char *const *const argv)
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
 	window.setVerticalSyncEnabled(true);
 
-	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
+	viz::ColorSettings color;
+	// color.set_wheel_rate(0.005);
+	color.wheel.rate = .005;
+	color.mode = viz::ColorSettings::Mode::WHEEL_RANGES;
+
+	sf::IntRect rect({}, (sf::Vector2i)size);
+
+	viz::ScopeDrawable<sf::RectangleShape> scope(rect, color);
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
 	scope.set_vert(false);
 	scope.set_fill_in(true);
-	scope.set_color_wheel_rate(0.005);
 
-	viz::SpectrumDrawable<viz::VerticalBar> sd;
-	sd.set_rect({{}, (sf::Vector2i)size});
+	viz::SpectrumDrawable<viz::VerticalBar> sd(rect, color);
 	sd.set_bar_width(1);
 	sd.set_bar_spacing(0);
-	sd.set_color_mode(viz::SpectrumDrawable<viz::VerticalBar>::ColorMode::WHEEL);
-	sd.set_color_wheel_rate(0.005);
 
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};

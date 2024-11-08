@@ -99,8 +99,8 @@ if(AUDIOVIZ_LUA)
 endif()
 
 # we need to include av/Util.cpp from libavpp for now until i figure out a better way
-file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
-add_executable(audioviz ${SOURCES})
+# file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
+# add_executable(audioviz ${SOURCES})
 
 add_executable(scope-drawable-test
 	ScopeDrawableTest.cpp

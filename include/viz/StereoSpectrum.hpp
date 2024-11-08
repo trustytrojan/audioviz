@@ -16,15 +16,14 @@ class StereoSpectrum : public sf::Drawable
 	sf::IntRect rect;
 
 public:
-	void set_left_backwards(const bool b)
+	StereoSpectrum(ColorSettings &color)
+		: _left({}, color),
+		  _right({}, color)
 	{
-		_left.set_backwards(b);
 	}
 
-	void set_right_backwards(const bool b)
-	{
-		_right.set_backwards(b);
-	}
+	void set_left_backwards(const bool b) { _left.set_backwards(b); }
+	void set_right_backwards(const bool b) { _right.set_backwards(b); }
 
 	void set_bar_width(int width)
 	{
@@ -38,30 +37,6 @@ public:
 		_left.set_bar_spacing(spacing);
 		_right.set_bar_spacing(spacing);
 		update_spectrum_rects();
-	}
-
-	void set_color_mode(SD::ColorMode mode)
-	{
-		_left.set_color_mode(mode);
-		_right.set_color_mode(mode);
-	}
-
-	void set_solid_color(sf::Color color)
-	{
-		_left.set_solid_color(color);
-		_right.set_solid_color(color);
-	}
-
-	void set_color_wheel_rate(float rate)
-	{
-		_left.set_color_wheel_rate(rate);
-		_right.set_color_wheel_rate(rate);
-	}
-
-	void set_color_wheel_hsv(sf::Vector3f hsv)
-	{
-		_left.set_color_wheel_hsv(hsv);
-		_right.set_color_wheel_hsv(hsv);
 	}
 
 	void set_multiplier(float multiplier)

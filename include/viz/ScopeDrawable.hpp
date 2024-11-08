@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "viz/SpectrumDrawable.hpp" 
+#include "ColorSettings.hpp"
 
 namespace viz
 {
@@ -19,6 +19,8 @@ class ScopeDrawable : public sf::Drawable
 	bool fill_in = false;
 	bool vert = false;
 
+	ColorSettings &color;
+
 public:
 
 	enum class ColorMode
@@ -29,8 +31,9 @@ public:
 		SOLID
 	};
 
-	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
+	ScopeDrawable(const sf::IntRect &rect, ColorSettings &color, const bool backwards = false)
 		: rect{rect},
+		  color{color},
 		  backwards{backwards}
 	{
 		update_shape_x_positions();
@@ -68,21 +71,11 @@ public:
 
 	size_t get_shape_count() const { return shapes.size(); }
 
-	
-	void set_color_wheel_rate(const float rate)
-	{
-		if (color.wheel.rate == rate)
-			return;
-		color.wheel.rate = rate;
-	}
-
 	void color_wheel_increment()
 	{
-		if (color.wheel.rate == 0)
-			return;
 		color.wheel.increment_time();
 		for (int i = 0; i < (int)shapes.size(); ++i) 
-			shapes[i].setFillColor(color.get((float)i / shapes.size())); 
+			shapes[i].setFillColor(color.calculate_color((float)i / shapes.size())); 
 	}
 
 	void update_shape_positions(const std::vector<float> &audio)
@@ -150,7 +143,7 @@ private:
 			else
 				shapes[i].setScale(shape.width);
 
-			shapes[i].setFillColor(color.get((float)i / shapes.size()));
+			shapes[i].setFillColor(color.calculate_color((float)i / shapes.size()));
 
 			// clang-format off
 			const auto x = backwards
@@ -166,54 +159,6 @@ private:
 				shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
 		}
 	}
-
-	struct
-	{
-		ColorMode mode = ColorMode::WHEEL_RANGES_REVERSE;
-		sf::Color solid{255, 255, 255};
-
-		/**
-		 * @param index_ratio the ratio of your loop index (`i`) to the total number of bars to print (`bars.size()`)
-		 */
-		sf::Color get(const float index_ratio)
-		{
-			switch (mode)
-			{
-			case ColorMode::WHEEL:
-			{
-				const auto [h, s, v] = wheel.hsv;
-				return tt::hsv2rgb(index_ratio + h + wheel.time, s, v);
-			}
-
-			case ColorMode::WHEEL_RANGES:
-			{
-				const auto [h, s, v] = tt::interpolate(index_ratio + wheel.time, wheel.start_hsv, wheel.end_hsv);
-				return tt::hsv2rgb(h, s, v);
-			}
-
-			case ColorMode::WHEEL_RANGES_REVERSE:
-			{
-				const auto [h, s, v] = tt::interpolate_and_reverse(index_ratio + wheel.time, wheel.start_hsv, wheel.end_hsv);
-				return tt::hsv2rgb(h, s, v);
-			}
-
-			case ColorMode::SOLID:
-				return solid;
-
-			default:
-				throw std::logic_error("SpectrumRenderer::color::get: default case hit");
-			}
-		}
-
-		// wheel stuff
-		struct
-		{
-			float time = 0, rate = 0;
-			sf::Vector3f hsv{0.9, 0.7, 1}, start_hsv{0.9, 0.7, 1}, end_hsv{.5,.2, 1};
-			void increment_time() { time += rate; }
-		} wheel;
-	} color;
-
 };
 
 } // namespace viz
