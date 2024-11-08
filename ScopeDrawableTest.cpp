@@ -23,6 +23,7 @@ int main(const int argc, const char *const *const argv)
 	scope.set_shape_width(1);
 	scope.set_vert(false);
 	scope.set_fill_in(true);
+	scope.set_color_wheel_rate(0.005);
 
 	viz::SpectrumDrawable<viz::VerticalBar> sd;
 	sd.set_rect({{}, (sf::Vector2i)size});
@@ -65,6 +66,7 @@ int main(const int argc, const char *const *const argv)
 			fa.render(spectrum);
 			sd.update_bar_heights(spectrum);
 			sd.color_wheel_increment();
+			scope.color_wheel_increment();
 			
 
 			try

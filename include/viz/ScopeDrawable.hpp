@@ -68,6 +68,23 @@ public:
 
 	size_t get_shape_count() const { return shapes.size(); }
 
+	
+	void set_color_wheel_rate(const float rate)
+	{
+		if (color.wheel.rate == rate)
+			return;
+		color.wheel.rate = rate;
+	}
+
+	void color_wheel_increment()
+	{
+		if (color.wheel.rate == 0)
+			return;
+		color.wheel.increment_time();
+		for (int i = 0; i < (int)shapes.size(); ++i) 
+			shapes[i].setFillColor(color.get((float)i / shapes.size())); 
+	}
+
 	void update_shape_positions(const std::vector<float> &audio)
 	{
 		if (shapes.size() != audio.size())
@@ -152,7 +169,7 @@ private:
 
 	struct
 	{
-		ColorMode mode = ColorMode::WHEEL;
+		ColorMode mode = ColorMode::WHEEL_RANGES_REVERSE;
 		sf::Color solid{255, 255, 255};
 
 		/**
@@ -192,10 +209,11 @@ private:
 		struct
 		{
 			float time = 0, rate = 0;
-			sf::Vector3f hsv{0.9, 0.7, 1}, start_hsv{}, end_hsv{};
+			sf::Vector3f hsv{0.9, 0.7, 1}, start_hsv{0.9, 0.7, 1}, end_hsv{.5,.2, 1};
 			void increment_time() { time += rate; }
 		} wheel;
 	} color;
+
 };
 
 } // namespace viz
