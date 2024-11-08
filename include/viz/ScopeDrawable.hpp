@@ -23,7 +23,9 @@ public:
 
 	enum class ColorMode
 	{
+		WHEEL_RANGES,
 		WHEEL,
+		WHEEL_RANGES_REVERSE,
 		SOLID
 	};
 
@@ -166,6 +168,18 @@ private:
 				return tt::hsv2rgb(index_ratio + h + wheel.time, s, v);
 			}
 
+			case ColorMode::WHEEL_RANGES:
+			{
+				const auto [h, s, v] = tt::interpolate(index_ratio + wheel.time, wheel.start_hsv, wheel.end_hsv);
+				return tt::hsv2rgb(h, s, v);
+			}
+
+			case ColorMode::WHEEL_RANGES_REVERSE:
+			{
+				const auto [h, s, v] = tt::interpolate_and_reverse(index_ratio + wheel.time, wheel.start_hsv, wheel.end_hsv);
+				return tt::hsv2rgb(h, s, v);
+			}
+
 			case ColorMode::SOLID:
 				return solid;
 
@@ -178,7 +192,7 @@ private:
 		struct
 		{
 			float time = 0, rate = 0;
-			sf::Vector3f hsv{0.9, 0.7, 1};
+			sf::Vector3f hsv{0.9, 0.7, 1}, start_hsv{}, end_hsv{};
 			void increment_time() { time += rate; }
 		} wheel;
 	} color;
