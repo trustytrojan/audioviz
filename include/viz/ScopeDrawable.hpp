@@ -1,6 +1,8 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <cmath>
+
 
 namespace viz
 {
@@ -64,7 +66,15 @@ public:
 
 	void set_backwards(bool b) { backwards = b; }
 
-	void set_rotation_angle(double degree) { tf.setRotation(sf::degrees(degree)); }
+	void set_rotation_angle(sf::Angle angle) { tf.setRotation(angle); }
+
+	void set_center_point(double radius, sf::Angle angle)
+	{
+		sf::Vector2f origin_{rect.size.x/2.f, rect.size.y/2.f};	
+		sf::Vector2f coord{origin_.x + radius * cos(angle.asRadians()), origin_.y - radius * sin(angle.asRadians())};
+
+		tf.setPosition({coord});
+	}
 
 	size_t get_shape_count() const { return shapes.size(); }
 

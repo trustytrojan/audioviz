@@ -100,7 +100,13 @@ int main(const int argc, const char *const *const argv)
 		// tf.setRotation(sf::degrees(2*sin(cur)*exp(2*sin(cur))));
 		//float max_channel = 30 * (*std::max_element(left_channel.begin(), left_channel.end()));
 		// tf.setRotation(5*sf::degrees(max_channel));
-		scope.set_rotation_angle(cur);
+		sf::Angle ang_deg = sf::degrees(-7*cur);
+		sf::Angle ang_deg2 = sf::degrees(90+7*cur);
+		
+		scope.set_rotation_angle(ang_deg);
+		sf::Vector2f coord {150,20};
+
+		scope.set_center_point(150, ang_deg2);
 
 		window.clear();
 		window.draw(scope);
