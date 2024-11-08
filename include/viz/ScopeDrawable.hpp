@@ -17,7 +17,7 @@ class ScopeDrawable : public sf::Drawable
 	bool fill_in = false;
 	bool vert = false;
 
-	sf::Angle angle = sf::degrees(20);
+	sf::Angle angle = sf::degrees(0);
 	sf::Transformable tf;
 
 public:
@@ -53,7 +53,6 @@ public:
 
 	void set_fill_in(bool _fill) { fill_in = _fill; }
 
-	void set_vert(bool _vert) { vert = _vert; }
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
@@ -82,35 +81,20 @@ public:
 			const auto half_height = rect.size.y / 2.f;
 			const auto half_heightx = rect.size.x / 2.f;
 
-			if (!fill_in && !vert)
+			if (!fill_in)
 			{
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
 					std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
 				});
 			}
-			else if (fill_in && !vert)
+			else
 			{
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
 					std::clamp(half_height, 0.f, (float)rect.size.y),
 				});
 				shapes[i].setSize({shape.width, (-half_height * audio[i])});
-			}
-			else if (!fill_in && vert)
-			{
-				shapes[i].setPosition({
-					std::clamp(half_heightx + (-half_heightx * audio[i]), 0.f, (float)rect.size.x),
-					shapes[i].getPosition().y,
-				});
-			}
-			else
-			{
-				shapes[i].setPosition({
-					std::clamp(half_heightx, 0.f, (float)rect.size.x),
-					shapes[i].getPosition().y,
-				});
-				shapes[i].setSize({(-half_height * audio[i]), shape.width});
 			}
 		}
 	}

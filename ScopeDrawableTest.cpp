@@ -22,8 +22,7 @@ int main(const int argc, const char *const *const argv)
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
-	// scope.set_vert(true);
-	scope.set_fill_in(true);
+	scope.set_fill_in(false);
 
 	viz::SpectrumDrawable<viz::VerticalBar> sd;
 	sd.set_rect({{}, (sf::Vector2i)size});
@@ -99,7 +98,7 @@ int main(const int argc, const char *const *const argv)
 		// tf.setRotation(sf::degrees(speed*sin(cur) + speed*cur));
 		// tf.setRotation(sf::degrees(exp(cur/5 + 2*sin(cur))));
 		// tf.setRotation(sf::degrees(2*sin(cur)*exp(2*sin(cur))));
-		// float max_channel = *std::max_element(left_channel.begin(), left_channel.end());
+		//float max_channel = 30 * (*std::max_element(left_channel.begin(), left_channel.end()));
 		// tf.setRotation(5*sf::degrees(max_channel));
 		scope.set_rotation_angle(cur);
 
