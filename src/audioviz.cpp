@@ -64,10 +64,10 @@ void audioviz::layers_init(const int antialiasing)
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
 
-		const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
-		const auto frames_to_wait = framerate / vfr;
 		if (media->_vstream) // set_orig_cb() to draw video frames on the layer
 		{
+			const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
+			const auto frames_to_wait = framerate / vfr;
 			bg.set_orig_cb(
 				[&](auto &orig_rt)
 				{
@@ -112,52 +112,51 @@ void audioviz::layers_init(const int antialiasing)
 				int innerR = outerR / 3;
 				spr.setPosition({outerR, outerR});
 				
-				if (avg >= .001 )
+				/*
+				************************Plan for Drawing Star**************************
+				Create boolean to know if star has appeared on screen due to bass drop
+
+				Set position for this star while it is on the screen
+
+				Shrink the average (avg) over x amount of time until the star is no longer
+				on the screen
+
+				Once the average is so low that we can no longer see the star, aka avg < 0,
+				we set the boolean to false and unset position
+				*/
+			
+
+				if (avg >= .01 && !star_is_shrinking)
 				{
-				star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-				star.setRadii(outerR, innerR);
-				star.setFillColor(sf::Color(100, 10, 100, 255));
+					x_pos = random<float>(0, size.x);
+					y_pos = random<float>(0, size.y);
+					star.setPosition({x_pos, y_pos});
+					star.setRadii(outerR, innerR);
+					star.setFillColor(sf::Color(100, 10, 100, 100));
+					star_is_shrinking = true;
 				}
-
-				// c.setFillColor(sf::Color(100, 10, 100));
-				// c.setRadius(100);
-				// c.setPosition({100, 100});
-
-				// if (avg >= .01 && !star_is_shrinking)
-				// {
-				// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-				// 	star.setRadii(outerR, innerR);
-				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
-				// 	star_is_shrinking = true;
-				// 	std::cout<<"In creating star";
-				// }
-				// else if (star_is_shrinking and shrinkink_inner_R <= 0.01)
-				// {
-				// 	shrinkink_outer_R = 0;
-				// 	shrinkink_inner_R = 0;
-				// 	star_is_shrinking = false;
-				// 	std::cout<<"In shrinking star";
-
-				// }
-				// else if(star_is_shrinking)
-				// {
-				// 	shrinkink_outer_R -= 0.1;
-				// 	shrinkink_inner_R -= shrinkink_outer_R / 3;
-
-				// 	star.setRadii(shrinkink_outer_R, shrinkink_inner_R);
-				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
-
-				// }
+				else if (star_is_shrinking and shrinking_inner_R <= 0.1)
+				{
+					shrinking_outer_R = 0;
+					shrinking_inner_R = 0;
+					star_is_shrinking = false;
+				}
+				else if(star_is_shrinking)
+				{
+					shrinking_outer_R -= 10;
+					shrinking_inner_R -= shrinking_outer_R / 3;
+					star.setPosition({x_pos, y_pos});
+					star.setRadii(shrinking_outer_R, shrinking_inner_R);
+					star.setFillColor(sf::Color(100, 10, 100, 100));
+				}
 				// else
 				// {
 				// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
 				// 	star.setRadii(outerR, innerR);
 				// 	star.setFillColor(sf::Color(100, 10, 100, 100));
-
 				// }
-				orig_rt.draw(spr);
-				// orig_rt.draw(c);
 
+				orig_rt.draw(spr);
 
 			});
 

@@ -41,12 +41,14 @@ private:
 	int afpvf{media->_astream.sample_rate() / framerate};
 
 	viz::StarShape star;	
+	int prev_average = 0;
+	bool star_is_shrinking = false;
+	int shrinking_outer_R = 0;
+	int shrinking_inner_R = 0;
+	int x_pos = 0;
+	int y_pos = 0;
 	// sf::CircleShape c;
 	// struct{
-	// bool star_is_shrinking = false;
-	// int prev_average = 0;
-	// int shrinkink_outer_R = 0;
-	// int shrinkink_inner_R = 0;
 	// } star_struct;
 
 
