@@ -1,5 +1,8 @@
+#include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <stdexcept>
+#include <iostream>
 
 #include "tt/ColorUtils.hpp"
 #include "SFML/System/Vector3.hpp"

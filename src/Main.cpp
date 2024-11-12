@@ -144,6 +144,20 @@ void Main::use_args(audioviz &viz, const Args &args)
 			const auto &rgb = args.get<std::vector<uint8_t>>("--rgb");
 			ss.set_solid_color({rgb[0], rgb[1], rgb[2]});
 		}
+		else if (color_str == "wheel_ranges")
+		{
+			ss.set_color_mode(SD::ColorMode::WHEEL_RANGES);
+			ss.set_color_wheel_rate(args.get<float>("--wheel-rate"));
+			const auto &double_hsv = args.get<std::vector<float>>("--wheel-ranges");
+			ss.set_color_wheel_ranges({double_hsv[0], double_hsv[1], double_hsv[2]}, {double_hsv[3], double_hsv[4], double_hsv[5]});
+		}
+		else if (color_str == "wheel_ranges_reverse")
+		{
+			ss.set_color_mode(SD::ColorMode::WHEEL_RANGES_REVERSE);
+			ss.set_color_wheel_rate(args.get<float>("--wheel-rate"));
+			const auto &double_hsv = args.get<std::vector<float>>("--wheel-ranges");
+			ss.set_color_wheel_ranges({double_hsv[0], double_hsv[1], double_hsv[2]}, {double_hsv[3], double_hsv[4], double_hsv[5]});
+		}
 		else
 			throw std::invalid_argument{"--color: unknown coloring type: " + color_str};
 	}
