@@ -69,8 +69,6 @@ void audioviz::layers_init(const int antialiasing)
 		{
 			const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
 			const auto frames_to_wait = framerate / vfr;
-			const auto vfr = av_q2d(media->_vstream->get()->avg_frame_rate);
-			const auto frames_to_wait = framerate / vfr;
 			bg.set_orig_cb(
 				[&](auto &orig_rt)
 				{
