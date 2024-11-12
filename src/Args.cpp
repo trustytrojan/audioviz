@@ -143,7 +143,12 @@ Args::Args(const int argc, const char *const *const argv)
 		.default_value(std::vector<float>{0.9, 0.7, 1, 0, 0, 0})
 		.scan<'f', float>()
 		.validate();
-
+	add_argument("--wheel-ranges-reverse")
+		.help("choose two hue offsets for the color wheel, saturation, and brightness, and it will move with time given the two ranges!\n all 6 values must be between [0, 1]\n Works with the wheel_ranges and wheel_ranges_reverse mode!")
+		.nargs(6)
+		.default_value(std::vector<float>{0.9, 0.7, 1, 0, 0, 0})
+		.scan<'f', float>()
+		.validate();
 	// clang-format on
 
 	try

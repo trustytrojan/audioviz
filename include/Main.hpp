@@ -4,6 +4,7 @@
 #include "audioviz.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
+#include "viz/ColorSettings.hpp"
 
 #ifdef AUDIOVIZ_LUA
 #include <sol/sol.hpp>
@@ -17,12 +18,14 @@ class Main
 	using BarType = viz::VerticalBar;
 	using SD = viz::SpectrumDrawable<BarType>;
 	using FS = tt::FrequencyAnalyzer;
+	using CS = viz::ColorSettings;
 
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
 
 	tt::FrequencyAnalyzer fa{3000};
-	viz::StereoSpectrum<BarType> ss;
+	viz::StereoSpectrum<BarType> ss{cs};
+	viz::ColorSettings cs;
 
 #ifdef AUDIOVIZ_LUA
 	struct LuaState : sol::state
