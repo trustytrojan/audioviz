@@ -2,6 +2,7 @@ BasedOnStyle: LLVM
 MaxEmptyLinesToKeep: 1
 ColumnLimit: 120
 ExperimentalAutoDetectBinPacking: true
+SeparateDefinitionBlocks: Always
 
 # Pack
 PackConstructorInitializers: Never
@@ -51,7 +52,10 @@ InsertNewlineAtEOF: true
 
 # Remove
 RemoveBracesLLVM: true
+RemoveParentheses: ReturnStatement
+RemoveSemicolon: true
 # KeepEmptyLines: # v19 only :(
 #   AtStartOfFile: false
 #   AtStartOfBlock: false
 #   AtEndOfFile: false
+# RemoveEmptyLinesInUnwrappedLines: true # v20 only :(
