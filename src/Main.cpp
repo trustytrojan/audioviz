@@ -132,42 +132,31 @@ void Main::use_args(audioviz &viz, const Args &args)
 		const auto &color_str = args.get("--color");
 		if (color_str == "wheel")
 		{
-			// ss.set_color_mode(SD::Mode::WHEEL);
 			cs.mode = CS::Mode::WHEEL;
 			const auto &hsv = args.get<std::vector<float>>("--hsv");
 			assert(hsv.size() == 3);
-			// ss.set_color_wheel_hsv({hsv[0], hsv[1], hsv[2]});
 			cs.wheel.hsv = {hsv[0], hsv[1], hsv[2]};
-			// ss.set_color_wheel_rate(args.get<float>("--wheel-rate"));
 			cs.wheel.rate = args.get<float>("--wheel-rate");
 		}
 		else if (color_str == "solid")
 		{
-			// ss.set_color_mode(SD::Mode::SOLID);
 			cs.mode = CS::Mode::SOLID;
 			const auto &rgb = args.get<std::vector<uint8_t>>("--rgb");
-			// ss.set_solid_color({rgb[0], rgb[1], rgb[2]});
 			cs.solid = {rgb[0], rgb[1], rgb[2]};
 		}
 		else if (color_str == "wheel_ranges")
 		{
-			// ss.set_color_mode(SD::ColorMode::WHEEL_RANGES);
 			cs.mode = CS::Mode::WHEEL_RANGES;
-			// ss.set_color_wheel_rate(args.get<float>("--wheel-rate"));
 			cs.wheel.rate = args.get<float>("--wheel-rate");
 			const auto &double_hsv = args.get<std::vector<float>>("--wheel-ranges");
-			// ss.set_color_wheel_ranges({double_hsv[0], double_hsv[1], double_hsv[2]}, {double_hsv[3], double_hsv[4], double_hsv[5]});
 			cs.wheel.start_hsv = {double_hsv[0], double_hsv[1], double_hsv[2]};
 			cs.wheel.end_hsv = {double_hsv[3], double_hsv[4], double_hsv[5]};
 		}
 		else if (color_str == "wheel_ranges_reverse")
 		{
-			// ss.set_color_mode(SD::ColorMode::WHEEL_RANGES_REVERSE);
 			cs.mode = CS::Mode::WHEEL_RANGES_REVERSE;
-			// ss.set_color_wheel_rate(args.get<float>("--wheel-rate"));
 			cs.wheel.rate = args.get<float>("--wheel-rate");
 			const auto &double_hsv = args.get<std::vector<float>>("--wheel-ranges");
-			// ss.set_color_wheel_ranges({double_hsv[0], double_hsv[1], double_hsv[2]}, {double_hsv[3], double_hsv[4], double_hsv[5]});
 			cs.wheel.start_hsv = {double_hsv[0], double_hsv[1], double_hsv[2]};
 			cs.wheel.end_hsv = {double_hsv[3], double_hsv[4], double_hsv[5]};
 		}
