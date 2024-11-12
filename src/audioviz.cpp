@@ -105,53 +105,51 @@ void audioviz::layers_init(const int antialiasing)
 					mult->factor = pow(1 + avg, 5);
 
 					sf::Sprite spr{*media->attached_pic};
-					int outerR = 5000 * avg;
-					int innerR = outerR / 3;
-					spr.setPosition({outerR, outerR});
+					spr.setPosition({100, 100});
 
-					if (avg >= .001)
+					// if (avg >= .001)
+					// {
+					// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
+					// 	star.setRadii(outerR, innerR);
+					// 	star.setFillColor(sf::Color(100, 10, 100, 255));
+					// }
+					if (avg >= .01 && !star_is_shrinking)
+					{
+						shrinking_outer_R = 5000 * avg;
+						shrinking_inner_R = shrinking_outer_R / 3;
+						x_pos = random<float>(50, size.x-50);
+						y_pos = random<float>(50, size.y-50);
+						star.setPosition({x_pos, y_pos});
+						star.setRadii(shrinking_outer_R, shrinking_inner_R);
+						star.setFillColor(sf::Color(100, 10, 100, 100));
+						star_is_shrinking = true;
+						std::cout << "is drawn";
+
+					}
+					else if (star_is_shrinking and shrinking_inner_R <= 0.1)
+					{
+						shrinking_outer_R = 0;
+						shrinking_inner_R = 0;
+						star_is_shrinking = false;
+					}
+					else if(star_is_shrinking)
+					{
+						// std::cout << "is shrinking";
+						shrinking_outer_R -= 1;
+						shrinking_inner_R = shrinking_outer_R / 3;
+
+						star.setPosition({x_pos, y_pos});
+						star.setRadii(shrinking_outer_R, shrinking_inner_R);
+						star.setFillColor(sf::Color(100, 10, 100, 100));
+
+					}
+					else
 					{
 						star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-						star.setRadii(outerR, innerR);
-						star.setFillColor(sf::Color(100, 10, 100, 255));
+						star.setRadii(shrinking_outer_R, shrinking_inner_R);
+						star.setFillColor(sf::Color(100, 10, 100, 100));
+
 					}
-
-					// c.setFillColor(sf::Color(100, 10, 100));
-					// c.setRadius(100);
-					// c.setPosition({100, 100});
-
-					// if (avg >= .01 && !star_is_shrinking)
-					// {
-					// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-					// 	star.setRadii(outerR, innerR);
-					// 	star.setFillColor(sf::Color(100, 10, 100, 100));
-					// 	star_is_shrinking = true;
-					// 	std::cout<<"In creating star";
-					// }
-					// else if (star_is_shrinking and shrinkink_inner_R <= 0.01)
-					// {
-					// 	shrinkink_outer_R = 0;
-					// 	shrinkink_inner_R = 0;
-					// 	star_is_shrinking = false;
-					// 	std::cout<<"In shrinking star";
-
-					// }
-					// else if(star_is_shrinking)
-					// {
-					// 	shrinkink_outer_R -= 0.1;
-					// 	shrinkink_inner_R -= shrinkink_outer_R / 3;
-
-					// 	star.setRadii(shrinkink_outer_R, shrinkink_inner_R);
-					// 	star.setFillColor(sf::Color(100, 10, 100, 100));
-
-					// }
-					// else
-					// {
-					// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-					// 	star.setRadii(outerR, innerR);
-					// 	star.setFillColor(sf::Color(100, 10, 100, 100));
-
-					// }
 					orig_rt.draw(spr);
 					// orig_rt.draw(c);
 				});
