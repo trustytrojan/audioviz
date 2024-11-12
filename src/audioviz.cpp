@@ -107,26 +107,19 @@ void audioviz::layers_init(const int antialiasing)
 					sf::Sprite spr{*media->attached_pic};
 					spr.setPosition({100, 100});
 
-					// if (avg >= .001)
-					// {
-					// 	star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-					// 	star.setRadii(outerR, innerR);
-					// 	star.setFillColor(sf::Color(100, 10, 100, 255));
-					// }
-					if (avg >= .01 && !star_is_shrinking)
+					if (avg - old_avg > 0.01 && avg >= .01 && !star_is_shrinking)
 					{
 						shrinking_outer_R = 5000 * avg;
 						shrinking_inner_R = shrinking_outer_R / 3;
 						x_pos = random<float>(50, size.x-50);
-						y_pos = random<float>(50, size.y-50);
+						y_pos = random<float>(50, size.y-100);
 						star.setPosition({x_pos, y_pos});
 						star.setRadii(shrinking_outer_R, shrinking_inner_R);
 						star.setFillColor(sf::Color(100, 10, 100, 100));
 						star_is_shrinking = true;
 						std::cout << "is drawn";
-
 					}
-					else if (star_is_shrinking and shrinking_inner_R <= 0.1)
+					else if (star_is_shrinking and shrinking_inner_R <= 1)
 					{
 						shrinking_outer_R = 0;
 						shrinking_inner_R = 0;
@@ -135,23 +128,21 @@ void audioviz::layers_init(const int antialiasing)
 					else if(star_is_shrinking)
 					{
 						// std::cout << "is shrinking";
-						shrinking_outer_R -= 1;
+						shrinking_outer_R /= 1.05;
 						shrinking_inner_R = shrinking_outer_R / 3;
-
 						star.setPosition({x_pos, y_pos});
 						star.setRadii(shrinking_outer_R, shrinking_inner_R);
-						star.setFillColor(sf::Color(100, 10, 100, 100));
-
+						star.setFillColor(sf::Color(100, 10, 100));
 					}
 					else
 					{
 						star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
 						star.setRadii(shrinking_outer_R, shrinking_inner_R);
 						star.setFillColor(sf::Color(100, 10, 100, 100));
-
 					}
 					orig_rt.draw(spr);
-					// orig_rt.draw(c);
+					old_avg = avg;
+
 				});
 
 			if (media->attached_pic)

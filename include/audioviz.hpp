@@ -45,6 +45,7 @@ private:
 	bool star_is_shrinking = false;
 	int shrinking_outer_R = 0;
 	int shrinking_inner_R = 0;
+	float old_avg = 0;
 	int x_pos = 0;
 	int y_pos = 0;
 	// sf::CircleShape c;
