@@ -16,13 +16,14 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	const sf::Vector2u size{atoi(argv[1]), atoi(argv[2])};
-	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
+	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4}};
 	window.setVerticalSyncEnabled(true);
 
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
 	scope.set_fill_in(false);
+	std::cout << "shape count: " << scope.get_shape_count() << '\n';
 
 	viz::SpectrumDrawable<viz::VerticalBar> sd;
 	sd.set_rect({{}, (sf::Vector2i)size});
@@ -39,7 +40,7 @@ int main(const int argc, const char *const *const argv)
 
 	int afpvf{media._astream.sample_rate() / 60};
 
-	std::vector<float> left_channel(size.x), spectrum(fft_size);
+	std::vector<float> left_channel(scope.get_shape_count()), spectrum(fft_size);
 
 	pa::PortAudio _;
 	pa::Stream pa_stream{0, media._astream.nb_channels(), paFloat32, media._astream.sample_rate()};
@@ -47,7 +48,7 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2f _origin{size.x / 2.f, size.y / 2.f};
 
-	const auto rad = 15;
+	const auto rad = 3;
 	sf::CircleShape origincircle{rad};
 	origincircle.setFillColor(sf::Color::Red);
 	origincircle.setOrigin({rad / 2.f, rad / 2.f});
@@ -64,13 +65,13 @@ int main(const int argc, const char *const *const argv)
 				window.close();
 
 		{
-			media.decode(size.x);
+			media.decode(scope.get_shape_count());
 
-			if (media.audio_buffer.size() < size.x)
+			if (media.audio_buffer.size() < scope.get_shape_count())
 				break;
 
 			// copy just the left channel
-			for (int i = 0; i < size.x; ++i)
+			for (int i = 0; i < scope.get_shape_count(); ++i)
 				left_channel[i] = media.audio_buffer[i * media._astream.nb_channels() + 0 /* left channel */];
 			scope.update_shape_positions(left_channel);
 
@@ -103,10 +104,10 @@ int main(const int argc, const char *const *const argv)
 		sf::Angle ang_deg = sf::degrees(-7*cur);
 		sf::Angle ang_deg2 = sf::degrees(90+7*cur);
 		
-		scope.set_rotation_angle(ang_deg);
+		// scope.set_rotation_angle(ang_deg);
 		sf::Vector2f coord {150,20};
 
-		scope.set_center_point(150, ang_deg2);
+		// scope.set_center_point(150, ang_deg2);
 
 		window.clear();
 		window.draw(scope);

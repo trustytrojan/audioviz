@@ -1,4 +1,5 @@
 #include "viz/Layer.hpp"
+#include <iostream>
 
 namespace viz
 {
@@ -37,6 +38,7 @@ void Layer::set_fx_cb(const FxCb &cb)
 
 void Layer::apply_fx()
 {
+	// std::cerr << "layer '" << name << "' called apply_fx()\n";
 	_fx_rt.clear(sf::Color::Transparent);
 	_fx_rt.copy(_orig_rt);
 	for (const auto &effect : effects)

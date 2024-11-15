@@ -21,10 +21,9 @@ class ScopeDrawable : public sf::Drawable
 
 	sf::Angle angle = sf::degrees(0);
 	sf::Transformable tf;
-
-public:
 	std::vector<ShapeType> shapes;
 
+public:
 	ScopeDrawable(const sf::IntRect &rect, const bool backwards = false)
 		: rect{rect},
 		  backwards{backwards}
@@ -78,15 +77,11 @@ public:
 
 	size_t get_shape_count() const { return shapes.size(); }
 
-	void update_shape_positions(const std::vector<float> &audio)
+	void update_shape_positions(const std::span<float> &audio)
 	{
-		if (shapes.size() != audio.size())
-		{
-			shapes.resize(audio.size());
-			update_shape_x_positions();
-		}
+		assert(audio.size() >= shapes.size());
 
-		for (int i = 0; i < (int)audio.size(); ++i)
+		for (int i = 0; i < (int)shapes.size(); ++i)
 		{
 			const auto half_height = rect.size.y / 2.f;
 			const auto half_heightx = rect.size.x / 2.f;
@@ -118,6 +113,9 @@ public:
 private:
 	void update_shape_x_positions()
 	{
+		const int shape_count = rect.size.x / (shape.width + shape.spacing);
+		shapes.resize(shape_count);
+
 		for (int i = 0; i < shapes.size(); ++i)
 		{
 			if constexpr (std::is_base_of_v<sf::CircleShape, ShapeType>)

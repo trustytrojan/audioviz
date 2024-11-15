@@ -13,6 +13,7 @@
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
+#include "viz/ScopeDrawable.hpp"
 
 #include "Media.hpp"
 
@@ -45,6 +46,10 @@ private:
 	// stereo spectrum
 	viz::StereoSpectrum<BarType> &ss;
 	std::optional<sf::BlendMode> spectrum_bm;
+
+	// scope
+	viz::ScopeDrawable<sf::RectangleShape> scope;
+	std::vector<float> left_channel; // NEEDS to be updated when the scope is updated
 
 	// particle system
 	viz::ParticleSystem<sf::CircleShape> ps;
