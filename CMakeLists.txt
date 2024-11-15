@@ -48,6 +48,7 @@ FetchContent_Declare(spline
 
 FetchContent_MakeAvailable(SFML libavpp argparse spline)
 
+cmake_policy(SET CMP0167 NEW)
 find_package(Boost COMPONENTS process)
 if(NOT Boost_FOUND)
 	message("Boost not found, using FetchContent...")
