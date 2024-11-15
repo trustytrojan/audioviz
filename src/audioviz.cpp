@@ -107,42 +107,9 @@ void audioviz::layers_init(const int antialiasing)
 					sf::Sprite spr{*media->attached_pic};
 					spr.setPosition({100, 100});
 
-					if (avg - old_avg > 0.01 && avg >= .01 && !star_is_shrinking)
-					{
-						shrinking_outer_R = 5000 * avg;
-						shrinking_inner_R = shrinking_outer_R / 3;
-						x_pos = random<float>(50, size.x-50);
-						y_pos = random<float>(50, size.y-100);
-						star.setPosition({x_pos, y_pos});
-						star.setRadii(shrinking_outer_R, shrinking_inner_R);
-						star.setFillColor(sf::Color(100, 10, 100, 100));
-						star_is_shrinking = true;
-						std::cout << "is drawn";
-					}
-					else if (star_is_shrinking and shrinking_inner_R <= 1)
-					{
-						shrinking_outer_R = 0;
-						shrinking_inner_R = 0;
-						star_is_shrinking = false;
-					}
-					else if(star_is_shrinking)
-					{
-						// std::cout << "is shrinking";
-						shrinking_outer_R /= 1.05;
-						shrinking_inner_R = shrinking_outer_R / 3;
-						star.setPosition({x_pos, y_pos});
-						star.setRadii(shrinking_outer_R, shrinking_inner_R);
-						star.setFillColor(sf::Color(100, 10, 100));
-					}
-					else
-					{
-						star.setPosition({random<float>(0, size.x), random<float>(0, size.y)});
-						star.setRadii(shrinking_outer_R, shrinking_inner_R);
-						star.setFillColor(sf::Color(100, 10, 100, 100));
-					}
-					orig_rt.draw(spr);
-					old_avg = avg;
+					update_star_effect(avg);
 
+					orig_rt.draw(spr);
 				});
 
 			if (media->attached_pic)
@@ -412,4 +379,41 @@ void audioviz::set_fft_size(const int n)
 {
 	fft_size = n;
 	fa.set_fft_size(n);
+}
+
+void audioviz::update_star_effect(const auto average)
+{
+	sf::Color star_color = sf::Color(255, 255, 204, 100);
+
+	//Draws initial star after screan is blank
+	if (average - old_avg > 0.01 && average >= .01 && !star_is_shrinking)
+	{
+		shrinking_outer_R = 5000 * average;
+		shrinking_inner_R = shrinking_outer_R / 3;
+		x_pos = random<float>(50, size.x-50);
+		y_pos = random<float>(50, size.y-150);
+		star.setPosition({x_pos, y_pos});
+		star.setRadii(shrinking_outer_R, shrinking_inner_R);
+		star.setFillColor(star_color);
+		star_is_shrinking = true;
+		std::cout << "is drawn";
+	}
+	//Removes the star from the screan when it becomes too small
+	else if (star_is_shrinking and shrinking_inner_R <= 1)
+	{
+		shrinking_outer_R = 0;
+		shrinking_inner_R = 0;
+		star_is_shrinking = false;
+	}
+	//Shrinks the star
+	else if(star_is_shrinking)
+	{
+		shrinking_outer_R /= 1.05;
+		shrinking_inner_R = shrinking_outer_R / 3;
+		star.setPosition({x_pos, y_pos});
+		star.setRadii(shrinking_outer_R, shrinking_inner_R);
+		star.setFillColor(star_color);
+	}
+	old_avg = average;
+
 }

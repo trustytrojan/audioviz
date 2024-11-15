@@ -159,4 +159,5 @@ private:
 	void play_audio();
 	void capture_elapsed_time(const char *const label, const sf::Clock &_clock);
 	void layers_init(int);
+	void update_star_effect(const auto);
 };
