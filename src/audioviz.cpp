@@ -107,7 +107,10 @@ void audioviz::layers_init(const int antialiasing)
 					sf::Sprite spr{*media->attached_pic};
 					spr.setPosition({100, 100});
 
-					update_star_effect(avg);
+					if (audio_reactive)
+					{
+						update_star_effect(avg);
+					}
 
 					orig_rt.draw(spr);
 				});

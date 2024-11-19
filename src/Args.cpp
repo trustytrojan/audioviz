@@ -133,6 +133,11 @@ Args::Args(const int argc, const char *const *const argv)
 		.choices("top", "bottom", "left", "right")
 		.default_value("bottom");
 
+	add_argument("-ar", "--audio-reactive")
+		.help("show audio-reactive stars on screen")
+		.flag();
+
+
 
 #ifdef AUDIOVIZ_LUA
 	add_argument("--luafile")

@@ -136,6 +136,13 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 	}
 
+	{ // drawing stars
+		if (args.get<bool>("-ar"))
+		{
+			viz.audio_reactive = true;
+		}
+	}
+
 	{ // interpolation type
 		static const std::unordered_map<std::string, FS::InterpolationType> it_map{
 			{"none", FS::InterpolationType::NONE},

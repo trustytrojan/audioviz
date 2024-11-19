@@ -22,6 +22,8 @@ class audioviz : public sf::Drawable
 public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
+	bool audio_reactive = false;
+
 
 private:
 	using BarType = viz::VerticalBar;
