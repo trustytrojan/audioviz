@@ -2,27 +2,38 @@
 
 #include "Args.hpp"
 #include "audioviz.hpp"
-#include "viz/StereoSpectrum.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
+#include "viz/StereoSpectrum.hpp"
 
 #ifdef AUDIOVIZ_LUA
 #include <sol/sol.hpp>
 #endif
 
-#include <string>
 #include <cstdlib>
+#include <string>
 
 class Main
 {
 	using BarType = viz::VerticalBar;
+	using ParticleShapeType = sf::CircleShape;
+
+	using FA = tt::FrequencyAnalyzer;
 	using SD = viz::SpectrumDrawable<BarType>;
-	using FS = tt::FrequencyAnalyzer;
+	using SS = viz::StereoSpectrum<BarType>;
+	using PS = viz::ParticleSystem<ParticleShapeType>;
 
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
 
-	tt::FrequencyAnalyzer fa{3000};
-	viz::StereoSpectrum<BarType> ss;
+	const Args args;
+	FA fa{3000};
+	SS ss;
+	PS ps{50};
+
+	Main(const Main &) = delete;
+	Main &operator=(const Main &) = delete;
+	Main(Main &&) = delete;
+	Main &operator=(Main &&) = delete;
 
 #ifdef AUDIOVIZ_LUA
 	struct LuaState : sol::state
@@ -34,6 +45,7 @@ class Main
 	class FfmpegEncoder
 	{
 		FILE *process;
+
 	public:
 		FfmpegEncoder(audioviz &, const std::string &outfile, const std::string &vcodec, const std::string &acodec);
 		~FfmpegEncoder();
@@ -41,13 +53,17 @@ class Main
 		void send_frame(const sf::Image &);
 	};
 
-	void use_args(audioviz &, const Args &);
+	void use_args(audioviz &);
 
 	void start_in_window(audioviz &);
-	void encode(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_without_window(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_without_window_mt(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_with_window(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode(
+		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_without_window(
+		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_without_window_mt(
+		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode_with_window(
+		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);

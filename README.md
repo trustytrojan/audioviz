@@ -1,6 +1,6 @@
 # audioviz
 my own audio visualizer, because after effects sucks.
-for right now, audioviz only supports linux, but with the libraries i'm using, it shouldn't be hard to port to windows.
+builds on windows and linux!!!!
 
 here are some demos:
 - https://youtu.be/Avk5lRZb7To
@@ -24,6 +24,10 @@ here are some demos:
 3. download [portaudio](https://files.portaudio.com/download.html) source, extract `portaudio.h` (inside `include` directory of the tarball) to `windows_deps/portaudio`. i recommending using 7zip for viewing archives: you can get it by running `winget install 7zip`.
 4. download the [64bit portaudio dll](https://github.com/spatialaudio/portaudio-binaries), rename it to `portaudio_x64.dll`, and move it to `windows_deps/portaudio`
 5. download [fftw](https://fftw.org/install/windows.html), open the archive and extract `fftw3.h` and `libfftw3f-3.dll` into `windows_deps/fftw`
+6. **optionally**, create a `lua` directory in `windows_deps`, install lua with `winget install devcom.lua`, then in an an admin command prompt run:
+  ```cmd
+  mklink /D windows_deps\lua %LocalAppData%\Programs\Lua
+  ```
 
 ## libraries/software used
 - [FFTW](https://fftw.org)
@@ -54,14 +58,20 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 ```
 
 ## todo list
-- `viz::ScopeDrawable`
+- ✅️ `viz::ScopeDrawable`
   - basically done, want extra feature: audio window customization independent of shape size
 - lua api (in progress)
-  - modular layering/effects system
+  - ✅️ modular layering/effects system
   - remove hardcoded visualizer components
-- make `viz::ParticleSystem` more customizable
-  - add `set_displacement_direction(sf::Vector2f)`
-  - replace `update(sf::Vector2f)` with `displace_particles(float)`
 - make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
   - figure out how to deal with [`fft_size`](src/audioviz.cpp#L284) and [`sa.analyze(...)`](src/audioviz.cpp#L299)
-- `clangd` still not configured properly on windows, it doesn't know where to find c++ headers (when using mingw). figure this out
+- add components/effects based on rhythm
+  - involves knowing the tempo of the song
+  - want a small translucent flash overlay that flashes to the beat of music
+  - copy the osu! stars effect
+- need to experiment with only using the ffmpeg CLI instead of the libraries
+  - ✅️ figure out metadata parsing, then subprocessing for the audio/video streams
+  - ✅️ this *might* fix all the "ending early" problems (not a guarantee)
+  - try using `basic_ipstream` over `basic_pipe`
+  - try to have one `ffmpeg` process output both streams
+- ⁉️ figure out why particles randomly don't show on linux

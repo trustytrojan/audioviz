@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Media.hpp"
+#include "media/Media.hpp"
 #include "tt/Sprite.hpp"
 #include <SFML/Graphics.hpp>
 

@@ -45,13 +45,20 @@ Main::FfmpegEncoder::FfmpegEncoder(
 #ifdef LINUX
 	if (vcodec.contains("vaapi"))
 	{
-		_ss << "-vaapi_device /dev/dri/render/D128 ";
-		_ss << "-vf format=nv12,hwupload ";
+		_ss << "-vaapi_device /dev/dri/renderD129 ";
+		_ss << "-vf 'format=nv12,hwupload' ";
 	}
 #endif
 
 	// output file
-	_ss << outfile;
+#ifdef _WIN32
+	_ss << '"' << outfile << "\" ";
+#else
+	if (outfile.contains('\''))
+		_ss << '"' << outfile << "\" ";
+	else
+		_ss << '\'' << outfile << "' ";
+#endif
 
 	const auto &command = _ss.str();
 	std::cout << command << '\n';
@@ -104,19 +111,19 @@ void Main::encode_without_window_mt(
 {
 	std::queue<sf::Image> images;
 
-	const auto image_queuer = std::async(
-		std::launch::async,
-		[&]
+	// clang-format off
+	const auto image_queuer = std::async(std::launch::async, [&]
+	{
+		tt::RenderTexture rt{viz.size, 4};
+		while (viz.prepare_frame())
 		{
-			tt::RenderTexture rt(viz.size, 4);
-			while (viz.prepare_frame())
-			{
-				rt.draw(viz);
-				rt.display();
-				images.push(rt.getTexture().copyToImage());
-				rt.clear();
-			}
-		});
+			rt.draw(viz);
+			rt.display();
+			images.push(rt.getTexture().copyToImage());
+			rt.clear();
+		}
+	});
+	// clang-format on
 
 	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
 	while (future_not_finished(image_queuer))

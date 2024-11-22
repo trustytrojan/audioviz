@@ -34,7 +34,7 @@ class Layer
 public:
 	static inline const FxCb DRAW_FX_RT = [](auto &, auto &fx_rt, auto &target)
 	{
-		target.draw(fx_rt.sprite);
+		target.draw(fx_rt.sprite());
 	};
 
 	/**
