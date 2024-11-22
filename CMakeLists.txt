@@ -111,5 +111,3 @@ add_executable(scope-drawable-test
 	src/viz/VerticalPill.cpp
 	src/tt/ColorUtils.cpp
 	${libavpp_SOURCE_DIR}/src/av/Util.cpp)
-
-add_executable(rotate-test test/rotate-test.cpp)
