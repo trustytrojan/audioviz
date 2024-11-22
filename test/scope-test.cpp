@@ -1,5 +1,5 @@
 #include "viz/ScopeDrawable.hpp"
-#include "Media.hpp"
+#include "media/FfmpegCliBoostMedia.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
 #include "viz/SpectrumDrawable.hpp"
 #include "viz/VerticalBar.hpp"
@@ -35,15 +35,14 @@ int main(const int argc, const char *const *const argv)
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};
 
-	Media media{argv[3]};
-	media.init(size);
+	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
 
-	int afpvf{media._astream.sample_rate() / 60};
+	int afpvf{media->astream().sample_rate() / 60};
 
 	std::vector<float> left_channel(scope.get_shape_count()), spectrum(fft_size);
 
 	pa::PortAudio _;
-	pa::Stream pa_stream{0, media._astream.nb_channels(), paFloat32, media._astream.sample_rate()};
+	pa::Stream pa_stream{0, media->astream().nb_channels(), paFloat32, media->astream().sample_rate()};
 	pa_stream.start();
 
 	const sf::Vector2f _origin{size.x / 2.f, size.y / 2.f};
@@ -65,14 +64,14 @@ int main(const int argc, const char *const *const argv)
 				window.close();
 
 		{
-			media.decode(scope.get_shape_count());
+			media->decode_audio(scope.get_shape_count());
 
-			if (media.audio_buffer.size() < scope.get_shape_count())
+			if (media->audio_buffer().size() < scope.get_shape_count())
 				break;
 
 			// copy just the left channel
 			for (int i = 0; i < scope.get_shape_count(); ++i)
-				left_channel[i] = media.audio_buffer[i * media._astream.nb_channels() + 0 /* left channel */];
+				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
 			scope.update_shape_positions(left_channel);
 
 			fa.copy_to_input(left_channel.data());
@@ -82,7 +81,7 @@ int main(const int argc, const char *const *const argv)
 
 			try
 			{
-				pa_stream.write(media.audio_buffer.data(), afpvf);
+				pa_stream.write(media->audio_buffer().data(), afpvf);
 			}
 			catch (const pa::Error &e)
 			{
@@ -90,7 +89,7 @@ int main(const int argc, const char *const *const argv)
 					throw;
 				std::cerr << e.what() << '\n';
 			}
-			media.audio_buffer_erase(afpvf);
+			media->audio_buffer_erase(afpvf);
 		}
 		double spin_arc = 360;
 		double speed = 20;

@@ -148,7 +148,7 @@ void audioviz::layers_init(const int antialiasing)
 			[&](auto &orig_rt)
 			{
 				for (int i = 0; i < scope.get_shape_count(); ++i)
-					left_channel[i] = media->audio_buffer[i * media->_astream.nb_channels() + 0 /* left channel */];
+					left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
 				scope.update_shape_positions(left_channel);
 				orig_rt.clear(sf::Color::Transparent);
 				orig_rt.draw(scope);
@@ -336,7 +336,7 @@ bool audioviz::prepare_frame()
 {
 	assert(media);
 	// now that two things are dependent on different amounts of audio, decode as much as needed
-	capture_time("media_decode", media->decode(std::max(fft_size, (int)scope.get_shape_count())));
+	capture_time("media_decode", media->decode_audio(std::max(fft_size, (int)scope.get_shape_count())));
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream)

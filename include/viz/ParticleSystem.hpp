@@ -145,7 +145,7 @@ public:
 	// figure this out!!!!!!!!!!!!!!!!!!
 	void update(const tt::AudioAnalyzer aa, const UpdateOptions &options = {})
 	{
-		float avg;
+		float avg{}; // didn't initialize this for the longest time... yikes.
 		for (int i = 0; i < aa.get_num_channels(); ++i)
 			avg += util::weighted_max(aa.get_spectrum_data(i), options.weight_func);
 		avg /= aa.get_num_channels();
