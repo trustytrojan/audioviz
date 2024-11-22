@@ -24,6 +24,7 @@ audioviz::audioviz(
 	  media{new FfmpegCliBoostMedia{media_url, size}},
 	  fa{fa},
 	  ss{ss},
+	  scope{{{}, (sf::Vector2i)size}},
 	  ps{ps},
 	  final_rt{size, antialiasing},
 	  video_bg{size}
@@ -51,6 +52,12 @@ audioviz::audioviz(
 	// default metadata position
 	// needs to be called AFTER album cover is set because the text position depends on album cover size
 	metadata.set_position({30, 30});
+
+	// scope setup
+	scope.set_shape_spacing(0);
+	scope.set_shape_width(2);
+	scope.set_fill_in(true);
+	left_channel.resize(scope.get_shape_count());
 }
 
 void audioviz::perform_fft()
@@ -133,6 +140,21 @@ void audioviz::layers_init(const int antialiasing)
 				target.draw(fx_rt.sprite(), sf::BlendAdd);
 				target.draw(orig_rt.sprite(), sf::BlendAdd);
 			});
+	}
+
+	{ // scope layer
+		auto &scope_layer = add_layer("scope", antialiasing);
+		scope_layer.set_orig_cb(
+			[&](auto &orig_rt)
+			{
+				for (int i = 0; i < scope.get_shape_count(); ++i)
+					left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
+				scope.update_shape_positions(left_channel);
+				orig_rt.clear(sf::Color::Transparent);
+				orig_rt.draw(scope);
+				orig_rt.display();
+			});
+		scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
 	}
 
 	{ // spectrum layer
@@ -312,7 +334,9 @@ void audioviz::play_audio()
 
 bool audioviz::prepare_frame()
 {
-	capture_time("media_decode", media->decode_audio(fft_size));
+	assert(media);
+	// now that two things are dependent on different amounts of audio, decode as much as needed
+	capture_time("media_decode", media->decode_audio(std::max(fft_size, (int)scope.get_shape_count())));
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream)

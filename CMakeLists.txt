@@ -145,13 +145,22 @@ endif()
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})
 
-add_executable(test-player
-	test/test-player.cpp
+add_executable(scope-test
+	test/scope-test.cpp
+	src/media/Media.cpp
+	src/media/FfmpegCliBoostMedia.cpp
+	src/tt/AudioAnalyzer.cpp
+	src/tt/FrequencyAnalyzer.cpp
+	src/viz/VerticalBar.cpp
+	src/viz/VerticalPill.cpp
+	src/tt/ColorUtils.cpp)
+
+add_executable(spectrum-test
+	test/spectrum-test.cpp
 	src/viz/VerticalBar.cpp
 	src/tt/FrequencyAnalyzer.cpp
 	src/tt/AudioAnalyzer.cpp
 	src/tt/ColorUtils.cpp
 	src/media/Media.cpp
 	src/media/FfmpegCliBoostMedia.cpp
-	src/media/FfmpegCliPopenMedia.cpp
-)
+	src/media/FfmpegCliPopenMedia.cpp)

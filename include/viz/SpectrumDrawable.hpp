@@ -151,8 +151,8 @@ public:
 
 	void update_bar_heights(const std::vector<float> &spectrum)
 	{
-		assert(spectrum.size() == bars.size());
-		for (int i = 0; i < (int)spectrum.size(); ++i)
+		assert(spectrum.size() >= bars.size());
+		for (int i = 0; i < (int)bars.size(); ++i)
 			bars[i].setHeight(std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y));
 	}
 

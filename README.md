@@ -58,7 +58,8 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 ```
 
 ## todo list
-- 🔄 `viz::ScopeDrawable`
+- ✅️ `viz::ScopeDrawable`
+  - basically done, want extra feature: audio window customization independent of shape size
 - lua api (in progress)
   - ✅️ modular layering/effects system
   - remove hardcoded visualizer components
