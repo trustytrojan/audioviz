@@ -102,14 +102,12 @@ endif()
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})
 
-# add_executable(scope-drawable-test
-# 	ScopeDrawableTest.cpp
-# 	src/Media.cpp
-# 	src/tt/AudioAnalyzer.cpp
-# 	src/tt/FrequencyAnalyzer.cpp
-# 	src/viz/VerticalBar.cpp
-# 	src/viz/VerticalPill.cpp
-# 	src/tt/ColorUtils.cpp
-# 	${libavpp_SOURCE_DIR}/src/av/Util.cpp)
-
-# add_executable(rotate-test rotate-test.cpp)
+add_executable(scope-colors-test
+	test/scope-colors-test.cpp
+	src/Media.cpp
+	src/tt/AudioAnalyzer.cpp
+	src/tt/FrequencyAnalyzer.cpp
+	src/viz/VerticalBar.cpp
+	src/viz/VerticalPill.cpp
+	src/tt/ColorUtils.cpp
+	${libavpp_SOURCE_DIR}/src/av/Util.cpp)

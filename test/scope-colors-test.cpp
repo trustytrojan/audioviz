@@ -1,11 +1,11 @@
-#include "viz/ScopeDrawable.hpp"
 #include "Media.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
+#include "viz/ColorSettings.hpp"
+#include "viz/ScopeDrawable.hpp"
 #include "viz/SpectrumDrawable.hpp"
 #include "viz/VerticalBar.hpp"
 #include <iostream>
 #include <portaudio.hpp>
-#include "viz/ColorSettings.hpp"
 
 int main(const int argc, const char *const *const argv)
 {
@@ -55,7 +55,7 @@ int main(const int argc, const char *const *const argv)
 		while (const auto event = window.pollEvent())
 			if (event->is<sf::Event::Closed>())
 				window.close();
-	
+
 		{
 			media.decode(size.x);
 
@@ -71,7 +71,6 @@ int main(const int argc, const char *const *const argv)
 			sd.update_bar_heights(spectrum);
 			sd.color_wheel_increment();
 			scope.color_wheel_increment();
-			
 
 			try
 			{
@@ -85,7 +84,6 @@ int main(const int argc, const char *const *const argv)
 			}
 			media.audio_buffer_erase(afpvf);
 		}
-
 
 		window.clear();
 		window.draw(scope);
