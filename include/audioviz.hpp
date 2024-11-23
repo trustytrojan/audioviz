@@ -10,10 +10,10 @@
 
 #include "viz/Layer.hpp"
 #include "viz/ParticleSystem.hpp"
+#include "viz/ScopeDrawable.hpp"
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
-#include "viz/ScopeDrawable.hpp"
 
 #include "media/Media.hpp"
 
@@ -27,6 +27,12 @@ private:
 	using BarType = viz::VerticalBar;
 	using ParticleShapeType = sf::CircleShape;
 
+	using FA = tt::FrequencyAnalyzer;
+	using CS = viz::ColorSettings;
+	using SS = viz::StereoSpectrum<BarType>;
+	using SD = viz::ScopeDrawable<sf::RectangleShape>;
+	using PS = viz::ParticleSystem<ParticleShapeType>;
+
 	int fft_size{3000};
 	int framerate{60};
 
@@ -39,19 +45,22 @@ private:
 	int afpvf{media->astream().sample_rate() / framerate};
 
 	// fft processor
-	tt::FrequencyAnalyzer &fa;
+	FA &fa;
 	tt::StereoAnalyzer sa;
 
+	// color settings
+	CS &color;
+
 	// stereo spectrum
-	viz::StereoSpectrum<BarType> &ss;
+	SS &ss;
 	std::optional<sf::BlendMode> spectrum_bm;
 
 	// scope
-	viz::ScopeDrawable<sf::RectangleShape> scope;
-	std::vector<float> left_channel; // NEEDS to be updated when the scope is updated
+	SD scope;
+	// std::vector<float> left_channel; // NEEDS to be updated when the scope is updated
 
 	// particle system
-	viz::ParticleSystem<ParticleShapeType> &ps;
+	PS &ps;
 
 	// metadata-related fields
 	sf::Font font;
@@ -82,15 +91,18 @@ public:
 	 * @param size size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media_url url to media source. must contain an audio stream
 	 * @param fa reference to your own `tt::FrequencyAnalyzer`
+	 * @param cs reference to your own `viz::ColorSettings`
 	 * @param ss reference to your own `viz::StereoSpectrum<BarType>`
+	 * @param ps reference to your own `viz::ParticleSystem<ParticleShapeType>`
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
 	audioviz(
 		sf::Vector2u size,
 		const std::string &media_url,
-		tt::FrequencyAnalyzer &fa,
-		viz::StereoSpectrum<BarType> &ss,
-		viz::ParticleSystem<ParticleShapeType> &ps,
+		FA &fa,
+		CS &color,
+		SS &ss,
+		PS &ps,
 		int antialiasing = 4);
 
 	/**

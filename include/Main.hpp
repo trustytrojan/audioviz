@@ -3,6 +3,7 @@
 #include "Args.hpp"
 #include "audioviz.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
+#include "viz/ColorSettings.hpp"
 #include "viz/StereoSpectrum.hpp"
 
 #ifdef AUDIOVIZ_LUA
@@ -21,13 +22,15 @@ class Main
 	using SD = viz::SpectrumDrawable<BarType>;
 	using SS = viz::StereoSpectrum<BarType>;
 	using PS = viz::ParticleSystem<ParticleShapeType>;
+	using CS = viz::ColorSettings;
 
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
 
 	const Args args;
 	FA fa{3000};
-	SS ss;
+	CS cs;
+	SS ss{cs};
 	PS ps{50};
 
 	Main(const Main &) = delete;

@@ -1,6 +1,5 @@
 #include "media/Media.hpp"
 #include "media/FfmpegCliBoostMedia.hpp"
-// #include "media/FfmpegCliPopenMedia.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
@@ -19,9 +18,10 @@ int main(const int argc, const char *const *const argv)
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
 	window.setVerticalSyncEnabled(true);
 
+	viz::ColorSettings color;
 	const auto framerate = 60;
 
-	viz::StereoSpectrum<viz::VerticalBar> ss;
+	viz::StereoSpectrum<viz::VerticalBar> ss{color};
 	ss.set_left_backwards(true);
 	ss.set_rect({{}, (sf::Vector2i)size});
 	ss.set_bar_width(10);

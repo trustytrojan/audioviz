@@ -19,18 +19,22 @@ int main(const int argc, const char *const *const argv)
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4}};
 	window.setVerticalSyncEnabled(true);
 
-	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
+	viz::ColorSettings color;
+	color.mode = viz::ColorSettings::Mode::WHEEL;
+	color.wheel.rate = .005;
+
+	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}, color};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
 	scope.set_fill_in(false);
 	std::cout << "shape count: " << scope.get_shape_count() << '\n';
 
-	viz::SpectrumDrawable<viz::VerticalBar> sd;
+	viz::SpectrumDrawable<viz::VerticalBar> sd{{}, color};
 	sd.set_rect({{}, (sf::Vector2i)size});
 	sd.set_bar_width(1);
 	sd.set_bar_spacing(0);
-	sd.set_color_mode(viz::SpectrumDrawable<viz::VerticalBar>::ColorMode::WHEEL);
-	sd.set_color_wheel_rate(0.005);
+	// sd.set_color_mode(viz::SpectrumDrawable<viz::VerticalBar>::ColorMode::WHEEL);
+	// sd.set_color_wheel_rate(0.005);
 
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};
@@ -72,12 +76,14 @@ int main(const int argc, const char *const *const argv)
 			// copy just the left channel
 			for (int i = 0; i < scope.get_shape_count(); ++i)
 				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
-			scope.update_shape_positions(left_channel);
+			scope.update(left_channel);
 
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
-			sd.update_bar_heights(spectrum);
-			sd.color_wheel_increment();
+			sd.update(spectrum);
+			// sd.color_wheel_increment();
+
+			color.wheel.increment_time();
 
 			try
 			{

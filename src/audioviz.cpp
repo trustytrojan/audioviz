@@ -16,15 +16,17 @@
 audioviz::audioviz(
 	const sf::Vector2u size,
 	const std::string &media_url,
-	tt::FrequencyAnalyzer &fa,
-	viz::StereoSpectrum<BarType> &ss,
-	viz::ParticleSystem<ParticleShapeType> &ps,
+	FA &fa,
+	CS &color,
+	SS &ss,
+	PS &ps,
 	const int antialiasing)
 	: size{size},
 	  media{new FfmpegCliBoostMedia{media_url, size}},
 	  fa{fa},
+	  color{color},
 	  ss{ss},
-	  scope{{{}, (sf::Vector2i)size}},
+	  scope{{{}, (sf::Vector2i)size}, color},
 	  ps{ps},
 	  final_rt{size, antialiasing},
 	  video_bg{size}
@@ -57,7 +59,7 @@ audioviz::audioviz(
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(2);
 	scope.set_fill_in(true);
-	left_channel.resize(scope.get_shape_count());
+	// left_channel.resize(scope.get_shape_count());
 }
 
 void audioviz::perform_fft()
@@ -107,6 +109,22 @@ void audioviz::layers_init(const int antialiasing)
 		}
 	}
 
+	{ // scope layer
+		auto &scope_layer = add_layer("scope", antialiasing);
+		scope_layer.set_orig_cb(
+			[&](auto &orig_rt)
+			{
+				float left_channel[scope.get_shape_count()];
+				for (int i = 0; i < scope.get_shape_count(); ++i)
+					left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
+				scope.update({left_channel, scope.get_shape_count()});
+				orig_rt.clear(sf::Color::Transparent);
+				orig_rt.draw(scope);
+				orig_rt.display();
+			});
+		scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
+	}
+
 	{ // particles layer
 		auto &particles = add_layer("particles", antialiasing);
 		particles.set_orig_cb(
@@ -140,21 +158,6 @@ void audioviz::layers_init(const int antialiasing)
 				target.draw(fx_rt.sprite(), sf::BlendAdd);
 				target.draw(orig_rt.sprite(), sf::BlendAdd);
 			});
-	}
-
-	{ // scope layer
-		auto &scope_layer = add_layer("scope", antialiasing);
-		scope_layer.set_orig_cb(
-			[&](auto &orig_rt)
-			{
-				for (int i = 0; i < scope.get_shape_count(); ++i)
-					left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
-				scope.update_shape_positions(left_channel);
-				orig_rt.clear(sf::Color::Transparent);
-				orig_rt.draw(scope);
-				orig_rt.display();
-			});
-		scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
 	}
 
 	{ // spectrum layer
@@ -351,6 +354,8 @@ bool audioviz::prepare_frame()
 	for (auto &layer : layers)
 		capture_time(layer.get_name(), layer.full_lifecycle(final_rt));
 	final_rt.display();
+
+	color.wheel.increment_time(); // PUT THIS SOMEWHERE ELSE
 
 	// THE IMPORTANT PART
 	capture_time("audio_buffer_erase", media->audio_buffer_erase(afpvf));

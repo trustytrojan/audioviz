@@ -1,6 +1,30 @@
 #include "media/FfmpegCliBoostMedia.hpp"
 #include <iostream>
 
+static std::string detect_vaapi_device()
+{
+	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
+	{
+		const auto &path = e.path();
+		if (!path.filename().string().starts_with("renderD"))
+			continue;
+		// clang-format off
+		bp::child c{
+			bp::search_path("ffmpeg"),
+			"-v", "warning",
+			"-vaapi_device", path.string(),
+			"-f", "lavfi", "-i", "testsrc=1280x720:d=1",
+			"-vf", "format=nv12,hwupload,scale_vaapi=640:640",
+			"-c:v", "h264_vaapi",
+			"-f", "null", "-"};
+		// clang-format on
+		c.wait();
+		if (c.exit_code() == 0)
+			return path.string();
+	}
+	return {};
+}
+
 FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vector2u video_size)
 	: FfmpegCliMedia{url, video_size},
 	  video_buffer(4 * video_size.x * video_size.y)
@@ -52,17 +76,23 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 		// also change quoting for windows
 
 #ifdef LINUX
-		// clang-format off
-		args.insert(args.end(), {
-			// really should not hardcode this!!!!!!!!!!!!!!!!
-			"-vaapi_device", "/dev/dri/renderD129",
+		if (const auto vaapi_device = detect_vaapi_device(); !vaapi_device.empty())
+			// clang-format off
+			args.insert(args.end(), {
+				"-vaapi_device", vaapi_device,
 
-			// va-api hardware accelerated scaling!
-			"-vf", "format=nv12,hwupload,scale_vaapi=" + std::to_string(video_size.x) + ':' + std::to_string(video_size.y) + ",hwdownload"
-		});
-		// clang-format on
+				// va-api hardware accelerated scaling!
+				"-vf", "format=nv12,hwupload,scale_vaapi=" + std::to_string(video_size.x) + ':' + std::to_string(video_size.y) + ",hwdownload"
+			});
+			// clang-format on
+		else
+		{
 #else
 		args.insert(args.end(), {"-s", std::to_string(video_size.x) + "x" + std::to_string(video_size.y)});
+#endif
+
+#ifdef LINUX
+		}
 #endif
 
 		args.insert(args.end(), {"-pix_fmt", "rgba", "-f", "rawvideo", "-"});
