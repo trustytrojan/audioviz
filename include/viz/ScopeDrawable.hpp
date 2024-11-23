@@ -2,6 +2,8 @@
 
 #include <SFML/Graphics.hpp>
 #include "ColorSettings.hpp"
+#include <cmath>
+
 
 namespace viz
 {
@@ -9,7 +11,6 @@ namespace viz
 template <typename ShapeType>
 class ScopeDrawable : public sf::Drawable
 {
-	std::vector<ShapeType> shapes;
 	sf::IntRect rect;
 	bool backwards = false;
 	struct
@@ -18,18 +19,20 @@ class ScopeDrawable : public sf::Drawable
 	} shape;
 	bool fill_in = false;
 	bool vert = false;
-
 	ColorSettings &color;
+	sf::Angle angle = sf::degrees(0);
+	sf::Transformable tf;
+	std::vector<ShapeType> shapes;
 
 public:
-
-	enum class ColorMode
+	ScopeDrawable()
 	{
-		WHEEL_RANGES,
-		WHEEL,
-		WHEEL_RANGES_REVERSE,
-		SOLID
-	};
+		for (auto &shape : shapes)
+		{
+			shape.setRadius(10);
+			shape.setFillColor(sf::Color::White);
+		}
+	}
 
 	ScopeDrawable(const sf::IntRect &rect, ColorSettings &color, const bool backwards = false)
 		: rect{rect},
@@ -39,25 +42,6 @@ public:
 		update_shape_x_positions();
 	}
 
-	void set_shape_spacing(const int spacing)
-	{
-		if (shape.spacing == spacing)
-			return;
-		shape.spacing = spacing;
-		update_shape_x_positions();
-	}
-
-	void set_shape_width(const int width)
-	{
-		if (shape.width == width)
-			return;
-		shape.width = width;
-		update_shape_x_positions();
-	}
-
-	void set_fill_in(bool _fill) { fill_in = _fill; }
-
-	void set_vert(bool _vert) { vert = _vert; }
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
@@ -69,36 +53,35 @@ public:
 
 	void set_backwards(bool b) { backwards = b; }
 
-	size_t get_shape_count() const { return shapes.size(); }
+	void set_rotation_angle(sf::Angle angle) { tf.setRotation(angle); }
 
-	void color_wheel_increment()
+	void set_center_point(double radius, sf::Angle angle)
 	{
-		color.wheel.increment_time();
-		for (int i = 0; i < (int)shapes.size(); ++i) 
-			shapes[i].setFillColor(color.calculate_color((float)i / shapes.size())); 
+		sf::Vector2f origin_{rect.size.x/2.f, rect.size.y/2.f};	
+		sf::Vector2f coord{origin_.x + radius * cos(angle.asRadians()), origin_.y - radius * sin(angle.asRadians())};
+
+		tf.setPosition({coord});
 	}
+
+	size_t get_shape_count() const { return shapes.size(); }
 
 	void update_shape_positions(const std::vector<float> &audio)
 	{
-		if (shapes.size() != audio.size())
-		{
-			shapes.resize(audio.size());
-			update_shape_x_positions();
-		}
+		assert(audio.size() >= shapes.size());
 
-		for (int i = 0; i < (int)audio.size(); ++i)
+		for (int i = 0; i < (int)shapes.size(); ++i)
 		{
 			const auto half_height = rect.size.y / 2.f;
 			const auto half_heightx = rect.size.x / 2.f;
 
-			if (!fill_in && !vert)
+			if (!fill_in)
 			{
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
 					std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
 				});
 			}
-			else if (fill_in && !vert)
+			else
 			{
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
@@ -106,34 +89,21 @@ public:
 				});
 				shapes[i].setSize({shape.width, (-half_height * audio[i])});
 			}
-			else if (!fill_in && vert)
-			{
-				shapes[i].setPosition({
-					std::clamp(half_heightx + (-half_heightx * audio[i]), 0.f, (float)rect.size.x),
-					shapes[i].getPosition().y,
-				});
-			}
-			else
-			{
-				shapes[i].setPosition({
-					std::clamp(half_heightx, 0.f, (float)rect.size.x),
-					shapes[i].getPosition().y,
-				});
-				shapes[i].setSize({(-half_height * audio[i]), shape.width});
-			}
 		}
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{
-		for (int i = 0; i < (int)shapes.size(); ++i) {
-			target.draw(shapes[i], states);
-		}
+		for (const auto &shape : shapes)
+			target.draw(shape, tf.getTransform());
 	}
 
 private:
 	void update_shape_x_positions()
 	{
+		const int shape_count = rect.size.x / (shape.width + shape.spacing);
+		shapes.resize(shape_count);
+
 		for (int i = 0; i < shapes.size(); ++i)
 		{
 			if constexpr (std::is_base_of_v<sf::CircleShape, ShapeType>)

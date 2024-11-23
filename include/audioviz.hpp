@@ -13,8 +13,9 @@
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
+#include "viz/ScopeDrawable.hpp"
 
-#include "Media.hpp"
+#include "media/Media.hpp"
 
 class audioviz : public sf::Drawable
 {
@@ -24,19 +25,18 @@ public:
 
 private:
 	using BarType = viz::VerticalBar;
+	using ParticleShapeType = sf::CircleShape;
 
 	int fft_size{3000};
 	int framerate{60};
 
 	// used for updating the particle system at 60Hz rate when framerate > 60
-	int frame_count{};
+	int frame_count{}, vfcount{1};
 
-	// MUST be constructed in the constructor
-	// this is an optional because i am too lazy to write a move assignment operator and destructor
-	std::optional<Media> media;
+	std::unique_ptr<Media> media;
 
 	// audio frames per video frame
-	int afpvf{media->_astream.sample_rate() / framerate};
+	int afpvf{media->astream().sample_rate() / framerate};
 
 	// fft processor
 	tt::FrequencyAnalyzer &fa;
@@ -46,8 +46,12 @@ private:
 	viz::StereoSpectrum<BarType> &ss;
 	std::optional<sf::BlendMode> spectrum_bm;
 
+	// scope
+	viz::ScopeDrawable<sf::RectangleShape> scope;
+	std::vector<float> left_channel; // NEEDS to be updated when the scope is updated
+
 	// particle system
-	viz::ParticleSystem<sf::CircleShape> ps;
+	viz::ParticleSystem<ParticleShapeType> &ps;
 
 	// metadata-related fields
 	sf::Font font;
@@ -68,6 +72,8 @@ private:
 	std::vector<viz::Layer> layers;
 	tt::RenderTexture final_rt;
 
+	sf::Texture video_bg;
+
 public:
 	// need to do this outside of the constructor otherwise the texture is broken?
 	void use_attached_pic_as_bg();
@@ -84,10 +90,11 @@ public:
 		const std::string &media_url,
 		tt::FrequencyAnalyzer &fa,
 		viz::StereoSpectrum<BarType> &ss,
+		viz::ParticleSystem<ParticleShapeType> &ps,
 		int antialiasing = 4);
 
 	/**
-	 * Add default effects to the `bg`, `spectrum`, and `particles` layers.
+	 * Add default effects to the `bg`, `spectrum`, and `particles` layers, if they exist.
 	 */
 	void add_default_effects();
 
@@ -127,8 +134,8 @@ public:
 	// you **must** call this method in order to see text metadata!
 	void set_text_font(const std::string &path);
 
-	void set_media_url(const std::string &url);
-	const std::string &get_media_url() const;
+	// void set_media_url(const std::string &url);
+	const std::string get_media_url() const;
 
 	/**
 	 * Set the number of audio samples used for frequency analysis.
@@ -141,6 +148,7 @@ private:
 	void draw_spectrum();
 	void draw_particles();
 	void play_audio();
-	void capture_elapsed_time(const char *const label, const sf::Clock &_clock);
+	void capture_elapsed_time(const std::string &label, const sf::Clock &_clock);
 	void layers_init(int);
+	void perform_fft();
 };

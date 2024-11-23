@@ -128,6 +128,11 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("disable vsync (not recommended)")
 		.flag();
 
+	add_argument("--ps-startside")
+		.help("start side of particles: 'top', 'bottom', 'left', 'right'")
+		.choices("top", "bottom", "left", "right")
+		.default_value("bottom");
+
 #ifdef AUDIOVIZ_LUA
 	add_argument("--luafile")
 		.help("NEW FEATURE!!!!!! configure audioviz with a lua script!\nlua code is run BEFORE cli args are parsed!");

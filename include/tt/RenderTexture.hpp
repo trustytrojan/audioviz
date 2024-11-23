@@ -13,27 +13,17 @@ namespace tt
 class RenderTexture : public sf::RenderTexture
 {
 public:
-	sf::Sprite sprite;
-
 	RenderTexture(const sf::Vector2u size, int antialiasing = 0)
-		: sf::RenderTexture{size, {.antiAliasingLevel = antialiasing}},
-		  sprite{getTexture()}
+		: sf::RenderTexture{size, {.antiAliasingLevel = antialiasing}}
 	{
 	}
 
-	// for some reason the texture that `sf::RenderTexture`
-	// starts with gets replaced after the first `display()` call.
-	// so to guarantee safety i need to do this...
-	void display()
-	{
-		sf::RenderTexture::display();
-		sprite.setTexture(getTexture(), true);
-	}
+	sf::Sprite sprite() const { return sf::Sprite{getTexture()}; }
 
 	// Copy the contents of `other` to this render-texture.
 	void copy(const RenderTexture &other)
 	{
-		draw(other.sprite);
+		draw(other.sprite());
 		display();
 	}
 };
