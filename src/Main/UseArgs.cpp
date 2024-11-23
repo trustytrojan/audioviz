@@ -113,7 +113,6 @@ void Main::use_args(audioviz &viz)
 		{
 			cs.mode = CS::Mode::WHEEL;
 			const auto &hsv = args.get<std::vector<float>>("--hsv");
-			assert(hsv.size() == 3);
 			cs.wheel.hsv = {hsv[0], hsv[1], hsv[2]};
 			cs.wheel.rate = args.get<float>("--wheel-rate");
 		}

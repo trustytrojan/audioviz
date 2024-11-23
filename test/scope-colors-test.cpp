@@ -1,4 +1,5 @@
-#include "Media.hpp"
+#include "media/Media.hpp"
+#include "media/FfmpegCliBoostMedia.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
 #include "viz/ColorSettings.hpp"
 #include "viz/ScopeDrawable.hpp"
@@ -20,7 +21,6 @@ int main(const int argc, const char *const *const argv)
 	window.setVerticalSyncEnabled(true);
 
 	viz::ColorSettings color;
-	// color.set_wheel_rate(0.005);
 	color.wheel.rate = .005;
 	color.mode = viz::ColorSettings::Mode::WHEEL_RANGES;
 
@@ -29,7 +29,6 @@ int main(const int argc, const char *const *const argv)
 	viz::ScopeDrawable<sf::RectangleShape> scope(rect, color);
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
-	scope.set_vert(false);
 	scope.set_fill_in(true);
 
 	viz::SpectrumDrawable<viz::VerticalBar> sd(rect, color);
@@ -39,15 +38,15 @@ int main(const int argc, const char *const *const argv)
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};
 
-	Media media{argv[3]};
-	media.init(size);
+	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
+	// media->init(size);
 
-	int afpvf{media._astream.sample_rate() / 60};
+	int afpvf{media->astream().sample_rate() / 60};
 
 	std::vector<float> left_channel(size.x), spectrum(fft_size);
 
 	pa::PortAudio _;
-	pa::Stream pa_stream{0, media._astream.nb_channels(), paFloat32, media._astream.sample_rate()};
+	pa::Stream pa_stream{0, media->astream().nb_channels(), paFloat32, media->astream().sample_rate()};
 	pa_stream.start();
 
 	while (window.isOpen())
@@ -57,24 +56,25 @@ int main(const int argc, const char *const *const argv)
 				window.close();
 
 		{
-			media.decode(size.x);
+			media->decode_audio(size.x);
 
-			if (media.audio_buffer.size() < size.x)
+			if (media->audio_buffer().size() < size.x)
 				break;
 
 			// copy just the left channel
 			for (int i = 0; i < size.x; ++i)
-				left_channel[i] = media.audio_buffer[i * media._astream.nb_channels() + 0 /* left channel */];
-			scope.update_shape_positions(left_channel);
+				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
+			scope.update(left_channel);
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
-			sd.update_bar_heights(spectrum);
-			sd.color_wheel_increment();
-			scope.color_wheel_increment();
+			sd.update(spectrum);
+			color.wheel.increment_time();
+			// sd.color_wheel_increment();
+			// scope.color_wheel_increment();
 
 			try
 			{
-				pa_stream.write(media.audio_buffer.data(), afpvf);
+				pa_stream.write(media->audio_buffer().data(), afpvf);
 			}
 			catch (const pa::Error &e)
 			{
@@ -82,7 +82,7 @@ int main(const int argc, const char *const *const argv)
 					throw;
 				std::cerr << e.what() << '\n';
 			}
-			media.audio_buffer_erase(afpvf);
+			media->audio_buffer_erase(afpvf);
 		}
 
 		window.clear();

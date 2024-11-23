@@ -16,10 +16,9 @@ namespace viz
 template <typename BarType>
 class SpectrumDrawable : public sf::Drawable
 {
-public:
-	ColorSettings &color;
-
 private:
+	const ColorSettings &color;
+
 	// spectrum parameters
 	float multiplier = 4;
 
@@ -34,7 +33,7 @@ private:
 	} bar;
 
 public:
-	SpectrumDrawable(const sf::IntRect &rect, ColorSettings &color, const bool backwards = false)
+	SpectrumDrawable(const sf::IntRect &rect, const ColorSettings &color, const bool backwards = false)
 		: rect{rect},
 		  color{color},
 		  backwards{backwards}
@@ -70,12 +69,6 @@ public:
 		update_bars();
 	}
 
-	void color_wheel_increment()
-	{
-		color.wheel.increment_time();
-		update_bar_colors();
-	}
-
 	void set_backwards(const bool b)
 	{
 		if (backwards == b)
@@ -84,11 +77,14 @@ public:
 		update_bars();
 	}
 
-	void update_bar_heights(const std::vector<float> &spectrum)
+	void update(const std::vector<float> &spectrum)
 	{
 		assert(spectrum.size() >= bars.size());
 		for (int i = 0; i < (int)bars.size(); ++i)
+		{
+			bars[i].setFillColor(color.calculate_color((float)i / bars.size()));
 			bars[i].setHeight(std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y));
+		}
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override

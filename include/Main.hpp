@@ -29,7 +29,8 @@ class Main
 
 	const Args args;
 	FA fa{3000};
-	SS ss;
+	CS cs;
+	SS ss{cs};
 	PS ps{50};
 
 	Main(const Main &) = delete;

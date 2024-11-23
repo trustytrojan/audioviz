@@ -22,7 +22,7 @@ struct ColorSettings
 	/**
 	 * @param index_ratio the ratio of your loop index (`i`) to the total number of bars to print (`bars.size()`)
 	 */
-	sf::Color calculate_color(const float index_ratio)
+	sf::Color calculate_color(const float index_ratio) const
 	{
 		switch (mode)
 		{

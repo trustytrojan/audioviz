@@ -57,7 +57,7 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 --query-driver=C:\path\to\mingw\bin\g++.exe
 ```
 
-## todo list
+## todo list / goals
 - ✅️ `viz::ScopeDrawable`
   - basically done, want extra feature: audio window customization independent of shape size
 - lua api (in progress)
@@ -74,4 +74,4 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
   - ✅️ this *might* fix all the "ending early" problems (not a guarantee)
   - try using `basic_ipstream` over `basic_pipe`
   - try to have one `ffmpeg` process output both streams
-- ⁉️ figure out why particles randomly don't show on linux
+- interactive gui (long term)

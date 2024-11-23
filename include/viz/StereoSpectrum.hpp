@@ -72,10 +72,8 @@ public:
 	 */
 	void update(const tt::StereoAnalyzer &sa)
 	{
-		_left.update_bar_heights(sa.left_data());
-		_right.update_bar_heights(sa.right_data());
-		_left.color_wheel_increment();
-		_right.color_wheel_increment();
+		_left.update(sa.left_data());
+		_right.update(sa.right_data());
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override
