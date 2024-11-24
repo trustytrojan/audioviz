@@ -35,66 +35,81 @@ Main::LuaState::LuaState(Main &main)
 
 	// clang-format off
 	auto tt_namespace = create_named_table("tt"),
-		 viz_namespace = create_named_table("viz");
+		 viz_namespace = create_named_table("viz"),
+		 sf_namespace = create_named_table("sf");
 
-	tt_namespace["FrequencyAnalyzer"] = new_usertype<tt::FrequencyAnalyzer>(
-		"", sol::constructors<tt::FrequencyAnalyzer(int)>(),
-		"set_fft_size", &tt::FrequencyAnalyzer::set_fft_size,
-		"set_interp_type", &tt::FrequencyAnalyzer::set_interp_type,
-		"set_window_func", &tt::FrequencyAnalyzer::set_window_func,
-		"set_accum_method", &tt::FrequencyAnalyzer::set_accum_method,
-		"set_scale", &tt::FrequencyAnalyzer::set_scale,
-		"set_nth_root", &tt::FrequencyAnalyzer::set_nth_root
+	tt_namespace["FrequencyAnalyzer"] = new_usertype<FA>(
+		"", sol::constructors<FA(int)>(),
+		"set_fft_size", &FA::set_fft_size,
+		"set_interp_type", &FA::set_interp_type,
+		"set_window_func", &FA::set_window_func,
+		"set_accum_method", &FA::set_accum_method,
+		"set_scale", &FA::set_scale,
+		"set_nth_root", &FA::set_nth_root
 	);
 
-	viz_namespace["ParticleSystem"] = new_usertype<viz::ParticleSystem<ParticleShapeType>>(
+	viz_namespace["ParticleSystem"] = new_usertype<PS>(
+		"", sol::constructors<PS(int)>(),
 		"", sol::factories([](const sol::table &rect, const int particle_count)
 		{
-			return std::make_shared<viz::ParticleSystem<ParticleShapeType>>(table_to_intrect(rect), particle_count);
+			return std::make_shared<PS>(table_to_intrect(rect), particle_count);
 		}),
-		"set_displacement_direction", &viz::ParticleSystem<ParticleShapeType>::set_displacement_direction,
-		"set_start_position", &viz::ParticleSystem<ParticleShapeType>::set_start_side,
-		"set_rect", &viz::ParticleSystem<ParticleShapeType>::set_rect,
-		"set_particle_count", &viz::ParticleSystem<ParticleShapeType>::set_particle_count
+		"set_displacement_direction", &PS::set_displacement_direction,
+		"set_start_position", &PS::set_start_side,
+		"set_rect", &PS::set_rect,
+		"set_particle_count", &PS::set_particle_count
 	);
 
-	viz_namespace["SpectrumDrawable"] = new_usertype<viz::SpectrumDrawable<BarType>>(
-		"", sol::constructors<viz::SpectrumDrawable<BarType>>(),
-		"set_multiplier", &viz::SpectrumDrawable<BarType>::set_multiplier,
-		"set_rect", &viz::SpectrumDrawable<BarType>::set_rect,
-		"set_bar_width", &viz::SpectrumDrawable<BarType>::set_bar_width,
-		"set_bar_spacing", &viz::SpectrumDrawable<BarType>::set_bar_spacing,
-		"set_color_mode", &viz::SpectrumDrawable<BarType>::set_color_mode,
-		"set_color_wheel_hsv", &viz::SpectrumDrawable<BarType>::set_color_wheel_hsv,
-		"set_color_wheel_rate", &viz::SpectrumDrawable<BarType>::set_color_wheel_rate,
-		"set_solid_color", &viz::SpectrumDrawable<BarType>::set_solid_color,
-		"set_backwards", &viz::SpectrumDrawable<BarType>::set_backwards
+	viz_namespace["SpectrumDrawable"] = new_usertype<SD>(
+		"", sol::constructors<SD(CS&)>(),
+		"", sol::factories([](const sol::table &rect, CS &cs)
+		{
+			return std::make_shared<SD>(table_to_intrect(rect), cs);
+		}),
+		"set_multiplier", &SD::set_multiplier,
+		"set_rect", &SD::set_rect,
+		"set_bar_width", &SD::set_bar_width,
+		"set_bar_spacing", &SD::set_bar_spacing,
+		"set_backwards", &SD::set_backwards
 	);
 
-	viz_namespace["StereoSpectrum"] = new_usertype<viz::StereoSpectrum<BarType>>(
-		"", sol::constructors<viz::StereoSpectrum<BarType>>(),
-		"set_multiplier", &viz::StereoSpectrum<BarType>::set_multiplier,
-		"set_rect", &viz::StereoSpectrum<BarType>::set_rect,
-		"set_bar_width", &viz::StereoSpectrum<BarType>::set_bar_width,
-		"set_bar_spacing", &viz::StereoSpectrum<BarType>::set_bar_spacing,
-		"set_color_mode", &viz::StereoSpectrum<BarType>::set_color_mode,
-		"set_color_wheel_hsv", &viz::StereoSpectrum<BarType>::set_color_wheel_hsv,
-		"set_color_wheel_rate", &viz::StereoSpectrum<BarType>::set_color_wheel_rate,
-		"set_solid_color", &viz::StereoSpectrum<BarType>::set_solid_color,
-		"set_left_backwards", &viz::StereoSpectrum<BarType>::set_left_backwards,
-		"set_right_backwards", &viz::StereoSpectrum<BarType>::set_right_backwards
+	viz_namespace["StereoSpectrum"] = new_usertype<SS>(
+		"", sol::constructors<SS(CS&)>(),
+		"", sol::factories([](const sol::table &rect, CS &cs)
+		{
+			return std::make_shared<SS>(table_to_intrect(rect), cs);
+		}),
+		"set_multiplier", &SS::set_multiplier,
+		"set_rect", &SS::set_rect,
+		"set_bar_width", &SS::set_bar_width,
+		"set_bar_spacing", &SS::set_bar_spacing,
+		"set_left_backwards", &SS::set_left_backwards,
+		"set_right_backwards", &SS::set_right_backwards
+	);
+
+	viz_namespace["ScopeDrawable"] = new_usertype<SC>(
+		"", sol::constructors<SC(CS&)>(),
+		"", sol::factories([](const sol::table &rect, CS &cs)
+		{
+			return std::make_shared<SC>(table_to_intrect(rect), cs);
+		}),
+		"set_rect", &SC::set_rect,
+		"set_shape_width", &SC::set_shape_width,
+		"set_shape_spacing", &SC::set_shape_spacing,
+		"set_fill_in", &SC::set_fill_in,
+		"set_backwards", &SC::set_backwards,
+		"set_rotation_angle", &SC::set_rotation_angle,
+		"set_center_point", &SC::set_center_point
+	);
+
+	viz_namespace["ColorSettings"] = new_usertype<CS>(
+		"", sol::constructors<CS>()
 	);
 
 	new_usertype<audioviz>("audioviz",
-		"new", sol::factories([](
-			const sol::table &rect,
-			const std::string &media_url,
-			tt::FrequencyAnalyzer &fa,
-			viz::StereoSpectrum<BarType> &ss,
-			viz::ParticleSystem<ParticleShapeType> &ps,
-			int antialiasing)
+		"new", sol::factories([](const sol::table &rect, const std::string &media_url, FA &fa, CS &cs, SS &ss, PS &ps, int antialiasing)
 		{
-			return std::make_shared<audioviz>(table_to_vec2u(rect), media_url, fa, ss, ps, antialiasing);
+			return std::make_shared<audioviz>(table_to_vec2u(rect), media_url, fa, cs, ss, ps, antialiasing);
 		}),
 		"use_attached_pic_as_bg", &audioviz::use_attached_pic_as_bg,
 		"add_default_effects", &audioviz::add_default_effects,

@@ -44,13 +44,13 @@ private:
 	StartSide start_side = StartSide::BOTTOM;
 
 public:
-	ParticleSystem(const size_t particle_count)
+	ParticleSystem(const int particle_count)
 		: particles{particle_count}
 	{
 		init_particles();
 	}
 
-	ParticleSystem(const sf::IntRect &rect, const size_t particle_count)
+	ParticleSystem(const sf::IntRect &rect, const int particle_count)
 		: rect{rect},
 		  particles{particle_count}
 	{

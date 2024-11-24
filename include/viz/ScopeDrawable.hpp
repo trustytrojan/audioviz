@@ -24,13 +24,11 @@ class ScopeDrawable : public sf::Drawable
 	std::vector<ShapeType> shapes;
 
 public:
-	ScopeDrawable()
+	ScopeDrawable(const ColorSettings &color, const bool backwards = false)
+		: color{color},
+		  backwards{backwards}
 	{
-		for (auto &shape : shapes)
-		{
-			shape.setRadius(10);
-			shape.setFillColor(sf::Color::White);
-		}
+		update_shapes();
 	}
 
 	ScopeDrawable(const sf::IntRect &rect, const ColorSettings &color, const bool backwards = false)
@@ -135,16 +133,9 @@ private:
 			const auto x = backwards
 				? rect.position.x + rect.size.x - shape.width - i * (shape.width + shape.spacing)
 				: rect.position.x + i * (shape.width + shape.spacing);
-			// const auto y = backwards
-			// 	? rect.position.y + rect.size.y - shape.width - i * (shape.width + shape.spacing)
-			// 	: rect.position.y + i * (shape.width + shape.spacing);
 			// clang-format on
-			// if (vert)
-			// shapes[i].setPosition({rect.position.x + rect.size.x / 2, y});
-			// else
-			shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
 
-			// shapes[i].setPosition({rect.position.x + rect.size.x / 2, y});
+			shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
 		}
 	}
 };

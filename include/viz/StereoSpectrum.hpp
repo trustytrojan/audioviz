@@ -17,8 +17,14 @@ class StereoSpectrum : public sf::Drawable
 
 public:
 	StereoSpectrum(ColorSettings &color)
-		: _left({}, color),
-		  _right({}, color)
+		: _left{color},
+		  _right{color}
+	{
+	}
+
+	StereoSpectrum(const sf::IntRect &rect, const ColorSettings &color)
+		: _left{rect, color},
+		  _right{rect, color}
 	{
 	}
 

@@ -5,7 +5,6 @@
 #include <tt/ColorUtils.hpp>
 #include <vector>
 
-
 namespace viz
 {
 
@@ -33,6 +32,12 @@ private:
 	} bar;
 
 public:
+	SpectrumDrawable(const ColorSettings &color, const bool backwards = false)
+		: color{color},
+		  backwards{backwards}
+	{
+	}
+
 	SpectrumDrawable(const sf::IntRect &rect, const ColorSettings &color, const bool backwards = false)
 		: rect{rect},
 		  color{color},
@@ -93,7 +98,7 @@ public:
 			target.draw(bar, states);
 	}
 
-	int bar_count() const { return bars.size(); }
+	inline int bar_count() const { return bars.size(); }
 
 private:
 	// call after changing any property of the spectrum/bars that will change their positions or colors
@@ -124,7 +129,7 @@ private:
 			update_bar_color(i);
 	}
 
-	void update_bar_color(const int i) { bars[i].setFillColor(color.calculate_color((float)i / bars.size())); }
+	inline void update_bar_color(const int i) { bars[i].setFillColor(color.calculate_color((float)i / bars.size())); }
 };
 
 } // namespace viz

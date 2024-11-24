@@ -17,8 +17,10 @@ class Main
 {
 	using BarType = viz::VerticalBar;
 	using ParticleShapeType = sf::CircleShape;
+	using ShapeType = sf::RectangleShape;
 
 	using FA = tt::FrequencyAnalyzer;
+	using SC = viz::ScopeDrawable<ShapeType>;
 	using SD = viz::SpectrumDrawable<BarType>;
 	using SS = viz::StereoSpectrum<BarType>;
 	using PS = viz::ParticleSystem<ParticleShapeType>;

@@ -54,7 +54,7 @@ struct ColorSettings
 	}
 
 	// wheel stuff
-	struct
+	struct _wheel
 	{
 		float time = 0, rate = 0;
 		sf::Vector3f hsv{0.9, 0.7, 1}, start_hsv{0.9, 0.7, 1}, end_hsv{.5, .2, 1};
