@@ -11,6 +11,7 @@ namespace bp = boost::process;
 class FfmpegEncoder
 {
 public:
+#ifdef LINUX
 	static std::string detect_vaapi_device()
 	{
 		for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
@@ -39,19 +40,20 @@ public:
 		std::cerr << "detect_vaapi_device: failed to find device\n";
 		return {};
 	}
+#endif
 
 private:
 	bp::child c;
-	bp::basic_pipe<const uint8_t> video_in;
+	bp::basic_pipe<uint8_t> video_in;
 
 public:
-	FfmpegEncoder(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+	FfmpegEncoder(const audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 	{
 		const auto &url = viz.get_media_url();
 
 		// clang-format off
 		std::vector<std::string> args{
-			"-hide_banner",
+			"-hide_banner", "-y", // THE -y NEEDS TO BE AT THE BEGINNING ON WINDOWS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			"-hwaccel", "auto",
 
 			// input 0: raw video stream from audioviz
@@ -97,8 +99,14 @@ public:
 #endif
 		// clang-format on
 
-		args.insert(args.end(), {"-y", outfile});
-		c = bp::child{bp::search_path("ffmpeg"), args, bp::std_in < video_in};
+		args.emplace_back(outfile);
+
+		std::cerr << "encoder args: ";
+		for (const auto &arg : args)
+			std::cerr << '\'' << arg << "' ";
+		std::cerr << '\n';
+
+		c = bp::child{bp::search_path("ffmpeg"), args, bp::std_in < video_in, bp::std_err > stderr};
 	}
 
 	~FfmpegEncoder()
@@ -118,85 +126,6 @@ public:
 		video_in.write(img.getPixelsPtr(), 4 * x * y);
 	}
 };
-
-/*
-FfmpegEncoder::FfmpegEncoder(
-	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
-{
-	std::ostringstream _ss;
-	_ss << "ffmpeg -hide_banner -y ";
-
-	// input 0: raw frames from audioviz
-	_ss << "-f rawvideo ";
-	_ss << "-pix_fmt rgba ";
-	_ss << "-s:v " << viz.size.x << 'x' << viz.size.y << ' ';
-	_ss << "-r " << viz.get_framerate() << ' ';
-	_ss << "-i - ";
-
-	// input 1: audioviz's input media file
-	_ss << "-ss -0.1 "; // THIS IS NECESSARY TO AVOID A/V DESYNC
-						// starts muxing this input 0.1 seconds earlier than the other
-
-#ifdef _WIN32
-	_ss << "-i \"" << viz.get_media_url() << "\" ";
-#else
-	if (viz.get_media_url().contains('\''))
-		_ss << "-i \"" << viz.get_media_url() << "\" ";
-	else
-		_ss << "-i '" << viz.get_media_url() << "' ";
-#endif
-
-	// specific stream mapping
-	_ss << "-map 0 ";	// use input 0
-	_ss << "-map 1:a "; // only use the AUDIO stream of input 1 (in case it might also have a video stream)
-
-	// specify encoders
-	_ss << "-c:v " << vcodec << ' ';
-	_ss << "-c:a " << acodec << ' ';
-
-	// end on shortest input stream
-	_ss << "-shortest ";
-
-#ifdef LINUX
-	if (vcodec.contains("vaapi"))
-	{
-		_ss << "-vaapi_device /dev/dri/renderD129 ";
-		_ss << "-vf 'format=nv12,hwupload' ";
-	}
-#endif
-
-	// output file
-#ifdef _WIN32
-	_ss << '"' << outfile << "\" ";
-#else
-	if (outfile.contains('\''))
-		_ss << '"' << outfile << "\" ";
-	else
-		_ss << '\'' << outfile << "' ";
-#endif
-
-	const auto &command = _ss.str();
-	std::cout << command << '\n';
-	process = popen(command.c_str(), "w");
-}
-
-FfmpegEncoder::~FfmpegEncoder()
-{
-	if (pclose(process) == -1)
-		perror("pclose");
-}
-
-void Main::FfmpegEncoder::send_frame(const sf::Texture &txr)
-{
-	send_frame(txr.copyToImage());
-}
-
-void Main::FfmpegEncoder::send_frame(const sf::Image &img)
-{
-	const auto [x, y] = img.getSize();
-	fwrite(img.getPixelsPtr(), 4 * x * y, 1, process);
-}
-*/
 
 void Main::encode(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {

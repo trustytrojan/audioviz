@@ -3,12 +3,17 @@ include(FetchContent)
 cmake_minimum_required(VERSION 3.16)
 project(audioviz LANGUAGES CXX)
 
+option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback during live rendering" ON)
+option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" ON)
+option(AUDIOVIZ_TESTS "Build the small test programs in ./tests/" OFF)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
 set(AV_LIBS avfilter avformat avcodec avutil swresample swscale)
 
 if(WIN32)
+	list(APPEND CMAKE_PREFIX_PATH "windows_deps/ffmpeg/lib")
 	link_directories(
 		windows_deps/ffmpeg/lib
 		windows_deps/fftw
@@ -86,9 +91,6 @@ elseif(LINUX)
 	add_compile_definitions(LINUX)
 endif()
 
-option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback during live rendering" ON)
-option(AUDIOVIZ_LUA "Build audioviz with Lua support: allows visualizer configuration with Lua" ON)
-
 if(AUDIOVIZ_PORTAUDIO)
 	if(WIN32)
 		find_library(PORTAUDIO portaudio_x64)
@@ -145,31 +147,33 @@ endif()
 file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
 add_executable(audioviz ${SOURCES})
 
-add_executable(scope-colors-test
-	test/scope-colors-test.cpp
-	src/media/Media.cpp
-	src/media/FfmpegCliBoostMedia.cpp
-	src/tt/AudioAnalyzer.cpp
-	src/tt/FrequencyAnalyzer.cpp
-	src/viz/VerticalBar.cpp
-	src/viz/VerticalPill.cpp
-	src/tt/ColorUtils.cpp)
+if(AUDIOVIZ_TESTS)
+	add_executable(scope-colors-test
+		test/scope-colors-test.cpp
+		src/media/Media.cpp
+		src/media/FfmpegCliBoostMedia.cpp
+		src/tt/AudioAnalyzer.cpp
+		src/tt/FrequencyAnalyzer.cpp
+		src/viz/VerticalBar.cpp
+		src/viz/VerticalPill.cpp
+		src/tt/ColorUtils.cpp)
 
-add_executable(scope-test
-	test/scope-test.cpp
-	src/media/Media.cpp
-	src/media/FfmpegCliBoostMedia.cpp
-	src/tt/AudioAnalyzer.cpp
-	src/tt/FrequencyAnalyzer.cpp
-	src/viz/VerticalBar.cpp
-	src/viz/VerticalPill.cpp
-	src/tt/ColorUtils.cpp)
+	add_executable(scope-test
+		test/scope-test.cpp
+		src/media/Media.cpp
+		src/media/FfmpegCliBoostMedia.cpp
+		src/tt/AudioAnalyzer.cpp
+		src/tt/FrequencyAnalyzer.cpp
+		src/viz/VerticalBar.cpp
+		src/viz/VerticalPill.cpp
+		src/tt/ColorUtils.cpp)
 
-add_executable(spectrum-test
-	test/spectrum-test.cpp
-	src/viz/VerticalBar.cpp
-	src/tt/FrequencyAnalyzer.cpp
-	src/tt/AudioAnalyzer.cpp
-	src/tt/ColorUtils.cpp
-	src/media/Media.cpp
-	src/media/FfmpegCliBoostMedia.cpp)
+	add_executable(spectrum-test
+		test/spectrum-test.cpp
+		src/viz/VerticalBar.cpp
+		src/tt/FrequencyAnalyzer.cpp
+		src/tt/AudioAnalyzer.cpp
+		src/tt/ColorUtils.cpp
+		src/media/Media.cpp
+		src/media/FfmpegCliBoostMedia.cpp)
+endif()
