@@ -17,6 +17,11 @@
 
 #include "media/Media.hpp"
 
+namespace viz
+{
+class Layer;
+}
+
 class audioviz : public sf::Drawable
 {
 public:
@@ -96,14 +101,7 @@ public:
 	 * @param ps reference to your own `viz::ParticleSystem<ParticleShapeType>`
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
-	audioviz(
-		sf::Vector2u size,
-		const std::string &media_url,
-		FA &fa,
-		CS &color,
-		SS &ss,
-		PS &ps,
-		int antialiasing = 4);
+	audioviz(sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, int antialiasing = 4);
 
 	/**
 	 * Add default effects to the `bg`, `spectrum`, and `particles` layers, if they exist.
@@ -121,6 +119,7 @@ public:
 
 	viz::Layer &add_layer(const std::string &name, int antialiasing);
 	viz::Layer *get_layer(const std::string &name);
+	void remove_layer(const std::string &name);
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	void set_audio_playback_enabled(bool);
@@ -155,12 +154,14 @@ public:
 	 */
 	void set_fft_size(int fft_size);
 
+	// just for viz::Layer
+	void capture_elapsed_time(const std::string &label, const sf::Clock &_clock);
+
 private:
 	void metadata_init();
 	void draw_spectrum();
 	void draw_particles();
 	void play_audio();
-	void capture_elapsed_time(const std::string &label, const sf::Clock &_clock);
 	void layers_init(int);
 	void perform_fft();
 };

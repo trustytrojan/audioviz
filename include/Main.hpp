@@ -47,17 +47,6 @@ class Main
 	};
 #endif
 
-	class FfmpegEncoder
-	{
-		FILE *process;
-
-	public:
-		FfmpegEncoder(audioviz &, const std::string &outfile, const std::string &vcodec, const std::string &acodec);
-		~FfmpegEncoder();
-		void send_frame(const sf::Texture &);
-		void send_frame(const sf::Image &);
-	};
-
 	void use_args(audioviz &);
 
 	void start_in_window(audioviz &);

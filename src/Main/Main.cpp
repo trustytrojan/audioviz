@@ -7,7 +7,8 @@ Main::Main(const int argc, const char *const *const argv)
 	// this is how things will be for now
 	if (const auto luafile = args.present("--luafile"))
 	{
-		LuaState(*this).do_file(*luafile);
+		// you MUST call script_file or safe_script_file, otherwise NO errors will be printed!
+		LuaState(*this).script_file(*luafile);
 		return;
 		// lua environment is still in the works!!!!!!!!!
 	}

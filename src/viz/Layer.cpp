@@ -1,5 +1,5 @@
 #include "viz/Layer.hpp"
-#include <iostream>
+// #include <iostream>
 
 namespace viz
 {
@@ -38,7 +38,7 @@ void Layer::set_fx_cb(const FxCb &cb)
 
 void Layer::apply_fx()
 {
-	// std::cerr << "layer '" << name << "' called apply_fx()\n";
+	// std::cerr << "layer '" << name << "' called apply_fx(): effects.size(): " << effects.size() << '\n';
 	_fx_rt.clear(sf::Color::Transparent);
 	_fx_rt.copy(_orig_rt);
 	for (const auto &effect : effects)
@@ -53,6 +53,13 @@ void Layer::full_lifecycle(sf::RenderTarget &target)
 		apply_fx();
 	if (fx_cb)
 		fx_cb(_orig_rt, _fx_rt, target);
+}
+
+void Layer::full_lifecycle(audioviz &a, sf::RenderTarget &target)
+{
+	sf::Clock clock;
+	full_lifecycle(target);
+	a.capture_elapsed_time("layer '" + name + '\'', clock);
 }
 
 } // namespace viz

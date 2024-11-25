@@ -199,6 +199,13 @@ viz::Layer *audioviz::get_layer(const std::string &name)
 	return (itr == layers.end()) ? nullptr : itr.base();
 }
 
+void audioviz::remove_layer(const std::string &name)
+{
+	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
+	if (itr != layers.end())
+		layers.erase(itr);
+}
+
 // need to do this outside of the constructor otherwise the texture is broken?
 void audioviz::use_attached_pic_as_bg()
 {
@@ -352,7 +359,7 @@ bool audioviz::prepare_frame()
 
 	final_rt.clear();
 	for (auto &layer : layers)
-		capture_time(layer.get_name(), layer.full_lifecycle(final_rt));
+		layer.full_lifecycle(*this, final_rt);
 	final_rt.display();
 
 	color.wheel.increment_time(); // PUT THIS SOMEWHERE ELSE

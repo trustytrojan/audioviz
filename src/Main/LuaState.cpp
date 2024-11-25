@@ -18,14 +18,34 @@ sf::Vector2u table_to_vec2u(const sol::table &tb)
 	return {tb[1].get<uint>(), tb[2].get<uint>()};
 }
 
+sf::Color table_to_color(const sol::table &tb)
+{
+	auto color = sf::Color::Black;
+	if (tb[1].valid())
+		color.r = tb[1];
+	if (tb[2].valid())
+		color.g = tb[2];
+	if (tb[3].valid())
+		color.b = tb[3];
+	if (tb[4].valid())
+		color.a = tb[4];
+	if (tb["r"].valid())
+		color.r = tb["r"];
+	if (tb["g"].valid())
+		color.r = tb["g"];
+	if (tb["b"].valid())
+		color.b = tb["b"];
+	if (tb["a"].valid())
+		color.a = tb["a"];
+	return color;
+}
+
 Main::LuaState::LuaState(Main &main)
 {
 	open_libraries(sol::lib::base, sol::lib::os); // for testing
 
 	// add more args here!!!!!!!!!
-	create_named_table("args",
-		"media_url", main.args.get("media_url")
-	);
+	create_named_table("args", "media_url", main.args.get("media_url"));
 
 	// wrapping arguments with std::ref ensures sol2 will not copy arguments
 	set_function("start_in_window", &Main::start_in_window, std::ref(main));
@@ -33,13 +53,18 @@ Main::LuaState::LuaState(Main &main)
 	set_function("encode_without_window_mt", &Main::encode_without_window_mt, std::ref(main));
 	set_function("encode_with_window", &Main::encode_with_window, std::ref(main));
 
+#ifdef LINUX
+	set("LINUX", true);
+#elifdef _WIN32
+	set("WIN32", true);
+#endif
+
 	// clang-format off
 	auto tt_namespace = create_named_table("tt"),
-		 viz_namespace = create_named_table("viz"),
-		 sf_namespace = create_named_table("sf");
+		 viz_namespace = create_named_table("viz");
 
 	tt_namespace["FrequencyAnalyzer"] = new_usertype<FA>(
-		"", sol::constructors<FA(int)>(),
+		"new", sol::constructors<FA(int)>(),
 		"set_fft_size", &FA::set_fft_size,
 		"set_interp_type", &FA::set_interp_type,
 		"set_window_func", &FA::set_window_func,
@@ -48,9 +73,38 @@ Main::LuaState::LuaState(Main &main)
 		"set_nth_root", &FA::set_nth_root
 	);
 
+	using SfDrawDrawable = void (sf::RenderTarget::*)(const sf::Drawable &, const sf::RenderStates &);
+	using RtDrawDrawable = void (tt::RenderTexture::*)(const sf::Drawable &, const sf::RenderStates &);
+	using RtClearColor = void (tt::RenderTexture::*)(sf::Color);
+
+	new_usertype<sf::RenderTarget>(
+		"", sol::no_constructor,
+		"draw", [](sf::RenderTarget &self, const sf::Drawable &drawable, const sf::RenderStates &states = {})
+			{
+				self.draw(drawable, states);
+			}
+	);
+
+	new_usertype<sf::Sprite>(
+		"", sol::no_constructor,
+		sol::base_classes, sol::bases<sf::Drawable>()
+	);
+
+	tt_namespace["RenderTexture"] = new_usertype<tt::RenderTexture>(
+		"new", sol::constructors<tt::RenderTexture(sf::Vector2u, int)>(),
+    	"draw", static_cast<RtDrawDrawable>(&tt::RenderTexture::draw),
+		"display", &tt::RenderTexture::display,
+		"sprite", &tt::RenderTexture::sprite,
+		"clear", [](tt::RenderTexture &self, const sol::table &table)
+			{
+				self.clear(table_to_color(table));
+			},
+		sol::base_classes, sol::bases<sf::RenderTarget>()
+	);
+
 	viz_namespace["ParticleSystem"] = new_usertype<PS>(
-		"", sol::constructors<PS(int)>(),
-		"", sol::factories([](const sol::table &rect, const int particle_count)
+		"new", sol::constructors<PS(int)>(),
+		"new", sol::factories([](const sol::table &rect, const int particle_count)
 		{
 			return std::make_shared<PS>(table_to_intrect(rect), particle_count);
 		}),
@@ -61,8 +115,8 @@ Main::LuaState::LuaState(Main &main)
 	);
 
 	viz_namespace["SpectrumDrawable"] = new_usertype<SD>(
-		"", sol::constructors<SD(CS&)>(),
-		"", sol::factories([](const sol::table &rect, CS &cs)
+		"new", sol::constructors<SD(CS&)>(),
+		"new", sol::factories([](const sol::table &rect, CS &cs)
 		{
 			return std::make_shared<SD>(table_to_intrect(rect), cs);
 		}),
@@ -74,8 +128,8 @@ Main::LuaState::LuaState(Main &main)
 	);
 
 	viz_namespace["StereoSpectrum"] = new_usertype<SS>(
-		"", sol::constructors<SS(CS&)>(),
-		"", sol::factories([](const sol::table &rect, CS &cs)
+		"new", sol::constructors<SS(CS&)>(),
+		"new", sol::factories([](const sol::table &rect, CS &cs)
 		{
 			return std::make_shared<SS>(table_to_intrect(rect), cs);
 		}),
@@ -88,8 +142,8 @@ Main::LuaState::LuaState(Main &main)
 	);
 
 	viz_namespace["ScopeDrawable"] = new_usertype<SC>(
-		"", sol::constructors<SC(CS&)>(),
-		"", sol::factories([](const sol::table &rect, CS &cs)
+		"new", sol::constructors<SC(CS&)>(),
+		"new", sol::factories([](const sol::table &rect, CS &cs)
 		{
 			return std::make_shared<SC>(table_to_intrect(rect), cs);
 		}),
@@ -103,7 +157,21 @@ Main::LuaState::LuaState(Main &main)
 	);
 
 	viz_namespace["ColorSettings"] = new_usertype<CS>(
-		"", sol::constructors<CS>()
+		"new", sol::constructors<CS>(),
+		"wheel_rate", sol::property(
+			[](CS &self) { return self.wheel.rate; },
+			[](CS &self, float value) { self.wheel.rate = value; }
+		)
+	);
+
+	// sf::RenderTexture is non-copyable...
+	// had to make the `orig_rt` and `fx_rt` arguments of `viz::Layer::FxCb` MUTABLE references,
+	// otherwise sol2 tries to make copies of const-refs...
+	viz_namespace["Layer"] = new_usertype<viz::Layer>("Layer",
+		sol::no_constructor,
+		"set_orig_cb", &viz::Layer::set_orig_cb,
+		"set_fx_cb", &viz::Layer::set_fx_cb,
+		"set_auto_fx", &viz::Layer::set_auto_fx
 	);
 
 	new_usertype<audioviz>("audioviz",
@@ -115,6 +183,7 @@ Main::LuaState::LuaState(Main &main)
 		"add_default_effects", &audioviz::add_default_effects,
 		"add_layer", &audioviz::add_layer,
 		"get_layer", &audioviz::get_layer,
+		"remove_layer", &audioviz::remove_layer,
 #ifdef AUDIOVIZ_PORTAUDIO
 		"set_audio_playback_enabled", &audioviz::set_audio_playback_enabled,
 #endif
