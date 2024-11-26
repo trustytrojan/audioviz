@@ -30,5 +30,5 @@ end)
 
 -- viz:remove_layer('test')
 
--- start_in_window(viz)
-encode_without_window_mt(viz, 'out.mp4', 'h264_qsv', 'copy')
+start_in_window(viz)
+-- encode_without_window_mt(viz, 'out.mp4', 'h264_qsv', 'copy')

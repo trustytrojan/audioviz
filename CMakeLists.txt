@@ -10,46 +10,67 @@ option(AUDIOVIZ_TESTS "Build the small test programs in ./tests/" OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
-set(AV_LIBS avfilter avformat avcodec avutil swresample swscale)
+set(FFMPEG_LIBS avformat avutil avcodec)
 
 if(WIN32)
 	list(APPEND CMAKE_PREFIX_PATH "windows_deps/ffmpeg/lib")
 	link_directories(
 		windows_deps/ffmpeg/lib
-		windows_deps/fftw
 		windows_deps/portaudio
 	)
 	include_directories(
 		windows_deps/ffmpeg/include
-		windows_deps/fftw
 		windows_deps/portaudio
 	)
 	add_compile_options(-Wa,-mbig-obj) # LuaState.cpp doesn't compile otherwise
 endif()
 
-# do it in a loop so we know exactly which lib may not be found
-foreach(lib IN LISTS AV_LIBS)
-	find_library(_ NAMES ${lib} REQUIRED)
-endforeach()
-find_library(_ NAMES fftw3f REQUIRED)
+find_library(ffmpeg NAMES ${FFMPEG_LIBS})
+if(ffmpeg-NOTFOUND)
+	if(WIN32)
+		FetchContent_Declare(ffmpeg URL https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full-shared.7z)
+		FetchContent_MakeAvailable(ffmpeg)
+	endif()
+	find_library(ffmpeg NAMES ${FFMPEG_LIBS} REQUIRED)
+endif()
+
+find_library(fftw NAMES fftw3f fftw-3f)
+if(AUDIOVIZ_BUILD_FFTW)
+	FetchContent_Declare(fftw URL https://fftw.org/fftw-3.3.10.tar.gz)
+	FetchContent_MakeAvailable(fftw)
+elseif(fftw-NOTFOUND)
+	if(WIN32)
+		FetchContent_Declare(fftw URL https://fftw.org/pub/fftw/fftw-3.3.5-dll64.zip)
+		FetchContent_MakeAvailable(fftw)
+	endif()
+	find_library(fftw NAMES fftw3f fftw-3f REQUIRED)
+endif()
 
 # don't build SFML's audio or network libs
 set(SFML_BUILD_AUDIO FALSE CACHE BOOL "" FORCE)
 set(SFML_BUILD_NETWORK FALSE CACHE BOOL "" FORCE)
 
-FetchContent_Declare(SFML
+FetchContent_Declare(
+	SFML
     GIT_REPOSITORY https://github.com/SFML/SFML.git
-    GIT_TAG 3.0.0-rc.1)
+    GIT_TAG 3.0.0-rc.1
+)
 
-FetchContent_Declare(libavpp
+FetchContent_Declare(
+	libavpp
 	GIT_REPOSITORY https://github.com/trustytrojan/libavpp
-	GIT_TAG main)
+	GIT_TAG main
+)
 
-FetchContent_Declare(argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse)
+FetchContent_Declare(
+	argparse
+    GIT_REPOSITORY https://github.com/p-ranav/argparse
+)
 
-FetchContent_Declare(spline
-	GIT_REPOSITORY https://github.com/ttk592/spline)
+FetchContent_Declare(
+	spline
+	GIT_REPOSITORY https://github.com/ttk592/spline
+)
 
 FetchContent_MakeAvailable(SFML libavpp argparse spline)
 
@@ -58,8 +79,10 @@ find_package(Boost COMPONENTS process)
 if(NOT Boost_FOUND)
 	message("Boost not found, using FetchContent...")
 	set(BOOST_INCLUDE_LIBRARIES "process")
-	FetchContent_Declare(Boost
-		URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z)
+	FetchContent_Declare(
+		Boost
+		URL https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-cmake.7z
+	)
 	FetchContent_MakeAvailable(Boost)
 	if(WIN32)
 		link_libraries(ws2_32) # winsock library required by boost.asio
@@ -82,7 +105,7 @@ include_directories(
 	${spline_SOURCE_DIR}/src
 )
 
-link_libraries(sfml-graphics argparse ${AV_LIBS} Boost::process)
+link_libraries(sfml-graphics argparse ${FFMPEG_LIBS} Boost::process)
 
 if(WIN32)
 	link_libraries(fftw3f-3)
@@ -96,16 +119,22 @@ if(AUDIOVIZ_PORTAUDIO)
 		find_library(PORTAUDIO portaudio_x64)
 		if(NOT PORTAUDIO_FOUND)
 			set(DLL_URL https://github.com/spatialaudio/portaudio-binaries/raw/refs/heads/master/libportaudio64bit.dll)
-			file(DOWNLOAD ${DLL_URL} portaudio_x64.dll)
+			file(
+				DOWNLOAD
+				https://github.com/spatialaudio/portaudio-binaries/raw/refs/heads/master/libportaudio64bit.dll
+				portaudio_x64.dll
+			)
 		endif()
 		find_library(_ portaudio_x64 REQUIRED)
 	else()
 		find_library(_ portaudio REQUIRED)
 	endif()
 
-	FetchContent_Declare(portaudio-pp
+	FetchContent_Declare(
+		portaudio-pp
 		GIT_REPOSITORY https://github.com/trustytrojan/portaudio-pp
-		GIT_TAG main)
+		GIT_TAG main
+	)
 	FetchContent_MakeAvailable(portaudio-pp)
 	add_compile_definitions(AUDIOVIZ_PORTAUDIO)
 	include_directories(${portaudio-pp_SOURCE_DIR}/include)
@@ -120,15 +149,14 @@ endif()
 if(AUDIOVIZ_LUA)
 	if(WIN32)
 		# usual place that lua is installed via winget
-		set(LUA_WINGET_PATH $ENV{localappdata}/programs/lua/lib)
-		find_library(LUA lua54 PATHS ${LUA_WINGET_PATH})
-	else()
-		find_library(_ lua REQUIRED)
+		list(APPEND CMAKE_PREFIX_PATH $ENV{localappdata}/programs/lua/lib)
 	endif()
-
-	FetchContent_Declare(sol2
+	find_library(lua NAMES lua lua54 REQUIRED)
+	FetchContent_Declare(
+		sol2
 		GIT_REPOSITORY https://github.com/ThePhD/sol2
-		GIT_TAG main)
+		GIT_TAG main
+	)
 	FetchContent_MakeAvailable(sol2)
 	add_compile_definitions(AUDIOVIZ_LUA)
 
@@ -144,8 +172,8 @@ if(AUDIOVIZ_LUA)
 endif()
 
 # we need to include av/Util.cpp from libavpp for now until i figure out a better way
-file(GLOB_RECURSE SOURCES src/*.cpp ${libavpp_SOURCE_DIR}/src/av/Util.cpp)
-add_executable(audioviz ${SOURCES})
+file(GLOB_RECURSE AUDIOVIZ_SOURCES src/*.cpp)
+add_executable(audioviz ${AUDIOVIZ_SOURCES})
 
 if(AUDIOVIZ_TESTS)
 	add_executable(scope-colors-test
@@ -156,8 +184,8 @@ if(AUDIOVIZ_TESTS)
 		src/tt/FrequencyAnalyzer.cpp
 		src/viz/VerticalBar.cpp
 		src/viz/VerticalPill.cpp
-		src/tt/ColorUtils.cpp)
-
+		src/tt/ColorUtils.cpp
+	)
 	add_executable(scope-test
 		test/scope-test.cpp
 		src/media/Media.cpp
@@ -166,8 +194,8 @@ if(AUDIOVIZ_TESTS)
 		src/tt/FrequencyAnalyzer.cpp
 		src/viz/VerticalBar.cpp
 		src/viz/VerticalPill.cpp
-		src/tt/ColorUtils.cpp)
-
+		src/tt/ColorUtils.cpp
+	)
 	add_executable(spectrum-test
 		test/spectrum-test.cpp
 		src/viz/VerticalBar.cpp
@@ -175,5 +203,6 @@ if(AUDIOVIZ_TESTS)
 		src/tt/AudioAnalyzer.cpp
 		src/tt/ColorUtils.cpp
 		src/media/Media.cpp
-		src/media/FfmpegCliBoostMedia.cpp)
+		src/media/FfmpegCliBoostMedia.cpp
+	)
 endif()
