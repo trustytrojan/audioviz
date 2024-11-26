@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(AV_LIBS avfilter avformat avcodec avutil swresample swscale)
 
 if(WIN32)
+	list(APPEND CMAKE_PREFIX_PATH windows_deps/ffmpeg/lib)
 	link_directories(
 		windows_deps/ffmpeg/lib
 		windows_deps/fftw

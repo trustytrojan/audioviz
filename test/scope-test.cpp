@@ -22,6 +22,7 @@ int main(const int argc, const char *const *const argv)
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
+	scope.set_shape_height(10);
 	scope.set_fill_in(false);
 	std::cout << "shape count: " << scope.get_shape_count() << '\n';
 
@@ -56,6 +57,7 @@ int main(const int argc, const char *const *const argv)
 
 	origincircle.setPosition(_origin);
 
+	//THERE IS A BUG WITH DIFFERENT WIDTHS MESSING UP AUDIO
 	while (window.isOpen())
 	{
 		cur += .1;
@@ -65,15 +67,15 @@ int main(const int argc, const char *const *const argv)
 
 		{
 			media->decode_audio(scope.get_shape_count());
-
+	
 			if (media->audio_buffer().size() < scope.get_shape_count())
 				break;
-
+			
 			// copy just the left channel
 			for (int i = 0; i < scope.get_shape_count(); ++i)
 				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
 			scope.update_shape_positions(left_channel);
-
+		
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
 			sd.update_bar_heights(spectrum);

@@ -14,7 +14,7 @@ class ScopeDrawable : public sf::Drawable
 	bool backwards = false;
 	struct
 	{
-		int width = 10, spacing = 5;
+		int width = 1, height = 1, spacing = 1;
 	} shape;
 	bool fill_in = false;
 	bool vert = false;
@@ -49,6 +49,13 @@ public:
 		if (shape.width == width)
 			return;
 		shape.width = width;
+		update_shape_x_positions();
+	}
+	void set_shape_height(const int height)
+	{
+		if (shape.height == height)
+			return;
+		shape.height = height;
 		update_shape_x_positions();
 	}
 
@@ -121,7 +128,7 @@ private:
 			if constexpr (std::is_base_of_v<sf::CircleShape, ShapeType>)
 				shapes[i].setRadius(shape.width);
 			else if constexpr (std::is_base_of_v<sf::RectangleShape, ShapeType>)
-				shapes[i].setSize({shape.width, shape.width});
+				shapes[i].setSize({shape.width, shape.height});
 			else
 				shapes[i].setScale(shape.width);
 
