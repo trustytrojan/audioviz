@@ -1,12 +1,8 @@
 #include "Main.hpp"
 
 #include <boost/process.hpp>
-#include <future>
-#include <queue>
 
 namespace bp = boost::process;
-
-#define future_not_finished(f) f.wait_for(std::chrono::seconds(0)) != std::future_status::ready
 
 class FfmpegEncoder
 {
@@ -106,7 +102,7 @@ public:
 			std::cerr << '\'' << arg << "' ";
 		std::cerr << '\n';
 
-		c = bp::child{bp::search_path("ffmpeg"), args, bp::std_in < video_in, bp::std_err > stderr};
+		c = bp::child{bp::search_path("ffmpeg"), args, bp::std_in<video_in, bp::std_err> stderr};
 	}
 
 	~FfmpegEncoder()
@@ -115,10 +111,7 @@ public:
 		c.wait();
 	}
 
-	void send_frame(const sf::Texture &txr)
-	{
-		send_frame(txr.copyToImage());
-	}
+	void send_frame(const sf::Texture &txr) { send_frame(txr.copyToImage()); }
 
 	void send_frame(const sf::Image &img)
 	{
@@ -129,75 +122,36 @@ public:
 
 void Main::encode(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	if (enc_window)
-		encode_with_window(viz, outfile, vcodec, acodec);
-	else
-		encode_without_window(viz, outfile, vcodec, acodec);
-}
-
-void Main::encode_without_window(
-	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
-{
 	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
-	tt::RenderTexture rt{viz.size, 4};
-	while (viz.prepare_frame())
+
+	if (enc_window)
 	{
-		rt.draw(viz);
-		rt.display();
-		ffmpeg.send_frame(rt.getTexture());
-		rt.clear();
+		sf::RenderWindow window{
+			sf::VideoMode{viz.size},
+			"audioviz - encoding...",
+			sf::Style::Titlebar,
+			sf::State::Windowed,
+			{.antiAliasingLevel = 4},
+		};
+		sf::Texture txr{viz.size};
+		while (viz.prepare_frame())
+		{
+			window.draw(viz);
+			window.display();
+			txr.update(window);
+			ffmpeg.send_frame(txr);
+			// window.clear();
+		}
 	}
-}
-
-// multi-threaded implementation; has not benchmarked against single-threaded yet.
-// single-threaded will be preferred until then.
-void Main::encode_without_window_mt(
-	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
-{
-	std::queue<sf::Image> images;
-
-	// clang-format off
-	const auto image_queuer = std::async(std::launch::async, [&]
+	else
 	{
 		tt::RenderTexture rt{viz.size, 4};
 		while (viz.prepare_frame())
 		{
 			rt.draw(viz);
 			rt.display();
-			images.push(rt.getTexture().copyToImage());
-			rt.clear();
+			ffmpeg.send_frame(rt.getTexture());
+			// rt.clear();
 		}
-	});
-	// clang-format on
-
-	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
-	while (future_not_finished(image_queuer))
-	{
-		if (images.empty())
-			continue;
-		ffmpeg.send_frame(images.front());
-		images.pop();
-	}
-}
-
-void Main::encode_with_window(
-	audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
-{
-	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
-	sf::RenderWindow window{
-		sf::VideoMode{viz.size},
-		"encoder",
-		sf::Style::Titlebar,
-		sf::State::Windowed,
-		{.antiAliasingLevel = 4},
-	};
-	sf::Texture txr{viz.size};
-	while (viz.prepare_frame())
-	{
-		window.draw(viz);
-		window.display();
-		txr.update(window);
-		ffmpeg.send_frame(txr);
-		window.clear();
 	}
 }

@@ -135,7 +135,7 @@ Args::Args(const int argc, const char *const *const argv)
 
 #ifdef AUDIOVIZ_LUA
 	add_argument("--luafile")
-		.help("NEW FEATURE!!!!!! configure audioviz with a lua script!\nlua code is run BEFORE cli args are parsed!");
+		.help("configure audioviz with a lua script!\nlua code is run BEFORE cli args are parsed!");
 #endif
 
 	add_argument("--no-fx")
@@ -148,6 +148,7 @@ Args::Args(const int argc, const char *const *const argv)
 		.default_value(std::vector<float>{0.9, 0.7, 1, 0, 0, 0})
 		.scan<'f', float>()
 		.validate();
+
 	add_argument("--wheel-ranges-reverse")
 		.help("choose two hue offsets for the color wheel, saturation, and brightness, and it will move with time given the two ranges!\n all 6 values must be between [0, 1]\n Works with the wheel_ranges and wheel_ranges_reverse mode!")
 		.nargs(6)
@@ -189,10 +190,7 @@ Args::Args(const int argc, const char *const *const argv)
 	}
 	catch (const std::exception &e)
 	{
-		// print error and help to stderr
 		std::cerr << argv[0] << ": " << e.what() << '\n';
-
-		// just exit here since we don't want to print anything after the help
 		exit(EXIT_FAILURE);
 	}
 }

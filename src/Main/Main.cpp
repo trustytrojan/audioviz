@@ -4,7 +4,6 @@ Main::Main(const int argc, const char *const *const argv)
 	: args{argc, argv}
 {
 #ifdef AUDIOVIZ_LUA
-	// this is how things will be for now
 	if (const auto luafile = args.present("--luafile"))
 	{
 		// you MUST call script_file or safe_script_file, otherwise NO errors will be printed!
@@ -50,7 +49,6 @@ void Main::start_in_window(audioviz &viz)
 	sf::RenderWindow window{
 		sf::VideoMode{viz.size},
 		"audioviz",
-		sf::Style::Titlebar,
 		sf::State::Windowed,
 		{.antiAliasingLevel = 4},
 	};

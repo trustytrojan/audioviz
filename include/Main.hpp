@@ -48,16 +48,8 @@ class Main
 #endif
 
 	void use_args(audioviz &);
-
 	void start_in_window(audioviz &);
-	void encode(
-		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_without_window(
-		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_without_window_mt(
-		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
-	void encode_with_window(
-		audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);
