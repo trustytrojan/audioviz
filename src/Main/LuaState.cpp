@@ -49,9 +49,8 @@ Main::LuaState::LuaState(Main &main)
 
 	// wrapping arguments with std::ref ensures sol2 will not copy arguments
 	set_function("start_in_window", &Main::start_in_window, std::ref(main));
-	set_function("encode_without_window", &Main::encode_without_window, std::ref(main));
-	set_function("encode_without_window_mt", &Main::encode_without_window_mt, std::ref(main));
-	set_function("encode_with_window", &Main::encode_with_window, std::ref(main));
+	set("enc_window", &Main::enc_window, std::ref(main));
+	set_function("encode", &Main::encode, std::ref(main));
 
 #ifdef LINUX
 	set("LINUX", true);
@@ -164,7 +163,7 @@ Main::LuaState::LuaState(Main &main)
 		)
 	);
 
-	// sf::RenderTexture is non-copyable...
+	// sf::RenderTexture is non-copyable... (as it should be)
 	// had to make the `orig_rt` and `fx_rt` arguments of `viz::Layer::FxCb` MUTABLE references,
 	// otherwise sol2 tries to make copies of const-refs...
 	viz_namespace["Layer"] = new_usertype<viz::Layer>("Layer",

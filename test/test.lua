@@ -14,8 +14,10 @@ viz:add_default_effects()
 
 if LINUX then
 	viz:set_text_font('/usr/share/fonts/TTF/Iosevka-Regular.ttc')
+	vcodec = 'h264_vaapi'
 elseif WIN32 then
 	viz:set_text_font(os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\Iosevka-Regular.ttc')
+	vcodec = 'h264_qsv'
 end
 
 test_layer = viz:add_layer('test', 4)
@@ -30,5 +32,5 @@ end)
 
 -- viz:remove_layer('test')
 
-start_in_window(viz)
--- encode_without_window_mt(viz, 'out.mp4', 'h264_qsv', 'copy')
+-- start_in_window(viz)
+encode(viz, 'out.mp4', vcodec, 'copy')
