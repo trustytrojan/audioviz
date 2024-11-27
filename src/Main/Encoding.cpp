@@ -43,7 +43,7 @@ private:
 	bp::basic_pipe<uint8_t> video_in;
 
 public:
-	FfmpegEncoder(const audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+	FfmpegEncoder(const base_audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 	{
 		const auto &url = viz.get_media_url();
 
@@ -120,7 +120,7 @@ public:
 	}
 };
 
-void Main::encode(audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+void Main::encode(base_audioviz &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
 
@@ -134,7 +134,7 @@ void Main::encode(audioviz &viz, const std::string &outfile, const std::string &
 			{.antiAliasingLevel = 4},
 		};
 		sf::Texture txr{viz.size};
-		while (viz.prepare_frame())
+		while (viz.next_frame())
 		{
 			window.draw(viz);
 			window.display();
@@ -146,7 +146,7 @@ void Main::encode(audioviz &viz, const std::string &outfile, const std::string &
 	else
 	{
 		tt::RenderTexture rt{viz.size, 4};
-		while (viz.prepare_frame())
+		while (viz.next_frame())
 		{
 			rt.draw(viz);
 			rt.display();

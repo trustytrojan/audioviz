@@ -45,6 +45,10 @@ audioviz::audioviz(
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(2);
 	scope.set_fill_in(true);
+
+	// VERY IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// now that two things are dependent on different amounts of audio, take the max of their dependencies
+	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
 }
 
 void audioviz::perform_fft()
@@ -94,21 +98,21 @@ void audioviz::layers_init(const int antialiasing)
 		}
 	}
 
-	// { // scope layer
-	// 	auto &scope_layer = add_layer("scope", antialiasing);
-	// 	scope_layer.set_orig_cb(
-	// 		[&](auto &orig_rt)
-	// 		{
-	// 			float left_channel[scope.get_shape_count()];
-	// 			for (int i = 0; i < scope.get_shape_count(); ++i)
-	// 				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
-	// 			scope.update({left_channel, scope.get_shape_count()});
-	// 			orig_rt.clear(sf::Color::Transparent);
-	// 			orig_rt.draw(scope);
-	// 			orig_rt.display();
-	// 		});
-	// 	scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
-	// }
+	/*{ // scope layer
+		auto &scope_layer = add_layer("scope", antialiasing);
+		scope_layer.set_orig_cb(
+			[&](auto &orig_rt)
+			{
+				float left_channel[scope.get_shape_count()];
+				for (int i = 0; i < scope.get_shape_count(); ++i)
+					left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0];
+				scope.update({left_channel, scope.get_shape_count()});
+				orig_rt.clear(sf::Color::Transparent);
+				orig_rt.draw(scope);
+				orig_rt.display();
+			});
+		scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
+	}*/
 
 	{ // particles layer
 		auto &particles = add_layer("particles", antialiasing);
@@ -253,12 +257,10 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 	spectrum_bm = bm;
 }
 
-bool audioviz::prepare_frame()
+bool audioviz::next_frame()
 {
-	// now that two things are dependent on different amounts of audio, decode as much as needed
-	const auto audio_frames_needed = std::max(fft_size, (int)scope.get_shape_count());
-	const auto next_frame_ready = base_audioviz::next_frame(audio_frames_needed);
-	color.wheel.increment_time();
+	const auto next_frame_ready = base_audioviz::next_frame();
+	color.increment_wheel_time();
 	return next_frame_ready;
 }
 
@@ -266,10 +268,4 @@ void audioviz::draw(sf::RenderTarget &target, const sf::RenderStates states) con
 {
 	base_audioviz::draw(target, states);
 	target.draw(metadata, states);
-}
-
-void audioviz::set_fft_size(const int n)
-{
-	fft_size = n;
-	fa.set_fft_size(n);
 }

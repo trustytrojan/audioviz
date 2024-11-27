@@ -65,16 +65,16 @@ public:
 	 * render. You MUST call this before analyzing audio, otherwise
 	 * you might get an assertion error from `tt::AudioAnalyzer::analyze`.
 	 */
-	void configure_analyzer(tt::StereoAnalyzer &sa)
+	void configure_analyzer(tt::AudioAnalyzer &aa)
 	{
 		assert(_left.bar_count() == _right.bar_count());
-		sa.resize(_left.bar_count());
+		aa.resize(_left.bar_count());
 	}
 
 	/**
 	 * @warning It is the CALLER's responsibility to make sure that
 	 * `sa`'s spectrum buffers are properly sized for this `StereoSpectrum`!!!!
-	 * Otherwise you will get an assertion error!!! Call `before_analyze` to help you with this.
+	 * Otherwise you will get an assertion error!!! Call `configure_analyzer` to help you with this.
 	 */
 	void update(const tt::StereoAnalyzer &sa)
 	{

@@ -143,7 +143,7 @@ public:
 
 	// uhhh.. this is bad. making `aa` pass-by-reference causes the particles to never appear on screen...
 	// figure this out!!!!!!!!!!!!!!!!!!
-	void update(const tt::AudioAnalyzer aa, const UpdateOptions &options = {})
+	void update(const tt::AudioAnalyzer &aa, const UpdateOptions &options = {})
 	{
 		float avg{}; // didn't initialize this for the longest time... yikes.
 		for (int i = 0; i < aa.get_num_channels(); ++i)

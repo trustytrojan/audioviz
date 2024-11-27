@@ -13,6 +13,10 @@ private:
 
 public:
 	AudioAnalyzer(int num_channels);
+	AudioAnalyzer(const AudioAnalyzer &) = delete;
+	AudioAnalyzer &operator=(const AudioAnalyzer &) = delete;
+	AudioAnalyzer(AudioAnalyzer &&) = delete;
+	AudioAnalyzer &operator=(AudioAnalyzer &&) = delete;
 	void resize(int size);
 
 	/**

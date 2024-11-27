@@ -7,20 +7,20 @@ ps = viz.ParticleSystem.new({ {}, size }, 50)
 ss = viz.StereoSpectrum.new({ {}, size }, cs)
 sc = viz.ScopeDrawable.new({ {}, size }, cs)
 
-cs.wheel_rate = 0.005
+cs:set_wheel_rate(0.005)
 
-viz = audioviz.new(size, args.media_url, fa, cs, ss, ps, 4)
-viz:add_default_effects()
+_viz = audioviz.new(size, args.media_url, fa, cs, ss, ps, 4)
+_viz:add_default_effects()
 
 if LINUX then
-	viz:set_text_font('/usr/share/fonts/TTF/Iosevka-Regular.ttc')
+	_viz:set_text_font('/usr/share/fonts/TTF/Iosevka-Regular.ttc')
 	vcodec = 'h264_vaapi'
 elseif WIN32 then
-	viz:set_text_font(os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\Iosevka-Regular.ttc')
+	_viz:set_text_font(os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\Iosevka-Regular.ttc')
 	vcodec = 'h264_qsv'
 end
 
-test_layer = viz:add_layer('test', 4)
+test_layer = _viz:add_layer('test', 4)
 test_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({50, 0, 0, 125})
 	orig_rt:display()
@@ -32,5 +32,5 @@ end)
 
 -- viz:remove_layer('test')
 
--- start_in_window(viz)
-encode(viz, 'out.mp4', vcodec, 'copy')
+start_in_window(_viz)
+-- encode(viz, 'out.mp4', vcodec, 'copy')

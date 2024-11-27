@@ -2,6 +2,7 @@
 
 #include "viz/ColorSettings.hpp"
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include <tt/ColorUtils.hpp>
 #include <vector>
 
@@ -19,7 +20,7 @@ private:
 	const ColorSettings &color;
 
 	// spectrum parameters
-	float multiplier = 4;
+	float multiplier{4};
 
 	// internal data
 	std::vector<BarType> bars;
@@ -28,7 +29,7 @@ private:
 
 	struct
 	{
-		int width = 10, spacing = 5;
+		int width{10}, spacing{5};
 	} bar;
 
 public:
@@ -43,6 +44,7 @@ public:
 		  color{color},
 		  backwards{backwards}
 	{
+		update_bars();
 	}
 
 	int get_bar_spacing() const { return bar.spacing; }

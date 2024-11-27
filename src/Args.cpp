@@ -1,7 +1,7 @@
 #include "Args.hpp"
 
 Args::Args(const int argc, const char *const *const argv)
-	: ArgumentParser(argv[0], "latest")
+	: ArgumentParser{argv[0], "latest"}
 {
 	add_argument("media_url");
 
@@ -143,13 +143,6 @@ Args::Args(const int argc, const char *const *const argv)
 		.flag();
 
 	add_argument("--wheel-ranges")
-		.help("choose two hue offsets for the color wheel, saturation, and brightness, and it will move with time given the two ranges!\n all 6 values must be between [0, 1]\n Works with the wheel_ranges and wheel_ranges_reverse mode!")
-		.nargs(6)
-		.default_value(std::vector<float>{0.9, 0.7, 1, 0, 0, 0})
-		.scan<'f', float>()
-		.validate();
-
-	add_argument("--wheel-ranges-reverse")
 		.help("choose two hue offsets for the color wheel, saturation, and brightness, and it will move with time given the two ranges!\n all 6 values must be between [0, 1]\n Works with the wheel_ranges and wheel_ranges_reverse mode!")
 		.nargs(6)
 		.default_value(std::vector<float>{0.9, 0.7, 1, 0, 0, 0})

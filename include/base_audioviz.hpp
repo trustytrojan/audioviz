@@ -8,6 +8,7 @@
 
 #include "media/Media.hpp"
 #include "viz/Layer.hpp"
+#include "tt/AudioAnalyzer.hpp"
 
 class base_audioviz : public sf::Drawable
 {
@@ -17,24 +18,22 @@ public:
 
 protected:
 	std::unique_ptr<Media> media;
-
-	// timing text
 	sf::Font font;
-
-#ifdef AUDIOVIZ_PORTAUDIO
-	// PortAudio stuff for live playback
-	std::optional<pa::PortAudio> pa_init;
-	std::optional<pa::Stream> pa_stream;
-#endif
 
 private:
 	int framerate{60};
+	int audio_frames_needed{};
 	int afpvf{media->astream().sample_rate() / framerate}; // audio frames per video frame
 	std::vector<viz::Layer> layers;
 	tt::RenderTexture final_rt;
 	sf::Text timing_text{font};
 	std::ostringstream tt_ss;
 	bool tt_enabled{};
+#ifdef AUDIOVIZ_PORTAUDIO
+	// PortAudio stuff for live playback
+	std::optional<pa::PortAudio> pa_init;
+	std::optional<pa::Stream> pa_stream;
+#endif
 
 public:
 	/**
@@ -55,7 +54,7 @@ public:
 	 *                     in preparation for subclass processing.
 	 * @returns Whether another frame can be prepared
 	 */
-	bool next_frame(int audio_frames = 0);
+	bool next_frame();
 
 	void draw(sf::RenderTarget &, sf::RenderStates) const override;
 
@@ -73,6 +72,11 @@ public:
 	inline void set_text_font(const std::string &path) { font = {path}; }
 
 	inline std::string get_media_url() const { return media->url; }
+
+	void perform_fft(tt::FrequencyAnalyzer &fa, tt::AudioAnalyzer &aa);
+
+	// users MUST call this to specify how much audio they need for their visualizers
+	void set_audio_frames_needed(int needed) { audio_frames_needed = needed; }
 
 protected:
 	void capture_elapsed_time(const std::string &label, const sf::Clock &);

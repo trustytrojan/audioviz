@@ -1,6 +1,8 @@
 #ifdef AUDIOVIZ_LUA
 
 #include "Main.hpp"
+#include "base_audioviz.hpp"
+#include "media/FfmpegCliBoostMedia.hpp"
 
 sf::IntRect table_to_intrect(const sol::table &tb)
 {
@@ -72,15 +74,23 @@ Main::LuaState::LuaState(Main &main)
 		"set_nth_root", &FA::set_nth_root
 	);
 
+	tt_namespace["AudioAnalyzer"] = new_usertype<tt::AudioAnalyzer>(
+		"new", sol::constructors<tt::AudioAnalyzer(int)>()
+	);
+
+	tt_namespace["StereoAnalyzer"] = new_usertype<tt::StereoAnalyzer>(
+		"new", sol::constructors<tt::StereoAnalyzer()>(),
+		sol::base_classes, sol::bases<tt::AudioAnalyzer>()
+	);
+
 	using SfDrawDrawable = void (sf::RenderTarget::*)(const sf::Drawable &, const sf::RenderStates &);
-	using RtDrawDrawable = void (tt::RenderTexture::*)(const sf::Drawable &, const sf::RenderStates &);
 	using RtClearColor = void (tt::RenderTexture::*)(sf::Color);
 
 	new_usertype<sf::RenderTarget>(
 		"", sol::no_constructor,
-		"draw", [](sf::RenderTarget &self, const sf::Drawable &drawable, const sf::RenderStates &states = {})
+		"draw",[](sf::RenderTarget &self, const sf::Drawable &drawable)
 			{
-				self.draw(drawable, states);
+				self.draw(drawable);
 			}
 	);
 
@@ -89,9 +99,20 @@ Main::LuaState::LuaState(Main &main)
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 
+	new_usertype<Media>(
+		"", sol::no_constructor
+	);
+
+	set("FfmpegCliBoostMedia", new_usertype<FfmpegCliBoostMedia>(
+		"new", sol::factories([](const std::string &url, const sol::table &size)
+		{
+			return std::make_shared<FfmpegCliBoostMedia>(url, table_to_vec2u(size));
+		}),
+		sol::base_classes, sol::bases<Media>()
+	));
+
 	tt_namespace["RenderTexture"] = new_usertype<tt::RenderTexture>(
 		"new", sol::constructors<tt::RenderTexture(sf::Vector2u, int)>(),
-    	"draw", static_cast<RtDrawDrawable>(&tt::RenderTexture::draw),
 		"display", &tt::RenderTexture::display,
 		"sprite", &tt::RenderTexture::sprite,
 		"clear", [](tt::RenderTexture &self, const sol::table &table)
@@ -110,7 +131,8 @@ Main::LuaState::LuaState(Main &main)
 		"set_displacement_direction", &PS::set_displacement_direction,
 		"set_start_position", &PS::set_start_side,
 		"set_rect", &PS::set_rect,
-		"set_particle_count", &PS::set_particle_count
+		"set_particle_count", &PS::set_particle_count,
+		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 
 	viz_namespace["SpectrumDrawable"] = new_usertype<SD>(
@@ -123,7 +145,8 @@ Main::LuaState::LuaState(Main &main)
 		"set_rect", &SD::set_rect,
 		"set_bar_width", &SD::set_bar_width,
 		"set_bar_spacing", &SD::set_bar_spacing,
-		"set_backwards", &SD::set_backwards
+		"set_backwards", &SD::set_backwards,
+		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 
 	viz_namespace["StereoSpectrum"] = new_usertype<SS>(
@@ -133,11 +156,17 @@ Main::LuaState::LuaState(Main &main)
 			return std::make_shared<SS>(table_to_intrect(rect), cs);
 		}),
 		"set_multiplier", &SS::set_multiplier,
-		"set_rect", &SS::set_rect,
+		"set_rect", [](SS &self, const sol::table &rect)
+		{
+			self.set_rect(table_to_intrect(rect));
+		},
 		"set_bar_width", &SS::set_bar_width,
 		"set_bar_spacing", &SS::set_bar_spacing,
 		"set_left_backwards", &SS::set_left_backwards,
-		"set_right_backwards", &SS::set_right_backwards
+		"set_right_backwards", &SS::set_right_backwards,
+		"update", &SS::update,
+		"configure_analyzer", &SS::configure_analyzer,
+		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 
 	viz_namespace["ScopeDrawable"] = new_usertype<SC>(
@@ -152,46 +181,54 @@ Main::LuaState::LuaState(Main &main)
 		"set_fill_in", &SC::set_fill_in,
 		"set_backwards", &SC::set_backwards,
 		"set_rotation_angle", &SC::set_rotation_angle,
-		"set_center_point", &SC::set_center_point
+		"set_center_point", &SC::set_center_point,
+		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 
 	viz_namespace["ColorSettings"] = new_usertype<CS>(
 		"new", sol::constructors<CS>(),
-		"wheel_rate", sol::property(
-			[](CS &self) { return self.wheel.rate; },
-			[](CS &self, float value) { self.wheel.rate = value; }
-		)
+		"set_mode", &CS::set_mode,
+		"set_wheel_hsv", &CS::set_wheel_hsv,
+		"set_wheel_ranges_start_hsv", &CS::set_wheel_ranges_start_hsv,
+		"set_wheel_ranges_end_hsv", &CS::set_wheel_ranges_end_hsv,
+		"set_wheel_rate", &CS::set_wheel_rate,
+		"increment_wheel_time", &CS::increment_wheel_time
 	);
 
 	// sf::RenderTexture is non-copyable... (as it should be)
 	// had to make the `orig_rt` and `fx_rt` arguments of `viz::Layer::FxCb` MUTABLE references,
 	// otherwise sol2 tries to make copies of const-refs...
-	viz_namespace["Layer"] = new_usertype<viz::Layer>("Layer",
-		sol::no_constructor,
+	viz_namespace["Layer"] = new_usertype<viz::Layer>(
+		"", sol::no_constructor,
 		"set_orig_cb", &viz::Layer::set_orig_cb,
 		"set_fx_cb", &viz::Layer::set_fx_cb,
 		"set_auto_fx", &viz::Layer::set_auto_fx
 	);
 
-	new_usertype<audioviz>("audioviz",
+	set("base_audioviz", new_usertype<base_audioviz>(
+		"new", sol::factories([](const sol::table &rect, Media *const media)
+		{
+			return std::make_shared<base_audioviz>(table_to_vec2u(rect), media);
+		}),
+		"add_layer", &base_audioviz::add_layer,
+		"get_layer", &base_audioviz::get_layer,
+		"remove_layer", &base_audioviz::remove_layer,
+		"perform_fft", &base_audioviz::perform_fft,
+		"set_text_font", &base_audioviz::set_text_font,
+		"set_audio_frames_needed", &base_audioviz::set_audio_frames_needed,
+		sol::base_classes, sol::bases<sf::Drawable>()
+	));
+
+	set("audioviz", new_usertype<audioviz>(
 		"new", sol::factories([](const sol::table &rect, const std::string &media_url, FA &fa, CS &cs, SS &ss, PS &ps, int antialiasing)
 		{
 			return std::make_shared<audioviz>(table_to_vec2u(rect), media_url, fa, cs, ss, ps, antialiasing);
 		}),
 		"use_attached_pic_as_bg", &audioviz::use_attached_pic_as_bg,
 		"add_default_effects", &audioviz::add_default_effects,
-		"add_layer", &audioviz::add_layer,
-		"get_layer", &audioviz::get_layer,
-		"remove_layer", &audioviz::remove_layer,
-#ifdef AUDIOVIZ_PORTAUDIO
-		"set_audio_playback_enabled", &audioviz::set_audio_playback_enabled,
-#endif
-		"set_timing_text_enabled", &audioviz::set_timing_text_enabled,
-		"set_framerate", &audioviz::set_framerate,
 		"set_spectrum_margin", &audioviz::set_spectrum_margin,
-		"set_text_font", &audioviz::set_text_font,
-		"set_fft_size", &audioviz::set_fft_size
-	);
+		sol::base_classes, sol::bases<base_audioviz>()
+	));
 	// clang-format on
 }
 

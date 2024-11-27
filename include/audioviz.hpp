@@ -9,15 +9,11 @@
 #endif
 
 #include "base_audioviz.hpp"
-
-// #include "viz/Layer.hpp"
 #include "viz/ParticleSystem.hpp"
 #include "viz/ScopeDrawable.hpp"
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
-
-// #include "media/Media.hpp"
 
 namespace viz
 {
@@ -39,8 +35,6 @@ private:
 	using SS = viz::StereoSpectrum<BarType>;
 	using SD = viz::ScopeDrawable<sf::RectangleShape>;
 	using PS = viz::ParticleSystem<ParticleShapeType>;
-
-	int fft_size{3000};
 
 	// used for updating the particle system at 60Hz rate when framerate > 60
 	int frame_count{}, vfcount{1};
@@ -93,7 +87,7 @@ public:
 	 * This method does all the work to produce a frame.
 	 * @return Whether another frame can be prepared
 	 */
-	bool prepare_frame();
+	bool next_frame();
 
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
 

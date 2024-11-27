@@ -40,7 +40,7 @@ Main::Main(const int argc, const char *const *const argv)
 	}
 }
 
-void Main::start_in_window(audioviz &viz)
+void Main::start_in_window(base_audioviz &viz)
 {
 #ifdef AUDIOVIZ_PORTAUDIO
 	viz.set_audio_playback_enabled(true);
@@ -54,7 +54,7 @@ void Main::start_in_window(audioviz &viz)
 	};
 	window.setVerticalSyncEnabled(!no_vsync);
 
-	while (window.isOpen() && viz.prepare_frame())
+	while (window.isOpen() && viz.next_frame())
 	{
 		window.draw(viz);
 		window.display();

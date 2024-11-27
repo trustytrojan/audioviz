@@ -1,4 +1,5 @@
 #include "base_audioviz.hpp"
+#include <numeric>
 
 #define capture_time(label, code)            \
 	if (tt_enabled)                          \
@@ -20,6 +21,8 @@ base_audioviz::base_audioviz(const sf::Vector2u size, Media *const media)
 	timing_text.setCharacterSize(18);
 	timing_text.setFillColor({255, 255, 255, 150});
 	set_timing_text_enabled(true);
+
+	std::cerr << "base_audioviz: afpvf: " << afpvf << '\n';
 }
 
 #ifdef AUDIOVIZ_PORTAUDIO
@@ -53,17 +56,18 @@ void base_audioviz::play_audio()
 }
 #endif
 
-bool base_audioviz::next_frame(const int audio_frames)
+bool base_audioviz::next_frame()
 {
 	assert(media);
-	media->decode_audio(std::max(audio_frames, afpvf));
+	media->decode_audio(std::max(audio_frames_needed, afpvf));
+	std::cerr << "base_audioviz: after decode_audio: " << media->audio_buffer_frames() << '\n';
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream && media->audio_buffer_frames() >= afpvf)
 		capture_time("play_audio", play_audio());
 #endif
 
-	if (media->audio_buffer_frames() < audio_frames)
+	if (media->audio_buffer_frames() < audio_frames_needed)
 		return false;
 
 	final_rt.clear();
@@ -117,4 +121,14 @@ void base_audioviz::remove_layer(const std::string &name)
 	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
 	if (itr != layers.end())
 		layers.erase(itr);
+}
+
+void base_audioviz::perform_fft(tt::FrequencyAnalyzer &fa, tt::AudioAnalyzer &aa)
+{
+	sf::Clock clock;
+	aa.analyze(fa, media->audio_buffer().data(), true);
+	const auto &left = aa.get_spectrum_data(0), &right = aa.get_spectrum_data(1);
+	std::cerr << "left spectrum sum: " << std::accumulate(left.begin(), left.end(), 0.f) << '\n';
+	std::cerr << "right spectrum sum: " << std::accumulate(right.begin(), right.end(), 0.f) << '\n';
+	capture_elapsed_time("fft", clock);
 }

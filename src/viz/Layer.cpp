@@ -1,5 +1,5 @@
 #include "viz/Layer.hpp"
-// #include <iostream>
+#include <iostream>
 
 namespace viz
 {
@@ -33,6 +33,7 @@ void Layer::set_auto_fx(const bool b)
 
 void Layer::set_fx_cb(const FxCb &cb)
 {
+	std::cerr << "layer '" << name << "' called set_fx_cb\n";
 	fx_cb = cb;
 }
 

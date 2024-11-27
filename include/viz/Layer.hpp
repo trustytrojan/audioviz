@@ -37,7 +37,7 @@ private:
 	tt::RenderTexture _orig_rt, _fx_rt;
 	bool auto_fx = true;
 	OrigCb orig_cb;
-	FxCb fx_cb;
+	FxCb fx_cb = DRAW_FX_RT;
 
 public:
 	/**

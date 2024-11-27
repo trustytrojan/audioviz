@@ -11,8 +11,7 @@ AudioAnalyzer::AudioAnalyzer(const int num_channels)
 
 void AudioAnalyzer::resize(const int size)
 {
-	for (int i = 0; i < _num_channels; ++i)
-		_spectrum_data_per_channel[i].resize(size);
+	std::ranges::for_each(_spectrum_data_per_channel, [=](auto &v) { v.resize(size); });
 }
 
 void AudioAnalyzer::analyze(tt::FrequencyAnalyzer &fa, const float *const audio, const bool interleaved)

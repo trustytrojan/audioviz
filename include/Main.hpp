@@ -48,8 +48,8 @@ class Main
 #endif
 
 	void use_args(audioviz &);
-	void start_in_window(audioviz &);
-	void encode(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void start_in_window(base_audioviz &);
+	void encode(base_audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);

@@ -5,8 +5,9 @@
 namespace tt
 {
 
-struct Sprite : sf::Sprite
+class Sprite : public sf::Sprite
 {
+public:
 	Sprite(const sf::Texture &txr);
 	void capture_centered_square_view();
 	void scale_to(const sf::Vector2f size);
