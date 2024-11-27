@@ -6,9 +6,6 @@
 
 #include "fx/Effect.hpp"
 #include "tt/RenderTexture.hpp"
-#include "audioviz.hpp"
-
-class audioviz;
 
 namespace viz
 {
@@ -40,7 +37,7 @@ private:
 	tt::RenderTexture _orig_rt, _fx_rt;
 	bool auto_fx = true;
 	OrigCb orig_cb;
-	FxCb fx_cb = DRAW_FX_RT;
+	FxCb fx_cb;
 
 public:
 	/**
@@ -85,7 +82,6 @@ public:
 	 * - calls the "effects" callback if given via `set_fx_cb`
 	 */
 	void full_lifecycle(sf::RenderTarget &target);
-	void full_lifecycle(audioviz &a, sf::RenderTarget &target);
 
 	/**
 	 * Copies the "original" render-texture to the "effects" render-texture and applies all `effects` on it.

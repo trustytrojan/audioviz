@@ -32,4 +32,5 @@ public:
 	inline const std::optional<av::Stream> &vstream() const { return _vstream; }
 	inline const std::optional<sf::Texture> &attached_pic() const { return _attached_pic; }
 	inline const std::vector<float> &audio_buffer() const { return _audio_buffer; }
+	inline int audio_buffer_frames() const { return _audio_buffer.size() / _astream.nb_channels(); }
 };

@@ -1,4 +1,3 @@
-#include <iomanip>
 #include <iostream>
 
 #include "audioviz.hpp"
@@ -14,21 +13,13 @@
 	}
 
 audioviz::audioviz(
-	const sf::Vector2u size,
-	const std::string &media_url,
-	FA &fa,
-	CS &color,
-	SS &ss,
-	PS &ps,
-	const int antialiasing)
-	: size{size},
-	  media{new FfmpegCliBoostMedia{media_url, size}},
+	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
+	: base_audioviz{size, new FfmpegCliBoostMedia{media_url, size}},
 	  fa{fa},
 	  color{color},
 	  ss{ss},
 	  scope{{{}, (sf::Vector2i)size}, color},
 	  ps{ps},
-	  final_rt{size, antialiasing},
 	  video_bg{size}
 {
 	// for now only stereo is supported
@@ -43,11 +34,6 @@ audioviz::audioviz(
 	// create stereo "mirror" effect
 	ss.set_left_backwards(true);
 
-	timing_text.setPosition({size.x - 300, 30});
-	timing_text.setCharacterSize(18);
-	timing_text.setFillColor({255, 255, 255, 150});
-	set_timing_text_enabled(true);
-
 	metadata_init();
 	layers_init(antialiasing);
 
@@ -59,7 +45,6 @@ audioviz::audioviz(
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(2);
 	scope.set_fill_in(true);
-	// left_channel.resize(scope.get_shape_count());
 }
 
 void audioviz::perform_fft()
@@ -78,7 +63,7 @@ void audioviz::layers_init(const int antialiasing)
 			// round the framerate bc sometimes it's 29.97
 			const int video_framerate = std::round(av_q2d(media->vstream()->get()->avg_frame_rate));
 			bg.set_orig_cb(
-				[this, frames_to_wait{framerate / video_framerate}](auto &orig_rt)
+				[this, frames_to_wait{get_framerate() / video_framerate}](auto &orig_rt)
 				{
 					if (vfcount < frames_to_wait)
 						++vfcount;
@@ -109,21 +94,21 @@ void audioviz::layers_init(const int antialiasing)
 		}
 	}
 
-	{ // scope layer
-		auto &scope_layer = add_layer("scope", antialiasing);
-		scope_layer.set_orig_cb(
-			[&](auto &orig_rt)
-			{
-				float left_channel[scope.get_shape_count()];
-				for (int i = 0; i < scope.get_shape_count(); ++i)
-					left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
-				scope.update({left_channel, scope.get_shape_count()});
-				orig_rt.clear(sf::Color::Transparent);
-				orig_rt.draw(scope);
-				orig_rt.display();
-			});
-		scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
-	}
+	// { // scope layer
+	// 	auto &scope_layer = add_layer("scope", antialiasing);
+	// 	scope_layer.set_orig_cb(
+	// 		[&](auto &orig_rt)
+	// 		{
+	// 			float left_channel[scope.get_shape_count()];
+	// 			for (int i = 0; i < scope.get_shape_count(); ++i)
+	// 				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
+	// 			scope.update({left_channel, scope.get_shape_count()});
+	// 			orig_rt.clear(sf::Color::Transparent);
+	// 			orig_rt.draw(scope);
+	// 			orig_rt.display();
+	// 		});
+	// 	scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
+	// }
 
 	{ // particles layer
 		auto &particles = add_layer("particles", antialiasing);
@@ -135,6 +120,7 @@ void audioviz::layers_init(const int antialiasing)
 				perform_fft();
 
 				// lock the tickrate of the particles at 60hz for non-60fps output
+				const auto framerate = get_framerate();
 
 				if (framerate < 60)
 					ps.update(sa, {.multiplier = 60.f / framerate});
@@ -188,24 +174,6 @@ void audioviz::layers_init(const int antialiasing)
 	}
 }
 
-viz::Layer &audioviz::add_layer(const std::string &name, const int antialiasing)
-{
-	return layers.emplace_back(viz::Layer{name, size, antialiasing});
-}
-
-viz::Layer *audioviz::get_layer(const std::string &name)
-{
-	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
-	return (itr == layers.end()) ? nullptr : itr.base();
-}
-
-void audioviz::remove_layer(const std::string &name)
-{
-	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
-	if (itr != layers.end())
-		layers.erase(itr);
-}
-
 // need to do this outside of the constructor otherwise the texture is broken?
 void audioviz::use_attached_pic_as_bg()
 {
@@ -237,24 +205,9 @@ void audioviz::add_default_effects()
 		spectrum->effects.emplace_back(new fx::Blur{1, 1, 20});
 }
 
-const std::string audioviz::get_media_url() const
-{
-	return media->format()->url;
-}
-
-void audioviz::set_timing_text_enabled(const bool enabled)
-{
-	tt_enabled = enabled;
-}
-
 void audioviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
 {
 	metadata.set_album_cover(sf::Texture{image_path}, size);
-}
-
-void audioviz::set_text_font(const std::string &path)
-{
-	font = {path};
 }
 
 void audioviz::metadata_init()
@@ -275,12 +228,6 @@ void audioviz::metadata_init()
 void audioviz::set_spectrum_margin(const int margin)
 {
 	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
-}
-
-void audioviz::set_framerate(const int framerate)
-{
-	this->framerate = framerate;
-	afpvf = media->astream().sample_rate() / framerate;
 }
 
 void audioviz::set_background(const sf::Texture &txr)
@@ -306,79 +253,19 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 	spectrum_bm = bm;
 }
 
-void audioviz::capture_elapsed_time(const std::string &label, const sf::Clock &_clock)
-{
-	tt_ss << std::setw(20) << std::left << label << _clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
-}
-
-#ifdef AUDIOVIZ_PORTAUDIO
-void audioviz::set_audio_playback_enabled(const bool enabled)
-{
-	if (enabled)
-	{
-		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, media->astream().sample_rate(), afpvf);
-		pa_stream->start();
-	}
-	else
-	{
-		pa_stream.reset();
-		pa_init.reset();
-	}
-}
-
-void audioviz::play_audio()
-{
-	try // to play the audio
-	{
-		pa_stream->write(media->audio_buffer().data(), afpvf);
-	}
-	catch (const pa::Error &e)
-	{
-		if (e.code != paOutputUnderflowed)
-			throw;
-		std::cerr << e.what() << '\n';
-	}
-}
-#endif
-
 bool audioviz::prepare_frame()
 {
-	assert(media);
 	// now that two things are dependent on different amounts of audio, decode as much as needed
-	capture_time("media_decode", media->decode_audio(std::max(fft_size, (int)scope.get_shape_count())));
-
-#ifdef AUDIOVIZ_PORTAUDIO
-	if (pa_stream)
-		capture_time("play_audio", play_audio());
-#endif
-
-	// we don't have enough samples for fft; end here
-	if ((int)media->audio_buffer().size() < 2 * fft_size)
-		return false;
-
-	final_rt.clear();
-	for (auto &layer : layers)
-		layer.full_lifecycle(*this, final_rt);
-	final_rt.display();
-
-	color.wheel.increment_time(); // PUT THIS SOMEWHERE ELSE
-
-	// THE IMPORTANT PART
-	capture_time("audio_buffer_erase", media->audio_buffer_erase(afpvf));
-
-	timing_text.setString(tt_ss.str());
-	tt_ss.str("");
-
-	return true;
+	const auto audio_frames_needed = std::max(fft_size, (int)scope.get_shape_count());
+	const auto next_frame_ready = base_audioviz::next_frame(audio_frames_needed);
+	color.wheel.increment_time();
+	return next_frame_ready;
 }
 
 void audioviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
-	target.draw(final_rt.sprite(), states);
+	base_audioviz::draw(target, states);
 	target.draw(metadata, states);
-	if (tt_enabled)
-		target.draw(timing_text, states);
 }
 
 void audioviz::set_fft_size(const int n)

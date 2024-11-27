@@ -5,9 +5,9 @@ namespace viz
 {
 
 Layer::Layer(const std::string &name, const sf::Vector2u size, const int antialiasing)
-	: name(name),
-	  _orig_rt(size, antialiasing),
-	  _fx_rt(size, 0)
+	: name{name},
+	  _orig_rt{size, antialiasing},
+	  _fx_rt{size}
 {
 }
 
@@ -53,13 +53,6 @@ void Layer::full_lifecycle(sf::RenderTarget &target)
 		apply_fx();
 	if (fx_cb)
 		fx_cb(_orig_rt, _fx_rt, target);
-}
-
-void Layer::full_lifecycle(audioviz &a, sf::RenderTarget &target)
-{
-	sf::Clock clock;
-	full_lifecycle(target);
-	a.capture_elapsed_time("layer '" + name + '\'', clock);
 }
 
 } // namespace viz
