@@ -37,3 +37,4 @@ end)
 spectrum_layer:set_fx_cb(viz.Layer.DRAW_FX_RT)
 
 start_in_window(_viz)
+-- encode(_viz, 'out.mp4', vcodec, 'copy')

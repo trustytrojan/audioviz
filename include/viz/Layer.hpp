@@ -24,6 +24,8 @@ public:
 	 * "Effects" texture callback type. Supplies const(NOT ANYMORE)-references to `_orig_rt` and `_fx_rt`, and a reference
 	 * to the `target` parameter of `full_lifecycle` to the callback. This is so the caller can customize how
 	 * they draw to the final target using the "original" and "effects" render-textures.
+	 * 
+	 * EDIT: had to make the first two params non-const refs due to sol2 copying const-ref objects by default
 	 */
 	using FxCb = std::function<void(tt::RenderTexture &, tt::RenderTexture &, sf::RenderTarget &)>;
 
