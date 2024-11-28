@@ -10,6 +10,14 @@ media = FfmpegCliBoostMedia.new(args.media_url, size)
 _viz = base_audioviz.new(size, media)
 _viz:set_audio_frames_needed(fft_size)
 
+---@param margin integer
+function set_spectrum_margin(margin)
+	ss:set_rect({ { margin, margin }, { size[1] - 2 * margin, size[2] - 2 * margin } })
+end
+
+ss:set_left_backwards(true)
+sa:resize(ss:get_bar_count())
+
 if LINUX then
 	_viz:set_text_font('/usr/share/fonts/TTF/Iosevka-Regular.ttc')
 	vcodec = 'h264_vaapi'
@@ -20,7 +28,6 @@ end
 
 spectrum_layer = _viz:add_layer('spectrum', 0)
 spectrum_layer:set_orig_cb(function(orig_rt)
-	ss:configure_analyzer(sa)
 	_viz:perform_fft(fa, sa)
 	ss:update(sa)
 	orig_rt:clear({ 0, 0, 0, 0 })

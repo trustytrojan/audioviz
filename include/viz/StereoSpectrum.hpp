@@ -10,22 +10,22 @@ namespace viz
 template <typename BarType>
 class StereoSpectrum : public sf::Drawable
 {
-	using SD = SpectrumDrawable<BarType>;
-
-	SD _left, _right;
+	SpectrumDrawable<BarType> _left, _right;
 	sf::IntRect rect;
 
 public:
-	StereoSpectrum(ColorSettings &color)
+	StereoSpectrum(const ColorSettings &color)
 		: _left{color},
 		  _right{color}
 	{
 	}
 
 	StereoSpectrum(const sf::IntRect &rect, const ColorSettings &color)
-		: _left{rect, color},
-		  _right{rect, color}
+		: _left{color},
+		  _right{color},
+		  rect{rect}
 	{
+		update_spectrum_rects();
 	}
 
 	void set_left_backwards(const bool b) { _left.set_backwards(b); }
@@ -59,16 +59,10 @@ public:
 		update_spectrum_rects();
 	}
 
-	/**
-	 * Resizes `sa` 's spectrum vectors to be the same size as
-	 * the number of bars that this `StereoSpectrum` is setup to
-	 * render. You MUST call this before analyzing audio, otherwise
-	 * you might get an assertion error from `tt::AudioAnalyzer::analyze`.
-	 */
-	void configure_analyzer(tt::AudioAnalyzer &aa)
+	int get_bar_count() const
 	{
 		assert(_left.bar_count() == _right.bar_count());
-		aa.resize(_left.bar_count());
+		return _left.bar_count();
 	}
 
 	/**
@@ -88,7 +82,6 @@ public:
 		target.draw(_right, states);
 	}
 
-private:
 	void update_spectrum_rects()
 	{
 		assert(_left.get_bar_spacing() == _right.get_bar_spacing());

@@ -53,7 +53,7 @@ audioviz::audioviz(
 
 void audioviz::perform_fft()
 {
-	ss.configure_analyzer(sa);
+	// ss.configure_analyzer(sa);
 	capture_time("fft", sa.analyze(fa, media->audio_buffer().data(), true));
 }
 
@@ -232,6 +232,7 @@ void audioviz::metadata_init()
 void audioviz::set_spectrum_margin(const int margin)
 {
 	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
+	sa.resize(ss.get_bar_count());
 }
 
 void audioviz::set_background(const sf::Texture &txr)

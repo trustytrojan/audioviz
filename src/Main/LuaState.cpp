@@ -75,7 +75,8 @@ Main::LuaState::LuaState(Main &main)
 	);
 
 	tt_namespace["AudioAnalyzer"] = new_usertype<tt::AudioAnalyzer>(
-		"new", sol::constructors<tt::AudioAnalyzer(int)>()
+		"new", sol::constructors<tt::AudioAnalyzer(int)>(),
+		"resize", &tt::AudioAnalyzer::resize
 	);
 
 	tt_namespace["StereoAnalyzer"] = new_usertype<tt::StereoAnalyzer>(
@@ -165,7 +166,7 @@ Main::LuaState::LuaState(Main &main)
 		"set_left_backwards", &SS::set_left_backwards,
 		"set_right_backwards", &SS::set_right_backwards,
 		"update", &SS::update,
-		"configure_analyzer", &SS::configure_analyzer,
+		"get_bar_count", &SS::get_bar_count,
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 
@@ -202,7 +203,8 @@ Main::LuaState::LuaState(Main &main)
 		"", sol::no_constructor,
 		"set_orig_cb", &viz::Layer::set_orig_cb,
 		"set_fx_cb", &viz::Layer::set_fx_cb,
-		"set_auto_fx", &viz::Layer::set_auto_fx
+		"set_auto_fx", &viz::Layer::set_auto_fx,
+		"DRAW_FX_RT", sol::var(viz::Layer::DRAW_FX_RT)
 	);
 
 	set("base_audioviz", new_usertype<base_audioviz>(
