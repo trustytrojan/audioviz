@@ -24,6 +24,8 @@ int main(const int argc, const char *const *const argv)
 	scope.set_shape_width(1);
 	scope.set_shape_height(10);
 	scope.set_fill_in(false);
+	scope.set_shake(true);
+	
 	std::cout << "shape count: " << scope.get_shape_count() << '\n';
 
 	viz::SpectrumDrawable<viz::VerticalBar> sd;
@@ -75,6 +77,7 @@ int main(const int argc, const char *const *const argv)
 			for (int i = 0; i < scope.get_shape_count(); ++i)
 				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
 			scope.update_shape_positions(left_channel);
+			scope.update_shake(left_channel);
 		
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);

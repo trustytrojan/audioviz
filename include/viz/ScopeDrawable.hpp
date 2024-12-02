@@ -18,6 +18,7 @@ class ScopeDrawable : public sf::Drawable
 	} shape;
 	bool fill_in = false;
 	bool vert = false;
+	bool shake = false;
 
 	sf::Angle angle = sf::degrees(0);
 	sf::Transformable tf;
@@ -61,6 +62,8 @@ public:
 
 	void set_fill_in(bool _fill) { fill_in = _fill; }
 
+	void set_shake(bool _shake) {shake = _shake; }
+
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
@@ -83,6 +86,21 @@ public:
 	}
 
 	size_t get_shape_count() const { return shapes.size(); }
+
+	void update_shake(const std::span<float> &audio)
+	{
+		if(shake == false)
+			return;
+
+
+		assert(audio.size() >= shapes.size());
+
+		if(audio[audio.size()/2] < .3f || audio[audio.size()/2] > -.3f){
+			set_rotation_angle(sf::Angle(20*sf::degrees(audio[audio.size()/2])));
+		}
+		
+		
+	}
 
 	void update_shape_positions(const std::span<float> &audio)
 	{
