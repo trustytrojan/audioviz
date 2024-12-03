@@ -9,7 +9,7 @@ SongMetadataDrawable::SongMetadataDrawable(sf::Text &title_text, sf::Text &artis
 {
 }
 
-void SongMetadataDrawable::use_metadata(const Media &media)
+void SongMetadataDrawable::use_metadata(const media::Media &media)
 {
 	if (const auto title = media.format().metadata("title"))
 		title_text.setString(title);

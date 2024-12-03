@@ -60,9 +60,11 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 ## todo list / goals
 - ✅️ `viz::ScopeDrawable`
   - basically done, want extra feature: audio window customization independent of shape size
-- lua api (in progress)
+- 🔄 lua api
   - ✅️ modular layering/effects system
-  - remove hardcoded visualizer components
+  - ✅️ remove hardcoded visualizer components
+  - freshen up c++ api for consumption
+  - decide whether to split up audioviz into library & programs
 - make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
   - figure out how to deal with [`fft_size`](src/audioviz.cpp#L284) and [`sa.analyze(...)`](src/audioviz.cpp#L299)
 - add components/effects based on rhythm

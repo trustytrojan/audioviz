@@ -64,9 +64,6 @@ Main::LuaState::LuaState(Main &main)
 
 	/// usertypes required for the others to work (parameter types)
 
-	using SfDrawDrawable = void (sf::RenderTarget::*)(const sf::Drawable &, const sf::RenderStates &);
-	using RtClearColor = void (tt::RenderTexture::*)(sf::Color);
-
 	// clang-format off
 	new_usertype<sf::RenderTarget>(
 		"", sol::no_constructor,
@@ -81,7 +78,7 @@ Main::LuaState::LuaState(Main &main)
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 
-	new_usertype<Media>(
+	new_usertype<media::Media>(
 		"", sol::no_constructor
 	);
 
@@ -113,9 +110,9 @@ Main::LuaState::LuaState(Main &main)
 			"display", &tt::RenderTexture::display,
 			"sprite", &tt::RenderTexture::sprite,
 			"clear", [](tt::RenderTexture &self, const sol::table &table)
-				{
-					self.clear(table_to_color(table));
-				},
+			{
+				self.clear(table_to_color(table));
+			},
 			sol::base_classes, sol::bases<sf::RenderTarget>()
 		)
 	);
@@ -208,16 +205,16 @@ Main::LuaState::LuaState(Main &main)
 	/// globals
 
 	set(
-		"FfmpegCliBoostMedia", new_usertype<FfmpegCliBoostMedia>(
+		"FfmpegCliBoostMedia", new_usertype<media::FfmpegCliBoostMedia>(
 			"new", sol::factories([](const std::string &url, const sol::table &size)
 			{
-				return std::make_shared<FfmpegCliBoostMedia>(url, table_to_vec2u(size));
+				return std::make_shared<media::FfmpegCliBoostMedia>(url, table_to_vec2u(size));
 			}),
-			sol::base_classes, sol::bases<Media>()
+			sol::base_classes, sol::bases<media::Media>()
 		),
 
 		"base_audioviz", new_usertype<base_audioviz>(
-			"new", sol::factories([](const sol::table &rect, Media *const media)
+			"new", sol::factories([](const sol::table &rect, media::Media *const media)
 			{
 				return std::make_shared<base_audioviz>(table_to_vec2u(rect), media);
 			}),

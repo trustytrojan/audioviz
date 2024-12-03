@@ -17,7 +17,7 @@ public:
 	const sf::Vector2u size;
 
 protected:
-	std::unique_ptr<Media> media;
+	std::unique_ptr<media::Media> media;
 	sf::Font font;
 
 private:
@@ -40,7 +40,7 @@ public:
 	 * @param size Size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media Pointer to `Media` object. This `base_audioviz` instance will own the object.
 	 */
-	base_audioviz(sf::Vector2u size, Media *media);
+	base_audioviz(sf::Vector2u size, media::Media *media);
 
 	/// layer api
 

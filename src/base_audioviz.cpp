@@ -11,7 +11,7 @@
 	else                                     \
 		code;
 
-base_audioviz::base_audioviz(const sf::Vector2u size, Media *const media)
+base_audioviz::base_audioviz(const sf::Vector2u size, media::Media *const media)
 	: size{size},
 	  media{media},
 	  final_rt{size}

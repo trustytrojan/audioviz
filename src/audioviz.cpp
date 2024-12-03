@@ -14,7 +14,7 @@
 
 audioviz::audioviz(
 	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
-	: base_audioviz{size, new FfmpegCliBoostMedia{media_url, size}},
+	: base_audioviz{size, new media::FfmpegCliBoostMedia{media_url, size}},
 	  fa{fa},
 	  color{color},
 	  ss{ss},

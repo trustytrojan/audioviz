@@ -1,5 +1,8 @@
 #include "media/FfmpegCliMedia.hpp"
 
+namespace media
+{
+
 void FfmpegCliMedia::decode_audio(const int frames)
 {
 	const auto samples_to_read = frames * _astream.nb_channels();
@@ -12,3 +15,5 @@ void FfmpegCliMedia::decode_audio(const int frames)
 		_audio_buffer.insert(_audio_buffer.end(), buf, buf + samples_read);
 	}
 }
+
+} // namespace media

@@ -5,6 +5,9 @@
 
 namespace bp = boost::process;
 
+namespace media
+{
+
 class FfmpegCliBoostMedia : public FfmpegCliMedia
 {
 	bp::child audioc, videoc;
@@ -18,3 +21,5 @@ public:
 	size_t read_audio_samples(float *buf, int samples) override;
 	bool read_video_frame(sf::Texture &txr) override;
 };
+
+} // namespace media

@@ -13,3 +13,4 @@ scripts
 build
 windows_deps
 .vscode
+*testing*

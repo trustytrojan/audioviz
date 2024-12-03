@@ -2,6 +2,9 @@
 
 #include "Media.hpp"
 
+namespace media
+{
+
 class FfmpegCliMedia : public Media
 {
 public:
@@ -10,3 +13,5 @@ public:
 
 	void decode_audio(const int frames) override;
 };
+
+} // namespace media
