@@ -5,9 +5,9 @@ namespace viz
 {
 
 Layer::Layer(const std::string &name, const sf::Vector2u size, const int antialiasing)
-	: name(name),
-	  _orig_rt(size, antialiasing),
-	  _fx_rt(size, 0)
+	: name{name},
+	  _orig_rt{size, antialiasing},
+	  _fx_rt{size}
 {
 }
 
@@ -33,12 +33,13 @@ void Layer::set_auto_fx(const bool b)
 
 void Layer::set_fx_cb(const FxCb &cb)
 {
+	std::cerr << "layer '" << name << "' called set_fx_cb\n";
 	fx_cb = cb;
 }
 
 void Layer::apply_fx()
 {
-	// std::cerr << "layer '" << name << "' called apply_fx()\n";
+	// std::cerr << "layer '" << name << "' called apply_fx(): effects.size(): " << effects.size() << '\n';
 	_fx_rt.clear(sf::Color::Transparent);
 	_fx_rt.copy(_orig_rt);
 	for (const auto &effect : effects)

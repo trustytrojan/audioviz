@@ -1,8 +1,8 @@
 #pragma once
 
 #include "fftw/dft_r2c_1d.hpp"
-#include <spline.h>
 #include <cstring>
+#include <spline.h>
 #include <vector>
 
 namespace tt
@@ -96,6 +96,7 @@ public:
 	 * @throws `std::invalid_argument` if `fft_size` is not even
 	 */
 	void set_fft_size(int fft_size);
+	inline int get_fft_size() const { return fft_size; }
 
 	/**
 	 * Set interpolation type.

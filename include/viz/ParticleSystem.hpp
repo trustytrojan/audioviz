@@ -44,13 +44,13 @@ private:
 	StartSide start_side = StartSide::BOTTOM;
 
 public:
-	ParticleSystem(const size_t particle_count)
+	ParticleSystem(const int particle_count)
 		: particles{particle_count}
 	{
 		init_particles();
 	}
 
-	ParticleSystem(const sf::IntRect &rect, const size_t particle_count)
+	ParticleSystem(const sf::IntRect &rect, const int particle_count)
 		: rect{rect},
 		  particles{particle_count}
 	{
@@ -143,7 +143,7 @@ public:
 
 	// uhhh.. this is bad. making `aa` pass-by-reference causes the particles to never appear on screen...
 	// figure this out!!!!!!!!!!!!!!!!!!
-	void update(const tt::AudioAnalyzer aa, const UpdateOptions &options = {})
+	void update(const tt::AudioAnalyzer &aa, const UpdateOptions &options = {})
 	{
 		float avg{}; // didn't initialize this for the longest time... yikes.
 		for (int i = 0; i < aa.get_num_channels(); ++i)

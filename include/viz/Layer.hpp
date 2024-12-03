@@ -1,16 +1,18 @@
 #pragma once
 
-#include "fx/Effect.hpp"
-#include "tt/RenderTexture.hpp"
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <vector>
+
+#include "fx/Effect.hpp"
+#include "tt/RenderTexture.hpp"
 
 namespace viz
 {
 
 class Layer
 {
+public:
 	/**
 	 * "Original" texture callback type. Supplies a reference to `_orig_rt` to the callback.
 	 * This is so the caller can customize what is drawn to the "original" render-texture without
@@ -19,24 +21,27 @@ class Layer
 	using OrigCb = std::function<void(tt::RenderTexture &)>;
 
 	/**
-	 * "Effects" texture callback type. Supplies const-references to `_orig_rt` and `_fx_rt`, and a reference
+	 * "Effects" texture callback type. Supplies const(NOT ANYMORE)-references to `_orig_rt` and `_fx_rt`, and a reference
 	 * to the `target` parameter of `full_lifecycle` to the callback. This is so the caller can customize how
 	 * they draw to the final target using the "original" and "effects" render-textures.
+	 * 
+	 * EDIT: had to make the first two params non-const refs due to sol2 copying const-ref objects by default
 	 */
-	using FxCb = std::function<void(const tt::RenderTexture &, const tt::RenderTexture &, sf::RenderTarget &)>;
+	using FxCb = std::function<void(tt::RenderTexture &, tt::RenderTexture &, sf::RenderTarget &)>;
 
-	std::string name;
-	tt::RenderTexture _orig_rt, _fx_rt;
-	bool auto_fx = true;
-	OrigCb orig_cb;
-	FxCb fx_cb;
-
-public:
 	static inline const FxCb DRAW_FX_RT = [](auto &, auto &fx_rt, auto &target)
 	{
 		target.draw(fx_rt.sprite());
 	};
 
+private:
+	std::string name;
+	tt::RenderTexture _orig_rt, _fx_rt;
+	bool auto_fx = true;
+	OrigCb orig_cb;
+	FxCb fx_cb = DRAW_FX_RT;
+
+public:
 	/**
 	 * The effects, in order, that will be applied to the "original"
 	 * render-texture when `apply_fx()` is called.
@@ -84,8 +89,6 @@ public:
 	 * Copies the "original" render-texture to the "effects" render-texture and applies all `effects` on it.
 	 */
 	void apply_fx();
-
-private:
 };
 
 } // namespace viz

@@ -2,9 +2,9 @@
 
 #include "viz/ColorSettings.hpp"
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include <tt/ColorUtils.hpp>
 #include <vector>
-
 
 namespace viz
 {
@@ -20,7 +20,7 @@ private:
 	const ColorSettings &color;
 
 	// spectrum parameters
-	float multiplier = 4;
+	float multiplier{4};
 
 	// internal data
 	std::vector<BarType> bars;
@@ -29,15 +29,22 @@ private:
 
 	struct
 	{
-		int width = 10, spacing = 5;
+		int width{10}, spacing{5};
 	} bar;
 
 public:
+	SpectrumDrawable(const ColorSettings &color, const bool backwards = false)
+		: color{color},
+		  backwards{backwards}
+	{
+	}
+
 	SpectrumDrawable(const sf::IntRect &rect, const ColorSettings &color, const bool backwards = false)
 		: rect{rect},
 		  color{color},
 		  backwards{backwards}
 	{
+		update_bars();
 	}
 
 	int get_bar_spacing() const { return bar.spacing; }
@@ -93,7 +100,7 @@ public:
 			target.draw(bar, states);
 	}
 
-	int bar_count() const { return bars.size(); }
+	inline int bar_count() const { return bars.size(); }
 
 private:
 	// call after changing any property of the spectrum/bars that will change their positions or colors
@@ -124,7 +131,7 @@ private:
 			update_bar_color(i);
 	}
 
-	void update_bar_color(const int i) { bars[i].setFillColor(color.calculate_color((float)i / bars.size())); }
+	inline void update_bar_color(const int i) { bars[i].setFillColor(color.calculate_color((float)i / bars.size())); }
 };
 
 } // namespace viz

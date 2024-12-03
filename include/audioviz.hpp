@@ -8,20 +8,23 @@
 #include <portaudio.hpp>
 #endif
 
-#include "viz/Layer.hpp"
+#include "base_audioviz.hpp"
 #include "viz/ParticleSystem.hpp"
 #include "viz/ScopeDrawable.hpp"
 #include "viz/SongMetadataDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
 
-#include "media/Media.hpp"
+namespace viz
+{
+class Layer;
+}
 
-class audioviz : public sf::Drawable
+class audioviz : public base_audioviz
 {
 public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
-	const sf::Vector2u size;
+	// const sf::Vector2u size;
 
 private:
 	using BarType = viz::VerticalBar;
@@ -33,16 +36,8 @@ private:
 	using SD = viz::ScopeDrawable<sf::RectangleShape>;
 	using PS = viz::ParticleSystem<ParticleShapeType>;
 
-	int fft_size{3000};
-	int framerate{60};
-
 	// used for updating the particle system at 60Hz rate when framerate > 60
 	int frame_count{}, vfcount{1};
-
-	std::unique_ptr<Media> media;
-
-	// audio frames per video frame
-	int afpvf{media->astream().sample_rate() / framerate};
 
 	// fft processor
 	FA &fa;
@@ -57,29 +52,13 @@ private:
 
 	// scope
 	SD scope;
-	// std::vector<float> left_channel; // NEEDS to be updated when the scope is updated
 
 	// particle system
 	PS &ps;
 
-	// metadata-related fields
-	sf::Font font;
+	// metadata-related fields (font from base_audioviz)
 	sf::Text title_text{font}, artist_text{font};
 	viz::SongMetadataDrawable metadata{title_text, artist_text};
-
-	// timing text
-	sf::Text timing_text{font};
-	std::ostringstream tt_ss;
-	bool tt_enabled{};
-
-#ifdef AUDIOVIZ_PORTAUDIO
-	// PortAudio stuff for live playback
-	std::optional<pa::PortAudio> pa_init;
-	std::optional<pa::Stream> pa_stream;
-#endif
-
-	std::vector<viz::Layer> layers;
-	tt::RenderTexture final_rt;
 
 	sf::Texture video_bg;
 
@@ -96,14 +75,7 @@ public:
 	 * @param ps reference to your own `viz::ParticleSystem<ParticleShapeType>`
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
-	audioviz(
-		sf::Vector2u size,
-		const std::string &media_url,
-		FA &fa,
-		CS &color,
-		SS &ss,
-		PS &ps,
-		int antialiasing = 4);
+	audioviz(sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, int antialiasing = 4);
 
 	/**
 	 * Add default effects to the `bg`, `spectrum`, and `particles` layers, if they exist.
@@ -115,22 +87,9 @@ public:
 	 * This method does all the work to produce a frame.
 	 * @return Whether another frame can be prepared
 	 */
-	bool prepare_frame();
+	bool next_frame();
 
 	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
-
-	viz::Layer &add_layer(const std::string &name, int antialiasing);
-	viz::Layer *get_layer(const std::string &name);
-
-#ifdef AUDIOVIZ_PORTAUDIO
-	void set_audio_playback_enabled(bool);
-#endif
-
-	void set_timing_text_enabled(bool);
-
-	// important if you are capturing frames for video encoding!
-	int get_framerate() const { return framerate; }
-	void set_framerate(int framerate);
 
 	// set background image with optional effects: blur and color-multiply
 	void set_background(const sf::Texture &texture);
@@ -143,12 +102,6 @@ public:
 
 	void set_album_cover(const std::string &image_path, sf::Vector2f size = {150, 150});
 
-	// you **must** call this method in order to see text metadata!
-	void set_text_font(const std::string &path);
-
-	// void set_media_url(const std::string &url);
-	const std::string get_media_url() const;
-
 	/**
 	 * Set the number of audio samples used for frequency analysis.
 	 * @note Calls `set_fft_size` on the `tt::FrequencyAnalyzer` you passed in the constructor.
@@ -157,10 +110,6 @@ public:
 
 private:
 	void metadata_init();
-	void draw_spectrum();
-	void draw_particles();
-	void play_audio();
-	void capture_elapsed_time(const std::string &label, const sf::Clock &_clock);
 	void layers_init(int);
 	void perform_fft();
 };

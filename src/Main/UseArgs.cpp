@@ -3,7 +3,7 @@
 void Main::use_args(audioviz &viz)
 {
 	// default-value params
-	viz.set_fft_size(args.get<uint>("-n"));
+	fa.set_fft_size(args.get<uint>("-n"));
 
 	ss.set_multiplier(args.get<float>("-m"));
 	ss.set_bar_width(args.get<uint>("-bw"));
@@ -111,32 +111,27 @@ void Main::use_args(audioviz &viz)
 		const auto &color_str = args.get("--color");
 		if (color_str == "wheel")
 		{
-			cs.mode = CS::Mode::WHEEL;
+			cs.set_mode(CS::Mode::WHEEL);
 			const auto &hsv = args.get<std::vector<float>>("--hsv");
-			cs.wheel.hsv = {hsv[0], hsv[1], hsv[2]};
-			cs.wheel.rate = args.get<float>("--wheel-rate");
+			cs.set_wheel_hsv({hsv[0], hsv[1], hsv[2]});
+			cs.set_wheel_rate(args.get<float>("--wheel-rate"));
 		}
 		else if (color_str == "solid")
 		{
-			cs.mode = CS::Mode::SOLID;
+			cs.set_mode(CS::Mode::SOLID);
 			const auto &rgb = args.get<std::vector<uint8_t>>("--rgb");
-			cs.solid = {rgb[0], rgb[1], rgb[2]};
+			cs.set_solid_color({rgb[0], rgb[1], rgb[2]});
 		}
-		else if (color_str == "wheel_ranges")
+		else if (color_str.starts_with("wheel_ranges"))
 		{
-			cs.mode = CS::Mode::WHEEL_RANGES;
-			cs.wheel.rate = args.get<float>("--wheel-rate");
+			if (color_str.ends_with("reverse"))
+				cs.set_mode(CS::Mode::WHEEL_RANGES_REVERSE);
+			else
+				cs.set_mode(CS::Mode::WHEEL_RANGES);
+			cs.set_wheel_rate(args.get<float>("--wheel-rate"));
 			const auto &double_hsv = args.get<std::vector<float>>("--wheel-ranges");
-			cs.wheel.start_hsv = {double_hsv[0], double_hsv[1], double_hsv[2]};
-			cs.wheel.end_hsv = {double_hsv[3], double_hsv[4], double_hsv[5]};
-		}
-		else if (color_str == "wheel_ranges_reverse")
-		{
-			cs.mode = CS::Mode::WHEEL_RANGES_REVERSE;
-			cs.wheel.rate = args.get<float>("--wheel-rate");
-			const auto &double_hsv = args.get<std::vector<float>>("--wheel-ranges");
-			cs.wheel.start_hsv = {double_hsv[0], double_hsv[1], double_hsv[2]};
-			cs.wheel.end_hsv = {double_hsv[3], double_hsv[4], double_hsv[5]};
+			cs.set_wheel_ranges_start_hsv({double_hsv[0], double_hsv[1], double_hsv[2]});
+			cs.set_wheel_ranges_end_hsv({double_hsv[3], double_hsv[4], double_hsv[5]});
 		}
 		else
 			throw std::invalid_argument{"--color: unknown coloring type: " + color_str};

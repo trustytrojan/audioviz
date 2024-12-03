@@ -25,6 +25,9 @@ static std::string detect_vaapi_device()
 	return {};
 }
 
+namespace media
+{
+
 FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vector2u video_size)
 	: FfmpegCliMedia{url, video_size},
 	  video_buffer(4 * video_size.x * video_size.y)
@@ -84,7 +87,7 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 				// va-api hardware accelerated scaling!
 				"-vf", "format=nv12,hwupload,scale_vaapi=" + std::to_string(video_size.x) + ':' + std::to_string(video_size.y) + ",hwdownload"
 			});
-			// clang-format on
+		// clang-format on
 		else
 		{
 #else
@@ -136,3 +139,5 @@ bool FfmpegCliBoostMedia::read_video_frame(sf::Texture &txr)
 	txr.update(video_buffer.data());
 	return true;
 }
+
+} // namespace media
