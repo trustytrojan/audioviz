@@ -16,9 +16,14 @@ class ScopeDrawable : public sf::Drawable
 	{
 		int width = 1, height = 1, spacing = 1;
 	} shape;
+
+	//fill in osc from middle screen to edges 
 	bool fill_in = false;
-	bool vert = false;
-	bool shake = false;
+
+	//shake_mag increases the amount of radians it shakes
+	//shake_act increases sensitivity to start shaking
+	double shake_mag = 0;
+	double shake_act = .3;
 
 	sf::Angle angle = sf::degrees(0);
 	sf::Transformable tf;
@@ -61,8 +66,12 @@ public:
 	}
 
 	void set_fill_in(bool _fill) { fill_in = _fill; }
+ 
+	// set magnitude of rotations
+	void set_shake_mag(double _shake) {shake_mag = _shake; }
 
-	void set_shake(bool _shake) {shake = _shake; }
+	// set amount required to shake
+	void set_shake_activation(double _act) {shake_act = _act; }
 
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
@@ -87,16 +96,17 @@ public:
 
 	size_t get_shape_count() const { return shapes.size(); }
 
+	//shakes osc based on magnitude and sensitivity using audio at the middle of the vector
 	void update_shake(const std::span<float> &audio)
 	{
-		if(shake == false)
+		if(shake_mag == 0)
 			return;
 
 
 		assert(audio.size() >= shapes.size());
 
-		if(audio[audio.size()/2] < .3f || audio[audio.size()/2] > -.3f){
-			set_rotation_angle(sf::Angle(20*sf::degrees(audio[audio.size()/2])));
+		if(audio[audio.size()/2] < shake_act || audio[audio.size()/2] > -shake_act){
+			set_rotation_angle(sf::Angle(shake_mag*sf::degrees(audio[audio.size()/2])));
 		}
 		
 		
@@ -158,10 +168,8 @@ private:
 				? rect.position.y + rect.size.y - shape.width - i * (shape.width + shape.spacing)
 				: rect.position.y + i * (shape.width + shape.spacing);
 			// clang-format on
-			if (vert)
-				shapes[i].setPosition({rect.position.x + rect.size.x / 2, y});
-			else
-				shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
+
+			shapes[i].setPosition({x, rect.position.y + rect.size.y / 2});
 		}
 	}
 };
