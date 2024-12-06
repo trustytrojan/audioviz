@@ -22,7 +22,7 @@ int main(const int argc, const char *const *const argv)
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
-	scope.set_shape_height(10);
+	scope.set_shape_height(20);
 	scope.set_fill_in(false);
 	scope.set_shake_mag(30);
 	

@@ -24,6 +24,8 @@ class ScopeDrawable : public sf::Drawable
 	//shake_act increases sensitivity to start shaking
 	double shake_mag = 0;
 	double shake_act = .3;
+	bool shake_rot = false;
+	bool shake_pos = true;
 
 	sf::Angle angle = sf::degrees(0);
 	sf::Transformable tf;
@@ -70,6 +72,12 @@ public:
 	// set magnitude of rotations
 	void set_shake_mag(double _shake) {shake_mag = _shake; }
 
+	//allow position shake
+	void set_shake_pos(bool _spos) {shake_pos = _spos;}
+
+	//allow rotational shake
+	void set_shake_rot(bool _srot) {shake_rot = _srot;}
+
 	// set amount required to shake
 	void set_shake_activation(double _act) {shake_act = _act; }
 
@@ -105,10 +113,19 @@ public:
 
 		assert(audio.size() >= shapes.size());
 
-		if(audio[audio.size()/2] < shake_act || audio[audio.size()/2] > -shake_act){
-			set_rotation_angle(sf::Angle(shake_mag*sf::degrees(audio[audio.size()/2])));
+		if(shake_rot)
+		{
+			if(audio[audio.size()/2] < shake_act || audio[audio.size()/2] > -shake_act)
+			{
+				set_rotation_angle(sf::Angle(shake_mag*sf::degrees(audio[audio.size()/2])));
+			}
 		}
-		
+
+		//shakes position vertically
+		if(shake_pos)
+		{
+			set_center_point(shake_mag * audio[audio.size()/2], sf::Angle(sf::degrees(90)));
+		}
 		
 	}
 
