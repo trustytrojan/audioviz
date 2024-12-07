@@ -182,6 +182,13 @@ public:
 		init_particles();
 	}
 
+	void set_particle_color(const sf::Color color){
+		for (auto &p : particles)
+		{	
+			p.setFillColor(color);
+		}
+	}
+
 private:
 	void init_particles()
 	{

@@ -137,6 +137,12 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("show audio-reactive stars on screen")
 		.flag();
 
+	add_argument("-pc", "--particle-color")
+		.help("sets particle to user defined [R, G, B] value, e.g. 33 55 77")
+		.nargs(3)
+		.default_value(std::vector<uint8_t>{255, 255, 255})
+		.scan<'u', uint8_t>();
+		
 
 
 #ifdef AUDIOVIZ_LUA

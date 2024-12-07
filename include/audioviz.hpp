@@ -50,9 +50,6 @@ private:
 	float old_avg = 0;
 	int x_pos = 0;
 	int y_pos = 0;
-	// sf::CircleShape c;
-	// struct{
-	// } star_struct;
 
 
 	// fft processor

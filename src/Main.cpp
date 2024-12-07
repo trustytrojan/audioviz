@@ -143,6 +143,21 @@ void Main::use_args(audioviz &viz, const Args &args)
 		}
 	}
 
+	{
+		try {
+			const auto& rgb_values = args.get<std::vector<uint8_t>>("-pc");
+
+			if (rgb_values.size() != 3) {
+				throw std::invalid_argument{"--particle-color: provide exactly three RGB values"};
+			}
+
+			ps.set_particle_color(sf::Color(rgb_values[0], rgb_values[1], rgb_values[2], 255));
+		}
+		catch (const std::exception& exception) {
+			throw std::invalid_argument{"unkown --particle-color: " + std::string(exception.what())};
+		}
+	}
+
 	{ // interpolation type
 		static const std::unordered_map<std::string, FS::InterpolationType> it_map{
 			{"none", FS::InterpolationType::NONE},
