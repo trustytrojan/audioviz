@@ -20,6 +20,9 @@ class ScopeDrawable : public sf::Drawable
 	//fill in osc from middle screen to edges 
 	bool fill_in = false;
 
+	//height of oscilloscope
+	double amplitude = 1;
+
 	//shake_mag increases the amount of radians it shakes
 	//shake_act increases sensitivity to start shaking
 	double shake_mag = 0;
@@ -72,6 +75,7 @@ public:
 	// set magnitude of rotations
 	void set_shake_mag(double _shake) {shake_mag = _shake; }
 
+	void set_amplitude(double _amp) {amplitude = _amp; }
 	//allow position shake
 	void set_shake_pos(bool _spos) {shake_pos = _spos;}
 
@@ -142,7 +146,7 @@ public:
 			{
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
-					std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
+					std::clamp(half_height + (-half_height * audio[i]* (float)amplitude), 0.f, (float)rect.size.y),
 				});
 			}
 			else
@@ -151,7 +155,7 @@ public:
 					shapes[i].getPosition().x,
 					std::clamp(half_height, 0.f, (float)rect.size.y),
 				});
-				shapes[i].setSize({shape.width, (-half_height * audio[i])});
+				shapes[i].setSize({shape.width, (-half_height * audio[i] * (float)amplitude)});
 			}
 		}
 	}
