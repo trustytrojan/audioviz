@@ -98,10 +98,18 @@ public:
 
 	void set_rotation_angle(sf::Angle angle) { tf.setRotation(angle); }
 
-	void set_center_point(double radius, sf::Angle angle)
+	void set_center_point_polar(double radius, sf::Angle angle)
 	{
 		sf::Vector2f origin_{rect.size.x/2.f, rect.size.y/2.f};	
 		sf::Vector2f coord{origin_.x + radius * cos(angle.asRadians()), origin_.y - radius * sin(angle.asRadians())};
+
+		tf.setPosition({coord});
+	}
+
+	void set_center_point_cartesian(double _x, double _y)
+	{
+		sf::Vector2f origin_{rect.size.x/2.f, rect.size.y/2.f};	
+		sf::Vector2f coord{origin_.x + _x, origin_.y - _y};
 
 		tf.setPosition({coord});
 	}
@@ -125,10 +133,10 @@ public:
 			}
 		}
 
-		//shakes position vertically
+		//shakes position vertically and horizontally
 		if(shake_pos)
 		{
-			set_center_point(shake_mag * audio[audio.size()/2], sf::Angle(sf::degrees(90)));
+			set_center_point_cartesian(shake_mag * audio[audio.size()/2], shake_mag * audio[audio.size()/2]);
 		}
 		
 	}
