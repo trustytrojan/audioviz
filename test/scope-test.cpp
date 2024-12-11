@@ -25,7 +25,8 @@ int main(const int argc, const char *const *const argv)
 	scope.set_shape_height(20);
 	scope.set_fill_in(false);
 	scope.set_shake_mag(30);
-	scope.set_amplitude(.4);
+	scope.set_amplitude(.5);
+	scope.set_shake_activation(.4);
 	
 	std::cout << "shape count: " << scope.get_shape_count() << '\n';
 

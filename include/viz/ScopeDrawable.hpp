@@ -28,7 +28,10 @@ class ScopeDrawable : public sf::Drawable
 	double shake_mag = 0;
 	double shake_act = .3;
 	bool shake_rot = false;
-	bool shake_pos = true;
+	bool shake_pos = false;
+	
+	//premade mode
+	bool mode1 = true;
 
 	sf::Angle angle = sf::degrees(0);
 	sf::Transformable tf;
@@ -127,7 +130,7 @@ public:
 
 		if(shake_rot)
 		{
-			if(audio[audio.size()/2] < shake_act || audio[audio.size()/2] > -shake_act)
+			if(audio[audio.size()/2] < -shake_act || audio[audio.size()/2] > shake_act)
 			{
 				set_rotation_angle(sf::Angle(shake_mag*sf::degrees(audio[audio.size()/2])));
 			}
@@ -137,6 +140,17 @@ public:
 		if(shake_pos)
 		{
 			set_center_point_cartesian(shake_mag * audio[audio.size()/2], shake_mag * audio[audio.size()/2]);
+		}
+
+		//flips oscilloscope if freuqency reaches shake_act. is premade mode to test features
+		if(mode1){
+			if(audio[audio.size()/2] < -shake_act || audio[audio.size()/2] > shake_act)
+			{
+				set_rotation_angle(sf::Angle(sf::degrees(180)));
+			}
+			else{
+				set_rotation_angle(sf::Angle(sf::degrees(0)));
+			}
 		}
 		
 	}
