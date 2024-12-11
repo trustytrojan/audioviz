@@ -101,6 +101,8 @@ public:
 
 	void set_rotation_angle(sf::Angle angle) { tf.setRotation(angle); }
 
+	void set_mode1(bool _m1) {mode1 = _m1; }
+
 	void set_center_point_polar(double radius, sf::Angle angle)
 	{
 		sf::Vector2f origin_{rect.size.x/2.f, rect.size.y/2.f};	
