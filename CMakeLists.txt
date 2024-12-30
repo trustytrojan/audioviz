@@ -65,8 +65,8 @@ set(SFML_BUILD_AUDIO FALSE CACHE BOOL "" FORCE)
 set(SFML_BUILD_NETWORK FALSE CACHE BOOL "" FORCE)
 FetchContent_Declare(
 	SFML
-    GIT_REPOSITORY https://github.com/SFML/SFML.git
-    GIT_TAG 3.0.0-rc.1
+    GIT_REPOSITORY https://github.com/SFML/SFML
+    GIT_TAG 3.0.0
 )
 
 ## boost

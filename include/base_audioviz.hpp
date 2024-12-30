@@ -69,7 +69,7 @@ public:
 	inline int get_framerate() const { return framerate; }
 
 	// must be called for timing text to display
-	inline void set_text_font(const std::string &path) { font = {path}; }
+	inline void set_text_font(const std::string &path) { font = sf::Font{path}; }
 
 	inline std::string get_media_url() const { return media->url; }
 
