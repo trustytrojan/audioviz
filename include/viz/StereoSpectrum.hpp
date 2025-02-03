@@ -65,6 +65,12 @@ public:
 		return _left.bar_count();
 	}
 
+	void configure_analyzer(tt::StereoAnalyzer &sa)
+	{
+		assert(_left.bar_count() == _right.bar_count());
+		sa.resize(_left.bar_count());
+	}
+
 	/**
 	 * @warning It is the CALLER's responsibility to make sure that
 	 * `sa`'s spectrum buffers are properly sized for this `StereoSpectrum`!!!!

@@ -1,4 +1,4 @@
-#include <argparse/argparse.hpp>
+#include <argparse.hpp>
 
 using argparse::ArgumentParser;
 using uint = unsigned int;

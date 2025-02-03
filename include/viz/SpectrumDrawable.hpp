@@ -1,10 +1,11 @@
 #pragma once
 
-#include "viz/ColorSettings.hpp"
 #include <SFML/Graphics.hpp>
-#include <iostream>
-#include <tt/ColorUtils.hpp>
 #include <vector>
+
+#include "viz/ColorSettings.hpp"
+#include "tt/ColorUtils.hpp"
+#include "tt/StereoAnalyzer.hpp"
 
 namespace viz
 {

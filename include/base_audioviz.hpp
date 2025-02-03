@@ -15,6 +15,7 @@ class base_audioviz : public sf::Drawable
 public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
+	std::vector<viz::Layer> layers;
 
 protected:
 	std::unique_ptr<media::Media> media;
@@ -24,7 +25,6 @@ private:
 	int framerate{60};
 	int audio_frames_needed{};
 	int afpvf{media->astream().sample_rate() / framerate}; // audio frames per video frame
-	std::vector<viz::Layer> layers;
 	tt::RenderTexture final_rt;
 	sf::Text timing_text{font};
 	std::ostringstream tt_ss;

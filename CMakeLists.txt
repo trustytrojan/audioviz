@@ -1,6 +1,6 @@
 ## project setup
 include(FetchContent)
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.18)
 project(audioviz LANGUAGES CXX)
 
 cmake_policy(SET CMP0135 NEW)
@@ -44,7 +44,7 @@ if(WIN32 AND NOT FFMPEG_LIBS_FOUND)
 	endif()
 endif()
 
-# find each lib separately as the NAMES parameter only checks ONE of the names
+# find each lib separately as the NAMES parameter only checks for one of the names being present
 foreach(LIB IN LISTS FFMPEG_LIBS)
 	find_library(${LIB} NAMES ${LIB} REQUIRED)
 endforeach()
@@ -65,8 +65,21 @@ set(SFML_BUILD_AUDIO FALSE CACHE BOOL "" FORCE)
 set(SFML_BUILD_NETWORK FALSE CACHE BOOL "" FORCE)
 FetchContent_Declare(
 	SFML
-    GIT_REPOSITORY https://github.com/SFML/SFML
-    GIT_TAG 3.0.0
+	URL https://github.com/SFML/SFML/archive/3.0.0.zip
+)
+
+## dear imgui & imgui-sfml
+FetchContent_Declare(
+	imgui
+	URL https://github.com/ocornut/imgui/archive/v1.91.8.zip
+)
+FetchContent_MakeAvailable(imgui)
+set(IMGUI_DIR ${imgui_SOURCE_DIR})
+set(IMGUI_SFML_FIND_SFML FALSE CACHE BOOL "" FORCE)
+set(IMGUI_SFML_IMGUI_DEMO FALSE CACHE BOOL "" FORCE)
+FetchContent_Declare(
+	imgui-sfml
+	URL https://github.com/SFML/imgui-sfml/archive/v3.0.zip
 )
 
 ## boost
@@ -84,21 +97,13 @@ endif()
 ## header-only libs
 FetchContent_Declare(
 	libavpp
-	GIT_REPOSITORY https://github.com/trustytrojan/libavpp
-	GIT_TAG main
+	URL https://github.com/trustytrojan/libavpp/archive/main.zip
 )
 
-FetchContent_Declare(
-	argparse
-    GIT_REPOSITORY https://github.com/p-ranav/argparse
-)
+file(DOWNLOAD https://github.com/p-ranav/argparse/raw/master/include/argparse/argparse.hpp argparse.hpp)
+file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h spline.h)
 
-FetchContent_Declare(
-	spline
-	GIT_REPOSITORY https://github.com/ttk592/spline
-)
-
-FetchContent_MakeAvailable(SFML libavpp argparse spline)
+FetchContent_MakeAvailable(SFML imgui imgui-sfml libavpp)
 
 add_compile_options(
 	-Wno-subobject-linkage # caused by spline; safe to ignore
@@ -110,24 +115,22 @@ include_directories(
 	${libavpp_SOURCE_DIR}/include
 	${libavpp_SOURCE_DIR}/src
 	${SFML_SOURCE_DIR}/include
-	${spline_SOURCE_DIR}/src
+	${CMAKE_BINARY_DIR}
 )
 
-link_libraries(sfml-graphics argparse ${FFMPEG_LIBS} Boost::process)
+link_libraries(sfml-graphics ImGui-SFML::ImGui-SFML ${FFMPEG_LIBS} Boost::process)
 
 ## portaudio (optional)
 if(AUDIOVIZ_PORTAUDIO)
 	if(WIN32)
 		file(DOWNLOAD https://github.com/spatialaudio/portaudio-binaries/raw/refs/heads/master/libportaudio64bit.dll portaudio_x64.dll)
 		file(DOWNLOAD https://github.com/PortAudio/portaudio/raw/refs/tags/v19.7.0/include/portaudio.h portaudio.h)
-		include_directories(${CMAKE_BINARY_DIR})
 		link_directories(${CMAKE_BINARY_DIR})
 	endif()
 
 	FetchContent_Declare(
 		portaudio-pp
-		GIT_REPOSITORY https://github.com/trustytrojan/portaudio-pp
-		GIT_TAG main
+		URL https://github.com/trustytrojan/portaudio-pp/archive/main.zip
 	)
 	FetchContent_MakeAvailable(portaudio-pp)
 	add_compile_definitions(AUDIOVIZ_PORTAUDIO)
@@ -149,12 +152,8 @@ if(AUDIOVIZ_LUA)
 	endif()
 	find_library(lua NAMES lua lua54 REQUIRED)
 
-	FetchContent_Declare(
-		sol2
-		GIT_REPOSITORY https://github.com/ThePhD/sol2
-		GIT_TAG main
-	)
-	FetchContent_MakeAvailable(sol2)
+	file(DOWNLOAD https://github.com/ThePhD/sol2/releases/download/v3.3.0/sol.hpp sol/sol.hpp)
+	file(DOWNLOAD https://github.com/ThePhD/sol2/releases/download/v3.3.0/config.hpp sol/config.hpp)
 	add_compile_definitions(AUDIOVIZ_LUA)
 
 	if(WIN32)
@@ -164,8 +163,6 @@ if(AUDIOVIZ_LUA)
 	elseif(LINUX)
 		link_libraries(lua)
 	endif()
-
-	link_libraries(sol2)
 endif()
 
 # do this now instead of earlier so we only make compile_commands.json for our code

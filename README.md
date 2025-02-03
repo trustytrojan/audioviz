@@ -69,3 +69,6 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
   - want a small translucent flash overlay that flashes to the beat of music
   - copy the osu! stars effect
 - interactive gui (long term)
+- libaudioviz - turn this project into a set of tools rather than one binary
+  - separate core code into a library "libaudioviz"
+  - separate the main features (realtime visualizer, video renderer, lua binding) into their own programs/libraries

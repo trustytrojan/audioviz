@@ -53,7 +53,7 @@ audioviz::audioviz(
 
 void audioviz::perform_fft()
 {
-	// ss.configure_analyzer(sa);
+	ss.configure_analyzer(sa);
 	capture_time("fft", sa.analyze(fa, media->audio_buffer().data(), true));
 }
 
@@ -260,6 +260,8 @@ void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 
 bool audioviz::next_frame()
 {
+	// pasting this here for imgui!!!!!!!!!!!!!!!!!!!!!
+	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
 	const auto next_frame_ready = base_audioviz::next_frame();
 	color.increment_wheel_time();
 	return next_frame_ready;
