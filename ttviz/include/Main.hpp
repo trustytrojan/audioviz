@@ -1,10 +1,14 @@
 #pragma once
 
 #include "Args.hpp"
-#include "audioviz.hpp"
+#include "ttviz.hpp"
 #include "tt/FrequencyAnalyzer.hpp"
 #include "viz/ColorSettings.hpp"
+#include "viz/ParticleSystem.hpp"
+#include "viz/ScopeDrawable.hpp"
+#include "viz/SpectrumDrawable.hpp"
 #include "viz/StereoSpectrum.hpp"
+#include "viz/VerticalBar.hpp"
 
 #ifdef AUDIOVIZ_LUA
 #include <sol/sol.hpp>
@@ -47,9 +51,9 @@ class Main
 	};
 #endif
 
-	void use_args(audioviz &);
-	void start_in_window(base_audioviz &);
-	void encode(base_audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void use_args(ttviz &);
+	void start_in_window(audioviz &);
+	void encode(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);

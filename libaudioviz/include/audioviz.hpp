@@ -10,7 +10,7 @@
 #include "viz/Layer.hpp"
 #include "tt/AudioAnalyzer.hpp"
 
-class base_audioviz : public sf::Drawable
+class audioviz : public sf::Drawable
 {
 public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
@@ -40,7 +40,7 @@ public:
 	 * @param size Size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media Pointer to `Media` object. This `base_audioviz` instance will own the object.
 	 */
-	base_audioviz(sf::Vector2u size, media::Media *media);
+	audioviz(sf::Vector2u size, media::Media *media);
 
 	/// layer api
 

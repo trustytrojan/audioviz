@@ -21,8 +21,8 @@ int main(const int argc, const char *const *const argv)
 	window.setVerticalSyncEnabled(true);
 
 	viz::ColorSettings color;
-	color.wheel.rate = .005;
-	color.mode = viz::ColorSettings::Mode::WHEEL_RANGES;
+	color.set_wheel_rate(.005);
+	color.set_mode(viz::ColorSettings::Mode::WHEEL_RANGES);
 
 	sf::IntRect rect({}, (sf::Vector2i)size);
 
@@ -38,8 +38,7 @@ int main(const int argc, const char *const *const argv)
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};
 
-	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
-	// media->init(size);
+	std::unique_ptr<media::Media> media{new media::FfmpegCliBoostMedia{argv[3]}};
 
 	int afpvf{media->astream().sample_rate() / 60};
 
@@ -68,9 +67,7 @@ int main(const int argc, const char *const *const argv)
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
 			sd.update(spectrum);
-			color.wheel.increment_time();
-			// sd.color_wheel_increment();
-			// scope.color_wheel_increment();
+			color.increment_wheel_time();
 
 			try
 			{

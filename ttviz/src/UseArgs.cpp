@@ -1,6 +1,6 @@
 #include "Main.hpp"
 
-void Main::use_args(audioviz &viz)
+void Main::use_args(ttviz &viz)
 {
 	// default-value params
 	fa.set_fft_size(args.get<uint>("-n"));

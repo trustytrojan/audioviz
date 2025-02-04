@@ -4,11 +4,7 @@
 #include <optional>
 #include <string>
 
-#ifdef AUDIOVIZ_PORTAUDIO
-#include <portaudio.hpp>
-#endif
-
-#include "base_audioviz.hpp"
+#include "audioviz.hpp"
 #include "viz/ParticleSystem.hpp"
 #include "viz/ScopeDrawable.hpp"
 #include "viz/SongMetadataDrawable.hpp"
@@ -20,7 +16,7 @@ namespace viz
 class Layer;
 }
 
-class audioviz : public base_audioviz
+class ttviz : public audioviz
 {
 public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
@@ -75,7 +71,7 @@ public:
 	 * @param ps reference to your own `viz::ParticleSystem<ParticleShapeType>`
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
-	audioviz(sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, int antialiasing = 4);
+	ttviz(sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, int antialiasing = 4);
 
 	/**
 	 * Add default effects to the `bg`, `spectrum`, and `particles` layers, if they exist.

@@ -1,7 +1,7 @@
 #ifdef AUDIOVIZ_LUA
 
 #include "Main.hpp"
-#include "base_audioviz.hpp"
+#include "audioviz.hpp"
 #include "media/FfmpegCliBoostMedia.hpp"
 
 sf::IntRect table_to_intrect(const sol::table &tb)
@@ -213,29 +213,29 @@ Main::LuaState::LuaState(Main &main)
 			sol::base_classes, sol::bases<media::Media>()
 		),
 
-		"base_audioviz", new_usertype<base_audioviz>(
+		"base_audioviz", new_usertype<audioviz>(
 			"new", sol::factories([](const sol::table &rect, media::Media *const media)
 			{
-				return std::make_shared<base_audioviz>(table_to_vec2u(rect), media);
+				return std::make_shared<audioviz>(table_to_vec2u(rect), media);
 			}),
-			"add_layer", &base_audioviz::add_layer,
-			"get_layer", &base_audioviz::get_layer,
-			"remove_layer", &base_audioviz::remove_layer,
-			"perform_fft", &base_audioviz::perform_fft,
-			"set_text_font", &base_audioviz::set_text_font,
-			"set_audio_frames_needed", &base_audioviz::set_audio_frames_needed,
+			"add_layer", &audioviz::add_layer,
+			"get_layer", &audioviz::get_layer,
+			"remove_layer", &audioviz::remove_layer,
+			"perform_fft", &audioviz::perform_fft,
+			"set_text_font", &audioviz::set_text_font,
+			"set_audio_frames_needed", &audioviz::set_audio_frames_needed,
 			sol::base_classes, sol::bases<sf::Drawable>()
 		),
 
-		"audioviz", new_usertype<audioviz>(
+		"audioviz", new_usertype<ttviz>(
 			"new", sol::factories([](const sol::table &rect, const std::string &media_url, FA &fa, CS &cs, SS &ss, PS &ps, int antialiasing)
 			{
-				return std::make_shared<audioviz>(table_to_vec2u(rect), media_url, fa, cs, ss, ps, antialiasing);
+				return std::make_shared<ttviz>(table_to_vec2u(rect), media_url, fa, cs, ss, ps, antialiasing);
 			}),
-			"use_attached_pic_as_bg", &audioviz::use_attached_pic_as_bg,
-			"add_default_effects", &audioviz::add_default_effects,
-			"set_spectrum_margin", &audioviz::set_spectrum_margin,
-			sol::base_classes, sol::bases<base_audioviz>()
+			"use_attached_pic_as_bg", &ttviz::use_attached_pic_as_bg,
+			"add_default_effects", &ttviz::add_default_effects,
+			"set_spectrum_margin", &ttviz::set_spectrum_margin,
+			sol::base_classes, sol::bases<audioviz>()
 		)
 	);
 	// clang-format on

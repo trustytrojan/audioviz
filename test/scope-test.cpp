@@ -20,8 +20,8 @@ int main(const int argc, const char *const *const argv)
 	window.setVerticalSyncEnabled(true);
 
 	viz::ColorSettings color;
-	color.mode = viz::ColorSettings::Mode::WHEEL;
-	color.wheel.rate = .005;
+	color.set_mode(viz::ColorSettings::Mode::WHEEL);
+	color.set_wheel_rate(.005);
 
 	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}, color};
 	scope.set_shape_spacing(0);
@@ -39,7 +39,7 @@ int main(const int argc, const char *const *const argv)
 	const auto fft_size = size.x;
 	tt::FrequencyAnalyzer fa{fft_size};
 
-	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
+	std::unique_ptr<media::Media> media{new media::FfmpegCliBoostMedia{argv[3]}};
 
 	int afpvf{media->astream().sample_rate() / 60};
 
@@ -81,9 +81,8 @@ int main(const int argc, const char *const *const argv)
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
 			sd.update(spectrum);
-			// sd.color_wheel_increment();
 
-			color.wheel.increment_time();
+			color.increment_wheel_time();
 
 			try
 			{

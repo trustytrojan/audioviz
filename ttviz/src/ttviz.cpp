@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "audioviz.hpp"
+#include "ttviz.hpp"
 #include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
 #include "media/FfmpegCliBoostMedia.hpp"
@@ -12,9 +12,9 @@
 		capture_elapsed_time(label, _clock); \
 	}
 
-audioviz::audioviz(
+ttviz::ttviz(
 	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
-	: base_audioviz{size, new media::FfmpegCliBoostMedia{media_url, size}},
+	: audioviz{size, new media::FfmpegCliBoostMedia{media_url, size}},
 	  fa{fa},
 	  color{color},
 	  ss{ss},
@@ -51,13 +51,13 @@ audioviz::audioviz(
 	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
 }
 
-void audioviz::perform_fft()
+void ttviz::perform_fft()
 {
 	ss.configure_analyzer(sa);
 	capture_time("fft", sa.analyze(fa, media->audio_buffer().data(), true));
 }
 
-void audioviz::layers_init(const int antialiasing)
+void ttviz::layers_init(const int antialiasing)
 {
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
@@ -179,13 +179,13 @@ void audioviz::layers_init(const int antialiasing)
 }
 
 // need to do this outside of the constructor otherwise the texture is broken?
-void audioviz::use_attached_pic_as_bg()
+void ttviz::use_attached_pic_as_bg()
 {
 	if (media->attached_pic())
 		set_background(*media->attached_pic());
 }
 
-void audioviz::add_default_effects()
+void ttviz::add_default_effects()
 {
 	if (const auto bg = get_layer("bg"))
 	{
@@ -209,12 +209,12 @@ void audioviz::add_default_effects()
 		spectrum->effects.emplace_back(new fx::Blur{1, 1, 20});
 }
 
-void audioviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
+void ttviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
 {
 	metadata.set_album_cover(sf::Texture{image_path}, size);
 }
 
-void audioviz::metadata_init()
+void ttviz::metadata_init()
 {
 	// set style, fontsize, and color
 	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
@@ -229,13 +229,13 @@ void audioviz::metadata_init()
 	metadata.use_metadata(*media);
 }
 
-void audioviz::set_spectrum_margin(const int margin)
+void ttviz::set_spectrum_margin(const int margin)
 {
 	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
 	sa.resize(ss.get_bar_count());
 }
 
-void audioviz::set_background(const sf::Texture &txr)
+void ttviz::set_background(const sf::Texture &txr)
 {
 	const auto bg = get_layer("bg");
 	if (!bg)
@@ -253,22 +253,22 @@ void audioviz::set_background(const sf::Texture &txr)
 	bg->set_fx_cb(viz::Layer::DRAW_FX_RT);
 }
 
-void audioviz::set_spectrum_blendmode(const sf::BlendMode &bm)
+void ttviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 {
 	spectrum_bm = bm;
 }
 
-bool audioviz::next_frame()
+bool ttviz::next_frame()
 {
 	// pasting this here for imgui!!!!!!!!!!!!!!!!!!!!!
 	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
-	const auto next_frame_ready = base_audioviz::next_frame();
+	const auto next_frame_ready = audioviz::next_frame();
 	color.increment_wheel_time();
 	return next_frame_ready;
 }
 
-void audioviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const
+void ttviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
-	base_audioviz::draw(target, states);
+	audioviz::draw(target, states);
 	target.draw(metadata, states);
 }

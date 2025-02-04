@@ -1,4 +1,4 @@
-#include "base_audioviz.hpp"
+#include "audioviz.hpp"
 #include <numeric>
 
 #define capture_time(label, code)            \
@@ -11,7 +11,7 @@
 	else                                     \
 		code;
 
-base_audioviz::base_audioviz(const sf::Vector2u size, media::Media *const media)
+audioviz::audioviz(const sf::Vector2u size, media::Media *const media)
 	: size{size},
 	  media{media},
 	  final_rt{size}
@@ -24,7 +24,7 @@ base_audioviz::base_audioviz(const sf::Vector2u size, media::Media *const media)
 }
 
 #ifdef AUDIOVIZ_PORTAUDIO
-void base_audioviz::set_audio_playback_enabled(const bool enabled)
+void audioviz::set_audio_playback_enabled(const bool enabled)
 {
 	if (enabled)
 	{
@@ -39,7 +39,7 @@ void base_audioviz::set_audio_playback_enabled(const bool enabled)
 	}
 }
 
-void base_audioviz::play_audio()
+void audioviz::play_audio()
 {
 	try // to play the audio
 	{
@@ -54,11 +54,11 @@ void base_audioviz::play_audio()
 }
 #endif
 
-bool base_audioviz::next_frame()
+bool audioviz::next_frame()
 {
 	assert(media);
 	media->decode_audio(std::max(audio_frames_needed, afpvf));
-	// std::cerr << "base_audioviz: after decode_audio: " << media->audio_buffer_frames() << '\n';
+	// std::cerr << "audioviz: after decode_audio: " << media->audio_buffer_frames() << '\n';
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream && media->audio_buffer_frames() >= afpvf)
@@ -85,43 +85,43 @@ bool base_audioviz::next_frame()
 	return true;
 }
 
-void base_audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
+void audioviz::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
 	target.draw(final_rt.sprite());
 	if (tt_enabled)
 		target.draw(timing_text);
 }
 
-void base_audioviz::capture_elapsed_time(const std::string &label, const sf::Clock &clock)
+void audioviz::capture_elapsed_time(const std::string &label, const sf::Clock &clock)
 {
 	tt_ss << std::setw(20) << std::left << label << clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
 }
 
-void base_audioviz::set_framerate(const int framerate)
+void audioviz::set_framerate(const int framerate)
 {
 	this->framerate = framerate;
 	afpvf = media->astream().sample_rate() / framerate;
 }
 
-viz::Layer &base_audioviz::add_layer(const std::string &name, const int antialiasing)
+viz::Layer &audioviz::add_layer(const std::string &name, const int antialiasing)
 {
 	return layers.emplace_back(viz::Layer{name, size, antialiasing});
 }
 
-viz::Layer *base_audioviz::get_layer(const std::string &name)
+viz::Layer *audioviz::get_layer(const std::string &name)
 {
 	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
 	return (itr == layers.end()) ? nullptr : itr.base();
 }
 
-void base_audioviz::remove_layer(const std::string &name)
+void audioviz::remove_layer(const std::string &name)
 {
 	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
 	if (itr != layers.end())
 		layers.erase(itr);
 }
 
-void base_audioviz::perform_fft(tt::FrequencyAnalyzer &fa, tt::AudioAnalyzer &aa)
+void audioviz::perform_fft(tt::FrequencyAnalyzer &fa, tt::AudioAnalyzer &aa)
 {
 	sf::Clock clock;
 	aa.analyze(fa, media->audio_buffer().data(), true);

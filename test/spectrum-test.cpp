@@ -32,7 +32,7 @@ int main(const int argc, const char *const *const argv)
 	tt::FrequencyAnalyzer fa{fft_size};
 	tt::StereoAnalyzer sa;
 
-	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
+	std::unique_ptr<media::Media> media{new media::FfmpegCliBoostMedia{argv[3]}};
 	const auto &astream = media->astream();
 
 	// number of audio FRAMES per video frame

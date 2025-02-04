@@ -17,7 +17,7 @@ Main::Main(const int argc, const char *const *const argv)
 
 	const auto &size_args = args.get<std::vector<uint>>("--size");
 	const sf::Vector2u size{size_args[0], size_args[1]};
-	audioviz viz{size, args.get("media_url"), fa, cs, ss, ps};
+	ttviz viz{size, args.get("media_url"), fa, cs, ss, ps};
 	ps.set_rect({{}, (sf::Vector2i)size});
 	use_args(viz);
 
@@ -47,7 +47,7 @@ static const char *layer_name_getter(void *user_data, int idx)
 	return (*(const std::vector<viz::Layer> *)user_data)[idx].get_name().c_str();
 }
 
-void Main::start_in_window(base_audioviz &viz)
+void Main::start_in_window(audioviz &viz)
 {
 #ifdef AUDIOVIZ_PORTAUDIO
 	viz.set_audio_playback_enabled(true);
