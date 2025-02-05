@@ -1,5 +1,4 @@
 #include "viz/Layer.hpp"
-#include <iostream>
 
 namespace viz
 {
@@ -28,18 +27,16 @@ void Layer::set_orig_cb(const OrigCb &cb)
 
 void Layer::set_auto_fx(const bool b)
 {
-	this->auto_fx = b;
+	auto_fx = b;
 }
 
 void Layer::set_fx_cb(const FxCb &cb)
 {
-	std::cerr << "layer '" << name << "' called set_fx_cb\n";
 	fx_cb = cb;
 }
 
 void Layer::apply_fx()
 {
-	// std::cerr << "layer '" << name << "' called apply_fx(): effects.size(): " << effects.size() << '\n';
 	_fx_rt.clear(sf::Color::Transparent);
 	_fx_rt.copy(_orig_rt);
 	for (const auto &effect : effects)
@@ -48,8 +45,14 @@ void Layer::apply_fx()
 
 void Layer::full_lifecycle(sf::RenderTarget &target)
 {
+	if (!drawables.empty())
+		_orig_rt.clear(sf::Color::Transparent);
 	if (orig_cb)
 		orig_cb(_orig_rt);
+	for (const auto drawable : drawables)
+		_orig_rt.draw(*drawable);
+	if (!drawables.empty())
+		_orig_rt.display();
 	if (auto_fx)
 		apply_fx();
 	if (fx_cb)

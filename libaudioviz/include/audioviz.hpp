@@ -76,7 +76,7 @@ public:
 	void perform_fft(tt::FrequencyAnalyzer &fa, tt::AudioAnalyzer &aa);
 
 	// users MUST call this to specify how much audio they need for their visualizers
-	void set_audio_frames_needed(int needed) { audio_frames_needed = needed; }
+	inline void set_audio_frames_needed(int needed) { audio_frames_needed = needed; }
 
 protected:
 	void capture_elapsed_time(const std::string &label, const sf::Clock &);

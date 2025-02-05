@@ -1,5 +1,4 @@
 #include "audioviz.hpp"
-#include <numeric>
 
 #define capture_time(label, code)            \
 	if (tt_enabled)                          \
@@ -58,7 +57,6 @@ bool audioviz::next_frame()
 {
 	assert(media);
 	media->decode_audio(std::max(audio_frames_needed, afpvf));
-	// std::cerr << "audioviz: after decode_audio: " << media->audio_buffer_frames() << '\n';
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	if (pa_stream && media->audio_buffer_frames() >= afpvf)
@@ -125,8 +123,5 @@ void audioviz::perform_fft(tt::FrequencyAnalyzer &fa, tt::AudioAnalyzer &aa)
 {
 	sf::Clock clock;
 	aa.analyze(fa, media->audio_buffer().data(), true);
-	// const auto &left = aa.get_spectrum_data(0), &right = aa.get_spectrum_data(1);
-	// std::cerr << "left spectrum sum: " << std::accumulate(left.begin(), left.end(), 0.f) << '\n';
-	// std::cerr << "right spectrum sum: " << std::accumulate(right.begin(), right.end(), 0.f) << '\n';
 	capture_elapsed_time("fft", clock);
 }

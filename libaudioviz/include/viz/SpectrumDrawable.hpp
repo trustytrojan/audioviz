@@ -4,8 +4,6 @@
 #include <vector>
 
 #include "viz/ColorSettings.hpp"
-#include "tt/ColorUtils.hpp"
-#include "tt/StereoAnalyzer.hpp"
 
 namespace viz
 {

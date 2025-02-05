@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "ttviz.hpp"
 #include "fx/Blur.hpp"
 #include "fx/Mult.hpp"
 #include "media/FfmpegCliBoostMedia.hpp"
+#include "ttviz.hpp"
 
 #define capture_time(label, code)            \
 	{                                        \
@@ -46,6 +46,12 @@ ttviz::ttviz(
 	scope.set_shape_width(2);
 	scope.set_fill_in(true);
 
+	if (media->attached_pic())
+	{
+		metadata.set_album_cover(*media->attached_pic(), {150, 150});
+		set_background(*media->attached_pic()); // this is safe bc we already called `layers_init`
+	}
+
 	// VERY IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// now that two things are dependent on different amounts of audio, take the max of their dependencies
 	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
@@ -79,23 +85,17 @@ void ttviz::layers_init(const int antialiasing)
 							std::cout << "media->read_video_frame returned false????????\n";
 						vfcount = 1; // ALWAYS RESET TO 1 OTHERWISE THE IF CHECK ABOVE DOESN'T MAKE SENSE
 					}
-					orig_rt.display();
+					// orig_rt.display();
 				});
-			bg.set_fx_cb(viz::Layer::DRAW_FX_RT);
 		}
-		else // set_background() will apply_fx() on the bg it sets
-		{
+
+		else
 			// we only have one image; don't run effects in Layer::full_lifecycle
+			// which means we need to prepopulate the `fx_rt` of this layer with something...
+			// set_background() handles this
 			bg.set_auto_fx(false);
 
-			if (media->attached_pic())
-			{
-				metadata.set_album_cover(*media->attached_pic(), {150, 150});
-				set_background(*media->attached_pic());
-			}
-
-			// don't set_fx_cb() if there is no video stream!
-		}
+		bg.set_fx_cb(viz::Layer::DRAW_FX_RT);
 	}
 
 	/*{ // scope layer
@@ -116,6 +116,7 @@ void ttviz::layers_init(const int antialiasing)
 
 	{ // particles layer
 		auto &particles = add_layer("particles", antialiasing);
+		particles.drawables.emplace_back(&ps);
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
@@ -137,10 +138,6 @@ void ttviz::layers_init(const int antialiasing)
 				}
 
 				++frame_count;
-
-				orig_rt.clear(sf::Color::Transparent);
-				orig_rt.draw(ps);
-				orig_rt.display();
 			});
 		particles.set_fx_cb(
 			[&](auto &orig_rt, auto &fx_rt, auto &target)
@@ -152,37 +149,28 @@ void ttviz::layers_init(const int antialiasing)
 
 	{ // spectrum layer
 		auto &spectrum = add_layer("spectrum", antialiasing);
-		spectrum.set_orig_cb(
-			[&](auto &orig_rt)
-			{
-				ss.update(sa);
-				orig_rt.clear(sf::Color::Transparent);
-				orig_rt.draw(ss);
-				orig_rt.display();
-			});
+		spectrum.drawables.emplace_back(&ss);
+		spectrum.set_orig_cb([&](auto &) { ss.update(sa); });
 		spectrum.set_fx_cb(
 			[&](auto &orig_rt, auto &fx_rt, auto &target)
 			{
-				target.draw(fx_rt.sprite(), sf::BlendAdd);
-
 				if (spectrum_bm)
+				{
+					target.draw(fx_rt.sprite(), *spectrum_bm);
 					target.draw(orig_rt.sprite(), *spectrum_bm);
+				}
 				else
+				{
+					target.draw(fx_rt.sprite(), sf::BlendAdd);
 					/**
 					 * since i haven't found the right blendmode that gets rid of the dark
-					 * spectrum bar edges, the default behavior (FOR NOW) is to redraw the spectrum.
+					 * spectrum bar edges (antialiasing), the default behavior (FOR NOW) is to redraw the spectrum.
 					 * users can pass --blendmode to instead blend the RT with the target above.
 					 */
 					target.draw(ss);
+				}
 			});
 	}
-}
-
-// need to do this outside of the constructor otherwise the texture is broken?
-void ttviz::use_attached_pic_as_bg()
-{
-	if (media->attached_pic())
-		set_background(*media->attached_pic());
 }
 
 void ttviz::add_default_effects()
@@ -198,7 +186,7 @@ void ttviz::add_default_effects()
 		if (!media->vstream())
 			bg->effects.emplace_back(new fx::Mult{0.75});
 		if (media->attached_pic())
-			// this will reapply the effects without any bs
+			// this will set the background WITH the blur affect we just added
 			set_background(*media->attached_pic());
 	}
 
@@ -249,8 +237,6 @@ void ttviz::set_background(const sf::Texture &txr)
 	bg->orig_draw(spr);
 	bg->orig_display();
 	bg->apply_fx();
-
-	bg->set_fx_cb(viz::Layer::DRAW_FX_RT);
 }
 
 void ttviz::set_spectrum_blendmode(const sf::BlendMode &bm)

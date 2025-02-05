@@ -55,7 +55,7 @@ void Main::start_in_window(audioviz &viz)
 
 	sf::RenderWindow window{
 		sf::VideoMode{viz.size},
-		"audioviz",
+		"ttviz",
 		sf::Style::Titlebar,
 		sf::State::Windowed,
 		{.antiAliasingLevel = 4},

@@ -19,8 +19,6 @@ void Main::use_args(ttviz &viz)
 
 	if (const auto bg_path = args.present("--bg"))
 		viz.set_background(sf::Texture{*bg_path});
-	else
-		viz.use_attached_pic_as_bg(); // THIS NEEDS TO BE HERE OTHERWISE THE BACKGROUND BREAKS!!!!!!!!!!!!!
 
 	if (!args.get<bool>("--no-fx"))
 		viz.add_default_effects();

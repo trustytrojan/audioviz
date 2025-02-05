@@ -18,11 +18,6 @@ class Layer;
 
 class ttviz : public audioviz
 {
-public:
-	// audioviz output size. cannot be changed, so make sure your window is not resizable.
-	// const sf::Vector2u size;
-
-private:
 	using BarType = viz::VerticalBar;
 	using ParticleShapeType = sf::CircleShape;
 
@@ -59,9 +54,6 @@ private:
 	sf::Texture video_bg;
 
 public:
-	// need to do this outside of the constructor otherwise the texture is broken?
-	void use_attached_pic_as_bg();
-
 	/**
 	 * @param size size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media_url url to media source. must contain an audio stream
