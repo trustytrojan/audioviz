@@ -6,8 +6,10 @@ project(audioviz LANGUAGES CXX)
 cmake_policy(SET CMP0135 NEW)
 cmake_policy(SET CMP0167 NEW)
 
-option(AUDIOVIZ_PORTAUDIO "Build audioviz with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
+option(AUDIOVIZ_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
 option(AUDIOVIZ_TESTS "Build the small test programs in the 'test' directory" OFF)
+option(AUDIOVIZ_LUA "Build with Lua: provides Lua binding" ON)
+option(AUDIOVIZ_TTVIZ "Build ttviz: my first implementation of audioviz" ON)
 
 set(BUILD_SHARED_LIBS ON)
 set(CMAKE_CXX_STANDARD 23)
@@ -23,7 +25,11 @@ add_compile_options(
 )
 
 add_subdirectory(libaudioviz)
-add_subdirectory(ttviz)
+
+if(AUDIOVIZ_TTVIZ)
+	add_subdirectory(ttviz)
+endif()
+
 if(AUDIOVIZ_TESTS)
 	add_subdirectory(test)
 endif()

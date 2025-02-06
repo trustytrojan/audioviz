@@ -1,7 +1,22 @@
 include(deps.cmake)
 
-file(GLOB_RECURSE AUDIOVIZ_SOURCES src/*.cpp)
-add_library(audioviz ${AUDIOVIZ_SOURCES})
+file(GLOB AUDIOVIZ_SOURCES
+	src/fx/*.cpp
+	src/media/*.cpp
+	src/tt/*.cpp
+	src/viz/*.cpp
+	src/*.cpp
+)
+
+if(AUDIOVIZ_LUA)
+	file(GLOB AUDIOVIZ_LUA_SOURCES src/lua/*.cpp)
+endif()
+
+add_library(audioviz ${AUDIOVIZ_SOURCES} ${AUDIOVIZ_LUA_SOURCES})
+set_target_properties(audioviz PROPERTIES
+	PREFIX ""
+	OUTPUT_NAME "audioviz"
+)
 
 target_include_directories(audioviz
 	PUBLIC include

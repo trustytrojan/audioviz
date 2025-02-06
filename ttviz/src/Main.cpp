@@ -5,16 +5,6 @@
 Main::Main(const int argc, const char *const *const argv)
 	: args{argc, argv}
 {
-#ifdef AUDIOVIZ_LUA
-	if (const auto luafile = args.present("--luafile"))
-	{
-		// you MUST call script_file or safe_script_file, otherwise NO errors will be printed!
-		LuaState(*this).script_file(*luafile);
-		return;
-		// lua environment is still in the works!!!!!!!!!
-	}
-#endif
-
 	const auto &size_args = args.get<std::vector<uint>>("--size");
 	const sf::Vector2u size{size_args[0], size_args[1]};
 	ttviz viz{size, args.get("media_url"), fa, cs, ss, ps};

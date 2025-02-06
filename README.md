@@ -1,5 +1,5 @@
 # audioviz
-my own audio visualizer, because after effects sucks.
+my own audio visualizer C++/Lua library, because after effects sucks.
 builds on windows and linux!!!!
 
 here are some demos:
@@ -14,7 +14,7 @@ here are some demos:
 ### windows
 1. install any required dependencies below using `winget`:
    - lua can be installed with `winget install devcom.lua`
-   - ffmpeg and its libraries can be installed with `winget install gyan.ffmpeg.shared`
+   - ffmpeg can be installed with `winget install gyan.ffmpeg.shared`
 2. run `cmake -S. -Bbuild && cmake --build build` or use your IDE of choice with CMake support
 
 ## libraries/software used
@@ -32,6 +32,7 @@ here are some demos:
 - [argparse](https://github.com/p-ranav/argparse)
 - [sol2](https://github.com/ThePhD/sol2)
 - [spline](https://github.com/ttk592/spline)
+- [ImGui-SFML](https://github.com/SFML/imgui-sfml)
 
 ## dev note
 on namespaces:
@@ -49,16 +50,16 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 ```
 
 ## todo list / goals
-- ✅️ `viz::ScopeDrawable`
+- ✅️ `ScopeDrawable` class
   - extra: audio window customization independent of shape size
 - 🔄 lua api
   - ✅️ modular layering/effects system
   - ✅️ remove hardcoded visualizer components
-  - freshen up c++ api for consumption
-  - decide whether to split up audioviz into library & programs
+  - 🔄 freshen up api for consumption
+  - ✅️ decide whether to split up audioviz into library & programs
 - ✅️ make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
   - ✅️ figure out how to deal with `fft_size` and `sa.analyze(...)`
-  - extra: rename `base_audioviz` to `audioviz` and call the default implementation something else
+  - ✅️ extra: rename `base_audioviz` to `audioviz` and call the default implementation something else
 - ✅️ need to experiment with only using the ffmpeg CLI instead of the libraries
   - ✅️ figure out metadata parsing, then subprocessing for the audio/video streams
   - ✅️ this *might* fix all the "ending early" problems (not a guarantee)
@@ -73,4 +74,5 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
   - develop imgui window for each audioviz implementation
 - 🔄 libaudioviz - turn this project into a set of tools rather than one binary
   - ✅️ separate core code into a library "libaudioviz"
-  - separate the main features (realtime visualizer, video renderer, lua binding) into their own programs/libraries
+  - 🔄 separate the main features (realtime visualizer, video renderer, lua binding) into their own programs/libraries
+  - put everything in one namespace `audioviz` (except for very interrelated classes like `fx` and `media`)

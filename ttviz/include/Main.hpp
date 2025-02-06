@@ -10,10 +10,6 @@
 #include "viz/StereoSpectrum.hpp"
 #include "viz/VerticalBar.hpp"
 
-#ifdef AUDIOVIZ_LUA
-#include <sol/sol.hpp>
-#endif
-
 #include <cstdlib>
 #include <string>
 
@@ -43,13 +39,6 @@ class Main
 	Main &operator=(const Main &) = delete;
 	Main(Main &&) = delete;
 	Main &operator=(Main &&) = delete;
-
-#ifdef AUDIOVIZ_LUA
-	struct LuaState : sol::state
-	{
-		LuaState(Main &);
-	};
-#endif
 
 	void use_args(ttviz &);
 	void start_in_window(audioviz &);

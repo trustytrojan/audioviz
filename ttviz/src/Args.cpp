@@ -133,11 +133,6 @@ Args::Args(const int argc, const char *const *const argv)
 		.choices("top", "bottom", "left", "right")
 		.default_value("bottom");
 
-#ifdef AUDIOVIZ_LUA
-	add_argument("--luafile")
-		.help("configure audioviz with a lua script!\nlua code is run BEFORE cli args are parsed!");
-#endif
-
 	add_argument("--no-fx")
 		.help("don't add default effects")
 		.flag();

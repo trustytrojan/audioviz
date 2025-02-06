@@ -65,18 +65,18 @@ FetchContent_Declare(
 	libavpp
 	URL https://github.com/trustytrojan/libavpp/archive/main.zip
 )
-file(DOWNLOAD https://github.com/p-ranav/argparse/raw/master/include/argparse/argparse.hpp argparse.hpp)
-file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h spline.h)
+file(DOWNLOAD https://github.com/p-ranav/argparse/raw/master/include/argparse/argparse.hpp ${CMAKE_BINARY_DIR}/argparse.hpp)
+file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h ${CMAKE_BINARY_DIR}/spline.h)
 
 FetchContent_MakeAvailable(SFML libavpp)
 
 ### TEMPORARY - libaudioviz should not be responsible for audio playback.
-### but to keep things stable i will leave this as is for now. HANDLE BEFORE MERGING TO MAIN.
+### but to keep things stable i will leave this as is for now.
 ## portaudio (optional)
 if(AUDIOVIZ_PORTAUDIO)
 	if(WIN32)
-		file(DOWNLOAD https://github.com/spatialaudio/portaudio-binaries/raw/refs/heads/master/libportaudio64bit.dll portaudio_x64.dll)
-		file(DOWNLOAD https://github.com/PortAudio/portaudio/raw/refs/tags/v19.7.0/include/portaudio.h portaudio.h)
+		file(DOWNLOAD https://github.com/spatialaudio/portaudio-binaries/raw/refs/heads/master/libportaudio64bit.dll ${CMAKE_BINARY_DIR}/portaudio_x64.dll)
+		file(DOWNLOAD https://github.com/PortAudio/portaudio/raw/refs/tags/v19.7.0/include/portaudio.h ${CMAKE_BINARY_DIR}/portaudio.h)
 		link_directories(${CMAKE_BINARY_DIR})
 	endif()
 
@@ -92,5 +92,27 @@ if(AUDIOVIZ_PORTAUDIO)
 		link_libraries(portaudio_x64)
 	elseif(LINUX)
 		link_libraries(portaudio)
+	endif()
+endif()
+
+## lua (optional)
+if(AUDIOVIZ_LUA)
+	if(WIN32)
+		# usual place that lua is installed via winget
+		set(WINGET_LUA_PATH $ENV{localappdata}/programs/lua)
+		list(APPEND CMAKE_PREFIX_PATH ${WINGET_LUA_PATH}/lib)
+	endif()
+	find_library(lua NAMES lua lua54 REQUIRED)
+
+	file(DOWNLOAD https://github.com/ThePhD/sol2/releases/download/v3.3.0/sol.hpp ${CMAKE_BINARY_DIR}/sol/sol.hpp)
+	file(DOWNLOAD https://github.com/ThePhD/sol2/releases/download/v3.3.0/config.hpp ${CMAKE_BINARY_DIR}/sol/config.hpp)
+	add_compile_definitions(AUDIOVIZ_LUA)
+
+	if(WIN32)
+		include_directories(${WINGET_LUA_PATH}/include)
+		link_directories(${WINGET_LUA_PATH}/lib)
+		link_libraries(lua54)
+	elseif(LINUX)
+		link_libraries(lua)
 	endif()
 endif()
