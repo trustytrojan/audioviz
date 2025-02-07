@@ -34,10 +34,10 @@ Main::Main(const int argc, const char *const *const argv)
 
 static const char *layer_name_getter(void *user_data, int idx)
 {
-	return (*(const std::vector<viz::Layer> *)user_data)[idx].get_name().c_str();
+	return (*(const std::vector<audioviz::Layer> *)user_data)[idx].get_name().c_str();
 }
 
-void Main::start_in_window(audioviz &viz)
+void Main::start_in_window(audioviz::Base &viz)
 {
 #ifdef AUDIOVIZ_PORTAUDIO
 	viz.set_audio_playback_enabled(true);

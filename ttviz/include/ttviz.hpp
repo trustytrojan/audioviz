@@ -4,35 +4,30 @@
 #include <optional>
 #include <string>
 
-#include "audioviz.hpp"
-#include "viz/ParticleSystem.hpp"
-#include "viz/ScopeDrawable.hpp"
-#include "viz/SongMetadataDrawable.hpp"
-#include "viz/StereoSpectrum.hpp"
-#include "viz/VerticalBar.hpp"
+#include <audioviz/Base.hpp>
+#include <audioviz/ParticleSystem.hpp>
+#include <audioviz/ScopeDrawable.hpp>
+#include <audioviz/SongMetadataDrawable.hpp>
+#include <audioviz/StereoSpectrum.hpp>
+#include <audioviz/VerticalBar.hpp>
 
-namespace viz
+class ttviz : public audioviz::Base
 {
-class Layer;
-}
-
-class ttviz : public audioviz
-{
-	using BarType = viz::VerticalBar;
+	using BarType = audioviz::VerticalBar;
 	using ParticleShapeType = sf::CircleShape;
-
-	using FA = tt::FrequencyAnalyzer;
-	using CS = viz::ColorSettings;
-	using SS = viz::StereoSpectrum<BarType>;
-	using SD = viz::ScopeDrawable<sf::RectangleShape>;
-	using PS = viz::ParticleSystem<ParticleShapeType>;
+	using FA = audioviz::fft::FrequencyAnalyzer;
+	using SA = audioviz::fft::StereoAnalyzer;
+	using CS = audioviz::ColorSettings;
+	using SS = audioviz::StereoSpectrum<BarType>;
+	using SD = audioviz::ScopeDrawable<sf::RectangleShape>;
+	using PS = audioviz::ParticleSystem<ParticleShapeType>;
 
 	// used for updating the particle system at 60Hz rate when framerate > 60
 	int frame_count{}, vfcount{1};
 
 	// fft processor
 	FA &fa;
-	tt::StereoAnalyzer sa;
+	SA sa;
 
 	// color settings
 	CS &color;
@@ -49,7 +44,7 @@ class ttviz : public audioviz
 
 	// metadata-related fields (font from base_audioviz)
 	sf::Text title_text{font}, artist_text{font};
-	viz::SongMetadataDrawable metadata{title_text, artist_text};
+	audioviz::SongMetadataDrawable metadata{title_text, artist_text};
 
 	sf::Texture video_bg;
 
@@ -57,10 +52,10 @@ public:
 	/**
 	 * @param size size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media_url url to media source. must contain an audio stream
-	 * @param fa reference to your own `tt::FrequencyAnalyzer`
-	 * @param cs reference to your own `viz::ColorSettings`
-	 * @param ss reference to your own `viz::StereoSpectrum<BarType>`
-	 * @param ps reference to your own `viz::ParticleSystem<ParticleShapeType>`
+	 * @param fa reference to your own `FrequencyAnalyzer`
+	 * @param cs reference to your own `audioviz::ColorSettings`
+	 * @param ss reference to your own `audioviz::StereoSpectrum<BarType>`
+	 * @param ps reference to your own `audioviz::ParticleSystem<ParticleShapeType>`
 	 * @param antialiasing antialiasing level to use for round shapes
 	 */
 	ttviz(sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, int antialiasing = 4);
@@ -92,7 +87,7 @@ public:
 
 	/**
 	 * Set the number of audio samples used for frequency analysis.
-	 * @note Calls `set_fft_size` on the `tt::FrequencyAnalyzer` you passed in the constructor.
+	 * @note Calls `set_fft_size` on the `FrequencyAnalyzer` you passed in the constructor.
 	 */
 	void set_fft_size(int fft_size);
 

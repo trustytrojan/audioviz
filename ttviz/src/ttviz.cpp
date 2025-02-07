@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "fx/Blur.hpp"
-#include "fx/Mult.hpp"
-#include "media/FfmpegCliBoostMedia.hpp"
+#include <audioviz/fx/Blur.hpp>
+#include <audioviz/fx/Mult.hpp>
+#include <audioviz/media/FfmpegCliBoostMedia.hpp>
 #include "ttviz.hpp"
 
 #define capture_time(label, code)            \
@@ -14,7 +14,7 @@
 
 ttviz::ttviz(
 	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
-	: audioviz{size, new media::FfmpegCliBoostMedia{media_url, size}},
+	: Base{size, new audioviz::media::FfmpegCliBoostMedia{media_url, size}},
 	  fa{fa},
 	  color{color},
 	  ss{ss},
@@ -95,7 +95,7 @@ void ttviz::layers_init(const int antialiasing)
 			// set_background() handles this
 			bg.set_auto_fx(false);
 
-		bg.set_fx_cb(viz::Layer::DRAW_FX_RT);
+		bg.set_fx_cb(audioviz::Layer::DRAW_FX_RT);
 	}
 
 	/*{ // scope layer
@@ -180,21 +180,21 @@ void ttviz::add_default_effects()
 		// clang-format off
 		bg->effects.emplace_back(
 			media->vstream()
-				? new fx::Blur{2.5, 2.5, 5}
-				: new fx::Blur{7.5, 7.5, 15});
+				? new audioviz::fx::Blur{2.5, 2.5, 5}
+				: new audioviz::fx::Blur{7.5, 7.5, 15});
 		// clang-format on
 		if (!media->vstream())
-			bg->effects.emplace_back(new fx::Mult{0.75});
+			bg->effects.emplace_back(new audioviz::fx::Mult{0.75});
 		if (media->attached_pic())
 			// this will set the background WITH the blur affect we just added
 			set_background(*media->attached_pic());
 	}
 
 	if (const auto particles = get_layer("particles"))
-		particles->effects.emplace_back(new fx::Blur{1, 1, 10});
+		particles->effects.emplace_back(new audioviz::fx::Blur{1, 1, 10});
 
 	if (const auto spectrum = get_layer("spectrum"))
-		spectrum->effects.emplace_back(new fx::Blur{1, 1, 20});
+		spectrum->effects.emplace_back(new audioviz::fx::Blur{1, 1, 20});
 }
 
 void ttviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
@@ -228,7 +228,7 @@ void ttviz::set_background(const sf::Texture &txr)
 	const auto bg = get_layer("bg");
 	if (!bg)
 		throw std::runtime_error("no background layer present!");
-	tt::Sprite spr{txr};
+	audioviz::Sprite spr{txr};
 
 	// i do this because of *widescreen* youtube thumbnails containing *square* album covers
 	spr.capture_centered_square_view();
@@ -248,13 +248,13 @@ bool ttviz::next_frame()
 {
 	// pasting this here for imgui!!!!!!!!!!!!!!!!!!!!!
 	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
-	const auto next_frame_ready = audioviz::next_frame();
+	const auto next_frame_ready = Base::next_frame();
 	color.increment_wheel_time();
 	return next_frame_ready;
 }
 
 void ttviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
-	audioviz::draw(target, states);
+	Base::draw(target, states);
 	target.draw(metadata, states);
 }

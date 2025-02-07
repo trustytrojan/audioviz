@@ -2,29 +2,29 @@
 
 #include "Args.hpp"
 #include "ttviz.hpp"
-#include "tt/FrequencyAnalyzer.hpp"
-#include "viz/ColorSettings.hpp"
-#include "viz/ParticleSystem.hpp"
-#include "viz/ScopeDrawable.hpp"
-#include "viz/SpectrumDrawable.hpp"
-#include "viz/StereoSpectrum.hpp"
-#include "viz/VerticalBar.hpp"
+#include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <audioviz/ColorSettings.hpp>
+#include <audioviz/ParticleSystem.hpp>
+#include <audioviz/ScopeDrawable.hpp>
+#include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/StereoSpectrum.hpp>
+#include <audioviz/VerticalBar.hpp>
 
 #include <cstdlib>
 #include <string>
 
 class Main
 {
-	using BarType = viz::VerticalBar;
+	using BarType = audioviz::VerticalBar;
 	using ParticleShapeType = sf::CircleShape;
 	using ShapeType = sf::RectangleShape;
 
-	using FA = tt::FrequencyAnalyzer;
-	using SC = viz::ScopeDrawable<ShapeType>;
-	using SD = viz::SpectrumDrawable<BarType>;
-	using SS = viz::StereoSpectrum<BarType>;
-	using PS = viz::ParticleSystem<ParticleShapeType>;
-	using CS = viz::ColorSettings;
+	using FA = audioviz::fft::FrequencyAnalyzer;
+	using SC = audioviz::ScopeDrawable<ShapeType>;
+	using SD = audioviz::SpectrumDrawable<BarType>;
+	using SS = audioviz::StereoSpectrum<BarType>;
+	using PS = audioviz::ParticleSystem<ParticleShapeType>;
+	using CS = audioviz::ColorSettings;
 
 	std::string ffmpeg_path;
 	bool no_vsync = false, enc_window = false;
@@ -41,8 +41,8 @@ class Main
 	Main &operator=(Main &&) = delete;
 
 	void use_args(ttviz &);
-	void start_in_window(audioviz &);
-	void encode(audioviz &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void start_in_window(audioviz::Base &);
+	void encode(audioviz::Base &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);
