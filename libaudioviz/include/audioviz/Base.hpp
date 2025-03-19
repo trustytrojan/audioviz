@@ -6,9 +6,9 @@
 #include <portaudio.hpp>
 #endif
 
-#include <audioviz/media/Media.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/Layer.hpp>
+#include <audioviz/fft/AudioAnalyzer.hpp>
+#include <audioviz/media/Media.hpp>
 
 namespace audioviz
 {
@@ -25,10 +25,11 @@ public:
 	std::vector<Layer> layers;
 
 protected:
-	std::shared_ptr<media::Media> media;
+	media::Media *const media;
 	sf::Font font;
 
 private:
+	std::vector<const sf::Drawable *> final_drawables;
 	int framerate{60};
 	int audio_frames_needed{};
 	int afpvf{media->astream().sample_rate() / framerate}; // audio frames per video frame
@@ -38,8 +39,9 @@ private:
 	bool tt_enabled{};
 #ifdef AUDIOVIZ_PORTAUDIO
 	// PortAudio stuff for live playback
-	std::optional<pa::PortAudio> pa_init;
-	std::optional<pa::Stream> pa_stream;
+	pa::PortAudio pa_init;
+	pa::Stream pa_stream{0, 2, paFloat32, media->astream().sample_rate(), afpvf};
+	bool audio_enabled{true};
 #endif
 
 public:
@@ -49,11 +51,17 @@ public:
 	 */
 	Base(sf::Vector2u size, media::Media *media);
 
+	// media needs to be freed
+	// we will take ownership of it for now
+	~Base();
+
 	/// layer api
 
 	Layer &add_layer(const std::string &name, int antialiasing = 0);
 	Layer *get_layer(const std::string &name);
 	void remove_layer(const std::string &name);
+
+	void add_final_drawable(const sf::Drawable &);
 
 	/**
 	 * Prepare the next frame to be drawn with `draw()`. Runs all layers.

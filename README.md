@@ -52,7 +52,7 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 ## todo list / goals
 - ✅️ `ScopeDrawable` class
   - extra: audio window customization independent of shape size
-- 🔄 lua api
+- 🔄 lua api: **luaviz**
   - ✅️ modular layering/effects system
   - ✅️ remove hardcoded visualizer components
   - 🔄 freshen up api for consumption
@@ -75,4 +75,4 @@ on windows please use the [mingw toolchain](https://github.com/niXman/mingw-buil
 - 🔄 libaudioviz - turn this project into a set of tools rather than one binary
   - ✅️ separate core code into a library "libaudioviz"
   - 🔄 separate the main features (realtime visualizer, video renderer, lua binding) into their own programs/libraries
-  - put everything in one namespace `audioviz` (except for very interrelated classes like `fx` and `media`)
+  - ✅️ put everything in one namespace `audioviz` (except for very interrelated classes like `fx` and `media`)

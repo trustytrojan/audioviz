@@ -25,19 +25,23 @@ Base::Base(const sf::Vector2u size, media::Media *const media)
 	set_timing_text_enabled(true);
 }
 
+Base::~Base()
+{
+	delete media;
+}
+
 #ifdef AUDIOVIZ_PORTAUDIO
 void Base::set_audio_playback_enabled(const bool enabled)
 {
 	if (enabled)
 	{
-		pa_init.emplace();
-		pa_stream.emplace(0, 2, paFloat32, media->astream().sample_rate(), afpvf);
-		pa_stream->start();
+		audio_enabled = true;
+		pa_stream.start();
 	}
 	else
 	{
-		pa_stream.reset();
-		pa_init.reset();
+		audio_enabled = false;
+		pa_stream.stop();
 	}
 }
 
@@ -45,7 +49,7 @@ void Base::play_audio()
 {
 	try // to play the audio
 	{
-		pa_stream->write(media->audio_buffer().data(), afpvf);
+		pa_stream.write(media->audio_buffer().data(), afpvf);
 	}
 	catch (const pa::Error &e)
 	{
@@ -63,7 +67,7 @@ bool Base::next_frame()
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	// clang-format off
-	if (pa_stream && media->audio_buffer_frames() >= afpvf)
+	if (audio_enabled && media->audio_buffer_frames() >= afpvf)
 	{
 		capture_time("play_audio", play_audio());
 	}
@@ -93,6 +97,8 @@ bool Base::next_frame()
 void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
 	target.draw(final_rt.sprite());
+	for (const auto drawable : final_drawables)
+		target.draw(*drawable);
 	if (tt_enabled)
 		target.draw(timing_text);
 }
@@ -124,6 +130,11 @@ void Base::remove_layer(const std::string &name)
 	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
 	if (itr != layers.end())
 		layers.erase(itr);
+}
+
+void Base::add_final_drawable(const Drawable &d)
+{
+	final_drawables.emplace_back(std::addressof(d));
 }
 
 void Base::perform_fft(fft::FrequencyAnalyzer &fa, fft::AudioAnalyzer &aa)

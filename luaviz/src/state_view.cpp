@@ -1,7 +1,7 @@
-#include <audioviz/lua/state_view.hpp>
+#include "state_view.hpp"
 #include <SFML/Graphics.hpp>
 
-namespace audioviz::lua
+namespace luaviz
 {
 
 state_view::state_view(lua_State *const L)
@@ -29,4 +29,4 @@ state_view::state_view(lua_State *const L)
 	// clang-format on
 }
 
-} // namespace audioviz::lua
+} // namespace luaviz

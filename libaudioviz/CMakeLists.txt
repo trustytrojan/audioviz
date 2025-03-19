@@ -7,17 +7,7 @@ file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/*.cpp
 )
 
-if(AUDIOVIZ_LUA)
-	file(GLOB AUDIOVIZ_LUA_SOURCES src/audioviz/lua/*.cpp)
-	message(${AUDIOVIZ_LUA_SOURCES})
-endif()
-
-add_library(audioviz ${AUDIOVIZ_SOURCES} ${AUDIOVIZ_LUA_SOURCES})
-
-# this will produce audioviz.so instead of libaudioviz.so
-set_target_properties(audioviz PROPERTIES
-	PREFIX ""
-)
+add_library(audioviz ${AUDIOVIZ_SOURCES})
 
 # need to use the target_XXXX commands so that dependents will also include
 # these directories and link to the same libraries

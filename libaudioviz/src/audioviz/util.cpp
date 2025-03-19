@@ -157,7 +157,9 @@ void start_in_window(Base &viz, const std::string &window_title)
 	window.setVerticalSyncEnabled(true);
 	while (window.isOpen() && viz.next_frame())
 	{
-		// window.clear();
+		while (const auto event = window.pollEvent())
+			if (event->is<sf::Event::Closed>())
+				window.close();
 		window.draw(viz);
 		window.display();
 	}

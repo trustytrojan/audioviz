@@ -61,7 +61,9 @@ public:
 	/**
 	 * @returns The name of this layer.
 	 */
-	const std::string &get_name() const { return name; }
+	inline const std::string &get_name() const { return name; }
+
+	inline const RenderTexture &fx_rt() const { return _fx_rt; }
 
 	/**
 	 * Calls `draw(...)` on the "original" render-texture. Useful if you want to prepopulate

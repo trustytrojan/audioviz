@@ -2,7 +2,7 @@
 
 #include <sol/sol.hpp>
 
-namespace audioviz::lua
+namespace luaviz
 {
 
 struct state_view : sol::state_view
@@ -10,4 +10,4 @@ struct state_view : sol::state_view
 	state_view(lua_State *);
 };
 
-} // namespace audioviz::lua
+} // namespace luaviz

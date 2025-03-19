@@ -1,5 +1,6 @@
 #pragma once
 
+#include "audioviz/Sprite.hpp"
 #include <SFML/Graphics.hpp>
 
 namespace audioviz
@@ -18,7 +19,7 @@ public:
 	// Copy the contents of `other` to this render-texture.
 	void copy(const RenderTexture &other);
 
-	inline sf::Sprite sprite() const { return sf::Sprite{getTexture()}; }
+	inline Sprite sprite() const { return getTexture(); }
 };
 
 } // namespace tt
