@@ -93,6 +93,13 @@ public:
 	// users MUST call this to specify how much audio they need for their visualizers
 	inline void set_audio_frames_needed(int needed) { audio_frames_needed = needed; }
 
+	// quick way to start your viz in a window!!!!!!!!
+	void start_in_window(const std::string &window_title);
+
+	// render this viz to a video file!!!!!!!!
+	// not implemented yet: just steal it from ttviz
+	void encode(const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+
 protected:
 	void capture_elapsed_time(const std::string &label, const sf::Clock &);
 

@@ -12,7 +12,7 @@ void table::load_PSS()
 	using SS = StereoSpectrum<VerticalPill>;
 	using CS = ColorSettings;
 	// clang-format off
-	new_usertype<SS>("BarStereoSpectrum",
+	new_usertype<SS>("PillStereoSpectrum",
 		"new", sol::constructors<SS(CS&)>(),
 		"new", sol::factories([](const sol::table &rect, CS &cs)
 		{

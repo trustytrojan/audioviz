@@ -39,8 +39,8 @@ void Layer::apply_fx()
 {
 	_fx_rt.clear(sf::Color::Transparent);
 	_fx_rt.copy(_orig_rt);
-	for (const auto &effect : effects)
-		effect->apply(_fx_rt);
+	for (const auto effect : effects)
+		effect->apply(_fx_rt); // this will call display() on _fx_rt for us
 }
 
 void Layer::full_lifecycle(sf::RenderTarget &target)

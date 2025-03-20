@@ -15,6 +15,7 @@ FFT_SIZE = 3000
 
 -- frequency analyzer (fft) logic
 fa = luaviz.FrequencyAnalyzer.new(FFT_SIZE)
+-- fa:set_accum_method('sum')
 
 -- handles fft of stereo audio for you
 sa = luaviz.StereoAnalyzer.new()
@@ -24,21 +25,27 @@ cs = luaviz.ColorSettings.new()
 
 -- the star of the show
 bss = luaviz.BarStereoSpectrum.new({ {}, SIZE }, cs)
+-- bss:set_bar_width(1)
+-- bss:set_bar_spacing(0)
+
+-- particles!!!!!!!!!!!
+cps = luaviz.CircleParticleSystem.new({ {}, SIZE }, 50)
 
 -- where the audio is coming from
 media = luaviz.FfmpegCliBoostMedia.new(arg[1], SIZE)
 
 -- layering & timing logic
 viz = luaviz.Base.new(SIZE, media)
+framerate = viz:get_framerate()
 
 -- tells `viz` to only read FFT_SIZE audio samples from `media` per video frame (default 60fps)
 viz:set_audio_frames_needed(FFT_SIZE)
 
 -- iosevka is a great font, use hardware h264 encoder (available on my laptop)
-if LINUX then
+if luaviz.os == 'linux' then
 	font_path = '/usr/share/fonts/TTF/Iosevka-Regular.ttc'
 	vcodec = 'h264_vaapi'
-elseif WIN32 then
+elseif luaviz.os == 'windows' then
 	font_path = os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\Iosevka-Regular.ttc'
 	vcodec = 'h264_qsv'
 end
@@ -84,24 +91,62 @@ if attached_pic then
 
 	bg_layer = viz:add_layer('bg', 0)
 	bg_layer:add_drawable(bg_spr)
+	-- we need to store the effects in variables for now, otherwise they get garbage collected...
+	bg_blur = luaviz.Blur.new(7.5, 7.5, 15)
+	bg_darken = luaviz.Mult.new(.75)
+	bg_layer:add_effect(bg_blur)
+	bg_layer:add_effect(bg_darken)
 end
 
-spectrum_layer = viz:add_layer('spectrum', 0)
--- register the object to be drawn by the layer
-spectrum_layer:add_drawable(bss)
--- perform IMPORTANT logic before any drawables are drawn
--- (we don't need to draw onto the layer ourselves, hence the unused `_` parameter)
-spectrum_layer:set_orig_cb(function(_)
+function do_fft_safely()
 	-- make sure the StereoAnalyzer allocates enough space for the BarStereoSpectrum's bars
 	bss:configure_analyzer(sa)
 	-- using the configuration in FrequencyAnalyzer, perform fft for both channels and store the result in the StereoAnalyzer
 	viz:perform_fft(fa, sa)
+end
+
+particles_layer = viz:add_layer('particles', 0)
+particles_layer:add_drawable(cps)
+particles_blur = luaviz.Blur.new(1, 1, 10)
+particles_layer:add_effect(particles_blur)
+
+particles_layer:set_orig_cb(function(_)
+	do_fft_safely()
+	if framerate == 60 then
+		cps:update(sa)
+	end
+	-- handle other framerates, check ttviz::layers_init() for reference
+end)
+
+particles_layer:set_fx_cb(function(orig_rt, fx_rt, target)
+	target:draw(fx_rt:sprite(), luaviz.sfBlendMode.Add)
+	target:draw(orig_rt:sprite(), luaviz.sfBlendMode.Add)
+end)
+
+spectrum_layer = viz:add_layer('spectrum', 0)
+
+-- register the object to be drawn by the layer
+spectrum_layer:add_drawable(bss)
+
+-- perform IMPORTANT logic before any drawables are drawn
+-- (we don't need to draw onto the layer ourselves, hence the unused `_` parameter)
+spectrum_layer:set_orig_cb(function(_)
 	-- update the spectrum bar heights using the fft results
 	bss:update(sa)
 end)
 
+-- blend the layer onto the final picture by adding colors (involves transparency)
+spectrum_layer:set_fx_cb(function(orig_rt, fx_rt, target)
+	target:draw(fx_rt:sprite(), luaviz.sfBlendMode.Add)
+	target:draw(orig_rt:sprite())
+end)
+
+-- add subtle glow effect on the spectrum
+spectrum_blur = luaviz.Blur.new(3, 3, 10)
+spectrum_layer:add_effect(spectrum_blur)
+
 -- a "final drawable" is something that depends on everything else being drawn first
 viz:add_final_drawable(smd)
 
--- utility function to open a window and start processing `viz`
-luaviz.start_in_window(viz, arg[0])
+-- watch the viz!!!!!!!!!!!!!!!
+viz:start_in_window(arg[0])

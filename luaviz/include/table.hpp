@@ -21,9 +21,10 @@ struct table : sol::table
 {
 	table(const sol::table &);
 	void load_FA();
+	void load_AA_SA();
 	void load_RT();
 	void load_Layer();
-	void load_CPS();
+	void load_particle_systems();
 	void load_CS();
 	void load_BSD();
 	void load_BSS();
@@ -33,7 +34,9 @@ struct table : sol::table
 	void load_sf_types();
 	void load_Sprite();
 	void load_SMD();
+	void load_media();
 	void load_Base();
+	void load_fx();
 };
 
 } // namespace luaviz

@@ -26,7 +26,7 @@ void FrequencyAnalyzer::set_interp_type(const InterpolationType interp)
 
 void FrequencyAnalyzer::set_window_func(const WindowFunction wf)
 {
-	this->wf = wf;
+	this->window_func = wf;
 }
 
 void FrequencyAnalyzer::set_accum_method(const AccumulationMethod am)
@@ -76,11 +76,12 @@ void FrequencyAnalyzer::copy_channel_to_input(
 void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 {
 	assert(spectrum.size());
+	assert(window_func);
 
 	// apply window function on input
 	const auto input = fftw.input();
 	for (int i = 0; i < fft_size; ++i)
-		input[i] *= window_func(i);
+		input[i] *= window_func(i, fft_size);
 
 	// execute fft and get output
 	fftw.execute();
@@ -116,21 +117,6 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 	// apply interpolation if necessary
 	if (interp != InterpolationType::NONE && scale != Scale::LINEAR)
 		interpolate(spectrum);
-}
-
-float FrequencyAnalyzer::window_func(const int i) const
-{
-	switch (wf)
-	{
-	case WindowFunction::HANNING:
-		return 0.5f * (1 - cos(2 * M_PI * i / (fft_size - 1)));
-	case WindowFunction::HAMMING:
-		return 0.54f - 0.46f * cos(2 * M_PI * i / (fft_size - 1));
-	case WindowFunction::BLACKMAN:
-		return 0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
-	default:
-		throw std::logic_error("FrequencySpectrum::window_func: default case hit");
-	}
 }
 
 int FrequencyAnalyzer::calc_index(const int i, const int max_index) const

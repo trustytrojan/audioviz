@@ -139,9 +139,30 @@ void Base::add_final_drawable(const Drawable &d)
 
 void Base::perform_fft(fft::FrequencyAnalyzer &fa, fft::AudioAnalyzer &aa)
 {
-	sf::Clock clock;
-	aa.analyze(fa, media->audio_buffer().data(), true);
-	capture_elapsed_time("fft", clock);
+	capture_time("fft", aa.analyze(fa, media->audio_buffer().data(), true));
+}
+
+void Base::start_in_window(const std::string &window_title)
+{
+#ifdef AUDIOVIZ_PORTAUDIO
+	set_audio_playback_enabled(true);
+#endif
+	sf::RenderWindow window{
+		sf::VideoMode{size},
+		window_title,
+		sf::Style::Titlebar,
+		sf::State::Windowed,
+		{.antiAliasingLevel = 4},
+	};
+	window.setVerticalSyncEnabled(true);
+	while (window.isOpen() && next_frame())
+	{
+		while (const auto event = window.pollEvent())
+			if (event->is<sf::Event::Closed>())
+				window.close();
+		window.draw(*this);
+		window.display();
+	}
 }
 
 } // namespace audioviz

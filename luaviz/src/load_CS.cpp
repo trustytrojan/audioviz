@@ -19,6 +19,13 @@ void table::load_CS()
 		"set_wheel_rate", &CS::set_wheel_rate,
 		"increment_wheel_time", &CS::increment_wheel_time
 	);
+
+	new_enum("ColorMode",
+		"SOLID", CS::Mode::SOLID,
+		"WHEEL", CS::Mode::WHEEL,
+		"WHEEL_RANGES", CS::Mode::WHEEL_RANGES,
+		"WHEEL_RANGES_REVERSE", CS::Mode::WHEEL_RANGES_REVERSE
+	);
 	// clang-format on
 }
 

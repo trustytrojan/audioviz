@@ -10,15 +10,21 @@ void table::load_RT()
 {
 	using RT = RenderTexture;
 	// clang-format off
+	new_usertype<sf::RenderTarget>("sfRenderTarget",
+		"draw", sol::overload(
+			[](sf::RenderTarget &self, const sf::Drawable &d, const sf::BlendMode &bm) { self.draw(d, bm); },
+			[](sf::RenderTarget &self, const sf::Drawable &d) { self.draw(d); }
+		)
+	);
+
 	new_usertype<RT>("RenderTexture",
-		"new", sol::constructors<RT(sf::Vector2u, int)>(),
-		"display", &RT::display,
+		sol::base_classes, sol::bases<sf::RenderTarget>(),
 		"sprite", &RT::sprite,
+		"display", &RT::display,
 		"clear", [](RT &self, const sol::table &table)
 		{
 			self.clear(table_to_color(table));
-		},
-		sol::base_classes, sol::bases<sf::RenderTarget>()
+		}
 	);
 	// clang-format on
 }

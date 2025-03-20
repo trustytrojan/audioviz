@@ -1,10 +1,10 @@
-#include <audioviz/media/Media.hpp>
-#include <audioviz/media/FfmpegCliBoostMedia.hpp>
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/ColorSettings.hpp>
 #include <audioviz/ScopeDrawable.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/VerticalBar.hpp>
+#include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <audioviz/media/FfmpegCliBoostMedia.hpp>
+#include <audioviz/media/Media.hpp>
 #include <iostream>
 #include <portaudio.hpp>
 

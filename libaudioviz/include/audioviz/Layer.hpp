@@ -48,7 +48,7 @@ public:
 	 * The effects, in order, that will be applied to the "original"
 	 * render-texture when `apply_fx()` is called.
 	 */
-	std::vector<std::shared_ptr<const fx::Effect>> effects;
+	std::vector<const fx::Effect *> effects;
 
 	/**
 	 * The drawables to draw on this layer. If they have state that needs to be updated

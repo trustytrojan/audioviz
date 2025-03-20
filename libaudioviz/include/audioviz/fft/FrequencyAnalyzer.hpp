@@ -2,6 +2,7 @@
 
 #include <audioviz/fft/fftwf_dft_r2c_1d.hpp>
 #include <cstring>
+#include <functional>
 #include <spline.h>
 #include <vector>
 
@@ -36,12 +37,16 @@ public:
 		MAX
 	};
 
-	enum class WindowFunction
+	using WindowFunction = std::function<float(int, int)>;
+
+	static const inline WindowFunction WF_NONE = [](int, int) { return 1; },
+									   WF_HANNING = [](int i, int fft_size)
+	{ return 0.5f * (1 - cos(2 * M_PI * i / (fft_size - 1))); },
+									   WF_HAMMING = [](int i, int fft_size)
+	{ return 0.54f - 0.46f * cos(2 * M_PI * i / (fft_size - 1)); },
+									   WF_BLACKMAN = [](int i, int fft_size)
 	{
-		NONE,
-		HANNING,
-		HAMMING,
-		BLACKMAN
+		return 0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
 	};
 
 private:
@@ -65,7 +70,7 @@ private:
 	AccumulationMethod am{AccumulationMethod::MAX};
 
 	// window function
-	WindowFunction wf{WindowFunction::BLACKMAN};
+	WindowFunction window_func{WF_BLACKMAN};
 
 	// struct to hold the "max"s used in `calc_index_ratio`
 	struct
@@ -157,7 +162,6 @@ public:
 	void render(std::vector<float> &spectrum);
 
 private:
-	float window_func(int i) const;
 	int calc_index(int i, int max_index) const;
 	float calc_index_ratio(float i) const;
 	void interpolate(std::vector<float> &spectrum);

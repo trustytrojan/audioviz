@@ -1,5 +1,5 @@
-#include <table.hpp>
 #include <SFML/Graphics.hpp>
+#include <table.hpp>
 
 namespace luaviz
 {
@@ -24,6 +24,15 @@ void table::load_sf_types()
 	new_enum("sfTextStyle",
 		"Bold", sf::Text::Bold,
 		"Italic", sf::Text::Italic
+	);
+
+	new_enum("sfBlendMode",
+		"Add", sf::BlendAdd,
+		"Alpha", sf::BlendAlpha,
+		"Multiply", sf::BlendMultiply,
+		"Min", sf::BlendMin,
+		"Max", sf::BlendMax,
+		"None", sf::BlendNone
 	);
 	// clang-format on
 }

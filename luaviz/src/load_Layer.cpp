@@ -14,13 +14,13 @@ void table::load_Layer()
 		"set_orig_cb", &Layer::set_orig_cb,
 		"set_fx_cb", &Layer::set_fx_cb,
 		"set_auto_fx", &Layer::set_auto_fx,
-		"add_drawable", [](Layer &self, const sf::Drawable &drawable)
+		"add_drawable", [](Layer &self, const sf::Drawable *drawable)
 		{
-			self.drawables.emplace_back(&drawable);
+			self.drawables.emplace_back(drawable);
 		},
-		"add_effect", [](Layer &self, const fx::Effect &effect)
+		"add_effect", [](Layer &self, const fx::Effect *effect)
 		{
-			self.effects.emplace_back(&effect);
+			self.effects.emplace_back(effect);
 		}
 	);
 	// clang-format on

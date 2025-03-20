@@ -142,27 +142,4 @@ float weighted_max(
 		begin + (amount / 2)); // these are generally the strongest bass frequencies to the ear
 }
 
-void start_in_window(Base &viz, const std::string &window_title)
-{
-#ifdef AUDIOVIZ_PORTAUDIO
-	viz.set_audio_playback_enabled(true);
-#endif
-	sf::RenderWindow window{
-		sf::VideoMode{viz.size},
-		window_title,
-		sf::Style::Titlebar,
-		sf::State::Windowed,
-		{.antiAliasingLevel = 4},
-	};
-	window.setVerticalSyncEnabled(true);
-	while (window.isOpen() && viz.next_frame())
-	{
-		while (const auto event = window.pollEvent())
-			if (event->is<sf::Event::Closed>())
-				window.close();
-		window.draw(viz);
-		window.display();
-	}
-}
-
 } // namespace audioviz::util

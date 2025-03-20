@@ -49,9 +49,10 @@ void Main::use_args(ttviz &viz)
 
 	{ // window function
 		static const std::unordered_map<std::string, FA::WindowFunction> wf_map{
-			{"hanning", FA::WindowFunction::HANNING},
-			{"hamming", FA::WindowFunction::HAMMING},
-			{"blackman", FA::WindowFunction::BLACKMAN},
+			{"none", FA::WF_NONE},
+			{"hanning", FA::WF_HANNING},
+			{"hamming", FA::WF_HAMMING},
+			{"blackman", FA::WF_BLACKMAN},
 		};
 
 		const auto &wf_str = args.get("-w");

@@ -40,16 +40,9 @@ private:
 	sf::IntRect rect;
 	std::vector<Particle<ParticleShape>> particles;
 	sf::Vector2f displacement_direction{0, 1};
-
 	StartSide start_side = StartSide::BOTTOM;
 
 public:
-	ParticleSystem(const int particle_count)
-		: particles{particle_count}
-	{
-		init_particles();
-	}
-
 	ParticleSystem(const sf::IntRect &rect, const int particle_count)
 		: rect{rect},
 		  particles{particle_count}
@@ -67,6 +60,12 @@ public:
 			// then apply additional displacement
 			auto new_pos = p.getPosition() + additional_displacement;
 
+			float width = 0;
+			if constexpr (std::is_same_v<ParticleShape, sf::CircleShape>)
+				width = p.getRadius();
+			else
+				width = p.getSize().x;
+
 			// make sure particles don't escape the rect
 			switch (start_side)
 			{
@@ -74,8 +73,8 @@ public:
 			case StartSide::TOP:
 				if (new_pos.x >= (rect.position.x + rect.size.x))
 					// teleport from right edge to left
-					new_pos.x = rect.position.x + -p.getRadius();
-				else if (new_pos.x + p.getRadius() < 0)
+					new_pos.x = rect.position.x + -width;
+				else if (new_pos.x + width < 0)
 					// teleport from left edge to right
 					new_pos.x = (rect.position.x + rect.size.x);
 				break;
@@ -83,8 +82,8 @@ public:
 			case StartSide::RIGHT:
 				if (new_pos.y >= (rect.position.y + rect.size.y))
 					// teleport from bottom edge to top
-					new_pos.y = rect.position.y + -p.getRadius();
-				else if (new_pos.y + p.getRadius() < 0)
+					new_pos.y = rect.position.y + -width;
+				else if (new_pos.y + width < 0)
 					// teleport from top edge to bottom
 					new_pos.y = (rect.position.y + rect.size.y);
 				break;
@@ -180,14 +179,27 @@ public:
 		init_particles();
 	}
 
+	void set_particle_textures(const sf::Texture &txr)
+	{
+		for (auto &p : particles)
+			p.setTexture(&txr);
+	}
+
 private:
 	void init_particles()
 	{
 		for (auto &p : particles)
 		{
-			// these are going to be very small circles, don't need many points
-			p.setPointCount(10);
-			p.setRadius(random<float>(2, 5));
+			if constexpr (std::is_same_v<ParticleShape, sf::CircleShape>)
+			{
+				// these are going to be very small circles, don't need many points
+				p.setPointCount(10);
+				p.setRadius(random<float>(2, 5));
+			}
+			else if constexpr (std::is_same_v<ParticleShape, sf::RectangleShape>)
+			{
+				p.setSize({random<float>(2, 5), random<float>(2, 5)});
+			}
 
 			// start some particles offscreen, so the beginning sequence feels less "sudden"
 			// otherwise all of them come out at once and it looks bad

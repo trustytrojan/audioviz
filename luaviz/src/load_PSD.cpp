@@ -12,7 +12,7 @@ void table::load_PSD()
 	using SD = SpectrumDrawable<VerticalPill>;
 	using CS = ColorSettings;
 	// clang-format off
-	new_usertype<SD>("BarSpectrumDrawable",
+	new_usertype<SD>("PillSpectrumDrawable",
 		"new", sol::constructors<SD(CS&)>(),
 		"new", sol::factories([](const sol::table &rect, CS &cs)
 		{
