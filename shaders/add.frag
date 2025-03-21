@@ -1,4 +1,4 @@
-#version 460 core
+#version 460
 
 uniform sampler2D image;
 uniform float addend;

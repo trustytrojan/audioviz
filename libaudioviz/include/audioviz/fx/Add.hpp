@@ -5,14 +5,10 @@
 namespace audioviz::fx
 {
 
-// Adds an addend to the entire texture.
-class Add : public Effect
+// Adds an addend to the entire texture's COLORS. Alphas are not affected.
+struct Add : Effect
 {
-	static inline sf::Shader shader{std::filesystem::path{"shaders/add.frag"}, sf::Shader::Type::Fragment};
-
-public:
 	float addend;
-
 	Add(float addend);
 	void apply(RenderTexture &rt) const override;
 };

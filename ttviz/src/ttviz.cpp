@@ -60,7 +60,7 @@ ttviz::ttviz(
 void ttviz::perform_fft()
 {
 	ss.configure_analyzer(sa);
-	capture_time("fft", sa.analyze(fa, media->audio_buffer().data(), true));
+	audioviz::Base::perform_fft(fa, sa);
 }
 
 void ttviz::layers_init(const int antialiasing)
@@ -162,12 +162,11 @@ void ttviz::layers_init(const int antialiasing)
 				else
 				{
 					target.draw(fx_rt.sprite(), sf::BlendAdd);
-					/**
-					 * since i haven't found the right blendmode that gets rid of the dark
-					 * spectrum bar edges (antialiasing), the default behavior (FOR NOW) is to redraw the spectrum.
-					 * users can pass --blendmode to instead blend the RT with the target above.
-					 */
-					target.draw(ss);
+					if constexpr (std::is_same_v<BarType, sf::CircleShape>)
+						// redraw the entire ss because antialiased edges have dark pixels with 1 alpha...
+						target.draw(ss);
+					else
+					 	target.draw(orig_rt.sprite());
 				}
 			});
 	}

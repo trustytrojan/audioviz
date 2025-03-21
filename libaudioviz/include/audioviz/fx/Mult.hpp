@@ -5,14 +5,11 @@
 namespace audioviz::fx
 {
 
-// Multiplies the entire texture by a factor.
-class Mult : public Effect
+// Multiplies the entire texture's COLORS by a factor.
+// Alphas are not affected.
+struct Mult : public Effect
 {
-	static inline sf::Shader shader{std::filesystem::path{"shaders/mult.frag"}, sf::Shader::Type::Fragment};
-
-public:
 	float factor;
-
 	Mult(float factor);
 	void apply(RenderTexture &rt) const override;
 };

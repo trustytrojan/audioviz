@@ -113,7 +113,7 @@ particles_layer:add_effect(particles_blur)
 particles_layer:set_orig_cb(function(_)
 	do_fft_safely()
 	if framerate == 60 then
-		cps:update(sa)
+		cps:update(sa) -- update the particle system
 	end
 	-- handle other framerates, check ttviz::layers_init() for reference
 end)

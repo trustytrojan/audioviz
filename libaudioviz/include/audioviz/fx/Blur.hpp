@@ -11,14 +11,10 @@ namespace audioviz::fx
  * `hrad` and `vrad` are the horizontal and vertical blur radii, respectively.
  * It is recommended to use a zero-alpha background if this is being used to create a glow.
  */
-class Blur : public Effect
+struct Blur : Effect
 {
-	static inline sf::Shader shader{std::filesystem::path{"shaders/blur.frag"}, sf::Shader::Type::Fragment};
-
-public:
 	float hrad, vrad;
 	int n_passes;
-
 	Blur(float hrad, float vrad, int n_passes);
 	void apply(RenderTexture &rt) const override;
 };
