@@ -1,8 +1,8 @@
-#include "viz/ScopeDrawable.hpp"
-#include "media/FfmpegCliBoostMedia.hpp"
-#include "tt/FrequencyAnalyzer.hpp"
-#include "viz/SpectrumDrawable.hpp"
-#include "viz/VerticalBar.hpp"
+#include <audioviz/ScopeDrawable.hpp>
+#include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/VerticalBar.hpp>
+#include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <audioviz/media/FfmpegCliBoostMedia.hpp>
 #include <cmath>
 #include <iostream>
 #include <portaudio.hpp>
@@ -16,20 +16,21 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	const sf::Vector2u size{atoi(argv[1]), atoi(argv[2])};
-	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4}};
+	sf::RenderWindow window{
+		sf::VideoMode{size}, "ScopeDrawableTest", sf::Style::Titlebar, sf::State::Windowed, {.antiAliasingLevel = 4}};
 	window.setVerticalSyncEnabled(true);
 
-	viz::ColorSettings color;
-	color.mode = viz::ColorSettings::Mode::WHEEL;
-	color.wheel.rate = .005;
+	audioviz::ColorSettings color;
+	color.set_mode(audioviz::ColorSettings::Mode::WHEEL);
+	color.set_wheel_rate(.005);
 
-	viz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}, color};
+	audioviz::ScopeDrawable<sf::RectangleShape> scope{{{}, (sf::Vector2i)size}, color};
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
 	scope.set_fill_in(false);
 	std::cout << "shape count: " << scope.get_shape_count() << '\n';
 
-	viz::SpectrumDrawable<viz::VerticalBar> sd{{}, color};
+	audioviz::SpectrumDrawable<audioviz::VerticalBar> sd{{}, color};
 	sd.set_rect({{}, (sf::Vector2i)size});
 	sd.set_bar_width(1);
 	sd.set_bar_spacing(0);
@@ -37,9 +38,9 @@ int main(const int argc, const char *const *const argv)
 	// sd.set_color_wheel_rate(0.005);
 
 	const auto fft_size = size.x;
-	tt::FrequencyAnalyzer fa{fft_size};
+	audioviz::fft::FrequencyAnalyzer fa{fft_size};
 
-	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
+	std::unique_ptr<audioviz::media::Media> media{new audioviz::media::FfmpegCliBoostMedia{argv[3]}};
 
 	int afpvf{media->astream().sample_rate() / 60};
 
@@ -81,9 +82,8 @@ int main(const int argc, const char *const *const argv)
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
 			sd.update(spectrum);
-			// sd.color_wheel_increment();
 
-			color.wheel.increment_time();
+			color.increment_wheel_time();
 
 			try
 			{
@@ -104,13 +104,13 @@ int main(const int argc, const char *const *const argv)
 		// tf.setRotation(sf::degrees(speed*sin(cur) + speed*cur));
 		// tf.setRotation(sf::degrees(exp(cur/5 + 2*sin(cur))));
 		// tf.setRotation(sf::degrees(2*sin(cur)*exp(2*sin(cur))));
-		//float max_channel = 30 * (*std::max_element(left_channel.begin(), left_channel.end()));
+		// float max_channel = 30 * (*std::max_element(left_channel.begin(), left_channel.end()));
 		// tf.setRotation(5*sf::degrees(max_channel));
-		sf::Angle ang_deg = sf::degrees(-7*cur);
-		sf::Angle ang_deg2 = sf::degrees(90+7*cur);
-		
+		sf::Angle ang_deg = sf::degrees(-7 * cur);
+		sf::Angle ang_deg2 = sf::degrees(90 + 7 * cur);
+
 		// scope.set_rotation_angle(ang_deg);
-		sf::Vector2f coord {150,20};
+		sf::Vector2f coord{150, 20};
 
 		// scope.set_center_point(150, ang_deg2);
 

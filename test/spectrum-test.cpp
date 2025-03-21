@@ -1,8 +1,8 @@
-#include "media/Media.hpp"
-#include "media/FfmpegCliBoostMedia.hpp"
-#include "tt/FrequencyAnalyzer.hpp"
-#include "viz/StereoSpectrum.hpp"
-#include "viz/VerticalBar.hpp"
+#include <audioviz/StereoSpectrum.hpp>
+#include <audioviz/VerticalBar.hpp>
+#include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <audioviz/media/FfmpegCliBoostMedia.hpp>
+#include <audioviz/media/Media.hpp>
 #include <iostream>
 #include <portaudio.hpp>
 
@@ -18,10 +18,10 @@ int main(const int argc, const char *const *const argv)
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
 	window.setVerticalSyncEnabled(true);
 
-	viz::ColorSettings color;
+	audioviz::ColorSettings color;
 	const auto framerate = 60;
 
-	viz::StereoSpectrum<viz::VerticalBar> ss{color};
+	audioviz::StereoSpectrum<audioviz::VerticalBar> ss{color};
 	ss.set_left_backwards(true);
 	ss.set_rect({{}, (sf::Vector2i)size});
 	ss.set_bar_width(10);
@@ -29,10 +29,10 @@ int main(const int argc, const char *const *const argv)
 
 	// number of audio FRAMES needed for fft
 	const auto fft_size = 3000;
-	tt::FrequencyAnalyzer fa{fft_size};
-	tt::StereoAnalyzer sa;
+	audioviz::fft::FrequencyAnalyzer fa{fft_size};
+	audioviz::fft::StereoAnalyzer sa;
 
-	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
+	std::unique_ptr<audioviz::media::Media> media{new audioviz::media::FfmpegCliBoostMedia{argv[3]}};
 	const auto &astream = media->astream();
 
 	// number of audio FRAMES per video frame

@@ -1,10 +1,10 @@
-#include "media/Media.hpp"
-#include "media/FfmpegCliBoostMedia.hpp"
-#include "tt/FrequencyAnalyzer.hpp"
-#include "viz/ColorSettings.hpp"
-#include "viz/ScopeDrawable.hpp"
-#include "viz/SpectrumDrawable.hpp"
-#include "viz/VerticalBar.hpp"
+#include <audioviz/ColorSettings.hpp>
+#include <audioviz/ScopeDrawable.hpp>
+#include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/VerticalBar.hpp>
+#include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <audioviz/media/FfmpegCliBoostMedia.hpp>
+#include <audioviz/media/Media.hpp>
 #include <iostream>
 #include <portaudio.hpp>
 
@@ -20,26 +20,25 @@ int main(const int argc, const char *const *const argv)
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
 	window.setVerticalSyncEnabled(true);
 
-	viz::ColorSettings color;
-	color.wheel.rate = .005;
-	color.mode = viz::ColorSettings::Mode::WHEEL_RANGES;
+	audioviz::ColorSettings color;
+	color.set_wheel_rate(.005);
+	color.set_mode(audioviz::ColorSettings::Mode::WHEEL_RANGES);
 
 	sf::IntRect rect({}, (sf::Vector2i)size);
 
-	viz::ScopeDrawable<sf::RectangleShape> scope(rect, color);
+	audioviz::ScopeDrawable<sf::RectangleShape> scope(rect, color);
 	scope.set_shape_spacing(0);
 	scope.set_shape_width(1);
 	scope.set_fill_in(true);
 
-	viz::SpectrumDrawable<viz::VerticalBar> sd(rect, color);
+	audioviz::SpectrumDrawable<audioviz::VerticalBar> sd(rect, color);
 	sd.set_bar_width(1);
 	sd.set_bar_spacing(0);
 
 	const auto fft_size = size.x;
-	tt::FrequencyAnalyzer fa{fft_size};
+	audioviz::fft::FrequencyAnalyzer fa{fft_size};
 
-	std::unique_ptr<Media> media{new FfmpegCliBoostMedia{argv[3]}};
-	// media->init(size);
+	std::unique_ptr<audioviz::media::Media> media{new audioviz::media::FfmpegCliBoostMedia{argv[3]}};
 
 	int afpvf{media->astream().sample_rate() / 60};
 
@@ -68,9 +67,7 @@ int main(const int argc, const char *const *const argv)
 			fa.copy_to_input(left_channel.data());
 			fa.render(spectrum);
 			sd.update(spectrum);
-			color.wheel.increment_time();
-			// sd.color_wheel_increment();
-			// scope.color_wheel_increment();
+			color.increment_wheel_time();
 
 			try
 			{
