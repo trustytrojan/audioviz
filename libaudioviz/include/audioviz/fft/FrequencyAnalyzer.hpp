@@ -73,18 +73,10 @@ private:
 	WindowFunction window_func{WF_BLACKMAN};
 
 	// struct to hold the "max"s used in `calc_index_ratio`
-	struct
+	struct _scale_max
 	{
 		double linear, log, sqrt, cbrt, nthroot;
-		void set(const FrequencyAnalyzer &fa)
-		{
-			const auto max = fa.fftw.output_size();
-			linear = max;
-			log = ::log(max);
-			sqrt = ::sqrt(max);
-			cbrt = ::cbrt(max);
-			nthroot = ::pow(max, fa.nthroot_inv);
-		}
+		void calc(const FrequencyAnalyzer &fa);
 	} scale_max;
 
 public:

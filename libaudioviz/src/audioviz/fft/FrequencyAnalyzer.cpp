@@ -5,18 +5,28 @@
 namespace audioviz::fft
 {
 
+void FrequencyAnalyzer::_scale_max::calc(const FrequencyAnalyzer &fa)
+{
+	const auto max = fa.fftw.output_size();
+	linear = max;
+	log = ::log(max);
+	sqrt = ::sqrt(max);
+	cbrt = ::cbrt(max);
+	nthroot = ::pow(max, fa.nthroot_inv);
+}
+
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
 	: fft_size{fft_size}
 {
 	set_fft_size(fft_size);
-	scale_max.set(*this);
+	scale_max.calc(*this);
 }
 
 void FrequencyAnalyzer::set_fft_size(const int fft_size)
 {
 	this->fft_size = fft_size;
 	fftw.set_n(fft_size);
-	scale_max.set(*this);
+	scale_max.calc(*this);
 }
 
 void FrequencyAnalyzer::set_interp_type(const InterpolationType interp)
