@@ -18,8 +18,10 @@ void table::load_AA_SA()
 	);
 
 	new_usertype<SA>("StereoAnalyzer",
+		sol::base_classes, sol::bases<AA>(),
 		"new", sol::constructors<SA()>(),
-		sol::base_classes, sol::bases<AA>()
+		"left_data", &SA::left_data,
+		"right_data", &SA::right_data
 	);
 	// clang-format on
 }

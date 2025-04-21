@@ -34,6 +34,20 @@ void table::load_sf_types()
 		"Max", sf::BlendMax,
 		"None", sf::BlendNone
 	);
+
+	new_usertype<sf::RenderStates>("sfRenderStates",
+		"new", sol::constructors<sf::RenderStates()>(),
+		"blendMode", sol::property(&sf::RenderStates::blendMode, &sf::RenderStates::blendMode),
+		"transform", sol::property(&sf::RenderStates::transform, &sf::RenderStates::transform)
+	);
+
+	new_usertype<sf::Transform>("sfTransform",
+		"", sol::no_constructor,
+		"rotateDegrees", [](sf::Transform &self, float degrees)
+		{
+			self.rotate(sf::degrees(degrees));
+		}
+	);
 	// clang-format on
 }
 

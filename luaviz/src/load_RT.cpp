@@ -13,6 +13,7 @@ void table::load_RT()
 	new_usertype<sf::RenderTarget>("sfRenderTarget",
 		"draw", sol::overload(
 			[](sf::RenderTarget &self, const sf::Drawable &d, const sf::BlendMode &bm) { self.draw(d, bm); },
+			[](sf::RenderTarget &self, const sf::Drawable &d, const sf::RenderStates &rs) { self.draw(d, rs); },
 			[](sf::RenderTarget &self, const sf::Drawable &d) { self.draw(d); }
 		)
 	);

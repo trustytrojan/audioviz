@@ -13,6 +13,7 @@ void table::load_BSD()
 	using CS = ColorSettings;
 	// clang-format off
 	new_usertype<SD>("BarSpectrumDrawable",
+		sol::base_classes, sol::bases<sf::Drawable>(),
 		"new", sol::constructors<SD(CS&)>(),
 		"new", sol::factories([](const sol::table &rect, CS &cs)
 		{
@@ -23,7 +24,10 @@ void table::load_BSD()
 		"set_bar_width", &SD::set_bar_width,
 		"set_bar_spacing", &SD::set_bar_spacing,
 		"set_backwards", &SD::set_backwards,
-		sol::base_classes, sol::bases<sf::Drawable>()
+		"configure_analyzer", &SD::configure_analyzer,
+		"bar_count", &SD::bar_count,
+		"update", &SD::update,
+		"set_debug_rect", &SD::set_debug_rect
 	);
 	// clang-format on
 }

@@ -60,10 +60,10 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 		if (url.contains("http"))
 			args.insert(args.end(), {"-reconnect", "1"});
 		args.insert(args.end(), {"-i", url, "-c:a", "pcm_f32le", "-f", "f32le", "-"});
-		std::cout << "audio args: ";
-		for (const auto &arg : args)
-			std::cout << '\'' << arg << "' ";
-		std::cout << '\n';
+		// std::cerr << "audio args: ";
+		// for (const auto &arg : args)
+		// 	std::cerr << '\'' << arg << "' ";
+		// std::cerr << '\n';
 		audioc = bp::child{bp::search_path("ffmpeg"), args, bp::std_out > audio};
 	}
 
@@ -100,10 +100,10 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 
 		args.insert(args.end(), {"-pix_fmt", "rgba", "-f", "rawvideo", "-"});
 
-		std::cout << "video args: ";
-		for (const auto &arg : args)
-			std::cout << '\'' << arg << "' ";
-		std::cout << '\n';
+		// std::cerr << "video args: ";
+		// for (const auto &arg : args)
+		// 	std::cerr << '\'' << arg << "' ";
+		// std::cerr << '\n';
 
 		videoc = bp::child{bp::search_path("ffmpeg"), args, bp::std_out > video};
 	}
