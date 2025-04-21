@@ -75,7 +75,10 @@ bool Base::next_frame()
 #endif
 
 	if (media->audio_buffer_frames() < audio_frames_needed)
+	{
+		std::cerr << "[Base::next_frame] not enough audio frames, returning false\n";
 		return false;
+	}
 
 	final_rt.clear();
 	for (auto &layer : layers)

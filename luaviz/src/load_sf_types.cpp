@@ -43,10 +43,10 @@ void table::load_sf_types()
 
 	new_usertype<sf::Transform>("sfTransform",
 		"", sol::no_constructor,
-		"rotateDegrees", [](sf::Transform &self, float degrees)
-		{
-			self.rotate(sf::degrees(degrees));
-		}
+		"rotateDegrees", sol::overload(
+			[](sf::Transform &self, float degrees) { self.rotate(sf::degrees(degrees)); },
+			[](sf::Transform &self, float degrees, const sol::table &center) { self.rotate(sf::degrees(degrees), table_to_vec2<float>(center)); }
+		)
 	);
 	// clang-format on
 }

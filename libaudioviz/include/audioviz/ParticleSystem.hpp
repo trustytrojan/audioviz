@@ -41,6 +41,7 @@ private:
 	std::vector<Particle<ParticleShape>> particles;
 	sf::Vector2f displacement_direction{0, 1};
 	StartSide start_side = StartSide::BOTTOM;
+	bool debug_rect{};
 
 public:
 	ParticleSystem(const sf::IntRect &rect, const int particle_count)
@@ -99,16 +100,16 @@ public:
 			switch (start_side)
 			{
 			case StartSide::BOTTOM:
-				a = sqrtf((new_pos.y - rect.position.y) / (rect.position.y + rect.size.y)) * 255;
+				a = sqrtf((new_pos.y - rect.position.y) / rect.size.y) * 255;
 				break;
 			case StartSide::TOP:
-				a = sqrtf((rect.size.y - new_pos.y) / (rect.position.y + rect.size.y)) * 255;
+				a = sqrtf((rect.size.y - new_pos.y) / rect.size.y) * 255;
 				break;
 			case StartSide::LEFT:
-				a = sqrtf((rect.size.x - new_pos.x) / (rect.position.x + rect.size.x)) * 255;
+				a = sqrtf((rect.size.x - new_pos.x) / rect.size.x) * 255;
 				break;
 			case StartSide::RIGHT:
-				a = sqrtf((new_pos.x - rect.position.x) / (rect.position.x + rect.size.x)) * 255;
+				a = sqrtf((new_pos.x - rect.position.x) / rect.size.x) * 255;
 				break;
 			}
 			p.setFillColor({r, g, b, a});
@@ -140,6 +141,13 @@ public:
 		}
 	}
 
+	void update(const std::vector<float> &spectrum_data, const UpdateOptions &options = {})
+	{
+		const auto scaled_avg = rect.size.y * util::weighted_max(spectrum_data, options.weight_func);
+		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
+		update(displacement_direction * additional_displacement * options.multiplier);
+	}
+
 	void update(const fft::AudioAnalyzer &aa, const UpdateOptions &options = {})
 	{
 		float avg{}; // didn't initialize this for the longest time... yikes.
@@ -151,10 +159,29 @@ public:
 		update(displacement_direction * additional_displacement * options.multiplier);
 	}
 
-	void draw(sf::RenderTarget &target, sf::RenderStates) const override
+	inline void set_debug_rect(bool b) { debug_rect = b; }
+
+	void draw(sf::RenderTarget &target, const sf::RenderStates states) const override
 	{
 		for (const auto &p : particles)
-			target.draw(p);
+			target.draw(p, states);
+		if (debug_rect)
+		{
+			sf::RectangleShape r{sf::Vector2f{rect.size}};
+			r.setFillColor(sf::Color::Transparent);
+			r.setOutlineThickness(1);
+			r.setOutlineColor(sf::Color::White);
+			r.setPosition(sf::Vector2f{rect.position});
+			sf::CircleShape c{5};
+			c.setPosition(sf::Vector2f{rect.position});
+			target.draw(r, states);
+			target.draw(c, states);
+
+			r.setOutlineColor(sf::Color::Red);
+			c.setFillColor(sf::Color::Red);
+			target.draw(r);
+			target.draw(c);
+		}
 	}
 
 	void set_displacement_direction(sf::Vector2f displacement) { displacement_direction = displacement; }
@@ -224,7 +251,7 @@ private:
 				break;
 			case StartSide::LEFT:
 				p.setPosition({
-					(rect.position.x + rect.size.x) * random<float>(-0.25, 0),
+					(rect.position.x + rect.size.x) * random<float>(-1, 0),
 					random<float>(rect.position.y, rect.position.y + rect.size.y),
 				});
 				p.setVelocity({random<float>(0, 2), random<float>(-0.5, 0.5)});
@@ -232,7 +259,7 @@ private:
 				break;
 			case StartSide::RIGHT:
 				p.setPosition({
-					(rect.position.x + rect.size.x) * random<float>(1, 1.5),
+					(rect.position.x + rect.size.x) * random<float>(1, 2),
 					random<float>(rect.position.y, rect.position.y + rect.size.y),
 				});
 				p.setVelocity({random<float>(0, -2), random<float>(-0.5, 0.5)});

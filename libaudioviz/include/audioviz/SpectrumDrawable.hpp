@@ -1,7 +1,8 @@
 #pragma once
 
-#include <audioviz/ColorSettings.hpp>
 #include <SFML/Graphics.hpp>
+#include <audioviz/ColorSettings.hpp>
+#include <audioviz/fft/AudioAnalyzer.hpp>
 #include <vector>
 
 namespace audioviz
@@ -14,7 +15,6 @@ namespace audioviz
 template <typename BarType>
 class SpectrumDrawable : public sf::Drawable
 {
-private:
 	const ColorSettings &color;
 
 	// spectrum parameters
@@ -23,7 +23,9 @@ private:
 	// internal data
 	std::vector<BarType> bars;
 	sf::IntRect rect;
-	bool backwards = false;
+	bool backwards{};
+	bool debug_rect{};
+	sf::Transform tf;
 
 	struct
 	{
@@ -45,9 +47,9 @@ public:
 		update_bars();
 	}
 
-	int get_bar_spacing() const { return bar.spacing; }
-
-	void set_multiplier(const float multiplier) { this->multiplier = multiplier; }
+	inline void set_debug_rect(bool b) { debug_rect = b; }
+	inline int get_bar_spacing() const { return bar.spacing; }
+	inline void set_multiplier(const float multiplier) { this->multiplier = multiplier; }
 
 	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
@@ -82,6 +84,8 @@ public:
 		update_bars();
 	}
 
+	void configure_analyzer(fft::AudioAnalyzer &aa) { aa.resize(bars.size()); }
+
 	void update(const std::vector<float> &spectrum)
 	{
 		assert(spectrum.size() >= bars.size());
@@ -96,6 +100,23 @@ public:
 	{
 		for (const auto &bar : bars)
 			target.draw(bar, states);
+		if (debug_rect)
+		{
+			sf::RectangleShape r{sf::Vector2f{rect.size}};
+			r.setFillColor(sf::Color::Transparent);
+			r.setOutlineThickness(1);
+			r.setOutlineColor(sf::Color::White);
+			r.setPosition(sf::Vector2f{rect.position});
+			sf::CircleShape c{5};
+			c.setPosition(sf::Vector2f{rect.position});
+			target.draw(r, states);
+			target.draw(c, states);
+
+			r.setOutlineColor(sf::Color::Red);
+			c.setFillColor(sf::Color::Red);
+			target.draw(r);
+			target.draw(c);
+		}
 	}
 
 	inline int bar_count() const { return bars.size(); }
@@ -122,14 +143,7 @@ private:
 		}
 	}
 
-	// only update bar colors
-	void update_bar_colors()
-	{
-		for (int i = 0; i < (int)bars.size(); ++i)
-			update_bar_color(i);
-	}
-
-	inline void update_bar_color(const int i) { bars[i].setFillColor(color.calculate_color((float)i / bars.size())); }
+	void update_bar_color(const int i) { bars[i].setFillColor(color.calculate_color((float)i / bars.size())); }
 };
 
 } // namespace audioviz

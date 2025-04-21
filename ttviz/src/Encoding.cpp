@@ -43,7 +43,8 @@ private:
 	bp::basic_pipe<uint8_t> video_in;
 
 public:
-	FfmpegEncoder(const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+	FfmpegEncoder(
+		const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 	{
 		const auto &url = viz.get_media_url();
 
@@ -85,13 +86,18 @@ public:
 
 #ifdef LINUX
 		// if on linux and vaapi encoder used, detect a vaapi device for usage
-		if (const auto vaapi_device = detect_vaapi_device(); vcodec.contains("vaapi") && !vaapi_device.empty())
-			args.insert(args.end(), {
-				"-vaapi_device", vaapi_device,
-				"-vf", "format=nv12,hwupload"
-			});
-		else
-			std::cerr << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
+		if (vcodec.contains("vaapi"))
+		{
+			if (const auto vaapi_device = detect_vaapi_device(); !vaapi_device.empty())
+			{
+				args.insert(args.end(), {
+					"-vaapi_device", vaapi_device,
+					"-vf", "format=nv12,hwupload"
+				});
+			}
+			else
+				std::cerr << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
+		}
 #endif
 		// clang-format on
 
@@ -140,7 +146,6 @@ void Main::encode(audioviz::Base &viz, const std::string &outfile, const std::st
 			window.display();
 			txr.update(window);
 			ffmpeg.send_frame(txr);
-			// window.clear();
 		}
 	}
 	else
@@ -151,7 +156,6 @@ void Main::encode(audioviz::Base &viz, const std::string &outfile, const std::st
 			rt.draw(viz);
 			rt.display();
 			ffmpeg.send_frame(rt.getTexture());
-			// rt.clear();
 		}
 	}
 }
