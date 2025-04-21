@@ -1,9 +1,9 @@
 # audioviz
-my own audio visualizer C++/Lua library, because after effects sucks. builds on windows and linux!!!!
+my own audio visualizer library, because after effects sucks.
 
 **main features:**
 - **low-level** visualizer building
-- clean, **easy-to-use API** on **C++ & Lua**
+- **layer-based** graphics API for **C++ & Lua**
 - **super fast** video rendering with ffmpeg (with hardware encoding)
 
 here are some songs **rendered** with audioviz!
@@ -21,13 +21,16 @@ here are some songs **rendered** with audioviz!
    - ffmpeg can be installed with `winget install gyan.ffmpeg.shared`
 2. run `cmake -S. -Bbuild && cmake --build build` or use your IDE of choice with CMake support
 
+### macOS
+havent tried building just yet because of lack of native opengl support (SFML requirement). but opengl -> metal compatibility layers exist; building/testing contributions are welcome!
+
 ## libraries/software used
 - **libaudioviz**
   - [FFTW](https://fftw.org)
   - [libavpp](https://github.com/trustytrojan/libavpp) - requires the [FFmpeg](https://ffmpeg.org) libraries
   - the `ffmpeg` CLI program, also part of the [FFmpeg](https://ffmpeg.org) project
   - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (only the C library)
-  - [SFML 3.0.0-rc.1](https://github.com/SFML/SFML/tree/3.0.0-rc.1) - only supports X11 windows
+  - [SFML 3.0.0](https://github.com/SFML/SFML/tree/3.0.0-rc.1) - only supports X11 windows
   - [Boost.Process](https://github.com/boostorg/process) - included in [Boost 1.86.0](https://github.com/boostorg/boost/releases/tag/boost-1.86.0) (which is what we use now) or higher
   - [tk-spline](https://github.com/ttk592/spline)
 - **ttviz**
@@ -37,19 +40,19 @@ here are some songs **rendered** with audioviz!
 - **luaviz**
   - [sol2](https://github.com/ThePhD/sol2) - requires Lua (preferably 5.4)
 
-## dev note
-on namespaces:
-- `audioviz`: namespace for all classes in **libaudioviz**
-- `audioviz::fx`: post-processing effects for `audioviz::Layer`s
-- `audioviz::media`: media provider implementations
-
-### environment setup
+## developer environment setup
 i recommend using vscode as it integrates well with git with no effort. get the [cmake tools extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) and [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) to make development easier.
 
 **on windows:** please use the [mingw toolchain](https://github.com/niXman/mingw-builds-binaries/releases) as it is the only toolchain i have compiled with, and honestly the easiest to setup and use. clangd might freak out about the standard headers being missing: to fix this, open clangd extension settings, and add the following argument:
 ```
 --query-driver=C:\path\to\mingw\bin\g++.exe
 ```
+
+## dev note
+on namespaces:
+- `audioviz`: namespace for all classes in **libaudioviz**
+- `audioviz::fx`: post-processing effects for `audioviz::Layer`s
+- `audioviz::media`: media provider implementations
 
 ## todo list / goals
 - ✅️ `ScopeDrawable` class
