@@ -3,7 +3,7 @@
 #include <audioviz/fft/fftwf_dft_r2c_1d.hpp>
 #include <cstring>
 #include <functional>
-#include <spline.h>
+#include <tk-spline.hpp>
 #include <vector>
 
 namespace audioviz::fft

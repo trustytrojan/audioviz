@@ -41,12 +41,13 @@ elseif(LINUX)
 endif()
 
 ## sfml (without audio and network libs)
-set(SFML_BUILD_AUDIO FALSE CACHE BOOL "" FORCE)
-set(SFML_BUILD_NETWORK FALSE CACHE BOOL "" FORCE)
-FetchContent_Declare(
-	SFML
-	URL https://github.com/SFML/SFML/archive/3.0.0.zip
-)
+find_package(SFML COMPONENTS Graphics Window System)
+if(NOT SFML_FOUND)
+	set(SFML_BUILD_AUDIO OFF)
+	set(SFML_BUILD_NETWORK OFF)
+	FetchContent_Declare(SFML URL https://github.com/SFML/SFML/archive/3.0.0.zip)
+	FetchContent_MakeAvailable(SFML)
+endif()
 
 ## boost
 find_package(Boost COMPONENTS process)
@@ -61,14 +62,10 @@ if(NOT Boost_FOUND)
 endif()
 
 ## header-only libs
-FetchContent_Declare(
-	libavpp
-	URL https://github.com/trustytrojan/libavpp/archive/main.zip
-)
-file(DOWNLOAD https://github.com/p-ranav/argparse/raw/master/include/argparse/argparse.hpp ${CMAKE_BINARY_DIR}/argparse.hpp)
-file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h ${CMAKE_BINARY_DIR}/spline.h)
+FetchContent_Declare(libavpp URL https://github.com/trustytrojan/libavpp/archive/main.zip)
+file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h ${CMAKE_BINARY_DIR}/tk-spline.hpp)
 
-FetchContent_MakeAvailable(SFML libavpp)
+FetchContent_MakeAvailable(libavpp)
 
 ### TEMPORARY - libaudioviz should not be responsible for audio playback.
 ### but to keep things stable i will leave this as is for now.
@@ -80,10 +77,7 @@ if(AUDIOVIZ_PORTAUDIO)
 		link_directories(${CMAKE_BINARY_DIR})
 	endif()
 
-	FetchContent_Declare(
-		portaudio-pp
-		URL https://github.com/trustytrojan/portaudio-pp/archive/main.zip
-	)
+	FetchContent_Declare(portaudio-pp URL https://github.com/trustytrojan/portaudio-pp/archive/main.zip)
 	FetchContent_MakeAvailable(portaudio-pp)
 	add_compile_definitions(AUDIOVIZ_PORTAUDIO)
 	include_directories(${portaudio-pp_SOURCE_DIR}/include)
