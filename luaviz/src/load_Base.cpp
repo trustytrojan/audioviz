@@ -22,6 +22,7 @@ void table::load_Base()
 		"set_text_font", &Base::set_text_font,
 		"set_audio_frames_needed", &Base::set_audio_frames_needed,
 		"start_in_window", &Base::start_in_window,
+		"encode", &Base::encode,
 		"get_framerate", &Base::get_framerate,
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);

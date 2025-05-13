@@ -1,4 +1,6 @@
 #include <audioviz/media/FfmpegCliBoostMedia.hpp>
+#include <boost/process/v1/search_path.hpp>
+#include <boost/process/v1/io.hpp>
 #include <iostream>
 
 static std::string detect_vaapi_device()

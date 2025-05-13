@@ -1,5 +1,6 @@
 #include "table.hpp"
 #include <audioviz/media/FfmpegCliBoostMedia.hpp>
+#include <iostream>
 
 using namespace audioviz;
 

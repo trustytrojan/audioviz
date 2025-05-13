@@ -1,4 +1,6 @@
 #include <audioviz/Base.hpp>
+#include <audioviz/media/FfmpegEncoder.hpp>
+#include <iostream>
 
 #define capture_time(label, code)            \
 	if (tt_enabled)                          \
@@ -165,6 +167,18 @@ void Base::start_in_window(const std::string &window_title)
 				window.close();
 		window.draw(*this);
 		window.display();
+	}
+}
+
+void Base::encode(const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+{
+	FfmpegEncoder ffmpeg{*this, outfile, vcodec, acodec};
+	RenderTexture rt{size, 4};
+	while (next_frame())
+	{
+		rt.draw(*this);
+		rt.display();
+		ffmpeg.send_frame(rt.getTexture());
 	}
 }
 

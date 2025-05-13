@@ -1,9 +1,9 @@
 #pragma once
 
 #include <audioviz/media/FfmpegCliMedia.hpp>
-#include <boost/process.hpp>
+#include <boost/process/v1/child.hpp>
 
-namespace bp = boost::process;
+namespace bp = boost::process::v1;
 
 namespace audioviz::media
 {

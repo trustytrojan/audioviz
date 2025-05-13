@@ -1,5 +1,3 @@
-## project setup
-include(FetchContent)
 cmake_minimum_required(VERSION 3.18)
 project(audioviz LANGUAGES CXX)
 
@@ -9,7 +7,7 @@ cmake_policy(SET CMP0167 NEW)
 option(AUDIOVIZ_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
 option(AUDIOVIZ_TESTS "Build the small test programs in the 'test' directory" OFF)
 option(AUDIOVIZ_LUAVIZ "Build luaviz: the Lua binding" ON)
-option(AUDIOVIZ_TTVIZ "Build ttviz: my first implementation of audioviz" ON)
+option(AUDIOVIZ_TTVIZ "Build ttviz: the first audioviz visualizer" ON)
 
 set(BUILD_SHARED_LIBS ON)
 set(CMAKE_CXX_STANDARD 23)

@@ -41,7 +41,7 @@ private:
 	// PortAudio stuff for live playback
 	pa::PortAudio pa_init;
 	pa::Stream pa_stream{0, 2, paFloat32, media->astream().sample_rate(), afpvf};
-	bool audio_enabled{true};
+	bool audio_enabled{false};
 #endif
 
 public:

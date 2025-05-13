@@ -238,7 +238,7 @@ private:
 					random<float>(rect.position.x, rect.position.x + rect.size.x),
 					(rect.position.y + rect.size.y) * random<float>(1, 1.5),
 				});
-				p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, -2)});
+				p.setVelocity({random<float>(-0.5, 0.5), random<float>(-2, 0)});
 				displacement_direction = {0, -1};
 				break;
 			case StartSide::TOP:
@@ -262,7 +262,7 @@ private:
 					(rect.position.x + rect.size.x) * random<float>(1, 2),
 					random<float>(rect.position.y, rect.position.y + rect.size.y),
 				});
-				p.setVelocity({random<float>(0, -2), random<float>(-0.5, 0.5)});
+				p.setVelocity({random<float>(-2, 0), random<float>(-0.5, 0.5)});
 				displacement_direction = {-1, 0};
 				break;
 			}

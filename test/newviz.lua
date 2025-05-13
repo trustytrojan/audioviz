@@ -8,13 +8,13 @@ if not arg[1] then
 end
 
 SIZE = { 1280, 720 }
-SPECTRUM_SIZE = { 720, 1280 // 2 }
+SPECTRUM_SIZE = { 720, 1280 }
 FFT_SIZE = 3000
 fa = luaviz.FrequencyAnalyzer.new(FFT_SIZE)
 sa = luaviz.StereoAnalyzer.new()
 cs = luaviz.ColorSettings.new()
-LBSD_POS = { 1280 // 2, 0 }
-RBSD_POS = { 1280 // 2, 720 }
+LBSD_POS = { 1280, 0 }
+RBSD_POS = { 0, 720 }
 lbsd = luaviz.BarSpectrumDrawable.new({ LBSD_POS, SPECTRUM_SIZE }, cs)
 rbsd = luaviz.BarSpectrumDrawable.new({ RBSD_POS, SPECTRUM_SIZE }, cs)
 lcps = luaviz.CircleParticleSystem.new({ { 0, 0 }, { 1280, 720 } }, 45)
@@ -47,8 +47,12 @@ rcps:set_start_side(luaviz.ParticleSystemStartSide.RIGHT)
 lbsd:set_backwards(true)
 rbsd:set_backwards(true)
 
-lbsd:set_multiplier(6)
-rbsd:set_multiplier(6)
+-- lbsd:set_multiplier(3)
+-- rbsd:set_multiplier(3)
+lbsd:set_bar_width(5)
+rbsd:set_bar_width(5)
+lbsd:set_bar_spacing(2)
+rbsd:set_bar_spacing(2)
 
 lstates = luaviz.sfRenderStates.new()
 lstates.transform:rotateDegrees(90, LBSD_POS)
@@ -73,13 +77,16 @@ if attached_pic then
 	bg_layer:add_effect(bg_darken)
 end
 
+updopts = luaviz.ParticleSystemUpdateOptions.new()
+updopts.multiplier = 1.25
+
 particles_layer = viz:add_layer('particles', 0)
 particles_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
 	lbsd:configure_analyzer(sa)
 	viz:perform_fft(fa, sa)
-	lcps:update(sa:left_data())
-	rcps:update(sa:right_data())
+	lcps:update(sa:left_data(), updopts)
+	rcps:update(sa:right_data(), updopts)
 	orig_rt:draw(lcps)
 	orig_rt:draw(rcps)
 	orig_rt:display()
@@ -128,11 +135,11 @@ artist_text:setCharacterSize(24)
 artist_text:setFillColor({ 255, 255, 255, 150 })
 
 -- centered in the window... doesn't really look good without some kind of contrasting effect
-smd:set_position({ 640 - 200, 360 - 75 })
-
--- smd:set_position({ 30, 30 })
+-- smd:set_position({ 640 - 200, 360 - 75 })
+smd:set_position({ 30, 30 })
 smd:use_metadata(media)
 
 viz:add_final_drawable(smd)
 
 viz:start_in_window(arg[0])
+-- viz:encode('out.mp4', 'h264_vaapi', 'copy')
