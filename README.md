@@ -1,14 +1,15 @@
 # audioviz
 my own audio visualizer library, because after effects sucks.
 
-**main features:**
+## features
 - **low-level** visualizer building
 - **layer-based** graphics API for **C++ & Lua**
-- **super fast** video rendering with ffmpeg (with hardware encoding)
+- **super fast** video rendering with ffmpeg
+- **faster than adobe after effects!!!!!!!!!**
 
 here are some songs **rendered** with audioviz!
-- https://youtu.be/Avk5lRZb7To
-- https://youtu.be/RaTMz4MPqCM
+- [hyperforms - LOSE CONTROL](https://youtu.be/Avk5lRZb7To)
+- [Chase Atlantic - DIE FOR ME](https://youtu.be/RaTMz4MPqCM)
 
 ## building
 ### linux
@@ -30,15 +31,14 @@ havent tried building just yet because of lack of native opengl support (SFML re
   - [libavpp](https://github.com/trustytrojan/libavpp) - requires the [FFmpeg](https://ffmpeg.org) libraries
   - the `ffmpeg` CLI program, also part of the [FFmpeg](https://ffmpeg.org) project
   - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (only the C library)
-  - [SFML 3.0.0](https://github.com/SFML/SFML/tree/3.0.0-rc.1) - only supports X11 windows
-  - [Boost.Process](https://github.com/boostorg/process) - included in [Boost 1.86.0](https://github.com/boostorg/boost/releases/tag/boost-1.86.0) (which is what we use now) or higher
+  - [SFML 3.0.1](https://github.com/SFML/SFML/tree/3.0.1) - only supports X11 windows
+  - [Boost.Process](https://github.com/boostorg/process) - included in [Boost 1.88.0](https://github.com/boostorg/boost/releases/tag/boost-1.88.0)
   - [tk-spline](https://github.com/ttk592/spline)
 - **ttviz**
   - [argparse](https://github.com/p-ranav/argparse)
   - [ImGui-SFML](https://github.com/SFML/imgui-sfml)
-  - Boost.Process
 - **luaviz**
-  - [sol2](https://github.com/ThePhD/sol2) - requires Lua (preferably 5.4)
+  - [sol2](https://github.com/ThePhD/sol2) - requires [Lua](https://lua.org/) 5.4
 
 ## developer environment setup
 i recommend using vscode as it integrates well with git with no effort. get the [cmake tools extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) and [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) to make development easier.
@@ -51,7 +51,8 @@ i recommend using vscode as it integrates well with git with no effort. get the 
 ## dev note
 on namespaces:
 - `audioviz`: namespace for all classes in **libaudioviz**
-- `audioviz::fx`: post-processing effects for `audioviz::Layer`s
+- `audioviz::fft`: classes that wrap FFTW
+- `audioviz::fx`: post-processing effects for `audioviz::Layer`
 - `audioviz::media`: media provider implementations
 
 ## todo list / goals
@@ -62,14 +63,7 @@ on namespaces:
   - ✅️ remove hardcoded visualizer components
   - 🔄 freshen up api for consumption
   - ✅️ decide whether to split up audioviz into library & programs
-- ✅️ make `audioviz` generic, extend it with default functionality in a new class named `ttviz`
-  - ✅️ figure out how to deal with `fft_size` and `sa.analyze(...)`
-  - ✅️ extra: rename `base_audioviz` to `audioviz` and call the default implementation something else
-- ✅️ need to experiment with only using the ffmpeg CLI instead of the libraries
-  - ✅️ figure out metadata parsing, then subprocessing for the audio/video streams
-  - ✅️ this *might* fix all the "ending early" problems (not a guarantee)
-  - extra: try using `basic_ipstream` over `basic_pipe`
-  - extra: try to have one `ffmpeg` process output both streams (seems impossible due to boost::process limitations)
+  - document the api
 - add components/effects based on rhythm
   - involves knowing the tempo of the song
   - want a small translucent flash overlay that flashes to the beat of music
@@ -77,7 +71,3 @@ on namespaces:
 - 🔄 interactive gui (long term)
   - ✅️ integrate imgui-sfml into project
   - develop imgui window for each audioviz implementation
-- 🔄 libaudioviz - turn this project into a set of tools rather than one binary
-  - ✅️ separate core code into a library "libaudioviz"
-  - 🔄 separate the main features (realtime visualizer, video renderer, lua binding) into their own programs/libraries
-  - ✅️ put everything in one namespace `audioviz` (except for very interrelated classes like `fx` and `media`)
