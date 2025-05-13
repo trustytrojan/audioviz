@@ -12,7 +12,10 @@ FetchContent_Declare(imgui URL https://github.com/ocornut/imgui/archive/v1.91.8.
 FetchContent_MakeAvailable(imgui)
 
 # imgui-sfml (depends on imgui being downloaded manually)
-find_package(SFML COMPONENTS Graphics)
+find_package(SFML COMPONENTS Graphics QUIET)
+if(NOT SFML_FOUND)
+	set(IMGUI_SFML_FIND_SFML OFF)
+endif()
 set(IMGUI_DIR ${imgui_SOURCE_DIR})
 set(IMGUI_SFML_IMGUI_DEMO OFF)
 FetchContent_Declare(imgui-sfml URL https://github.com/SFML/imgui-sfml/archive/v3.0.zip)

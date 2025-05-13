@@ -1,6 +1,7 @@
 #include <boost/process/v1/child.hpp>
 #include <boost/process/v1/io.hpp>
 #include <boost/process/v1/search_path.hpp>
+#include <iostream>
 
 namespace bp = boost::process::v1;
 

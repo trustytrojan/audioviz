@@ -1,7 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include <audioviz/media/FfmpegCliMedia.hpp>
 #include <boost/process/v1/child.hpp>
+#include <boost/process/v1/pipe.hpp>
 
 namespace bp = boost::process::v1;
 
