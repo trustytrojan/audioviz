@@ -1,5 +1,4 @@
 #include <audioviz/util.hpp>
-#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>

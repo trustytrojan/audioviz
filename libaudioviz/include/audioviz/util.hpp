@@ -15,4 +15,10 @@ float weighted_max(
 	const std::function<float(float)> &weight_func = {},
 	const float size_divisor = 3.5f); // generally the lower third of the frequency spectrum is considered bass
 
+inline const sf::BlendMode GreatAmazingBlendMode{
+	sf::BlendMode::Factor::OneMinusDstColor,
+	sf::BlendMode::Factor::One,
+	sf::BlendMode::Equation::Add
+};
+
 } // namespace audioviz::util

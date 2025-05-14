@@ -1,8 +1,8 @@
 #pragma once
 
+#include <SFML/Graphics.hpp>
 #include <audioviz/Sprite.hpp>
 #include <audioviz/media/Media.hpp>
-#include <SFML/Graphics.hpp>
 
 namespace audioviz
 {
@@ -14,9 +14,18 @@ namespace audioviz
  */
 class SongMetadataDrawable : public sf::Drawable
 {
+public:
+	enum class TextPosition
+	{
+		RIGHT,
+		BOTTOM
+	};
+
+private:
 	sf::Text &title_text, &artist_text;
 	sf::Texture ac_txr;
 	Sprite ac_spr = ac_txr;
+	TextPosition text_pos{TextPosition::RIGHT};
 
 public:
 	SongMetadataDrawable(sf::Text &title_text, sf::Text &artist_text);
@@ -24,6 +33,12 @@ public:
 	void set_album_cover(const sf::Texture &txr, const sf::Vector2f size);
 	void set_position(const sf::Vector2f pos);
 	void draw(sf::RenderTarget &target, const sf::RenderStates states) const override;
+
+	inline void set_text_pos(const TextPosition tp)
+	{
+		text_pos = tp;
+		update_text_positions();
+	}
 
 private:
 	void update_text_positions();

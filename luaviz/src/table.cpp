@@ -38,6 +38,7 @@ table::table(const sol::table &t)
 	load_SMD();
 	load_Base();
 	load_fx();
+	load_tb_conv();
 }
 
 } // namespace luaviz

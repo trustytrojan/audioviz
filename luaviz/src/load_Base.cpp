@@ -24,6 +24,7 @@ void table::load_Base()
 		"start_in_window", &Base::start_in_window,
 		"encode", &Base::encode,
 		"get_framerate", &Base::get_framerate,
+		"set_timing_text_enabled", &Base::set_timing_text_enabled,
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 	// clang-format on

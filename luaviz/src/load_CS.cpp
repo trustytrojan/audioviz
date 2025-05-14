@@ -13,6 +13,13 @@ void table::load_CS()
 	new_usertype<CS>("ColorSettings",
 		"new", sol::constructors<CS>(),
 		"set_mode", &CS::set_mode,
+		"set_solid_color", sol::overload(
+			&CS::set_solid_color,
+			[](CS &self, const sol::table &color)
+			{
+				self.set_solid_color(table_to_color(color));
+			}
+		),
 		"set_wheel_hsv", &CS::set_wheel_hsv,
 		"set_wheel_ranges_start_hsv", &CS::set_wheel_ranges_start_hsv,
 		"set_wheel_ranges_end_hsv", &CS::set_wheel_ranges_end_hsv,

@@ -75,6 +75,10 @@ if attached_pic then
 	bg_darken = luaviz.Mult.new(.75)
 	bg_layer:add_effect(bg_blur)
 	bg_layer:add_effect(bg_darken)
+
+	-- make spectrum match bg color
+	cs:set_mode(luaviz.ColorMode.SOLID)
+	-- cs:set_solid_color({ 199, 220, 241, 255 })
 end
 
 updopts = luaviz.ParticleSystemUpdateOptions.new()
@@ -92,8 +96,8 @@ particles_layer:set_orig_cb(function(orig_rt)
 	orig_rt:display()
 end)
 particles_layer:set_fx_cb(function(orig_rt, fx_rt, target)
-	target:draw(fx_rt:sprite(), luaviz.sfBlendMode.Add)
-	target:draw(orig_rt:sprite(), luaviz.sfBlendMode.Add)
+	target:draw(fx_rt:sprite(), luaviz.sfBlendModes.Add)
+	target:draw(orig_rt:sprite(), luaviz.sfBlendModes.Add)
 end)
 
 particles_blur = luaviz.Blur.new(1, 1, 10)
@@ -102,6 +106,7 @@ particles_layer:add_effect(particles_blur)
 spectrum_layer = viz:add_layer('spectrum', 0)
 spectrum_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
+	-- cs:set_solid_color(luaviz.sfColors.Magenta)
 	lbsd:update(sa:left_data())
 	rbsd:update(sa:right_data())
 	orig_rt:draw(lbsd, lstates)
@@ -109,8 +114,15 @@ spectrum_layer:set_orig_cb(function(orig_rt)
 	orig_rt:display()
 end)
 spectrum_layer:set_fx_cb(function(orig_rt, fx_rt, target)
-	target:draw(fx_rt:sprite(), luaviz.sfBlendMode.Add)
+	target:draw(fx_rt:sprite(), luaviz.GreatAmazingBlendMode)
 	target:draw(orig_rt:sprite())
+
+	-- magenta glow underneath white spectrum:
+	-- cs:set_solid_color(luaviz.sfColors.White)
+	-- lbsd:update_colors()
+	-- rbsd:update_colors()
+	-- target:draw(lbsd, lstates)
+	-- target:draw(rbsd, rstates)
 end)
 
 -- add subtle glow effect on the spectrum
@@ -123,8 +135,9 @@ title_text = luaviz.sfText.new(font)
 artist_text = luaviz.sfText.new(font)
 smd = luaviz.SongMetadataDrawable.new(title_text, artist_text)
 
+AC_SIZE = { 250, 250 }
 if attached_pic then
-	smd:set_album_cover(attached_pic, { 150, 150 })
+	smd:set_album_cover(attached_pic, AC_SIZE)
 end
 
 title_text:setStyle(luaviz.sfTextStyle.Bold | luaviz.sfTextStyle.Italic)
@@ -135,11 +148,12 @@ artist_text:setCharacterSize(24)
 artist_text:setFillColor({ 255, 255, 255, 150 })
 
 -- centered in the window... doesn't really look good without some kind of contrasting effect
--- smd:set_position({ 640 - 200, 360 - 75 })
-smd:set_position({ 30, 30 })
+smd:set_position({ SIZE[1] // 2 - AC_SIZE[1] // 2, SIZE[2] // 2 - AC_SIZE[2] // 2 })
+-- smd:set_position({ 30, 30 })
 smd:use_metadata(media)
+smd:set_text_pos(luaviz.SMDTextPosition.BOTTOM)
 
 viz:add_final_drawable(smd)
 
 viz:start_in_window(arg[0])
--- viz:encode('out.mp4', 'h264_vaapi', 'copy')
+-- viz:encode('out.mp4', vcodec, 'copy')

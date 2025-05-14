@@ -22,10 +22,13 @@ void table::load_RT()
 		sol::base_classes, sol::bases<sf::RenderTarget>(),
 		"sprite", &RT::sprite,
 		"display", &RT::display,
-		"clear", [](RT &self, const sol::table &table)
-		{
-			self.clear(table_to_color(table));
-		}
+		"clear", sol::overload(
+			static_cast<void (RT::*)(sf::Color)>(&RT::clear),
+			[](RT &self, const sol::table &table)
+			{
+				self.clear(table_to_color(table));
+			}
+		)
 	);
 	// clang-format on
 }

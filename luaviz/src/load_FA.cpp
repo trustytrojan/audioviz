@@ -23,28 +23,24 @@ void table::load_FA()
 		"NTH_ROOT", FA::Scale::NTH_ROOT
 	);
 
+	new_enum("InterpolationType",
+		"CSPLINE", FA::InterpolationType::CSPLINE,
+		"CSPLINE_HERMITE", FA::InterpolationType::CSPLINE_HERMITE,
+		"LINEAR", FA::InterpolationType::LINEAR,
+		"NONE", FA::InterpolationType::NONE
+	);
+
+	new_enum("AccumulationMethod", 
+		"SUM", FA::AccumulationMethod::SUM,
+		"MAX", FA::AccumulationMethod::MAX
+	);
+
 	new_usertype<FA>("FrequencyAnalyzer",
 		"new", sol::constructors<FA(int)>(),
 		"set_fft_size", &FA::set_fft_size,
-		"set_interp_type", [](FA &self, const std::string &type)
-		{
-			if (type == "cspline")
-				self.set_interp_type(FA::InterpolationType::CSPLINE);
-			else if (type == "cspline_hermite")
-				self.set_interp_type(FA::InterpolationType::CSPLINE_HERMITE);
-			else if (type == "linear")
-				self.set_interp_type(FA::InterpolationType::LINEAR);
-			else if (type == "none")
-				self.set_interp_type(FA::InterpolationType::NONE);
-		},
+		"set_interp_type", &FA::set_interp_type,
 		"set_window_func", &FA::set_window_func,
-		"set_accum_method", [](FA &self, const std::string &am)
-		{
-			if (am == "sum")
-				self.set_accum_method(FA::AccumulationMethod::SUM);
-			else if (am == "max")
-				self.set_accum_method(FA::AccumulationMethod::MAX);
-		},
+		"set_accum_method", &FA::set_accum_method,
 		"set_scale", &FA::set_scale,
 		"set_nth_root", &FA::set_nth_root
 	);

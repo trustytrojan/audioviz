@@ -24,7 +24,6 @@ Base::Base(const sf::Vector2u size, media::Media *const media)
 	timing_text.setPosition({size.x - 300, 30});
 	timing_text.setCharacterSize(18);
 	timing_text.setFillColor({255, 255, 255, 150});
-	set_timing_text_enabled(true);
 }
 
 Base::~Base()

@@ -31,4 +31,10 @@ sf::Color table_to_color(const sol::table &tb)
 	return color;
 }
 
+void table::load_tb_conv()
+{
+	set_function("table_to_intrect", &table_to_intrect);
+	set_function("table_to_color", &table_to_color);
+}
+
 } // namespace luaviz

@@ -50,9 +50,23 @@ void SongMetadataDrawable::update_text_positions()
 {
 	const auto ac_pos = ac_spr.getPosition();
 	const auto ac_size = ac_spr.get_size();
-	const sf::Vector2f text_pos{ac_pos.x + ac_size.x + 10 * bool(ac_size.x), ac_pos.y};
-	title_text.setPosition({text_pos.x, text_pos.y});
-	artist_text.setPosition({text_pos.x, text_pos.y + title_text.getCharacterSize() + 5});
+	switch (text_pos)
+	{
+	case TextPosition::RIGHT:
+	{
+		const sf::Vector2f pos{ac_pos.x + ac_size.x + 10 * bool(ac_size.x), ac_pos.y};
+		title_text.setPosition({pos.x, pos.y});
+		artist_text.setPosition({pos.x, pos.y + title_text.getCharacterSize() + 5});
+		break;
+	}
+	case TextPosition::BOTTOM:
+	{
+		const sf::Vector2f pos{ac_pos.x, ac_pos.y + ac_size.y + 10 * bool(ac_size.x)};
+		title_text.setPosition({pos.x, pos.y});
+		artist_text.setPosition({pos.x, pos.y + title_text.getCharacterSize() + 5});
+		break;
+	}
+	}
 }
 
-} // namespace viz
+} // namespace audioviz

@@ -96,6 +96,12 @@ public:
 		}
 	}
 
+	void update_colors()
+	{
+		for (int i = 0; i < (int)bars.size(); ++i)
+			bars[i].setFillColor(color.calculate_color((float)i / bars.size()));
+	}
+
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{
 		for (const auto &bar : bars)

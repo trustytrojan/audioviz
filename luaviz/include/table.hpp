@@ -37,6 +37,7 @@ struct table : sol::table
 	void load_media();
 	void load_Base();
 	void load_fx();
+	void load_tb_conv();
 };
 
 } // namespace luaviz
