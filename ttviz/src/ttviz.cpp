@@ -161,7 +161,7 @@ void ttviz::layers_init(const int antialiasing)
 				}
 				else
 				{
-					target.draw(fx_rt.sprite(), sf::BlendAdd);
+					target.draw(fx_rt.sprite(), audioviz::util::GreatAmazingBlendMode);
 					if constexpr (std::is_same_v<BarType, sf::CircleShape>)
 						// redraw the entire ss because antialiased edges have dark pixels with 1 alpha...
 						target.draw(ss);
