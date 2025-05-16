@@ -14,8 +14,8 @@ namespace audioviz::media
 class FfmpegCliBoostMedia : public FfmpegCliMedia
 {
 	bp::child audioc, videoc;
-	bp::basic_pipe<float> audio;
-	bp::basic_pipe<uint8_t> video;
+	// can't use basic_pipe<non-char type> because LLVM deprecated std::char_traits<non-char type>
+	bp::pipe audio, video;
 	std::vector<uint8_t> video_buffer;
 
 public:

@@ -171,7 +171,7 @@ void Base::start_in_window(const std::string &window_title)
 
 void Base::encode(const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	FfmpegEncoder ffmpeg{*this, outfile, vcodec, acodec};
+	media::FfmpegEncoder ffmpeg{*this, outfile, vcodec, acodec};
 	RenderTexture rt{size, 4};
 	while (next_frame())
 	{

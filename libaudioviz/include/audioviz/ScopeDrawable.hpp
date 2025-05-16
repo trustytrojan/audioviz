@@ -3,6 +3,7 @@
 #include <audioviz/ColorSettings.hpp>
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <span>
 
 namespace audioviz
 {

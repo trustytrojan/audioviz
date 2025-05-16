@@ -117,8 +117,8 @@ FfmpegCliBoostMedia::~FfmpegCliBoostMedia()
 
 size_t FfmpegCliBoostMedia::read_audio_samples(float *const buf, const int samples)
 {
-	const auto bytes_read = audio.read(buf, samples);
-	return bytes_read / sizeof(float);
+	const auto bytes_read = audio.read(reinterpret_cast<char *>(buf), samples * sizeof(float));
+	return bytes_read;
 }
 
 bool FfmpegCliBoostMedia::read_video_frame(sf::Texture &txr)
@@ -129,7 +129,7 @@ bool FfmpegCliBoostMedia::read_video_frame(sf::Texture &txr)
 	int bytes_read = 0;
 	while (bytes_read < bytes_to_read)
 	{
-		const auto _bytes_read = video.read(video_buffer.data() + bytes_read, bytes_to_read - bytes_read);
+		const auto _bytes_read = video.read(reinterpret_cast<char *>(video_buffer.data()) + bytes_read, bytes_to_read - bytes_read);
 		if (!_bytes_read)
 			return false;
 		bytes_read += _bytes_read;

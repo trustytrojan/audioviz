@@ -17,11 +17,6 @@ if(LINUX)
 	add_compile_definitions(LINUX)
 endif()
 
-add_compile_options(
-	-Wno-subobject-linkage # caused by spline; safe to ignore
-	-Wno-narrowing
-)
-
 add_subdirectory(libaudioviz)
 
 if(AUDIOVIZ_TTVIZ)

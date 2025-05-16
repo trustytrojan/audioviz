@@ -4,7 +4,7 @@
 
 void Main::encode(audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
+	audioviz::media::FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
 
 	if (enc_window)
 	{
