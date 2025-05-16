@@ -1,6 +1,10 @@
 ---@diagnostic disable: lowercase-global, undefined-global
-package.cpath = package.cpath .. ';build/luaviz/?.so'
-luaviz = require('luaviz')
+
+-- if running off standalone lua executable
+if not luaviz and package and package.cpath then
+	package.cpath = package.cpath .. ';build/luaviz/?.so;build/luaviz/?.dll'
+	luaviz = require('luaviz')
+end
 
 if not arg[1] then
 	print('media file required')
@@ -28,7 +32,7 @@ if luaviz.os == 'linux' then
 	font_path = '/usr/share/fonts/TTF/Iosevka-Regular.ttc'
 	vcodec = 'h264_vaapi'
 elseif luaviz.os == 'windows' then
-	font_path = os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\Iosevka-Regular.ttc'
+	font_path = os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\IosevkaFixed-Regular.ttf'
 	vcodec = 'h264_qsv'
 end
 viz:set_text_font(font_path)

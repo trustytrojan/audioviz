@@ -9,14 +9,20 @@ using namespace audioviz;
 namespace luaviz
 {
 
+table::table()
+	: sol::table{}
+{
+	load_everything();
+}
+
 table::table(const sol::table &t)
 	: sol::table{t}
 {
-	using FA = fft::FrequencyAnalyzer;
-	using AA = fft::AudioAnalyzer;
-	using SA = fft::StereoAnalyzer;
-	using CS = ColorSettings;
+	load_everything();
+}
 
+void table::load_everything()
+{
 #ifdef LINUX
 	set("os", "linux");
 #elifdef _WIN32

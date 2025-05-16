@@ -9,7 +9,7 @@ option(AUDIOVIZ_TESTS "Build the small test programs in the 'test' directory" OF
 option(AUDIOVIZ_LUAVIZ "Build luaviz: the Lua binding" ON)
 option(AUDIOVIZ_TTVIZ "Build ttviz: the first audioviz visualizer" ON)
 
-set(BUILD_SHARED_LIBS ON)
+set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

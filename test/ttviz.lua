@@ -1,6 +1,10 @@
 ---@diagnostic disable: lowercase-global, undefined-global
-package.cpath = package.cpath .. ';build/luaviz/?.so'
-luaviz = require('luaviz')
+
+-- if running off standalone lua executable
+if not luaviz and package and package.cpath then
+	package.cpath = package.cpath .. ';build/luaviz/?.so;build/luaviz/?.dll'
+	luaviz = require('luaviz')
+end
 
 if not arg[1] then
 	print('media file required')
@@ -46,7 +50,7 @@ if luaviz.os == 'linux' then
 	font_path = '/usr/share/fonts/TTF/Iosevka-Regular.ttc'
 	vcodec = 'h264_vaapi'
 elseif luaviz.os == 'windows' then
-	font_path = os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\Iosevka-Regular.ttc'
+	font_path = os.getenv('LocalAppData') .. '\\Microsoft\\Windows\\Fonts\\IosevkaFixed-Regular.ttf'
 	vcodec = 'h264_qsv'
 end
 viz:set_text_font(font_path)
@@ -119,8 +123,8 @@ particles_layer:set_orig_cb(function(_)
 end)
 
 particles_layer:set_fx_cb(function(orig_rt, fx_rt, target)
-	target:draw(fx_rt:sprite(), luaviz.sfBlendMode.Add)
-	target:draw(orig_rt:sprite(), luaviz.sfBlendMode.Add)
+	target:draw(fx_rt:sprite(), luaviz.sfBlendModes.Add)
+	target:draw(orig_rt:sprite(), luaviz.sfBlendModes.Add)
 end)
 
 spectrum_layer = viz:add_layer('spectrum', 0)
@@ -137,7 +141,7 @@ end)
 
 -- blend the layer onto the final picture by adding colors (involves transparency)
 spectrum_layer:set_fx_cb(function(orig_rt, fx_rt, target)
-	target:draw(fx_rt:sprite(), luaviz.sfBlendMode.Add)
+	target:draw(fx_rt:sprite(), luaviz.sfBlendModes.Add)
 	target:draw(orig_rt:sprite())
 end)
 

@@ -12,7 +12,8 @@ void table::load_Base()
 	new_usertype<Base>("Base",
 		"new", sol::factories([](const sol::table &rect, media::Media *const media)
 		{
-			return new Base(table_to_vec2<uint>(rect), media);
+			// the `uint` typedef isnt on mingw
+			return new Base(table_to_vec2<unsigned>(rect), media);
 		}),
 		"add_layer", &Base::add_layer,
 		"get_layer", &Base::get_layer,

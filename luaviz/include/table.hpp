@@ -19,7 +19,10 @@ sf::Color table_to_color(const sol::table &tb);
 
 struct table : sol::table
 {
+	table();
 	table(const sol::table &);
+	void load_everything();
+
 	void load_FA();
 	void load_AA_SA();
 	void load_RT();

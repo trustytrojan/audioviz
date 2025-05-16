@@ -18,7 +18,7 @@ void table::load_Sprite()
 		},
 		"fill_screen", [](Sprite &self, const sol::table &size)
 		{
-			self.fill_screen(table_to_vec2<uint>(size));
+			self.fill_screen(table_to_vec2<unsigned>(size));
 		},
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);

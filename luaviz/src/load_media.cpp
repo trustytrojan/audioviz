@@ -23,7 +23,7 @@ void table::load_media()
 		sol::base_classes, sol::bases<media::Media>(),
 		"new", sol::factories([](const std::string &url, const sol::table &size)
 		{
-			return new media::FfmpegCliBoostMedia(url, table_to_vec2<uint>(size));
+			return new media::FfmpegCliBoostMedia(url, table_to_vec2<unsigned>(size));
 		})
 	);
 	// clang-format on
