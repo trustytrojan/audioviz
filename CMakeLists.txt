@@ -13,9 +13,19 @@ set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if(LINUX)
-	add_compile_definitions(LINUX)
-endif()
+function(audioviz_compile_definitions target)
+	if(LINUX)
+		target_compile_definitions(${target} PUBLIC LINUX)
+	endif()
+
+	# the _WIN32 macro is defined by the mingw-w64 compilers
+
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		target_compile_definitions(${target} PUBLIC AUDIOVIZ_DEBUG)
+	endif()
+
+	message("[audioviz_compile_definitions] added compile definitions to target '${target}'")
+endfunction()
 
 add_subdirectory(libaudioviz)
 

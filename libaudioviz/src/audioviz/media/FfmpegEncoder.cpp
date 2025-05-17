@@ -1,39 +1,9 @@
 #include <audioviz/media/FfmpegEncoder.hpp>
-#include <iostream>
+#include <audioviz/util.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace audioviz::media
 {
-
-#ifdef LINUX
-static std::string detect_vaapi_device()
-{
-	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
-	{
-		const auto &path = e.path();
-		if (!path.filename().string().starts_with("renderD"))
-			continue;
-		std::cerr << "detect_vaapi_device: testing " << path << '\n';
-		// clang-format off
-		bp::child c{
-			bp::search_path("ffmpeg"),
-			"-v", "warning",
-			"-vaapi_device", path.string(),
-			"-f", "lavfi", "-i", "testsrc=1280x720:d=1",
-			"-vf", "format=nv12,hwupload,scale_vaapi=640:640",
-			"-c:v", "h264_vaapi",
-			"-f", "null", "-"};
-		// clang-format on
-		c.wait();
-		if (c.exit_code() == 0)
-		{
-			std::cerr << "detect_vaapi_device: success, returning " << path << '\n';
-			return path.string();
-		}
-	}
-	std::cerr << "detect_vaapi_device: failed to find device\n";
-	return {};
-}
-#endif
 
 FfmpegEncoder::FfmpegEncoder(
 	const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
@@ -80,7 +50,7 @@ FfmpegEncoder::FfmpegEncoder(
 		// if on linux and vaapi encoder used, detect a vaapi device for usage
 		if (vcodec.contains("vaapi"))
 		{
-			if (const auto vaapi_device = detect_vaapi_device(); !vaapi_device.empty())
+			if (const auto vaapi_device = util::detect_vaapi_device(); !vaapi_device.empty())
 			{
 				args.insert(args.end(), {
 					"-vaapi_device", vaapi_device,
@@ -88,17 +58,17 @@ FfmpegEncoder::FfmpegEncoder(
 				});
 			}
 			else
-				std::cerr << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
+				BOOST_LOG_TRIVIAL(error) << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
 		}
 #endif
 	// clang-format on
 
 	args.emplace_back(outfile);
 
-	std::cerr << "encoder args: ";
+	BOOST_LOG_TRIVIAL(debug) << "encoder args: ";
 	for (const auto &arg : args)
-		std::cerr << '\'' << arg << "' ";
-	std::cerr << '\n';
+		BOOST_LOG_TRIVIAL(debug) << '\'' << arg << "' ";
+	BOOST_LOG_TRIVIAL(debug) << '\n';
 
 	c = bp::child{bp::search_path("ffmpeg"), args, bp::std_in<video_in, bp::std_err> stderr};
 }

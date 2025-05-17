@@ -1,11 +1,16 @@
 #include "table.hpp"
-#include <iostream>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
+namespace bl = boost::log;
 
 int main(const int argc, const char *const *const argv)
 {
-	if (argc == 1)
+	bl::core::get()->set_filter(bl::trivial::severity >= bl::trivial::debug);
+
+	if (argc < 2)
 	{
-		std::cerr << "audioviz lua script required\n";
+		BOOST_LOG_TRIVIAL(info) << "audioviz lua script required\n";
 		return EXIT_FAILURE;
 	}
 
@@ -22,6 +27,5 @@ int main(const int argc, const char *const *const argv)
 	}
 	lua["arg"] = lua_arg;
 
-	// Now run the script
 	lua.safe_script_file(argv[1]);
 }

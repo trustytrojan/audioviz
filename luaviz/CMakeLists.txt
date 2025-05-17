@@ -16,3 +16,5 @@ else()
 	# remove `lib` prefix from filename
 	set_target_properties(luaviz PROPERTIES PREFIX "")
 endif()
+
+audioviz_compile_definitions(luaviz)

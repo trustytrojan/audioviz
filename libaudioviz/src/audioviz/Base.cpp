@@ -1,6 +1,7 @@
 #include <audioviz/Base.hpp>
 #include <audioviz/media/FfmpegEncoder.hpp>
 #include <iostream>
+#include <boost/log/trivial.hpp>
 
 #define capture_time(label, code)            \
 	if (tt_enabled)                          \
@@ -56,7 +57,7 @@ void Base::play_audio()
 	{
 		if (e.code != paOutputUnderflowed)
 			throw;
-		std::cerr << e.what() << '\n';
+		BOOST_LOG_TRIVIAL(warning) << e.what() << '\n';
 	}
 }
 #endif
@@ -77,7 +78,7 @@ bool Base::next_frame()
 
 	if (media->audio_buffer_frames() < audio_frames_needed)
 	{
-		std::cerr << "[Base::next_frame] not enough audio frames, returning false\n";
+		BOOST_LOG_TRIVIAL(info) << "not enough audio frames, returning false\n";
 		return false;
 	}
 

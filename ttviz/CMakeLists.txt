@@ -13,3 +13,4 @@ endif()
 
 file(GLOB_RECURSE TTVIZ_SOURCES src/*.cpp)
 add_executable(ttviz ${TTVIZ_SOURCES})
+audioviz_compile_definitions(ttviz)

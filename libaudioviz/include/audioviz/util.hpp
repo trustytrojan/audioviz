@@ -21,4 +21,8 @@ inline const sf::BlendMode GreatAmazingBlendMode{
 	sf::BlendMode::Equation::Add
 };
 
+#ifdef LINUX
+std::string detect_vaapi_device();
+#endif
+
 } // namespace audioviz::util

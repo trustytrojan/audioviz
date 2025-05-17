@@ -3,8 +3,12 @@
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/media/FfmpegCliBoostMedia.hpp>
 #include <audioviz/media/Media.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/trivial.hpp>
 #include <iostream>
 #include <portaudio.hpp>
+
+namespace bl = boost::log;
 
 int main(const int argc, const char *const *const argv)
 {
@@ -13,6 +17,8 @@ int main(const int argc, const char *const *const argv)
 		std::cerr << "usage: " << argv[0] << " <size.x> <size.y> <media file>\n";
 		return EXIT_FAILURE;
 	}
+
+	bl::core::get()->set_filter(bl::trivial::severity >= bl::trivial::info);
 
 	const sf::Vector2u size{std::stoi(argv[1]), std::stoi(argv[2])};
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
@@ -38,19 +44,11 @@ int main(const int argc, const char *const *const argv)
 	// number of audio FRAMES per video frame
 	const int afpvf{astream.sample_rate() / framerate};
 
-	// number of audio SAMPLES per video frame
-	const int aspvf{afpvf * astream.nb_channels()};
-
-	// number of audio SAMPLES needed for fft
-	const auto fft_samples = fft_size * astream.nb_channels();
-
-	// remember this stores SAMPLES not FRAMES
-	// one audio FRAME is nb_channels SAMPLES long
-	std::vector<float> audio_buffer(fft_samples);
-
 	pa::PortAudio _;
-	pa::Stream pa_stream{0, astream.nb_channels(), paFloat32, astream.sample_rate(), afpvf};
+	pa::Stream pa_stream{0, astream.nb_channels(), paFloat32, astream.sample_rate()};
 	pa_stream.start();
+
+	int frames{};
 
 	while (window.isOpen())
 	{
@@ -60,24 +58,20 @@ int main(const int argc, const char *const *const argv)
 				window.close();
 
 		// ensure we have at least fft_samples samples
-		if (audio_buffer.size() < fft_samples)
+		media->decode_audio(fft_size);
+		if (media->audio_buffer_frames() < fft_size)
 		{
-			float buf[fft_samples];
-			if (media->read_audio_samples(buf, fft_samples) < fft_samples)
-			{
-				std::cout << "not enough audio for fft, breaking loop\n";
-				break;
-			}
-			audio_buffer.insert(audio_buffer.end(), buf, buf + fft_samples);
+			std::cout << "not enough audio for fft, breaking loop\n";
+			break;
 		}
 
 		ss.configure_analyzer(sa);
-		sa.analyze(fa, audio_buffer.data(), true);
+		sa.analyze(fa, media->audio_buffer().data(), true);
 		ss.update(sa);
 
 		try
 		{
-			pa_stream.write(audio_buffer.data(), afpvf);
+			pa_stream.write(media->audio_buffer().data(), afpvf);
 		}
 		catch (const pa::Error &e)
 		{
@@ -86,11 +80,12 @@ int main(const int argc, const char *const *const argv)
 			std::cerr << e.what() << '\n';
 		}
 
-		const auto begin = audio_buffer.begin();
-		audio_buffer.erase(begin, begin + afpvf * astream.nb_channels());
+		media->audio_buffer_erase(afpvf);
 
 		window.clear();
 		window.draw(ss);
 		window.display();
+
+		std::cerr << "\r\e[2Kframes: " << frames++;
 	}
 }

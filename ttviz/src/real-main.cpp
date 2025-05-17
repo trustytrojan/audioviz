@@ -1,18 +1,20 @@
-#include <iostream>
 #include "Main.hpp"
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 
-void * __gxx_personality_v0=0;
-void * _Unwind_Resume =0;
+namespace bl = boost::log;
 
 int main(const int argc, const char *const *const argv)
 {
+	bl::core::get()->set_filter(bl::trivial::severity >= bl::trivial::debug);
+
 	try
 	{
 		Main(argc, argv);
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << "audioviz: " << e.what() << '\n';
+		BOOST_LOG_TRIVIAL(error) << "audioviz: " << e.what() << '\n';
 		return EXIT_FAILURE;
 	}
 }

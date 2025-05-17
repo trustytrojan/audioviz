@@ -1,31 +1,8 @@
 #include <audioviz/media/FfmpegCliBoostMedia.hpp>
-#include <boost/process/v1/search_path.hpp>
+#include <audioviz/util.hpp>
 #include <boost/process/v1/io.hpp>
-#include <iostream>
-
-static std::string detect_vaapi_device()
-{
-	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
-	{
-		const auto &path = e.path();
-		if (!path.filename().string().starts_with("renderD"))
-			continue;
-		// clang-format off
-		bp::child c{
-			bp::search_path("ffmpeg"),
-			"-v", "warning",
-			"-vaapi_device", path.string(),
-			"-f", "lavfi", "-i", "testsrc=1280x720:d=1",
-			"-vf", "format=nv12,hwupload,scale_vaapi=640:640",
-			"-c:v", "h264_vaapi",
-			"-f", "null", "-"};
-		// clang-format on
-		c.wait();
-		if (c.exit_code() == 0)
-			return path.string();
-	}
-	return {};
-}
+#include <boost/process/v1/search_path.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace audioviz::media
 {
@@ -45,7 +22,7 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 		}
 	}
 
-	try // find video stream
+	try // to find a video stream
 	{
 		const auto stream = _format.find_best_stream(AVMEDIA_TYPE_VIDEO);
 		// we don't want to re-decode the attached pic stream
@@ -54,7 +31,7 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 	}
 	catch (const av::Error &e)
 	{
-		std::cerr << e.what() << '\n';
+		BOOST_LOG_TRIVIAL(info) << e.what() << '\n';
 	}
 
 	{ // create audio decoder
@@ -62,10 +39,10 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 		if (url.contains("http"))
 			args.insert(args.end(), {"-reconnect", "1"});
 		args.insert(args.end(), {"-i", url, "-c:a", "pcm_f32le", "-f", "f32le", "-"});
-		std::cerr << "audio args: ";
+		BOOST_LOG_TRIVIAL(debug) << "audio args: ";
 		for (const auto &arg : args)
-			std::cerr << '\'' << arg << "' ";
-		std::cerr << '\n';
+			BOOST_LOG_TRIVIAL(debug) << '\'' << arg << "' ";
+		BOOST_LOG_TRIVIAL(debug) << '\n';
 		audioc = bp::child{bp::search_path("ffmpeg"), args, bp::std_out > audio};
 	}
 
@@ -81,7 +58,7 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 		// also change quoting for windows
 
 #ifdef LINUX
-		if (const auto vaapi_device = detect_vaapi_device(); !vaapi_device.empty())
+		if (const auto vaapi_device = util::detect_vaapi_device(); !vaapi_device.empty())
 			// clang-format off
 			args.insert(args.end(), {
 				"-vaapi_device", vaapi_device,
@@ -98,10 +75,10 @@ FfmpegCliBoostMedia::FfmpegCliBoostMedia(const std::string &url, const sf::Vecto
 
 		args.insert(args.end(), {"-pix_fmt", "rgba", "-f", "rawvideo", "-"});
 
-		std::cerr << "video args: ";
+		BOOST_LOG_TRIVIAL(debug) << "video args: ";
 		for (const auto &arg : args)
-			std::cerr << '\'' << arg << "' ";
-		std::cerr << '\n';
+			BOOST_LOG_TRIVIAL(debug) << '\'' << arg << "' ";
+		BOOST_LOG_TRIVIAL(debug) << '\n';
 
 		videoc = bp::child{bp::search_path("ffmpeg"), args, bp::std_out > video};
 	}
@@ -118,7 +95,10 @@ FfmpegCliBoostMedia::~FfmpegCliBoostMedia()
 size_t FfmpegCliBoostMedia::read_audio_samples(float *const buf, const int samples)
 {
 	const auto bytes_read = audio.read(reinterpret_cast<char *>(buf), samples * sizeof(float));
-	return bytes_read;
+	const auto floats_read = bytes_read / sizeof(float);
+	BOOST_LOG_TRIVIAL(trace) << "bytes_read=" << bytes_read << " floats_read=" << floats_read
+			  << '\n';
+	return floats_read;
 }
 
 bool FfmpegCliBoostMedia::read_video_frame(sf::Texture &txr)
@@ -129,7 +109,8 @@ bool FfmpegCliBoostMedia::read_video_frame(sf::Texture &txr)
 	int bytes_read = 0;
 	while (bytes_read < bytes_to_read)
 	{
-		const auto _bytes_read = video.read(reinterpret_cast<char *>(video_buffer.data()) + bytes_read, bytes_to_read - bytes_read);
+		const auto _bytes_read =
+			video.read(reinterpret_cast<char *>(video_buffer.data()) + bytes_read, bytes_to_read - bytes_read);
 		if (!_bytes_read)
 			return false;
 		bytes_read += _bytes_read;

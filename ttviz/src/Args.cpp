@@ -1,4 +1,5 @@
 #include "Args.hpp"
+#include <boost/log/trivial.hpp>
 
 Args::Args(const int argc, const char *const *const argv)
 	: ArgumentParser{argv[0], "latest"}
@@ -151,7 +152,7 @@ Args::Args(const int argc, const char *const *const argv)
 
 		if (get<bool>("--bm-help"))
 		{
-			std::cout << R"(possible argument cases:
+			std::cout << R"(possible --blendmode argument cases:
 - 1 arg: 'alpha', 'add', 'mult', 'min', 'max', 'none'
 - 3 args: <srcfactor> <dstfactor> <op>
 - 6 args: <color_sf> <color_df> <op> <alpha_sf> <alpha_df> <op>
@@ -178,7 +179,7 @@ Args::Args(const int argc, const char *const *const argv)
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << argv[0] << ": " << e.what() << '\n';
+		BOOST_LOG_TRIVIAL(error) << argv[0] << ": " << e.what() << '\n';
 		exit(EXIT_FAILURE);
 	}
 }

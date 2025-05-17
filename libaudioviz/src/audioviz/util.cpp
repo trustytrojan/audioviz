@@ -3,6 +3,12 @@
 #include <cstdlib>
 #include <stdexcept>
 
+#ifdef LINUX
+#include <boost/process/v1/io.hpp>
+#include <boost/process/v1/child.hpp>
+#include <boost/process/v1/search_path.hpp>
+#endif
+
 namespace audioviz::util
 {
 
@@ -140,5 +146,41 @@ float weighted_max(
 		begin + amount,		   // only the first 50% of the range will have full weight
 		begin + (amount / 2)); // these are generally the strongest bass frequencies to the ear
 }
+
+#ifdef LINUX
+std::string detect_vaapi_device()
+{
+	namespace bp = boost::process;
+
+	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
+	{
+		const auto &path = e.path();
+		if (!path.filename().string().starts_with("renderD"))
+			continue;
+		BOOST_LOG_TRIVIAL(debug) << "detect_vaapi_device: testing " << path << '\n';
+
+		// clang-format off
+		bp::child c{
+			bp::search_path("ffmpeg"),
+			"-v", "warning",
+			"-vaapi_device", path.string(),
+			"-f", "lavfi", "-i", "testsrc=1280x720:d=1",
+			"-vf", "format=nv12,hwupload,scale_vaapi=640:640",
+			"-c:v", "h264_vaapi",
+			"-f", "null", "-"};
+		// clang-format on
+
+		c.wait();
+		if (c.exit_code() == 0)
+		{
+			BOOST_LOG_TRIVIAL(debug) << "detect_vaapi_device: success, returning " << path << '\n';
+			return path.string();
+		}
+	}
+
+	BOOST_LOG_TRIVIAL(warning) << "detect_vaapi_device: failed to find device\n";
+	return {};
+}
+#endif
 
 } // namespace audioviz::util

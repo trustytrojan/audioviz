@@ -6,6 +6,7 @@ file(GLOB AUDIOVIZ_SOURCES
 )
 
 add_library(audioviz ${AUDIOVIZ_SOURCES})
+audioviz_compile_definitions(audioviz)
 
 # after the add_library so that deps.cmake can use target_XXXX commands
 include(deps.cmake)

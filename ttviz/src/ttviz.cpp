@@ -1,8 +1,7 @@
-#include <iostream>
-
 #include <audioviz/fx/Blur.hpp>
 #include <audioviz/fx/Mult.hpp>
 #include <audioviz/media/FfmpegCliBoostMedia.hpp>
+#include <boost/log/trivial.hpp>
 #include "ttviz.hpp"
 
 #define capture_time(label, code)            \
@@ -82,7 +81,7 @@ void ttviz::layers_init(const int antialiasing)
 						if (media->read_video_frame(video_bg))
 							orig_rt.draw(sf::Sprite{video_bg});
 						else
-							std::cout << "media->read_video_frame returned false????????\n";
+							BOOST_LOG_TRIVIAL(warning) << "media->read_video_frame returned false????????\n";
 						vfcount = 1; // ALWAYS RESET TO 1 OTHERWISE THE IF CHECK ABOVE DOESN'T MAKE SENSE
 					}
 					// orig_rt.display();

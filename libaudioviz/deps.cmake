@@ -97,13 +97,13 @@ target_link_libraries(audioviz PUBLIC SFML::Graphics)
 find_package(Boost COMPONENTS Process QUIET)
 if(NOT Boost_FOUND)
 	message("Boost not found, using FetchContent...")
-	set(BOOST_INCLUDE_LIBRARIES "process;filesystem")
+	set(BOOST_INCLUDE_LIBRARIES "process;log")
 	FetchContent_Declare(Boost URL https://github.com/boostorg/boost/releases/download/boost-1.88.0/boost-1.88.0-cmake.7z)
 	FetchContent_MakeAvailable(Boost)
 	if(WIN32)
 		target_link_libraries(audioviz PUBLIC ws2_32) # winsock library required by boost.asio
 	endif()
-	target_link_libraries(audioviz PUBLIC Boost::process)
+	target_link_libraries(audioviz PUBLIC Boost::process PUBLIC Boost::log)
 endif()
 
 ## header-only libs
