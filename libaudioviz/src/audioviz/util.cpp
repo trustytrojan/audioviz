@@ -7,6 +7,7 @@
 #include <boost/process/v1/io.hpp>
 #include <boost/process/v1/child.hpp>
 #include <boost/process/v1/search_path.hpp>
+#include <boost/log/trivial.hpp>
 #endif
 
 namespace audioviz::util
@@ -150,7 +151,7 @@ float weighted_max(
 #ifdef LINUX
 std::string detect_vaapi_device()
 {
-	namespace bp = boost::process;
+	namespace bp = boost::process::v1;
 
 	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
 	{

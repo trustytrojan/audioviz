@@ -5,8 +5,12 @@
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/media/FfmpegCliBoostMedia.hpp>
 #include <audioviz/media/Media.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/trivial.hpp>
 #include <iostream>
 #include <portaudio.hpp>
+
+namespace bl = boost::log;
 
 int main(const int argc, const char *const *const argv)
 {
@@ -15,6 +19,8 @@ int main(const int argc, const char *const *const argv)
 		std::cerr << "usage: " << argv[0] << " <size.x> <size.y> <media file>\n";
 		return EXIT_FAILURE;
 	}
+
+	bl::core::get()->set_filter(bl::trivial::severity >= bl::trivial::info);
 
 	const sf::Vector2u size{atoi(argv[1]), atoi(argv[2])};
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};

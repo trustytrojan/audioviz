@@ -3,8 +3,8 @@ include(FetchContent)
 
 ## ffmpeg
 set(FFMPEG_LIBS avformat avutil avcodec)
-find_library(FFMPEG_LIBS_FOUND NAMES ${FFMPEG_LIBS})
-if(WIN32 AND NOT FFMPEG_LIBS_FOUND)
+find_library(ffmpeg NAMES ${FFMPEG_LIBS})
+if(WIN32 AND ffmpeg STREQUAL "ffmpeg-NOTFOUND")
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		find_program(WINGET winget)
 		if(WINGET STREQUAL "WINGET-NOTFOUND")
@@ -60,7 +60,8 @@ foreach(LIB IN LISTS FFMPEG_LIBS)
 endforeach()
 
 ## fftw
-if(WIN32)
+find_package(FFTW3 COMPONENTS fftw3f)
+if(WIN32 AND NOT fftw3_FOUND)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		message("fetching fftw x64 binaries...")
 		FetchContent_Declare(fftw URL https://fftw.org/pub/fftw/fftw-3.3.5-dll64.zip)
@@ -78,7 +79,7 @@ if(WIN32)
 		target_include_directories(audioviz PUBLIC ${fftw_SOURCE_DIR}/api)
 		target_link_libraries(audioviz PUBLIC fftw3f)
 	endif()
-elseif(LINUX)
+else()
 	target_link_libraries(audioviz PUBLIC fftw3f)
 endif()
 
@@ -94,7 +95,7 @@ endif()
 target_link_libraries(audioviz PUBLIC SFML::Graphics)
 
 ## boost
-find_package(Boost COMPONENTS Process QUIET)
+find_package(Boost COMPONENTS Process Log REQUIRED)
 if(NOT Boost_FOUND)
 	message("Boost not found, using FetchContent...")
 	set(BOOST_INCLUDE_LIBRARIES "process;log")
@@ -103,8 +104,8 @@ if(NOT Boost_FOUND)
 	if(WIN32)
 		target_link_libraries(audioviz PUBLIC ws2_32) # winsock library required by boost.asio
 	endif()
-	target_link_libraries(audioviz PUBLIC Boost::process PUBLIC Boost::log)
 endif()
+target_link_libraries(audioviz PUBLIC Boost::process PUBLIC Boost::log)
 
 ## header-only libs
 FetchContent_Declare(libavpp URL https://github.com/trustytrojan/libavpp/archive/main.zip)
@@ -130,7 +131,7 @@ if(AUDIOVIZ_PORTAUDIO)
 			FetchContent_MakeAvailable(portaudio)
 			target_link_libraries(audioviz PUBLIC portaudio)
 		endif()
-	elseif(LINUX)
+	else()
 		target_link_libraries(audioviz PUBLIC portaudio)
 	endif()
 

@@ -15,6 +15,10 @@ FetchContent_MakeAvailable(imgui)
 find_package(SFML COMPONENTS Graphics QUIET)
 if(NOT SFML_FOUND)
 	set(IMGUI_SFML_FIND_SFML OFF)
+else()
+	set(BUILD_SHARED_LIBS ON)
+	# because imgui-sfml's cmake sets SFML_STATIC_LIBRARIES
+	# based on BUILD_SHARED_LIBS
 endif()
 set(IMGUI_DIR ${imgui_SOURCE_DIR})
 set(IMGUI_SFML_IMGUI_DEMO OFF)

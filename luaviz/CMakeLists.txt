@@ -1,20 +1,17 @@
-option(LUAVIZ_EXECUTABLE "Make a luaviz executable that executes a Lua script with the audioviz binding included" OFF)
+option(LUAVIZ_EXECUTABLE "Make luaviz an executable that executes a Lua script with the audioviz binding included" OFF)
 
 file(GLOB LUAVIZ_SOURCES src/*.cpp)
-add_library(luaviz-intermediate ${LUAVIZ_SOURCES})
-target_include_directories(luaviz-intermediate PUBLIC include)
-target_link_libraries(luaviz-intermediate PUBLIC audioviz)
+
+if(LUAVIZ_EXECUTABLE)
+	add_executable(luaviz ${LUAVIZ_SOURCES} src/exe/main.cpp)
+else()
+	add_library(luaviz MODULE ${LUAVIZ_SOURCES} src/lib/extern.cpp)
+	set_target_properties(luaviz PROPERTIES PREFIX "") # remove `lib` prefix from filename
+endif()
 
 include(deps.cmake)
 
-if(LUAVIZ_EXECUTABLE)
-	add_executable(luaviz src/exe/main.cpp)
-	target_link_libraries(luaviz PUBLIC luaviz-intermediate)
-else()
-	add_library(luaviz MODULE src/lib/extern.cpp)
-	target_link_libraries(luaviz PUBLIC luaviz-intermediate)
-	# remove `lib` prefix from filename
-	set_target_properties(luaviz PROPERTIES PREFIX "")
-endif()
+target_include_directories(luaviz PUBLIC include)
+target_link_libraries(luaviz PUBLIC audioviz)
 
 audioviz_compile_definitions(luaviz)
