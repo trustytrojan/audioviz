@@ -4,10 +4,7 @@
 #include <stdexcept>
 
 #ifdef LINUX
-#include <boost/process/v1/io.hpp>
-#include <boost/process/v1/child.hpp>
-#include <boost/process/v1/search_path.hpp>
-#include <boost/log/trivial.hpp>
+#include <iostream>
 #endif
 
 namespace audioviz::util
@@ -151,35 +148,35 @@ float weighted_max(
 #ifdef LINUX
 std::string detect_vaapi_device()
 {
-	namespace bp = boost::process::v1;
-
 	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
 	{
 		const auto &path = e.path();
 		if (!path.filename().string().starts_with("renderD"))
 			continue;
-		BOOST_LOG_TRIVIAL(debug) << "detect_vaapi_device: testing " << path << '\n';
+		std::cerr << "detect_vaapi_device: testing " << path << '\n';
 
-		// clang-format off
-		bp::child c{
-			bp::search_path("ffmpeg"),
-			"-v", "warning",
-			"-vaapi_device", path.string(),
-			"-f", "lavfi", "-i", "testsrc=1280x720:d=1",
-			"-vf", "format=nv12,hwupload,scale_vaapi=640:640",
-			"-c:v", "h264_vaapi",
-			"-f", "null", "-"};
-		// clang-format on
+		// Build the ffmpeg command
+		const auto cmd{
+			"ffmpeg -v warning -vaapi_device " + path.string() +
+			" -f lavfi -i testsrc=1280x720:d=1 -vf format=nv12,hwupload,scale_vaapi=640:640 -c:v "
+			"h264_vaapi -f null - 2>&1"};
 
-		c.wait();
-		if (c.exit_code() == 0)
+		const auto pipe = popen(cmd.c_str(), "r");
+		if (!pipe)
 		{
-			BOOST_LOG_TRIVIAL(debug) << "detect_vaapi_device: success, returning " << path << '\n';
+			std::cerr << "detect_vaapi_device: popen failed for " << path << '\n';
+			continue;
+		}
+
+		const auto status = pclose(pipe);
+		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+		{
+			std::cerr << "detect_vaapi_device: success, returning " << path << '\n';
 			return path.string();
 		}
 	}
 
-	BOOST_LOG_TRIVIAL(warning) << "detect_vaapi_device: failed to find device\n";
+	std::cerr << "detect_vaapi_device: failed to find device\n";
 	return {};
 }
 #endif

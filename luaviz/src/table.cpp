@@ -1,10 +1,4 @@
 #include "table.hpp"
-#include <audioviz/ColorSettings.hpp>
-#include <audioviz/fft/StereoAnalyzer.hpp>
-#include <audioviz/media/FfmpegCliBoostMedia.hpp>
-#include <audioviz/util.hpp>
-
-using namespace audioviz;
 
 namespace luaviz
 {

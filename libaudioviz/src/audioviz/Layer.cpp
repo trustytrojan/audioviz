@@ -59,4 +59,4 @@ void Layer::full_lifecycle(sf::RenderTarget &target)
 		fx_cb(_orig_rt, _fx_rt, target);
 }
 
-} // namespace viz
+} // namespace audioviz

@@ -66,7 +66,7 @@ void Main::start_in_window(audioviz::Base &viz)
 		}
 		ImGui::SFML::Update(window, delta_clock.restart());
 
-		ImGui::Begin("audioviz config");
+		ImGui::Begin("ttviz config");
 		ImGui::SliderInt("bar width", &bar_width, 1, 100);
 		ImGui::SliderInt("bar spacing", &bar_spacing, 0, 100);
 		ImGui::SliderInt("fft size", &fft_size, 100, 10'000);

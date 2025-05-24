@@ -17,4 +17,4 @@ public:
 	void setHeight(float height);
 };
 
-} // namespace viz
+} // namespace audioviz

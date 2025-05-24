@@ -23,7 +23,7 @@ lbsd = luaviz.BarSpectrumDrawable.new({ LBSD_POS, SPECTRUM_SIZE }, cs)
 rbsd = luaviz.BarSpectrumDrawable.new({ RBSD_POS, SPECTRUM_SIZE }, cs)
 lcps = luaviz.CircleParticleSystem.new({ { 0, 0 }, { 1280, 720 } }, 45)
 rcps = luaviz.CircleParticleSystem.new({ { 0, 0 }, { 1280, 720 } }, 45)
-media = luaviz.FfmpegCliBoostMedia.new(arg[1], {})
+media = luaviz.FfmpegPopenMedia.new(arg[1], {})
 viz = luaviz.Base.new(SIZE, media)
 viz:set_audio_frames_needed(FFT_SIZE)
 

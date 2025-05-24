@@ -1,7 +1,7 @@
 #pragma once
 
-#include <audioviz/ColorSettings.hpp>
 #include <SFML/Graphics.hpp>
+#include <audioviz/ColorSettings.hpp>
 #include <cmath>
 #include <span>
 

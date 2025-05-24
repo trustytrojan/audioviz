@@ -2,13 +2,9 @@
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/VerticalBar.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/media/FfmpegCliBoostMedia.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/trivial.hpp>
+#include <audioviz/media/Media.hpp>
 #include <iostream>
 #include <portaudio.hpp>
-
-namespace bl = boost::log;
 
 int main(const int argc, const char *const *const argv)
 {
@@ -17,8 +13,6 @@ int main(const int argc, const char *const *const argv)
 		std::cerr << "usage: " << argv[0] << " <size.x> <size.y> <media file>\n";
 		return EXIT_FAILURE;
 	}
-
-	bl::core::get()->set_filter(bl::trivial::severity >= bl::trivial::info);
 
 	const sf::Vector2u size{atoi(argv[1]), atoi(argv[2])};
 	sf::RenderWindow window{
@@ -45,14 +39,14 @@ int main(const int argc, const char *const *const argv)
 	const auto fft_size = size.x;
 	audioviz::fft::FrequencyAnalyzer fa{fft_size};
 
-	std::unique_ptr<audioviz::media::Media> media{new audioviz::media::FfmpegCliBoostMedia{argv[3]}};
+	std::unique_ptr<audioviz::media::Media> media{audioviz::media::Media::create(argv[3])};
 
-	int afpvf{media->astream().sample_rate() / 60};
+	int afpvf{media->audio_sample_rate() / 60};
 
 	std::vector<float> left_channel(scope.get_shape_count()), spectrum(fft_size);
 
 	pa::PortAudio _;
-	pa::Stream pa_stream{0, media->astream().nb_channels(), paFloat32, media->astream().sample_rate()};
+	pa::Stream pa_stream{0, media->audio_channels(), paFloat32, media->audio_sample_rate()};
 	pa_stream.start();
 
 	const sf::Vector2f _origin{size.x / 2.f, size.y / 2.f};
@@ -74,14 +68,14 @@ int main(const int argc, const char *const *const argv)
 				window.close();
 
 		{
-			media->decode_audio(scope.get_shape_count());
+			media->buffer_audio(scope.get_shape_count());
 
 			if (media->audio_buffer().size() < scope.get_shape_count())
 				break;
 
 			// copy just the left channel
 			for (int i = 0; i < scope.get_shape_count(); ++i)
-				left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0 /* left channel */];
+				left_channel[i] = media->audio_buffer()[i * media->audio_channels() + 0 /* left channel */];
 			scope.update(left_channel);
 
 			fa.copy_to_input(left_channel.data());

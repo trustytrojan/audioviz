@@ -1,5 +1,4 @@
 #include "Args.hpp"
-#include <boost/log/trivial.hpp>
 
 Args::Args(const int argc, const char *const *const argv)
 	: ArgumentParser{argv[0], "latest"}
@@ -179,7 +178,7 @@ Args::Args(const int argc, const char *const *const argv)
 	}
 	catch (const std::exception &e)
 	{
-		BOOST_LOG_TRIVIAL(error) << argv[0] << ": " << e.what() << '\n';
+		std::cerr << argv[0] << ": " << e.what() << '\n';
 		exit(EXIT_FAILURE);
 	}
 }

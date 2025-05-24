@@ -1,5 +1,8 @@
 #include "table.hpp"
-#include <audioviz/media/FfmpegCliBoostMedia.hpp>
+#ifdef AUDIOVIZ_BOOST
+#include <audioviz/media/FfmpegBoostMedia.hpp>
+#endif
+#include <audioviz/media/FfmpegPopenMedia.hpp>
 
 using namespace audioviz;
 
@@ -19,11 +22,21 @@ void table::load_media()
 		}
 	);
 
-	new_usertype<media::FfmpegCliBoostMedia>("FfmpegCliBoostMedia",
+#ifdef AUDIOVIZ_BOOST
+	new_usertype<media::FfmpegCliBoostMedia>("FfmpegBoostMedia",
 		sol::base_classes, sol::bases<media::Media>(),
 		"new", sol::factories([](const std::string &url, const sol::table &size)
 		{
-			return new media::FfmpegCliBoostMedia(url, table_to_vec2<unsigned>(size));
+			return new media::FfmpegCliBoostMedia{url, table_to_vec2<unsigned>(size)};
+		})
+	);
+#endif
+
+	new_usertype<media::FfmpegPopenMedia>("FfmpegPopenMedia",
+		sol::base_classes, sol::bases<media::Media>(),
+		"new", sol::factories([](const std::string &url, const sol::table &size)
+		{
+			return new media::FfmpegPopenMedia{url, table_to_vec2<unsigned>(size)};
 		})
 	);
 	// clang-format on

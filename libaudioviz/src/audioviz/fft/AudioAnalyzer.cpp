@@ -31,4 +31,4 @@ const std::vector<float> &AudioAnalyzer::get_spectrum_data(const int channel_ind
 	return _spectrum_data_per_channel[channel_index];
 }
 
-} // namespace tt
+} // namespace audioviz::fft

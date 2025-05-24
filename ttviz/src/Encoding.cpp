@@ -1,10 +1,11 @@
 #include "Main.hpp"
 
 #include <audioviz/media/FfmpegEncoder.hpp>
+#include <audioviz/media/FfmpegPopenEncoder.hpp>
 
 void Main::encode(audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	audioviz::media::FfmpegEncoder ffmpeg{viz, outfile, vcodec, acodec};
+	const auto ffmpeg = std::make_unique<audioviz::media::FfmpegPopenEncoder>(viz, outfile, vcodec, acodec);
 
 	if (enc_window)
 	{
@@ -21,7 +22,7 @@ void Main::encode(audioviz::Base &viz, const std::string &outfile, const std::st
 			window.draw(viz);
 			window.display();
 			txr.update(window);
-			ffmpeg.send_frame(txr);
+			ffmpeg->send_frame(txr);
 		}
 	}
 	else
@@ -31,7 +32,7 @@ void Main::encode(audioviz::Base &viz, const std::string &outfile, const std::st
 		{
 			rt.draw(viz);
 			rt.display();
-			ffmpeg.send_frame(rt.getTexture());
+			ffmpeg->send_frame(rt.getTexture());
 		}
 	}
 }

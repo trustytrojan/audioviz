@@ -1,7 +1,7 @@
 #pragma once
 
-#include <audioviz/fft/StereoAnalyzer.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/fft/StereoAnalyzer.hpp>
 
 namespace audioviz
 {
@@ -114,4 +114,4 @@ public:
 	}
 };
 
-} // namespace viz
+} // namespace audioviz

@@ -15,4 +15,4 @@ void RenderTexture::copy(const RenderTexture &other)
 	display();
 }
 
-} // namespace tt
+} // namespace audioviz

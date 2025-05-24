@@ -36,7 +36,7 @@ bss = luaviz.BarStereoSpectrum.new({ {}, SIZE }, cs)
 cps = luaviz.CircleParticleSystem.new({ {}, SIZE }, 50)
 
 -- where the audio is coming from
-media = luaviz.FfmpegCliBoostMedia.new(arg[1], SIZE)
+media = luaviz.FfmpegPopenMedia.new(arg[1], SIZE)
 
 -- layering & timing logic
 viz = luaviz.Base.new(SIZE, media)

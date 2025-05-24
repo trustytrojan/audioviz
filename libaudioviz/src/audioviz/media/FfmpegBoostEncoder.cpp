@@ -1,11 +1,10 @@
-#include <audioviz/media/FfmpegEncoder.hpp>
+#include <audioviz/media/FfmpegBoostEncoder.hpp>
 #include <audioviz/util.hpp>
-#include <boost/log/trivial.hpp>
 
 namespace audioviz::media
 {
 
-FfmpegEncoder::FfmpegEncoder(
+FfmpegBoostEncoder::FfmpegBoostEncoder(
 	const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	const auto &url = viz.get_media_url();
@@ -58,28 +57,28 @@ FfmpegEncoder::FfmpegEncoder(
 				});
 			}
 			else
-				BOOST_LOG_TRIVIAL(error) << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
+				std::cerr << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
 		}
 #endif
 	// clang-format on
 
 	args.emplace_back(outfile);
 
-	BOOST_LOG_TRIVIAL(debug) << "encoder args: ";
+	std::cout << "encoder args: ";
 	for (const auto &arg : args)
-		BOOST_LOG_TRIVIAL(debug) << '\'' << arg << "' ";
-	BOOST_LOG_TRIVIAL(debug) << '\n';
+		std::cout << '\'' << arg << "' ";
+	std::cout << '\n';
 
 	c = bp::child{bp::search_path("ffmpeg"), args, bp::std_in<video_in, bp::std_err> stderr};
 }
 
-FfmpegEncoder::~FfmpegEncoder()
+FfmpegBoostEncoder::~FfmpegBoostEncoder()
 {
 	video_in.close();
 	c.wait();
 }
 
-void FfmpegEncoder::send_frame(const sf::Image &img)
+void FfmpegBoostEncoder::send_frame(const sf::Image &img)
 {
 	const auto [x, y] = img.getSize();
 	video_in.write(reinterpret_cast<const char *>(img.getPixelsPtr()), 4 * x * y);

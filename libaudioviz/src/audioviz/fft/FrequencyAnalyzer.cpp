@@ -183,4 +183,4 @@ void FrequencyAnalyzer::interpolate(std::vector<float> &spectrum)
 			spectrum[i] = spline(i);
 }
 
-} // namespace tt
+} // namespace audioviz::fft

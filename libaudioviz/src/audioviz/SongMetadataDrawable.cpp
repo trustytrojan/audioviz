@@ -11,14 +11,9 @@ SongMetadataDrawable::SongMetadataDrawable(sf::Text &title_text, sf::Text &artis
 
 void SongMetadataDrawable::use_metadata(const media::Media &media)
 {
-	if (const auto title = media.format().metadata("title"))
+	if (const auto title = media.title(); !title.empty())
 		title_text.setString(title);
-	else if (const auto title = media.astream().metadata("title"))
-		title_text.setString(title);
-
-	if (const auto artist = media.format().metadata("artist"))
-		artist_text.setString(artist);
-	else if (const auto artist = media.astream().metadata("artist"))
+	if (const auto artist = media.artist(); !artist.empty())
 		artist_text.setString(artist);
 }
 

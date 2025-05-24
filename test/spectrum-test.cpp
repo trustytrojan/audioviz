@@ -1,14 +1,9 @@
 #include <audioviz/StereoSpectrum.hpp>
 #include <audioviz/VerticalBar.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/media/FfmpegCliBoostMedia.hpp>
 #include <audioviz/media/Media.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/trivial.hpp>
 #include <iostream>
 #include <portaudio.hpp>
-
-namespace bl = boost::log;
 
 int main(const int argc, const char *const *const argv)
 {
@@ -17,8 +12,6 @@ int main(const int argc, const char *const *const argv)
 		std::cerr << "usage: " << argv[0] << " <size.x> <size.y> <media file>\n";
 		return EXIT_FAILURE;
 	}
-
-	bl::core::get()->set_filter(bl::trivial::severity >= bl::trivial::info);
 
 	const sf::Vector2u size{std::stoi(argv[1]), std::stoi(argv[2])};
 	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
@@ -38,14 +31,13 @@ int main(const int argc, const char *const *const argv)
 	audioviz::fft::FrequencyAnalyzer fa{fft_size};
 	audioviz::fft::StereoAnalyzer sa;
 
-	std::unique_ptr<audioviz::media::Media> media{new audioviz::media::FfmpegCliBoostMedia{argv[3]}};
-	const auto &astream = media->astream();
+	std::unique_ptr<audioviz::media::Media> media{audioviz::media::Media::create(argv[3])};
 
 	// number of audio FRAMES per video frame
-	const int afpvf{astream.sample_rate() / framerate};
+	const int afpvf{media->audio_sample_rate() / framerate};
 
 	pa::PortAudio _;
-	pa::Stream pa_stream{0, astream.nb_channels(), paFloat32, astream.sample_rate()};
+	pa::Stream pa_stream{0, media->audio_channels(), paFloat32, media->audio_sample_rate()};
 	pa_stream.start();
 
 	int frames{};
@@ -58,7 +50,7 @@ int main(const int argc, const char *const *const argv)
 				window.close();
 
 		// ensure we have at least fft_samples samples
-		media->decode_audio(fft_size);
+		media->buffer_audio(fft_size);
 		if (media->audio_buffer_frames() < fft_size)
 		{
 			std::cout << "not enough audio for fft, breaking loop\n";

@@ -15,4 +15,4 @@ public:
 	sf::Vector2f get_size() const;
 };
 
-} // namespace tt
+} // namespace audioviz

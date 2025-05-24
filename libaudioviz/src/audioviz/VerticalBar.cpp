@@ -21,4 +21,4 @@ void VerticalBar::setHeight(float height)
 	update();
 }
 
-} // namespace viz
+} // namespace audioviz

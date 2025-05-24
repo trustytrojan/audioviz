@@ -1,6 +1,6 @@
 #include <SFML/Graphics.hpp>
-#include <table.hpp>
 #include <audioviz/util.hpp>
+#include <table.hpp>
 
 namespace luaviz
 {

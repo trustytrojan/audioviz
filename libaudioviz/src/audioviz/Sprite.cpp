@@ -37,4 +37,4 @@ sf::Vector2f Sprite::get_size() const
 	return sf::Vector2f(getTextureRect().size).componentWiseMul(getScale());
 }
 
-} // namespace tt
+} // namespace audioviz

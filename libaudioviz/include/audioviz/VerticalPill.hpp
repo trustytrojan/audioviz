@@ -25,4 +25,4 @@ public:
 	sf::Vector2f getPoint(std::size_t index) const override;
 };
 
-} // namespace viz
+} // namespace audioviz

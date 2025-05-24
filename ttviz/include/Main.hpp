@@ -2,13 +2,13 @@
 
 #include "Args.hpp"
 #include "ttviz.hpp"
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/ColorSettings.hpp>
 #include <audioviz/ParticleSystem.hpp>
 #include <audioviz/ScopeDrawable.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/StereoSpectrum.hpp>
 #include <audioviz/VerticalBar.hpp>
+#include <audioviz/fft/FrequencyAnalyzer.hpp>
 
 #include <cstdlib>
 #include <string>
@@ -42,7 +42,11 @@ class Main
 
 	void use_args(ttviz &);
 	void start_in_window(audioviz::Base &);
-	void encode(audioviz::Base &, const std::string &outfile, const std::string &vcodec = "h264", const std::string &acodec = "copy");
+	void encode(
+		audioviz::Base &,
+		const std::string &outfile,
+		const std::string &vcodec = "h264",
+		const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);

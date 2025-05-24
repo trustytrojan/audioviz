@@ -1,9 +1,20 @@
+option(LIBAUDIOVIZ_BOOST "Use Boost::process over popen() for spawning ffmpeg" OFF)
+
 file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/fft/*.cpp
 	src/audioviz/fx/*.cpp
-	src/audioviz/media/*.cpp
+	src/audioviz/media/FfmpegPopenEncoder.cpp
+	src/audioviz/media/FfmpegPopenMedia.cpp
+	src/audioviz/media/Media.cpp
 	src/audioviz/*.cpp
 )
+
+if(AUDIOVIZ_BOOST)
+	list(APPEND AUDIOVIZ_SOURCES
+		src/audioviz/media/FfmpegBoostEncoder.cpp
+		src/audioviz/media/FfmpegBoostMedia.cpp
+	)
+endif()
 
 if(LINUX)
 	# relocation issues arise when linking luaviz to a static libaudioviz

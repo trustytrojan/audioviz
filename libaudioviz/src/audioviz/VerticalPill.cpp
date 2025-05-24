@@ -34,4 +34,4 @@ sf::Vector2f VerticalPill::getPoint(const std::size_t index) const
 	return point;
 }
 
-} // namespace viz
+} // namespace audioviz

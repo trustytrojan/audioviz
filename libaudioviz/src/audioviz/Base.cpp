@@ -1,7 +1,7 @@
 #include <audioviz/Base.hpp>
 #include <audioviz/media/FfmpegEncoder.hpp>
+#include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <iostream>
-#include <boost/log/trivial.hpp>
 
 #define capture_time(label, code)            \
 	if (tt_enabled)                          \
@@ -57,7 +57,7 @@ void Base::play_audio()
 	{
 		if (e.code != paOutputUnderflowed)
 			throw;
-		BOOST_LOG_TRIVIAL(warning) << e.what() << '\n';
+		std::cerr << e.what() << '\n';
 	}
 }
 #endif
@@ -65,7 +65,7 @@ void Base::play_audio()
 bool Base::next_frame()
 {
 	assert(media);
-	media->decode_audio(std::max(audio_frames_needed, afpvf));
+	media->buffer_audio(std::max(audio_frames_needed, afpvf));
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	// clang-format off
@@ -78,7 +78,7 @@ bool Base::next_frame()
 
 	if (media->audio_buffer_frames() < audio_frames_needed)
 	{
-		BOOST_LOG_TRIVIAL(info) << "not enough audio frames, returning false\n";
+		std::cout << "not enough audio frames, returning false\n";
 		return false;
 	}
 
@@ -116,7 +116,7 @@ void Base::capture_elapsed_time(const std::string &label, const sf::Clock &clock
 void Base::set_framerate(const int framerate)
 {
 	this->framerate = framerate;
-	afpvf = media->astream().sample_rate() / framerate;
+	afpvf = media->audio_sample_rate() / framerate;
 }
 
 Layer &Base::add_layer(const std::string &name, const int antialiasing)
@@ -172,13 +172,13 @@ void Base::start_in_window(const std::string &window_title)
 
 void Base::encode(const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	media::FfmpegEncoder ffmpeg{*this, outfile, vcodec, acodec};
+	const auto ffmpeg{std::make_unique<media::FfmpegPopenEncoder>(*this, outfile, vcodec, acodec)};
 	RenderTexture rt{size, 4};
 	while (next_frame())
 	{
 		rt.draw(*this);
 		rt.display();
-		ffmpeg.send_frame(rt.getTexture());
+		ffmpeg->send_frame(rt.getTexture());
 	}
 }
 

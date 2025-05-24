@@ -22,4 +22,4 @@ public:
 	inline Sprite sprite() const { return getTexture(); }
 };
 
-} // namespace tt
+} // namespace audioviz

@@ -69,4 +69,4 @@ sf::Color ColorSettings::calculate_color(const float index_ratio) const
 	}
 }
 
-} // namespace viz
+} // namespace audioviz

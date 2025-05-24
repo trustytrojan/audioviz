@@ -1,19 +1,11 @@
+#include "ttviz.hpp"
 #include <audioviz/fx/Blur.hpp>
 #include <audioviz/fx/Mult.hpp>
-#include <audioviz/media/FfmpegCliBoostMedia.hpp>
-#include <boost/log/trivial.hpp>
-#include "ttviz.hpp"
-
-#define capture_time(label, code)            \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}
+#include <audioviz/media/FfmpegPopenMedia.hpp>
 
 ttviz::ttviz(
 	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
-	: Base{size, new audioviz::media::FfmpegCliBoostMedia{media_url, size}},
+	: Base{size, new audioviz::media::FfmpegPopenMedia{media_url, size}},
 	  fa{fa},
 	  color{color},
 	  ss{ss},
@@ -23,7 +15,7 @@ ttviz::ttviz(
 {
 	// for now only stereo is supported
 	// this will be moved into its own class eventually
-	if (media->astream().nb_channels() != 2)
+	if (media->audio_channels() != 2)
 		throw std::runtime_error("only stereo audio is supported!");
 
 	// default spectrum margin
@@ -67,10 +59,11 @@ void ttviz::layers_init(const int antialiasing)
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
 
-		if (media->vstream()) // set_orig_cb() to draw video frames on the layer
+		if (media->has_video_stream()) // set_orig_cb() to draw video frames on the layer
 		{
 			// round the framerate bc sometimes it's 29.97
-			const int video_framerate = std::round(av_q2d(media->vstream()->get()->avg_frame_rate));
+			const int video_framerate =
+				media->video_framerate(); // std::round(av_q2d(media->vstream()->get()->avg_frame_rate));
 			bg.set_orig_cb(
 				[this, frames_to_wait{get_framerate() / video_framerate}](auto &orig_rt)
 				{
@@ -81,7 +74,7 @@ void ttviz::layers_init(const int antialiasing)
 						if (media->read_video_frame(video_bg))
 							orig_rt.draw(sf::Sprite{video_bg});
 						else
-							BOOST_LOG_TRIVIAL(warning) << "media->read_video_frame returned false????????\n";
+							std::cout << "media->read_video_frame returned false????????\n";
 						vfcount = 1; // ALWAYS RESET TO 1 OTHERWISE THE IF CHECK ABOVE DOESN'T MAKE SENSE
 					}
 					// orig_rt.display();
@@ -165,7 +158,7 @@ void ttviz::layers_init(const int antialiasing)
 						// redraw the entire ss because antialiased edges have dark pixels with 1 alpha...
 						target.draw(ss);
 					else
-					 	target.draw(orig_rt.sprite());
+						target.draw(orig_rt.sprite());
 				}
 			});
 	}
@@ -177,11 +170,11 @@ void ttviz::add_default_effects()
 	{
 		// clang-format off
 		bg->effects.emplace_back(
-			media->vstream()
+			media->has_video_stream()
 				? new audioviz::fx::Blur{2.5, 2.5, 5}
 				: new audioviz::fx::Blur{7.5, 7.5, 15});
 		// clang-format on
-		if (!media->vstream())
+		if (!media->has_video_stream())
 			bg->effects.emplace_back(new audioviz::fx::Mult{0.75});
 		if (media->attached_pic())
 			// this will set the background WITH the blur affect we just added
@@ -192,7 +185,7 @@ void ttviz::add_default_effects()
 		particles->effects.emplace_back(new audioviz::fx::Blur{1, 1, 10});
 
 	if (const auto spectrum = get_layer("spectrum"))
-		spectrum->effects.emplace_back(new audioviz::fx::Blur{1, 1, 20});
+		spectrum->effects.emplace_back(new audioviz::fx::Blur{3, 3, 10});
 }
 
 void ttviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)
