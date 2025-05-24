@@ -1,21 +1,12 @@
 #include <audioviz/media/Media.hpp>
-
-#ifdef _WIN32
-#include <audioviz/media/FfmpegBoostMedia.hpp>
-#elifdef LINUX
 #include <audioviz/media/FfmpegPopenMedia.hpp>
-#endif
 
 namespace audioviz::media
 {
 
 Media *Media::create(const std::string &url, const sf::Vector2u video_size)
 {
-#ifdef _WIN32
-	return new FfmpegCliBoostMedia{url, video_size};
-#elifdef unix
 	return new FfmpegPopenMedia{url, video_size};
-#endif
 }
 
 Media::Media(const std::string &url, const sf::Vector2u video_size)

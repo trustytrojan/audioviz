@@ -61,11 +61,8 @@ void ttviz::layers_init(const int antialiasing)
 
 		if (media->has_video_stream()) // set_orig_cb() to draw video frames on the layer
 		{
-			// round the framerate bc sometimes it's 29.97
-			const int video_framerate =
-				media->video_framerate(); // std::round(av_q2d(media->vstream()->get()->avg_frame_rate));
 			bg.set_orig_cb(
-				[this, frames_to_wait{get_framerate() / video_framerate}](auto &orig_rt)
+				[this, frames_to_wait{get_framerate() / media->video_framerate()}](auto &orig_rt)
 				{
 					if (vfcount < frames_to_wait)
 						++vfcount;
@@ -74,10 +71,10 @@ void ttviz::layers_init(const int antialiasing)
 						if (media->read_video_frame(video_bg))
 							orig_rt.draw(sf::Sprite{video_bg});
 						else
-							std::cout << "media->read_video_frame returned false????????\n";
+							std::cerr << "media->read_video_frame returned false????????\n";
 						vfcount = 1; // ALWAYS RESET TO 1 OTHERWISE THE IF CHECK ABOVE DOESN'T MAKE SENSE
 					}
-					// orig_rt.display();
+					orig_rt.display();
 				});
 		}
 

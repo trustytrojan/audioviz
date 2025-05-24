@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <av/MediaReader.hpp>
 
 namespace audioviz::media
 {

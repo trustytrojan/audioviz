@@ -32,7 +32,6 @@ havent tried building just yet because of lack of native opengl support (SFML re
   - the `ffmpeg` CLI program, also part of the [FFmpeg](https://ffmpeg.org) project
   - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (only the C library)
   - [SFML 3.0.1](https://github.com/SFML/SFML/tree/3.0.1) - only supports X11 windows
-  - [Boost.Process](https://github.com/boostorg/process) - included in [Boost 1.88.0](https://github.com/boostorg/boost/releases/tag/boost-1.88.0)
   - [tk-spline](https://github.com/ttk592/spline)
 - **ttviz**
   - [argparse](https://github.com/p-ranav/argparse)

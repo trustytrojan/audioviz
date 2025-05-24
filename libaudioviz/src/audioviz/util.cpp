@@ -1,11 +1,9 @@
 #include <audioviz/util.hpp>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <stdexcept>
-
-#ifdef LINUX
 #include <iostream>
-#endif
 
 namespace audioviz::util
 {
@@ -77,10 +75,6 @@ sf::Color hsv2rgb(float h, const float s, const float v)
 	return {r * 255, g * 255, b * 255};
 }
 
-// still haven't integrated this feature yet lmao
-// just gonna let it sit on the backburner
-// still haven't integrated this feature yet lmao
-// just gonna let it sit on the backburner
 sf::Vector3f interpolate(float t, sf::Vector3f start_hsv, sf::Vector3f end_hsv)
 {
 	const auto [h1, s1, v1] = start_hsv;
@@ -180,5 +174,74 @@ std::string detect_vaapi_device()
 	return {};
 }
 #endif
+
+std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
+{
+	const auto cmd{
+		"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
+	std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
+
+	const auto pipe = popen(cmd.c_str(), "rb");
+	if (!pipe)
+	{
+		std::cerr << __FUNCTION__ << ": popen: " << strerror(errno) << '\n';
+		return {};
+	}
+
+	std::vector<std::byte> buffer;
+	while (!feof(pipe) && !ferror(pipe))
+	{
+		std::byte buf[4096];
+		const auto bytesRead = fread(buf, 1, sizeof(buf), pipe);
+		if (bytesRead > 0)
+			buffer.insert(buffer.end(), buf, buf + bytesRead);
+	}
+
+	switch (const auto rc = pclose(pipe))
+	{
+	case -1:
+		std::cerr << __FUNCTION__ << ": pclose: " << strerror(errno) << '\n';
+		return {};
+	case 0:
+		return {{buffer.data(), buffer.size()}};
+	default:
+		std::cerr << __FUNCTION__ << ": pclose returned: " << rc << '\n';
+		return {};
+	}
+}
+
+/*
+This function is for handling cases where a media file has the coverart/thumbnail inside
+an *attachment* stream, but this is not the same as a *video* stream. To handle this we use
+the -dump_attachment:t option, which must write to a file on disk, and then we can call
+sf::Texture::loadFromFile on that file.
+
+Not important, since I mostly care about MP3s, however this is how MKVs are spit out when
+calling yt-dlp with --embed-thumbnail, and the highest quality audio/video streams have vp9 or opus.
+
+std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPath)
+{
+    // Use ffmpeg to dump the first attachment (usually cover art) to a temp file
+    const std::string tmpFile = "cover_attachment_tmp";
+    const std::string cmd = "ffmpeg -v warning -y -dump_attachment:t=" + tmpFile + " -i \"" + mediaPath + "\"";
+
+    std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
+    int rc = std::system(cmd.c_str());
+    if (rc != 0) {
+        std::cerr << __FUNCTION__ << ": ffmpeg command failed with code " << rc << '\n';
+        return {};
+    }
+
+    sf::Texture texture;
+    if (!texture.loadFromFile(tmpFile)) {
+        std::cerr << __FUNCTION__ << ": failed to load texture from " << tmpFile << '\n';
+        std::remove(tmpFile.c_str());
+        return {};
+    }
+
+    std::remove(tmpFile.c_str());
+    return texture;
+}
+*/
 
 } // namespace audioviz::util

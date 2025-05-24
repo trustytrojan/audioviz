@@ -22,4 +22,6 @@ inline const sf::BlendMode GreatAmazingBlendMode{
 std::string detect_vaapi_device();
 #endif
 
+std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath);
+
 } // namespace audioviz::util

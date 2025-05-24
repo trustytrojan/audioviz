@@ -23,7 +23,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	cmd_stream << "-ss -0.1 ";
 	if (url.find("http") != std::string::npos)
 		cmd_stream << "-reconnect 1 ";
-	cmd_stream << "-i '" << url << "' ";
+	cmd_stream << "-i \"" << url << "\" ";
 
 #ifdef LINUX
 	// if on linux and vaapi encoder used, detect a vaapi device for usage
@@ -45,7 +45,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	// end on shortest input stream
 	cmd_stream << "-shortest " << outfile;
 
-	ffmpeg = popen(cmd_stream.str().c_str(), "w");
+	ffmpeg = popen(cmd_stream.str().c_str(), "wb");
 	if (!ffmpeg)
 		throw std::runtime_error("Failed to start ffmpeg process with popen");
 }

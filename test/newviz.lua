@@ -82,7 +82,7 @@ if attached_pic then
 
 	-- make spectrum match bg color
 	cs:set_mode(luaviz.ColorMode.SOLID)
-	-- cs:set_solid_color({ 199, 220, 241, 255 })
+	-- cs:set_solid_color({ 199, 220, 241, 255 }) -- june.mp3
 end
 
 updopts = luaviz.ParticleSystemUpdateOptions.new()

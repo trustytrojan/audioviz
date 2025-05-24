@@ -1,0 +1,4 @@
+at long last i found the answer to why pipes opened by `popen` immediately close on mingw-w64: https://lists.gnu.org/archive/html/bug-gnulib/2012-01/msg00406.html
+yes, the `mode` parameter actually matters on windows
+this made me realize that the "rb" and "wb" modes are in fact different from "r" and "w" and i should have been using them all along (y'know, because i've ALWAYS been reading/writing binary data) to achieve ACTUAL posix portability
+boost can finally go away

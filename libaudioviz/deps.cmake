@@ -2,13 +2,13 @@
 include(FetchContent)
 
 ## ffmpeg (just the ffmpeg & ffprobe executables, libs no longer needed)
-find_program(FFMPEG ffmpeg ffprobe)
+find_program(FFMPEG NAMES ffmpeg ffprobe)
 if(WIN32 AND FFMPEG STREQUAL "FFMPEG-NOTFOUND")
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		# this needs to be rewritten, we no longer need to link to ffmpeg libs
 		find_program(WINGET winget)
 		if(WINGET STREQUAL "WINGET-NOTFOUND")
-			# we'll download ffmpeg ourselves
+			# we'll download ffmpeg ourselves (rare case, as windows usually comes with winget nowadays)
 			message("winget not found, downloading latest ffmpeg with FetchContent_Declare")
 			FetchContent_Declare(ffmpeg URL https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.7z)
 			FetchContent_MakeAvailable(ffmpeg)
@@ -16,17 +16,17 @@ if(WIN32 AND FFMPEG STREQUAL "FFMPEG-NOTFOUND")
 		else()
 			# use winget installation of ffmpeg shared libs
 			message("winget found!")
-			file(GLOB FFMPEG_WINGET_PATH $ENV{LocalAppData}/Microsoft/WinGet/Packages/Gyan.FFmpeg.Shared_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-*-full_build-shared)
+			file(GLOB FFMPEG_WINGET_PATH $ENV{LocalAppData}/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-*-full_build)
 			if(NOT FFMPEG_WINGET_PATH)
-				message(FATAL_ERROR "ffmpeg not installed! please install it first by running 'winget install gyan.ffmpeg'")
+				message(FATAL_ERROR "ffmpeg not installed! please install it first by running 'winget install ffmpeg'")
 			endif()
 			message("using ffmpeg path: ${FFMPEG_WINGET_PATH}")
-			list(APPEND CMAKE_PREFIX_PATH ${FFMPEG_WINGET_PATH}/lib)
+			list(APPEND CMAKE_PROGRAM_PATH ${FFMPEG_WINGET_PATH}/bin)
 		endif()
 	elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "ARM64|aarch64")
 		message("windows arm64 detected, downloading ffmpeg from https://github.com/tordona/ffmpeg-win-arm64")
 
-		# unfortunately cmake itself can't handle 7zips properly
+		# unfortunately cmake itself can't handle all 7zips properly
 		find_program(7zip 7z)
 		if(7zip STREQUAL "7zip-NOTFOUND")
 			message(FATAL_ERROR "a 7zip-like program is required to extract ffmpeg for windows arm64!")
@@ -50,8 +50,8 @@ find_program(FFMPEG ffmpeg REQUIRED)
 find_program(FFPROBE ffprobe REQUIRED)
 
 ## fftw
-find_package(FFTW3 COMPONENTS fftw3f)
-if(WIN32 AND NOT fftw3_FOUND)
+find_package(FFTW3 COMPONENTS fftw3f QUIET)
+if(WIN32 AND NOT FFTW3_FOUND)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		message("fetching fftw x64 binaries...")
 		FetchContent_Declare(fftw URL https://fftw.org/pub/fftw/fftw-3.3.5-dll64.zip)
@@ -84,26 +84,13 @@ if(NOT SFML_FOUND)
 endif()
 target_link_libraries(audioviz PUBLIC SFML::Graphics)
 
-## boost
-if(AUDIOVIZ_BOOST)
-	find_package(Boost COMPONENTS Process Log REQUIRED)
-	if(NOT Boost_FOUND)
-		message("Boost not found, using FetchContent...")
-		set(BOOST_INCLUDE_LIBRARIES "process")
-		FetchContent_Declare(Boost URL https://github.com/boostorg/boost/releases/download/boost-1.88.0/boost-1.88.0-cmake.7z)
-		FetchContent_MakeAvailable(Boost)
-		if(WIN32)
-			target_link_libraries(audioviz PUBLIC ws2_32) # winsock library required by boost.asio
-		endif()
-	endif()
-	target_link_libraries(audioviz PUBLIC Boost::process)
-endif()
-
-## header-only libs
-FetchContent_Declare(libavpp URL https://github.com/trustytrojan/libavpp/archive/main.zip)
-FetchContent_MakeAvailable(libavpp)
-target_link_libraries(audioviz PUBLIC libavpp)
+## spline
 file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h ${CMAKE_BINARY_DIR}/tk-spline.hpp)
+
+## nlohmann_json
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+FetchContent_MakeAvailable(json)
+target_link_libraries(audioviz PUBLIC nlohmann_json::nlohmann_json)
 
 ### TEMPORARY - libaudioviz should not be responsible for audio playback.
 ### but to keep things stable i will leave this as is for now.
