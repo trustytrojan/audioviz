@@ -5,12 +5,12 @@ file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/*.cpp
 )
 
-if(LINUX AND AUDIOVIZ_LUAVIZ)
+if(LINUX AND AUDIOVIZ_LUAVIZ AND NOT GITHUB_CI)
 	# relocation issues arise when luaviz links to a static libaudioviz
-	set(BUILD_SHARED_LIBS ON)
+	add_library(audioviz SHARED ${AUDIOVIZ_SOURCES})
+else()
+	add_library(audioviz ${AUDIOVIZ_SOURCES})
 endif()
-
-add_library(audioviz ${AUDIOVIZ_SOURCES})
 
 # after the add_library so that deps.cmake can use target_XXXX commands
 include(deps.cmake)

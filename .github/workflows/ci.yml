@@ -2,7 +2,7 @@ name: Build on Linux
 
 on:
   push:
-    branches: [main]
+    branches: [main, ghci]
   pull_request:
     branches: [main]
 
@@ -35,7 +35,7 @@ jobs:
             ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DGITHUB_CI=1
 
       - name: Build project
         run: cmake --build build -j$(nproc)
