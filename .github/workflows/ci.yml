@@ -31,6 +31,7 @@ jobs:
             liblua5.4-dev \
             portaudio19-dev \
             libfftw3-dev \
+            libudev-dev \
             ffmpeg
 
       - name: Configure CMake
