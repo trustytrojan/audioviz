@@ -31,7 +31,7 @@ int main(const int argc, const char *const *const argv)
 	audioviz::fft::FrequencyAnalyzer fa{fft_size};
 	audioviz::fft::StereoAnalyzer sa;
 
-	std::unique_ptr<audioviz::media::Media> media{audioviz::media::Media::create(argv[3])};
+	std::unique_ptr<audioviz::Media> media{audioviz::Media::create(argv[3])};
 
 	// number of audio FRAMES per video frame
 	const int afpvf{media->audio_sample_rate() / framerate};

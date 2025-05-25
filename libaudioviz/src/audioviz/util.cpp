@@ -5,6 +5,12 @@
 #include <stdexcept>
 #include <iostream>
 
+#ifdef __linux__
+#define POPEN_MODE "r"
+#elifdef _WIN32
+#define POPEN_MODE "rb"
+#endif
+
 namespace audioviz::util
 {
 
@@ -139,7 +145,7 @@ float weighted_max(
 		begin + (amount / 2)); // these are generally the strongest bass frequencies to the ear
 }
 
-#ifdef LINUX
+#ifdef __linux__
 std::string detect_vaapi_device()
 {
 	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
@@ -181,7 +187,7 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 		"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
 	std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
 
-	const auto pipe = popen(cmd.c_str(), "rb");
+	const auto pipe = popen(cmd.c_str(), POPEN_MODE);
 	if (!pipe)
 	{
 		std::cerr << __FUNCTION__ << ": popen: " << strerror(errno) << '\n';

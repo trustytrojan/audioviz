@@ -1,7 +1,7 @@
 #include <audioviz/media/Media.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 
-namespace audioviz::media
+namespace audioviz
 {
 
 Media *Media::create(const std::string &url, const sf::Vector2u video_size)

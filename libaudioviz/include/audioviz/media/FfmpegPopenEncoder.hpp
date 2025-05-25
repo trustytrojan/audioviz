@@ -6,12 +6,11 @@
 #include <cstdio>
 #include <string>
 
-namespace audioviz::media
+namespace audioviz
 {
 
 class FfmpegPopenEncoder : public FfmpegEncoder
 {
-private:
 	FILE *ffmpeg;
 
 public:

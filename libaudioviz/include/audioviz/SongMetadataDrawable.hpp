@@ -29,7 +29,7 @@ private:
 
 public:
 	SongMetadataDrawable(sf::Text &title_text, sf::Text &artist_text);
-	void use_metadata(const media::Media &);
+	void use_metadata(const Media &);
 	void set_album_cover(const sf::Texture &txr, const sf::Vector2f size);
 	void set_position(const sf::Vector2f pos);
 	void draw(sf::RenderTarget &target, const sf::RenderStates states) const override;

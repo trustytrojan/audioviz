@@ -1,6 +1,6 @@
 #include <audioviz/fx/Add.hpp>
 
-static sf::Shader shader{std::filesystem::path{"shaders/add-110.frag"}, sf::Shader::Type::Fragment};
+static sf::Shader shader{std::filesystem::path{"shaders/add.frag"}, sf::Shader::Type::Fragment};
 
 namespace audioviz::fx
 {

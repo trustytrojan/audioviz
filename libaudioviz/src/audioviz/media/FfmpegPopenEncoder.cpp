@@ -3,7 +3,13 @@
 #include <cstring>
 #include <stdexcept>
 
-namespace audioviz::media
+#ifdef _WIN32
+#define POPEN_MODE "wb"
+#elifdef __unix__
+#define POPEN_MODE "w"
+#endif
+
+namespace audioviz
 {
 
 FfmpegPopenEncoder::FfmpegPopenEncoder(
@@ -25,7 +31,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 		cmd_stream << "-reconnect 1 ";
 	cmd_stream << "-i \"" << url << "\" ";
 
-#ifdef LINUX
+#ifdef __linux__
 	// if on linux and vaapi encoder used, detect a vaapi device for usage
 	if (vcodec.find("vaapi") != std::string::npos)
 	{
@@ -45,7 +51,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	// end on shortest input stream
 	cmd_stream << "-shortest " << outfile;
 
-	ffmpeg = popen(cmd_stream.str().c_str(), "wb");
+	ffmpeg = popen(cmd_stream.str().c_str(), POPEN_MODE);
 	if (!ffmpeg)
 		throw std::runtime_error("Failed to start ffmpeg process with popen");
 }

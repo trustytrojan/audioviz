@@ -5,7 +5,7 @@
 
 void Main::encode(audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	const auto ffmpeg = std::make_unique<audioviz::media::FfmpegPopenEncoder>(viz, outfile, vcodec, acodec);
+	const auto ffmpeg = std::make_unique<audioviz::FfmpegPopenEncoder>(viz, outfile, vcodec, acodec);
 
 	if (enc_window)
 	{

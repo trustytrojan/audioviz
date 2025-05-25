@@ -16,7 +16,7 @@
 namespace audioviz
 {
 
-Base::Base(const sf::Vector2u size, media::Media *const media)
+Base::Base(const sf::Vector2u size, Media *const media)
 	: size{size},
 	  media{media},
 	  final_rt{size}
@@ -172,7 +172,7 @@ void Base::start_in_window(const std::string &window_title)
 
 void Base::encode(const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	const auto ffmpeg{std::make_unique<media::FfmpegPopenEncoder>(*this, outfile, vcodec, acodec)};
+	const auto ffmpeg{std::make_unique<FfmpegPopenEncoder>(*this, outfile, vcodec, acodec)};
 	RenderTexture rt{size, 4};
 	while (next_frame())
 	{

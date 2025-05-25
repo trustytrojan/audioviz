@@ -1,15 +1,13 @@
 # audioviz
-my own audio visualizer library, because after effects sucks.
+*my own audio visualizer (library), because after effects sucks*
 
 ## features
 - **low-level** visualizer building
-- **layer-based** graphics API for **C++ & Lua**
+- **layer-and-effect-based** graphics API for **C++ & Lua**
 - **super fast** video rendering with ffmpeg
 - **faster than adobe after effects!!!!!!!!!**
 
-here are some songs **rendered** with audioviz!
-- [hyperforms - LOSE CONTROL](https://youtu.be/Avk5lRZb7To)
-- [Chase Atlantic - DIE FOR ME](https://youtu.be/RaTMz4MPqCM)
+[here are some songs rendered with audioviz!](https://youtube.com/playlist?list=PLq63g2iq0LVvxNjjoYOL4GMTOdXEdHsBf)
 
 ## building
 ### linux
@@ -27,17 +25,30 @@ havent tried building just yet because of lack of native opengl support (SFML re
 
 ## libraries/software used
 - **libaudioviz**
-  - [FFTW](https://fftw.org)
+  - [FFTW3](https://fftw.org)
   - [libavpp](https://github.com/trustytrojan/libavpp) - requires the [FFmpeg](https://ffmpeg.org) libraries
-  - the `ffmpeg` CLI program, also part of the [FFmpeg](https://ffmpeg.org) project
-  - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (only the C library)
+  - `ffmpeg`, the standalone CLI program, part of the [FFmpeg](https://ffmpeg.org) project
+  - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (the C library, NOT the C++ binding)
   - [SFML 3.0.1](https://github.com/SFML/SFML/tree/3.0.1) - only supports X11 windows
   - [tk-spline](https://github.com/ttk592/spline)
 - **ttviz**
   - [argparse](https://github.com/p-ranav/argparse)
   - [ImGui-SFML](https://github.com/SFML/imgui-sfml)
 - **luaviz**
-  - [sol2](https://github.com/ThePhD/sol2) - requires [Lua](https://lua.org/) 5.4
+  - [sol2](https://github.com/ThePhD/sol2) - requires [Lua](https://lua.org/) 5.x
+
+## project structure
+```
+audioviz
+├── libaudioviz - core library
+├── ttviz - first visualizer
+├── luaviz - lua binding
+├── lua - lua scripts calling the luaviz binding
+│ ├── newviz.lua - newer style visualizer using luaviz
+│ └── ttviz.lua - recreation of ttviz using luaviz
+├── shaders - GLSL shaders used by audioviz::fx classes
+└── tests - small test programs for various classes in libaudioviz
+```
 
 ## developer environment setup
 i recommend using vscode as it integrates well with git with no effort. get the [cmake tools extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) and [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) to make development easier.
@@ -47,26 +58,18 @@ i recommend using vscode as it integrates well with git with no effort. get the 
 --query-driver=C:\path\to\mingw\bin\g++.exe
 ```
 
-## dev note
-on namespaces:
-- `audioviz`: namespace for all classes in **libaudioviz**
-- `audioviz::fft`: classes that wrap FFTW
-- `audioviz::fx`: post-processing effects for `audioviz::Layer`
-- `audioviz::media`: media provider implementations
-
 ## todo list / goals
+- figure out what to do with the shaders in order to make fully static binaries
 - ✅️ `ScopeDrawable` class
   - extra: audio window customization independent of shape size
-- 🔄 lua api: **luaviz**
-  - ✅️ modular layering/effects system
-  - ✅️ remove hardcoded visualizer components
+    - hint: use libswresample from ffmpeg
+- 🔄 luaviz: the lua binding
   - 🔄 freshen up api for consumption
-  - ✅️ decide whether to split up audioviz into library & programs
   - document the api
+- 🔄 interactive gui (long term)
+  - ✅️ integrate imgui-sfml into project
+  - develop imgui window for each audioviz implementation
 - add components/effects based on rhythm
   - involves knowing the tempo of the song
   - want a small translucent flash overlay that flashes to the beat of music
   - copy the osu! stars effect
-- 🔄 interactive gui (long term)
-  - ✅️ integrate imgui-sfml into project
-  - develop imgui window for each audioviz implementation

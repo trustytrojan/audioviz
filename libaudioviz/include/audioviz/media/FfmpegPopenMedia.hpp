@@ -3,12 +3,11 @@
 #include "FfprobeMetadata.hpp"
 #include "Media.hpp"
 
-namespace audioviz::media
+namespace audioviz
 {
 
 class FfmpegPopenMedia : public Media
 {
-private:
 	FILE *audio{}, *video{};
 	FfprobeMetadata metadata;
 	std::optional<sf::Texture> _attached_pic;

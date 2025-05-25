@@ -1,6 +1,6 @@
 #include <audioviz/fx/Blur.hpp>
 
-static sf::Shader shader{std::filesystem::path{"shaders/blur-120.frag"}, sf::Shader::Type::Fragment};
+static sf::Shader shader{std::filesystem::path{"shaders/blur.frag"}, sf::Shader::Type::Fragment};
 
 namespace audioviz::fx
 {

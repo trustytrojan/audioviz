@@ -5,7 +5,7 @@
 
 ttviz::ttviz(
 	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
-	: Base{size, new audioviz::media::FfmpegPopenMedia{media_url, size}},
+	: Base{size, new audioviz::FfmpegPopenMedia{media_url, size}},
 	  fa{fa},
 	  color{color},
 	  ss{ss},

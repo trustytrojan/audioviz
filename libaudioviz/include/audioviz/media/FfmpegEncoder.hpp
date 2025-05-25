@@ -3,7 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <audioviz/Base.hpp>
 
-namespace audioviz::media
+namespace audioviz
 {
 
 class FfmpegEncoder

@@ -25,7 +25,7 @@ public:
 	std::vector<Layer> layers;
 
 protected:
-	media::Media *const media;
+	Media *const media;
 	sf::Font font;
 
 private:
@@ -52,7 +52,7 @@ public:
 	 * @param size Size of the output; recommended to match your `sf::RenderTarget`'s size
 	 * @param media Pointer to `Media` object. This `base_audioviz` instance will own the object.
 	 */
-	Base(sf::Vector2u size, media::Media *media);
+	Base(sf::Vector2u size, Media *media);
 
 	// media needs to be freed
 	// we will take ownership of it for now

@@ -1,5 +1,3 @@
-option(LIBAUDIOVIZ_BOOST "Use Boost::process over popen() for spawning ffmpeg" OFF)
-
 file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/fft/*.cpp
 	src/audioviz/fx/*.cpp
@@ -7,14 +5,12 @@ file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/*.cpp
 )
 
-if(LINUX)
-	# relocation issues arise when linking luaviz to a static libaudioviz
-	# just avoid it on linux by making it shared
-	add_library(audioviz SHARED ${AUDIOVIZ_SOURCES})
-else()
-	add_library(audioviz STATIC ${AUDIOVIZ_SOURCES})
+if(LINUX AND AUDIOVIZ_LUAVIZ)
+	# relocation issues arise when luaviz links to a static libaudioviz
+	set(BUILD_SHARED_LIBS ON)
 endif()
-audioviz_compile_definitions(audioviz)
+
+add_library(audioviz ${AUDIOVIZ_SOURCES})
 
 # after the add_library so that deps.cmake can use target_XXXX commands
 include(deps.cmake)
@@ -28,6 +24,6 @@ target_compile_options(audioviz PUBLIC -Wno-narrowing)
 
 target_include_directories(audioviz
 	PUBLIC include # our headers
-	PUBLIC ${CMAKE_BINARY_DIR} # individually-downloaded headers
+	PUBLIC ${CMAKE_BINARY_DIR} # single-header libs
 	PUBLIC ${portaudio-pp_SOURCE_DIR}/include
 )

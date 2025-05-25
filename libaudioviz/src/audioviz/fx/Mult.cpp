@@ -1,6 +1,6 @@
 #include <audioviz/fx/Mult.hpp>
 
-static sf::Shader shader{std::filesystem::path{"shaders/mult-110.frag"}, sf::Shader::Type::Fragment};
+static sf::Shader shader{std::filesystem::path{"shaders/mult.frag"}, sf::Shader::Type::Fragment};
 
 namespace audioviz::fx
 {

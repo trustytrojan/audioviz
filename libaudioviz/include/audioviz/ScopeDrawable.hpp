@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <algorithm>
 #include <audioviz/ColorSettings.hpp>
 #include <cmath>
 #include <span>

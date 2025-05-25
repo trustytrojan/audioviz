@@ -18,7 +18,7 @@ float weighted_max(
 inline const sf::BlendMode GreatAmazingBlendMode{
 	sf::BlendMode::Factor::OneMinusDstColor, sf::BlendMode::Factor::One, sf::BlendMode::Equation::Add};
 
-#ifdef LINUX
+#ifdef __linux__
 std::string detect_vaapi_device();
 #endif
 

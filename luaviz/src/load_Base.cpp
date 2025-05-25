@@ -10,7 +10,7 @@ void table::load_Base()
 {
 	// clang-format off
 	new_usertype<Base>("Base",
-		"new", sol::factories([](const sol::table &rect, media::Media *const media)
+		"new", sol::factories([](const sol::table &rect, Media *const media)
 		{
 			// the `uint` typedef isnt on mingw
 			return new Base(table_to_vec2<unsigned>(rect), media);

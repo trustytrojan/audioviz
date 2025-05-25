@@ -17,8 +17,10 @@ table::table(const sol::table &t)
 
 void table::load_everything()
 {
-#ifdef LINUX
+#ifdef __linux__
 	set("os", "linux");
+#elifdef __APPLE__
+	set("os", "apple");
 #elifdef _WIN32
 	set("os", "windows");
 #endif

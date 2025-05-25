@@ -37,7 +37,7 @@ int main(const int argc, const char *const *const argv)
 	const auto fft_size = size.x;
 	audioviz::fft::FrequencyAnalyzer fa{fft_size};
 
-	std::unique_ptr<audioviz::media::Media> media{audioviz::media::Media::create(argv[3])};
+	std::unique_ptr<audioviz::Media> media{audioviz::Media::create(argv[3])};
 
 	int afpvf{media->audio_sample_rate() / 60};
 

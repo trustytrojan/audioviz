@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace audioviz::media
+namespace audioviz
 {
 
 class Media

@@ -1,4 +1,4 @@
-name: CI - Build on Linux
+name: Build on Linux
 
 on:
   push:
@@ -24,6 +24,9 @@ jobs:
             libgl-dev \
             libx11-dev \
             libxau-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
             zlib1g-dev \
             liblua5.4-dev \
             portaudio19-dev \

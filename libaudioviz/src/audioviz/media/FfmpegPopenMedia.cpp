@@ -2,7 +2,13 @@
 #include <audioviz/util.hpp>
 #include <iostream>
 
-namespace audioviz::media
+#ifdef _WIN32
+#define POPEN_MODE "rb"
+#else
+#define POPEN_MODE "r"
+#endif
+
+namespace audioviz
 {
 
 FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u video_size)
@@ -21,7 +27,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 		ss << "-i \"" << url << "\" ";
 		ss << "-f f32le - ";
 
-		if (!(audio = popen(ss.str().c_str(), "rb")))
+		if (!(audio = popen(ss.str().c_str(), POPEN_MODE)))
 			// fatal error: audio visualizers need audio...
 			throw std::runtime_error{std::string{"audio: popen: "} + strerror(errno)};
 	}
@@ -39,7 +45,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 		// from the ffmpeg docs: ’V’ only matches video streams which are not attached pictures, video thumbnails or cover arts
 		ss << "-map V ";
 
-#ifdef LINUX
+#ifdef __linux__
 		if (const auto vaapi_device{util::detect_vaapi_device()}; !vaapi_device.empty())
 		{
 			// use vaapi-accelerated scaling!
@@ -47,15 +53,15 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 			   << video_size.y << ",hwdownload ";
 		}
 		else
-			// software scale (uses the statement below)
-#endif
-
-		// vaapi probably doesnt exist on this platform, software scale instead
+			ss << "-s " << video_size.x << 'x' << video_size.y << ' ';
+#else
+		// va-api probably doesn't exist on this platform, software scale instead
 		ss << "-s " << video_size.x << 'x' << video_size.y << ' ';
+#endif
 
 		ss << "-pix_fmt rgba -f rawvideo -";
 
-		if (!(video = popen(ss.str().c_str(), "rb")))
+		if (!(video = popen(ss.str().c_str(), POPEN_MODE)))
 			// non-fatal error, we can continue without video
 			perror("video: popen");
 	}
