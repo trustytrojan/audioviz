@@ -35,7 +35,7 @@ jobs:
             ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DGITHUB_CI=1
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DGITHUB_CI=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j$(nproc)
