@@ -50,7 +50,7 @@ find_program(FFMPEG ffmpeg REQUIRED)
 find_program(FFPROBE ffprobe REQUIRED)
 
 ## fftw
-find_package(FFTW3 COMPONENTS fftw3f QUIET)
+find_package(FFTW3 QUIET)
 if(WIN32 AND NOT FFTW3_FOUND)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		message("fetching fftw x64 binaries...")

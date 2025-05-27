@@ -14,6 +14,12 @@ set(BUILD_SHARED_LIBS OFF) # static preferred
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(APPLE)
+	# for homebrew setups
+	link_directories(/opt/homebrew/lib)
+	include_directories(/opt/homebrew/include)
+endif()
+
 add_subdirectory(libaudioviz)
 
 if(AUDIOVIZ_TTVIZ)

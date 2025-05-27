@@ -3,12 +3,6 @@
 #include <cstring>
 #include <stdexcept>
 
-#ifdef _WIN32
-#define POPEN_MODE "wb"
-#elifdef __unix__
-#define POPEN_MODE "w"
-#endif
-
 namespace audioviz
 {
 
@@ -51,7 +45,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	// end on shortest input stream
 	cmd_stream << "-shortest " << outfile;
 
-	ffmpeg = popen(cmd_stream.str().c_str(), POPEN_MODE);
+	ffmpeg = popen(cmd_stream.str().c_str(), POPEN_W_MODE);
 	if (!ffmpeg)
 		throw std::runtime_error("Failed to start ffmpeg process with popen");
 }

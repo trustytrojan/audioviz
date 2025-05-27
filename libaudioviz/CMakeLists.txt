@@ -27,3 +27,15 @@ target_include_directories(audioviz
 	PUBLIC ${CMAKE_BINARY_DIR} # single-header libs
 	PUBLIC ${portaudio-pp_SOURCE_DIR}/include
 )
+
+if(WIN32)
+	target_compile_definitions(audioviz
+		PUBLIC POPEN_R_MODE="rb"
+		PUBLIC POPEN_W_MODE="wb"
+	)
+else() # be specific if you discover more differences
+	target_compile_definitions(audioviz
+		PUBLIC POPEN_R_MODE="r"
+		PUBLIC POPEN_W_MODE="w"
+	)
+endif()

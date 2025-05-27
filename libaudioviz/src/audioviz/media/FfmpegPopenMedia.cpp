@@ -2,12 +2,6 @@
 #include <audioviz/util.hpp>
 #include <iostream>
 
-#ifdef _WIN32
-#define POPEN_MODE "rb"
-#else
-#define POPEN_MODE "r"
-#endif
-
 namespace audioviz
 {
 
@@ -27,7 +21,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 		ss << "-i \"" << url << "\" ";
 		ss << "-f f32le - ";
 
-		if (!(audio = popen(ss.str().c_str(), POPEN_MODE)))
+		if (!(audio = popen(ss.str().c_str(), POPEN_R_MODE)))
 			// fatal error: audio visualizers need audio...
 			throw std::runtime_error{std::string{"audio: popen: "} + strerror(errno)};
 	}
@@ -61,7 +55,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 
 		ss << "-pix_fmt rgba -f rawvideo -";
 
-		if (!(video = popen(ss.str().c_str(), POPEN_MODE)))
+		if (!(video = popen(ss.str().c_str(), POPEN_R_MODE)))
 			// non-fatal error, we can continue without video
 			perror("video: popen");
 	}
