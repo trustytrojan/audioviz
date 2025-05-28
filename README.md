@@ -9,6 +9,11 @@
 
 [here are some songs rendered with audioviz!](https://youtube.com/playlist?list=PLq63g2iq0LVvxNjjoYOL4GMTOdXEdHsBf)
 
+## how things work
+below is a great video explaining some of the fundamentals of programming with audio. it will get you up to speed with a decent chunk of the codebase:
+
+[Cinamark - How do computers even render audio...?](https://youtu.be/md79DDofGVo)
+
 ## building
 ### linux
 1. install any required dependencies below
