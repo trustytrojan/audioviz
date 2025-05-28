@@ -31,7 +31,6 @@ havent tried building just yet because of lack of native opengl support (SFML re
 ## libraries/software used
 - **libaudioviz**
   - [FFTW3](https://fftw.org)
-  - [libavpp](https://github.com/trustytrojan/libavpp) - requires the [FFmpeg](https://ffmpeg.org) libraries
   - `ffmpeg`, the standalone CLI program, part of the [FFmpeg](https://ffmpeg.org) project
   - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (the C library, NOT the C++ binding)
   - [SFML 3.0.1](https://github.com/SFML/SFML/tree/3.0.1) - only supports X11 windows
