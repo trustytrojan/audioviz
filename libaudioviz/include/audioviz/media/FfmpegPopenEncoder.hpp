@@ -11,6 +11,14 @@ namespace audioviz
 
 class FfmpegPopenEncoder : public FfmpegEncoder
 {
+	static const int NUM_PBOS = 2;
+	unsigned int pbos[NUM_PBOS]; // this is basically a ring buffer of pixel buffer objects (PBOs) to avoid stalls
+	unsigned int fbo;
+	unsigned int intermediateFBO;
+	unsigned int intermediateTexture;
+	int current_frame = 0;
+	sf::Vector2u video_size;
+
 	FILE *ffmpeg;
 
 public:
@@ -19,7 +27,7 @@ public:
 	~FfmpegPopenEncoder();
 
 	void send_frame(const sf::Image &img);
-	inline void send_frame(const sf::Texture &txr) { send_frame(txr.copyToImage()); }
+	void send_frame(const sf::Texture &txr);
 };
 
 } // namespace audioviz::media
