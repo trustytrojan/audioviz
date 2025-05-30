@@ -14,10 +14,6 @@ set(BUILD_SHARED_LIBS OFF) # static preferred
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if(GITHUB_CI)
-	list(PREPEND CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-endif()
-
 add_subdirectory(libaudioviz)
 
 if(AUDIOVIZ_TTVIZ)

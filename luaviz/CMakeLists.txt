@@ -12,4 +12,4 @@ endif()
 include(deps.cmake)
 
 target_include_directories(luaviz PUBLIC include)
-target_link_libraries(luaviz PUBLIC audioviz xcb)
+target_link_libraries(luaviz PUBLIC audioviz)
