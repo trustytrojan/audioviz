@@ -43,7 +43,11 @@ void table::load_particle_systems()
 			[](CPS &self, const std::vector<float> &v) { self.update(v); }
 		),
 		"set_particle_textures", &CPS::set_particle_textures,
-		"set_debug_rect", &CPS::set_debug_rect
+		"set_debug_rect", &CPS::set_debug_rect,
+		"set_color", sol::overload(
+			&CPS::set_color,
+			[](CPS &self, const sol::table &color) { self.set_color(table_to_color(color)); }
+		)
 	);
 
 	new_usertype<RPS>("RectangleParticleSystem",
@@ -60,7 +64,11 @@ void table::load_particle_systems()
 			static_cast<void(RPS::*)(const fft::AudioAnalyzer &, const RPS::UpdateOptions &)>(&RPS::update),
 			[](RPS &self, const fft::AudioAnalyzer &aa) { self.update(aa); }
 		),
-		"set_particle_textures", &RPS::set_particle_textures
+		"set_particle_textures", &RPS::set_particle_textures,
+		"set_color", sol::overload(
+			&RPS::set_color,
+			[](RPS &self, const sol::table &color) { self.set_color(table_to_color(color)); }
+		)
 	);
 	// clang-format on
 }
