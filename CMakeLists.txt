@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(GITHUB_CI)
-	list(APPEND CMAKE_EXE_LINKER_FLAGS "-static")
+	list(PREPEND CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 endif()
 
 add_subdirectory(libaudioviz)
