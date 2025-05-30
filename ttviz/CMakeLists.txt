@@ -1,7 +1,7 @@
 include(deps.cmake)
 
 include_directories(include ${CMAKE_BINARY_DIR})
-link_libraries(audioviz ImGui-SFML::ImGui-SFML)
+link_libraries(audioviz ImGui-SFML::ImGui-SFML xcb)
 
 if(AUDIOVIZ_PORTAUDIO)
 	add_compile_definitions(AUDIOVIZ_PORTAUDIO)
