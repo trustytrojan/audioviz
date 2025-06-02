@@ -42,7 +42,8 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 
 		ss << "-i \"" << url << "\" ";
 
-		// from the ffmpeg docs: ’V’ only matches video streams which are not attached pictures, video thumbnails or cover arts
+		// from the ffmpeg docs: ’V’ only matches video streams which are not attached pictures, video thumbnails or
+		// cover arts
 		ss << "-map V ";
 
 #ifdef __linux__
@@ -111,4 +112,4 @@ bool FfmpegPopenMedia::read_video_frame(sf::Texture &txr)
 	return true;
 }
 
-} // namespace audioviz::media
+} // namespace audioviz
