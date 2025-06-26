@@ -62,4 +62,4 @@ public:
 	inline int audio_buffer_frames() const { return _audio_buffer.size() / audio_channels(); }
 };
 
-} // namespace audioviz::media
+} // namespace audioviz

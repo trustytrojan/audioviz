@@ -30,4 +30,4 @@ public:
 	void send_frame(const sf::Texture &txr);
 };
 
-} // namespace audioviz::media
+} // namespace audioviz

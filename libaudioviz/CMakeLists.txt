@@ -5,7 +5,7 @@ file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/*.cpp
 )
 
-if(LINUX AND AUDIOVIZ_LUAVIZ)
+if(LINUX AND AUDIOVIZ_LUAVIZ AND NOT LUAVIZ_EXECUTABLE)
 	# relocation issues arise when luaviz links to a static libaudioviz
 	set(BUILD_SHARED_LIBS ON)
 endif()

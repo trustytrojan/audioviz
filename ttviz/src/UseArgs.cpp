@@ -49,7 +49,7 @@ void Main::use_args(ttviz &viz)
 
 	{ // window function
 		static const std::unordered_map<std::string, FA::WindowFunction> wf_map{
-			{"none", FA::WF_NONE},
+			{"none", nullptr},
 			{"hanning", FA::WF_HANNING},
 			{"hamming", FA::WF_HAMMING},
 			{"blackman", FA::WF_BLACKMAN},

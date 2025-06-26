@@ -3,6 +3,7 @@
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 #ifdef _WIN32
@@ -121,6 +122,5 @@ void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 	if (fwrite(pixels, 1, size, ffmpeg) != size)
 		throw std::runtime_error("Failed to write frame to ffmpeg stdin");
 }
-
 
 } // namespace audioviz::media

@@ -1,5 +1,5 @@
-#include <audioviz/media/Media.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
+#include <audioviz/media/Media.hpp>
 
 namespace audioviz
 {
@@ -35,4 +35,4 @@ void Media::buffer_audio(const int frames)
 	}
 }
 
-} // namespace audioviz::media
+} // namespace audioviz

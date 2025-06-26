@@ -39,8 +39,7 @@ public:
 
 	using WindowFunction = std::function<float(int, int)>;
 
-	static const inline WindowFunction WF_NONE = [](int, int) { return 1; },
-									   WF_HANNING = [](int i, int fft_size)
+	static const inline WindowFunction WF_HANNING = [](int i, int fft_size)
 	{ return 0.5f * (1 - cos(2 * M_PI * i / (fft_size - 1))); },
 									   WF_HAMMING = [](int i, int fft_size)
 	{ return 0.54f - 0.46f * cos(2 * M_PI * i / (fft_size - 1)); },

@@ -1,5 +1,6 @@
 #include <audioviz/media/FfprobeMetadata.hpp>
 #include <iostream>
+#include <sstream>
 
 FfprobeMetadata::FfprobeMetadata(const std::string &media_url)
 {
