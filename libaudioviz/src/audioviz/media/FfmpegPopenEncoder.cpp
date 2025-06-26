@@ -1,5 +1,5 @@
-#include "_deps/sfml-src/extlibs/headers/glad/include/glad/gl.h"
-#include "_deps/sfml-src/include/SFML/Window/GlResource.hpp"
+#include <SFML/OpenGL.hpp>
+#include <SFML/Window/GlResource.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
 #include <cstring>
@@ -123,4 +123,4 @@ void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 		throw std::runtime_error("Failed to write frame to ffmpeg stdin");
 }
 
-} // namespace audioviz::media
+} // namespace audioviz
