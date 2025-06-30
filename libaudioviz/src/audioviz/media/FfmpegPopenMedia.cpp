@@ -2,12 +2,6 @@
 #include <audioviz/util.hpp>
 #include <iostream>
 
-#ifdef _WIN32
-#define POPEN_MODE "rb"
-#else
-#define POPEN_MODE "r"
-#endif
-
 namespace audioviz
 {
 
@@ -27,7 +21,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 		ss << "-i \"" << url << "\" ";
 		ss << "-f f32le - ";
 
-		if (!(audio = popen(ss.str().c_str(), POPEN_MODE)))
+		if (!(audio = popen(ss.str().c_str(), POPEN_R_MODE)))
 			// fatal error: audio visualizers need audio...
 			throw std::runtime_error{std::string{"audio: popen: "} + strerror(errno)};
 	}
@@ -42,8 +36,8 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 
 		ss << "-i \"" << url << "\" ";
 
-		// from the ffmpeg docs: ’V’ only matches video streams which are not attached pictures, video thumbnails or
-		// cover arts
+		// from the ffmpeg docs: ’V’ only matches video streams which
+		// are not attached pictures, video thumbnails or cover arts
 		ss << "-map V ";
 
 #ifdef __linux__
@@ -62,7 +56,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 
 		ss << "-pix_fmt rgba -f rawvideo -";
 
-		if (!(video = popen(ss.str().c_str(), POPEN_MODE)))
+		if (!(video = popen(ss.str().c_str(), POPEN_R_MODE)))
 			// non-fatal error, we can continue without video
 			perror("video: popen");
 	}
@@ -92,13 +86,13 @@ bool FfmpegPopenMedia::read_video_frame(sf::Texture &txr)
 		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] texture resize failed!"};
 	const auto bytes_to_read{4 * video_size.x * video_size.y};
 
-#ifdef unix
-	uint8_t buf[bytes_to_read];
-#elifdef _WIN32
+#ifdef _WIN32
 	// windows doesnt like large stacks so we have to heap-allocate instead
 	const auto buf = new uint8_t[bytes_to_read];
 	if (!buf)
 		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] failed to allocate buffer"};
+#else // most other things are probably unix based so... this is fine
+	uint8_t buf[bytes_to_read];
 #endif
 
 	if (fread(buf, sizeof(uint8_t), bytes_to_read, video) < bytes_to_read)
