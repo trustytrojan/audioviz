@@ -7,6 +7,12 @@ if(NOT WIN32)
 	target_link_libraries(audioviz PUBLIC GLEW)
 endif()
 
+## OpenGL (separate on macos????? also caused by optimization changes)
+if(APPLE)
+	find_library(OpenGL_LIBRARY OpenGL REQUIRED)
+	target_link_libraries(audioviz PUBLIC ${OpenGL_PUBLIC})
+endif()
+
 ## ffmpeg (just the ffmpeg & ffprobe executables, libs no longer needed)
 find_program(FFMPEG NAMES ffmpeg ffprobe)
 if(WIN32 AND FFMPEG STREQUAL "FFMPEG-NOTFOUND")

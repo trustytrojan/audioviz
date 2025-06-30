@@ -83,6 +83,7 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 		ffmpeg = nullptr;
 	}
 }
+
 void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
 {
 	glBindTexture(GL_TEXTURE_2D, txr.getNativeHandle());
