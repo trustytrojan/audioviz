@@ -1,4 +1,3 @@
-#include <SFML/OpenGL.hpp>
 #include <SFML/Window/GlResource.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
@@ -8,8 +7,10 @@
 
 #ifdef _WIN32
 #define POPEN_MODE "wb"
-#elifdef __unix__
+#include <SFML/OpenGL.hpp>
+#else
 #define POPEN_MODE "w"
+#include <GL/glew.h>
 #endif
 
 namespace audioviz

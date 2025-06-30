@@ -1,6 +1,12 @@
 # deps.cmake - fetch, setup, and link to dependencies
 include(FetchContent)
 
+## GLEW (caused by pbo optimization changes)
+if(NOT WIN32)
+	find_package(GLEW REQUIRED)
+	target_link_libraries(audioviz PUBLIC GLEW)
+endif()
+
 ## ffmpeg (just the ffmpeg & ffprobe executables, libs no longer needed)
 find_program(FFMPEG NAMES ffmpeg ffprobe)
 if(WIN32 AND FFMPEG STREQUAL "FFMPEG-NOTFOUND")
