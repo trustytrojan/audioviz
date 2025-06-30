@@ -22,17 +22,15 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	glGenBuffers(NUM_PBOS, pbos);
 
 	const unsigned int byte_size = viz.size.x * viz.size.y * 4; // 4 refers to channel count
-	for (unsigned int pbo : pbos) {
+	for (unsigned int pbo : pbos)
+	{
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
 		glBufferData(GL_PIXEL_PACK_BUFFER, byte_size, nullptr, GL_STREAM_READ);
 	}
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-
-
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
 
 	const auto &url = viz.get_media_url();
 	std::ostringstream cmd_stream;
@@ -97,12 +95,12 @@ void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
 
 	// Map previous PBO and write to FFmpeg
 	int prev_idx = (current_frame + 1) % NUM_PBOS;
-	if (current_frame >= NUM_PBOS - 1) { // Only start reading after we've filled the queue
+	if (current_frame >= NUM_PBOS - 1)
+	{ // Only start reading after we've filled the queue
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[prev_idx]);
-		auto ptr = static_cast<std::uint8_t*>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
-		if (ptr) {
+		auto ptr = static_cast<std::uint8_t *>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
+		if (ptr)
 			fwrite(ptr, 1, video_size.x * video_size.y * 4, ffmpeg);
-		}
 		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 	}
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
