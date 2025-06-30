@@ -1,4 +1,4 @@
-option(LUAVIZ_EXECUTABLE "Make luaviz an executable that executes a Lua script with the audioviz binding included" OFF)
+option(LUAVIZ_EXECUTABLE "Make luaviz an executable that executes Lua scripts with the binding included" OFF)
 
 file(GLOB LUAVIZ_SOURCES src/*.cpp)
 

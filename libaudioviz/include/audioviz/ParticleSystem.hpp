@@ -212,6 +212,12 @@ public:
 			p.setTexture(&txr);
 	}
 
+	void set_color(const sf::Color color)
+	{
+		for (auto &p : particles)
+			p.setFillColor(color);
+	}
+
 private:
 	void init_particles()
 	{

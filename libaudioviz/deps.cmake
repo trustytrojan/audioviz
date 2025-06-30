@@ -50,7 +50,10 @@ find_program(FFMPEG ffmpeg REQUIRED)
 find_program(FFPROBE ffprobe REQUIRED)
 
 ## fftw
-find_package(FFTW3 QUIET)
+if(NOT ANDROID)
+	# termux's fftw package is missing FFTW3LibraryDepends.cmake, so don't bother finding
+	find_package(FFTW3 COMPONENTS fftw3f QUIET)
+endif()
 if(WIN32 AND NOT FFTW3_FOUND)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		message("fetching fftw x64 binaries...")
@@ -95,7 +98,7 @@ target_link_libraries(audioviz PUBLIC nlohmann_json::nlohmann_json)
 ### TEMPORARY - libaudioviz should not be responsible for audio playback.
 ### but to keep things stable i will leave this as is for now.
 ## portaudio (optional)
-if(AUDIOVIZ_PORTAUDIO)
+if(AUDIOVIZ_USE_PORTAUDIO)
 	if(WIN32)
 		if(CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|x86_64")
 			message("windows x64 detected, fetching portaudio dll...")

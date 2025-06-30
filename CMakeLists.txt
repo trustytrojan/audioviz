@@ -5,7 +5,7 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.24)
 	cmake_policy(SET CMP0135 NEW)
 endif()
 
-option(AUDIOVIZ_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
+option(AUDIOVIZ_USE_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
 option(AUDIOVIZ_TESTS "Build the small test programs in the 'test' directory" OFF)
 option(AUDIOVIZ_LUAVIZ "Build luaviz: the Lua binding" ON)
 option(AUDIOVIZ_TTVIZ "Build ttviz: the first audioviz visualizer" ON)

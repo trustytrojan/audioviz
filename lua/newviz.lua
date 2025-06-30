@@ -41,18 +41,10 @@ viz:set_text_font(font_path)
 -- aka set the analyzer's buffer size to have enough data for all the spectrum bars
 assert(lbsd:bar_count() == rbsd:bar_count(), 'bar counts are not the same!')
 
--- lbsd:set_debug_rect(true)
--- rbsd:set_debug_rect(true)
--- lcps:set_debug_rect(true)
--- rcps:set_debug_rect(true)
-
 lcps:set_start_side(luaviz.ParticleSystemStartSide.LEFT)
 rcps:set_start_side(luaviz.ParticleSystemStartSide.RIGHT)
 lbsd:set_backwards(true)
 rbsd:set_backwards(true)
-
--- lbsd:set_multiplier(3)
--- rbsd:set_multiplier(3)
 lbsd:set_bar_width(5)
 rbsd:set_bar_width(5)
 lbsd:set_bar_spacing(2)
@@ -82,11 +74,15 @@ if attached_pic then
 
 	-- make spectrum match bg color
 	cs:set_mode(luaviz.ColorMode.SOLID)
-	-- cs:set_solid_color({ 199, 220, 241, 255 }) -- june.mp3
+	-- cs:set_solid_color({ 199, 220, 241, 255 })
+	-- cs:set_solid_color({ 90, 75, 94, 255 })
 end
 
 updopts = luaviz.ParticleSystemUpdateOptions.new()
 updopts.multiplier = 1.25
+
+-- lcps:set_color({ 80, 191, 122, 255 })
+-- rcps:set_color({ 80, 191, 122, 255 })
 
 particles_layer = viz:add_layer('particles', 0)
 particles_layer:set_orig_cb(function(orig_rt)
@@ -110,6 +106,7 @@ particles_layer:add_effect(particles_blur)
 spectrum_layer = viz:add_layer('spectrum', 0)
 spectrum_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
+	-- cs:set_solid_color({ 80, 191, 122, 255 })
 	-- cs:set_solid_color(luaviz.sfColors.Magenta)
 	lbsd:update(sa:left_data())
 	rbsd:update(sa:right_data())
@@ -121,7 +118,8 @@ spectrum_layer:set_fx_cb(function(orig_rt, fx_rt, target)
 	target:draw(fx_rt:sprite(), luaviz.GreatAmazingBlendMode)
 	target:draw(orig_rt:sprite())
 
-	-- magenta glow underneath white spectrum:
+	-- glow color different from spectrum color:
+	-- cs:set_solid_color({ 90, 75, 94, 255 })
 	-- cs:set_solid_color(luaviz.sfColors.White)
 	-- lbsd:update_colors()
 	-- rbsd:update_colors()

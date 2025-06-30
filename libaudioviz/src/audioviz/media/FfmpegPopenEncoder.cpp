@@ -1,6 +1,7 @@
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 namespace audioviz
