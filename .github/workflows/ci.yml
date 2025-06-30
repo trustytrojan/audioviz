@@ -23,6 +23,7 @@ jobs:
             build-essential \
             cmake \
             libfreetype-dev \
+            libglew-dev \
             libgl-dev \
             libx11-dev \
             libxau-dev \
@@ -64,6 +65,7 @@ jobs:
         run: |
           brew update
           brew install \
+            glew \
             cmake \
             sfml \
             fftw \
