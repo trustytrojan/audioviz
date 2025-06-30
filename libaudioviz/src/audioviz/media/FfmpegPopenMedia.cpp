@@ -85,7 +85,7 @@ bool FfmpegPopenMedia::read_video_frame(sf::Texture &txr)
 		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] texture resize failed!"};
 	const auto bytes_to_read{4 * video_size.x * video_size.y};
 
-#ifdef unix
+#if defined(unix) || defined(__APPLE__)
 	uint8_t buf[bytes_to_read];
 #elifdef _WIN32
 	// windows doesnt like large stacks so we have to heap-allocate instead
