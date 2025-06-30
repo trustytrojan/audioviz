@@ -5,12 +5,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#ifdef __linux__
-#define POPEN_MODE "r"
-#elifdef _WIN32
-#define POPEN_MODE "rb"
-#endif
-
 namespace audioviz::util
 {
 
@@ -186,7 +180,7 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 	const auto cmd{"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
 	std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
 
-	const auto pipe = popen(cmd.c_str(), POPEN_MODE);
+	const auto pipe = popen(cmd.c_str(), POPEN_R_MODE);
 	if (!pipe)
 	{
 		std::cerr << __FUNCTION__ << ": popen: " << strerror(errno) << '\n';
