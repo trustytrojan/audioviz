@@ -14,4 +14,4 @@ public:
 	inline virtual void send_frame(const sf::Texture &txr) { send_frame(txr.copyToImage()); }
 };
 
-} // namespace audioviz::media
+} // namespace audioviz

@@ -69,4 +69,4 @@ void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 		throw std::runtime_error("Failed to write frame to ffmpeg stdin");
 }
 
-} // namespace audioviz::media
+} // namespace audioviz
