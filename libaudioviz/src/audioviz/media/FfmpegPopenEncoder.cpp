@@ -5,6 +5,13 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <SFML/OpenGL.hpp>
+#include <GL/glext.h>
+#else
+#include <GL/glew.h>
+#endif
+
 namespace audioviz
 {
 
