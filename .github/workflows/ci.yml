@@ -23,6 +23,7 @@ jobs:
             build-essential \
             cmake \
             libfreetype-dev \
+            libglew-dev \
             libgl-dev \
             libx11-dev \
             libxau-dev \
@@ -37,7 +38,7 @@ jobs:
             ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DGITHUB_CI=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j$(nproc)
@@ -64,6 +65,7 @@ jobs:
         run: |
           brew update
           brew install \
+            glew \
             cmake \
             sfml \
             fftw \
@@ -72,7 +74,7 @@ jobs:
             ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DGITHUB_CI=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1 -DCMAKE_VERBOSE_MAKEFILE=ON
 
       - name: Build project
         run: cmake --build build -j$(sysctl -n hw.ncpu)
