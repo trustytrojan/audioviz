@@ -1,20 +1,33 @@
+#include <SFML/Window/GlResource.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
-
-#ifdef _WIN32
-#define POPEN_MODE "wb"
-#elifdef __unix__
-#define POPEN_MODE "w"
-#endif
 
 namespace audioviz
 {
 
 FfmpegPopenEncoder::FfmpegPopenEncoder(
 	const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+	: video_size{viz.size}
 {
+#ifndef _WIN32
+	glewInit(); // otherwise the line below segfaults
+#endif
+	glGenBuffers(NUM_PBOS, pbos);
+
+	const unsigned int byte_size = viz.size.x * viz.size.y * 4; // 4 refers to channel count
+	for (unsigned int pbo : pbos)
+	{
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
+		glBufferData(GL_PIXEL_PACK_BUFFER, byte_size, nullptr, GL_STREAM_READ);
+	}
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
 	const auto &url = viz.get_media_url();
 	std::ostringstream cmd_stream;
 	cmd_stream << "ffmpeg -hide_banner -hwaccel auto -y ";
@@ -51,7 +64,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	// end on shortest input stream
 	cmd_stream << "-shortest " << outfile;
 
-	ffmpeg = popen(cmd_stream.str().c_str(), POPEN_MODE);
+	ffmpeg = popen(cmd_stream.str().c_str(), POPEN_W_MODE);
 	if (!ffmpeg)
 		throw std::runtime_error("Failed to start ffmpeg process with popen");
 }
@@ -67,6 +80,35 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 	}
 }
 
+void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
+{
+	glBindTexture(GL_TEXTURE_2D, txr.getNativeHandle());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, video_size.x, video_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, txr.getNativeHandle(), 0);
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[current_frame % NUM_PBOS]);
+	glReadPixels(0, 0, video_size.x, video_size.y, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+	// Map previous PBO and write to FFmpeg
+	const auto prev_idx = (current_frame + 1) % NUM_PBOS;
+
+	if (current_frame >= NUM_PBOS - 1)
+	{
+		// Only start reading after we've filled the queue
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[prev_idx]);
+		const auto *const ptr = static_cast<std::byte *>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
+		if (ptr)
+			fwrite(ptr, 1, 4 * video_size.x * video_size.y, ffmpeg);
+		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+	}
+
+	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glFlush();
+
+	++current_frame;
+}
+
 void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 {
 	const auto pixels = img.getPixelsPtr();
@@ -75,4 +117,4 @@ void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 		throw std::runtime_error("Failed to write frame to ffmpeg stdin");
 }
 
-} // namespace audioviz::media
+} // namespace audioviz

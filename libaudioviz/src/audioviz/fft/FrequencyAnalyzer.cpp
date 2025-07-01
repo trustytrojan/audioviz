@@ -86,12 +86,12 @@ void FrequencyAnalyzer::copy_channel_to_input(
 void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 {
 	assert(spectrum.size());
-	assert(window_func);
 
 	// apply window function on input
 	const auto input = fftw.input();
-	for (int i = 0; i < fft_size; ++i)
-		input[i] *= window_func(i, fft_size);
+	if (window_func)
+		for (int i = 0; i < fft_size; ++i)
+			input[i] *= window_func(i, fft_size);
 
 	// execute fft and get output
 	fftw.execute();

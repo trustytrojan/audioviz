@@ -1,6 +1,18 @@
 # deps.cmake - fetch, setup, and link to dependencies
 include(FetchContent)
 
+## GLEW (caused by pbo optimization changes)
+if(NOT WIN32)
+	find_package(GLEW REQUIRED)
+	target_link_libraries(audioviz PUBLIC GLEW::GLEW)
+endif()
+
+## OpenGL (separate on macos????? also caused by optimization changes)
+if(APPLE)
+	find_package(OpenGL COMPONENTS OpenGL REQUIRED)
+	target_link_libraries(audioviz PUBLIC OpenGL::GL)
+endif()
+
 ## ffmpeg (just the ffmpeg & ffprobe executables, libs no longer needed)
 find_program(FFMPEG NAMES ffmpeg ffprobe)
 if(WIN32 AND FFMPEG STREQUAL "FFMPEG-NOTFOUND")
@@ -50,7 +62,10 @@ find_program(FFMPEG ffmpeg REQUIRED)
 find_program(FFPROBE ffprobe REQUIRED)
 
 ## fftw
-find_package(FFTW3 COMPONENTS fftw3f QUIET)
+if(NOT ANDROID)
+	# termux's fftw package is missing FFTW3LibraryDepends.cmake, so don't bother finding
+	find_package(FFTW3 COMPONENTS fftw3f QUIET)
+endif()
 if(WIN32 AND NOT FFTW3_FOUND)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		message("fetching fftw x64 binaries...")
@@ -95,7 +110,7 @@ target_link_libraries(audioviz PUBLIC nlohmann_json::nlohmann_json)
 ### TEMPORARY - libaudioviz should not be responsible for audio playback.
 ### but to keep things stable i will leave this as is for now.
 ## portaudio (optional)
-if(AUDIOVIZ_PORTAUDIO)
+if(AUDIOVIZ_USE_PORTAUDIO)
 	if(WIN32)
 		if(CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64|x86_64")
 			message("windows x64 detected, fetching portaudio dll...")

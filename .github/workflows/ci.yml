@@ -1,9 +1,15 @@
-name: Build on Linux
+name: Build
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,6 +23,7 @@ jobs:
             build-essential \
             cmake \
             libfreetype-dev \
+            libglew-dev \
             libgl-dev \
             libx11-dev \
             libxau-dev \
@@ -31,7 +38,7 @@ jobs:
             ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DGITHUB_CI=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j$(nproc)
@@ -39,7 +46,43 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: audioviz-build
+          name: audioviz-build-linux
+          path: |
+            build/libaudioviz/libaudioviz.*
+            build/ttviz/ttviz
+            build/luaviz/luaviz*
+            build/test/*-test
+            shaders/
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install \
+            glew \
+            cmake \
+            sfml \
+            fftw \
+            lua \
+            portaudio \
+            ffmpeg
+
+      - name: Configure CMake
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1 -DCMAKE_VERBOSE_MAKEFILE=ON
+
+      - name: Build project
+        run: cmake --build build -j$(sysctl -n hw.ncpu)
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: audioviz-build-macos
           path: |
             build/libaudioviz/libaudioviz.*
             build/ttviz/ttviz

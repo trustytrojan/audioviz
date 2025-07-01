@@ -2,6 +2,7 @@
 #include <audioviz/fx/Blur.hpp>
 #include <audioviz/fx/Mult.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
+#include <iostream>
 
 ttviz::ttviz(
 	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)

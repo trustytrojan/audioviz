@@ -2,14 +2,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <stdexcept>
 #include <iostream>
-
-#ifdef __linux__
-#define POPEN_MODE "r"
-#elifdef _WIN32
-#define POPEN_MODE "rb"
-#endif
+#include <stdexcept>
 
 namespace audioviz::util
 {
@@ -183,11 +177,10 @@ std::string detect_vaapi_device()
 
 std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 {
-	const auto cmd{
-		"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
+	const auto cmd{"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
 	std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
 
-	const auto pipe = popen(cmd.c_str(), POPEN_MODE);
+	const auto pipe = popen(cmd.c_str(), POPEN_R_MODE);
 	if (!pipe)
 	{
 		std::cerr << __FUNCTION__ << ": popen: " << strerror(errno) << '\n';
@@ -227,26 +220,26 @@ calling yt-dlp with --embed-thumbnail, and the highest quality audio/video strea
 
 std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPath)
 {
-    // Use ffmpeg to dump the first attachment (usually cover art) to a temp file
-    const std::string tmpFile = "cover_attachment_tmp";
-    const std::string cmd = "ffmpeg -v warning -y -dump_attachment:t=" + tmpFile + " -i \"" + mediaPath + "\"";
+	// Use ffmpeg to dump the first attachment (usually cover art) to a temp file
+	const std::string tmpFile = "cover_attachment_tmp";
+	const std::string cmd = "ffmpeg -v warning -y -dump_attachment:t=" + tmpFile + " -i \"" + mediaPath + "\"";
 
-    std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
-    int rc = std::system(cmd.c_str());
-    if (rc != 0) {
-        std::cerr << __FUNCTION__ << ": ffmpeg command failed with code " << rc << '\n';
-        return {};
-    }
+	std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
+	int rc = std::system(cmd.c_str());
+	if (rc != 0) {
+		std::cerr << __FUNCTION__ << ": ffmpeg command failed with code " << rc << '\n';
+		return {};
+	}
 
-    sf::Texture texture;
-    if (!texture.loadFromFile(tmpFile)) {
-        std::cerr << __FUNCTION__ << ": failed to load texture from " << tmpFile << '\n';
-        std::remove(tmpFile.c_str());
-        return {};
-    }
+	sf::Texture texture;
+	if (!texture.loadFromFile(tmpFile)) {
+		std::cerr << __FUNCTION__ << ": failed to load texture from " << tmpFile << '\n';
+		std::remove(tmpFile.c_str());
+		return {};
+	}
 
-    std::remove(tmpFile.c_str());
-    return texture;
+	std::remove(tmpFile.c_str());
+	return texture;
 }
 */
 

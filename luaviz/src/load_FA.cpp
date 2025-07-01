@@ -11,7 +11,7 @@ void table::load_FA()
 	using FA = fft::FrequencyAnalyzer;
 	// clang-format off
 	new_enum("WindowFunction",
-		"NONE", FA::WF_NONE,
+		"NONE", nullptr,
 		"HANNING", FA::WF_HANNING,
 		"HAMMING", FA::WF_HAMMING,
 		"BLACKMAN", FA::WF_BLACKMAN

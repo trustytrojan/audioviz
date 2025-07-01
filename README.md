@@ -9,6 +9,11 @@
 
 [here are some songs rendered with audioviz!](https://youtube.com/playlist?list=PLq63g2iq0LVvxNjjoYOL4GMTOdXEdHsBf)
 
+## how things work
+below is a great video explaining some of the fundamentals of programming with audio. it will get you up to speed with a decent chunk of the codebase:
+
+[Cinamark - How do computers even render audio...?](https://youtu.be/md79DDofGVo)
+
 ## building
 ### linux
 1. install any required dependencies below
@@ -26,7 +31,6 @@ havent tried building just yet because of lack of native opengl support (SFML re
 ## libraries/software used
 - **libaudioviz**
   - [FFTW3](https://fftw.org)
-  - [libavpp](https://github.com/trustytrojan/libavpp) - requires the [FFmpeg](https://ffmpeg.org) libraries
   - `ffmpeg`, the standalone CLI program, part of the [FFmpeg](https://ffmpeg.org) project
   - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (the C library, NOT the C++ binding)
   - [SFML 3.0.1](https://github.com/SFML/SFML/tree/3.0.1) - only supports X11 windows

@@ -28,4 +28,4 @@ public:
 	inline const std::optional<sf::Texture> &attached_pic() const override { return _attached_pic; }
 };
 
-} // namespace audioviz::media
+} // namespace audioviz
