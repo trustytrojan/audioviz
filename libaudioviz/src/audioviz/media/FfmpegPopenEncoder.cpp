@@ -2,14 +2,7 @@
 #include <audioviz/util.hpp>
 #include <iostream>
 #include <stdexcept>
-
-#ifdef _WIN32
-	#define GL_GLEXT_PROTOTYPES
-	#include <SFML/OpenGL.hpp>
-	#include <GL/glext.h>
-#else
-	#include <GL/glew.h>
-#endif
+#include <GL/glew.h>
 
 namespace audioviz
 {
@@ -18,6 +11,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 	: video_size{viz.size}
 {
+	glewInit();
 	glGenBuffers(NUM_PBOS, pbos);
 
 	const unsigned int byte_size = viz.size.x * viz.size.y * 4; // 4 refers to channel count
