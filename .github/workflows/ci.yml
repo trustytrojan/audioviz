@@ -38,7 +38,7 @@ jobs:
             ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DGITHUB_CI=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j$(nproc)
@@ -74,7 +74,7 @@ jobs:
             ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1 -DCMAKE_VERBOSE_MAKEFILE=ON
+        run: cmake -S. -Bbuild -DGITHUB_CI=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j$(sysctl -n hw.ncpu)
@@ -99,14 +99,14 @@ jobs:
 
       - name: Download MinGW
         run: |
-          curl -Lo mingw64.zip https://github.com/brechtsanders/winlibs_mingw/releases/download/12.2.0-16.0.0-10.0.0-msvcrt-r5/winlibs-x86_64-posix-seh-gcc-12.2.0-llvm-16.0.0-mingw-w64msvcrt-10.0.0-r5.zip
-          7z x mingw64.zip -o"C:\Program Files" > nul
+          curl -Lo mingw64.7z https://github.com/niXman/mingw-builds-binaries/releases/download/15.1.0-rt_v12-rev0/x86_64-15.1.0-release-posix-seh-ucrt-rt_v12-rev0.7z
+          7z x mingw64.7z -o"C:\" >nul
 
       - name: Add MinGW to PATH
-        run: echo "C:\Program Files\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
+        run: echo "C:\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DGITHUB_CI=1 -DLUAVIZ_BUILD_LUA=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j $env:NUMBER_OF_PROCESSORS

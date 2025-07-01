@@ -1,4 +1,5 @@
 option(LUAVIZ_EXECUTABLE "Make luaviz an executable that executes Lua scripts with the binding included" OFF)
+option(LUAVIZ_BUILD_LUA "Build Lua from source for luaviz" OFF)
 
 file(GLOB LUAVIZ_SOURCES src/*.cpp)
 
