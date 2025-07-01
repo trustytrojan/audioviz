@@ -9,8 +9,11 @@ endif()
 
 ## OpenGL (also caused by optimization changes)
 if(APPLE OR WIN32)
-	find_package(OpenGL COMPONENTS OpenGL REQUIRED)
+	find_package(OpenGL COMPONENTS GL REQUIRED)
 	target_link_libraries(audioviz PUBLIC OpenGL::GL)
+endif()
+if(WIN32)
+	target_link_libraries(audioviz PUBLIC opengl32)
 endif()
 
 ## ffmpeg (just the ffmpeg & ffprobe executables, libs no longer needed)
