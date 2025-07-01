@@ -3,9 +3,13 @@
 #include <iostream>
 #include <stdexcept>
 
-#define GL_GLEXT_PROTOTYPES
-#include <SFML/OpenGL.hpp>
-#include <GL/glext.h>
+#ifdef _WIN32
+	#define GL_GLEXT_PROTOTYPES
+	#include <SFML/OpenGL.hpp>
+	#include <GL/glext.h>
+#else
+	#include <GL/glew.h>
+#endif
 
 namespace audioviz
 {
