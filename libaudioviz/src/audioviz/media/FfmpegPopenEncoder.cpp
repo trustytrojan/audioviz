@@ -1,9 +1,8 @@
-#include <SFML/Window/GlResource.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
-#include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <GL/glew.h>
 
 namespace audioviz
 {
@@ -12,9 +11,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 	: video_size{viz.size}
 {
-#ifndef _WIN32
-	glewInit(); // otherwise the line below segfaults
-#endif
+	glewInit();
 	glGenBuffers(NUM_PBOS, pbos);
 
 	const unsigned int byte_size = viz.size.x * viz.size.y * 4; // 4 refers to channel count
@@ -66,7 +63,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 
 	ffmpeg = popen(cmd_stream.str().c_str(), POPEN_W_MODE);
 	if (!ffmpeg)
-		throw std::runtime_error("Failed to start ffmpeg process with popen");
+		throw std::runtime_error{"Failed to start ffmpeg process with popen" + std::string{strerror(errno)}};
 }
 
 FfmpegPopenEncoder::~FfmpegPopenEncoder()
@@ -114,7 +111,7 @@ void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 	const auto pixels = img.getPixelsPtr();
 	std::size_t size = img.getSize().x * img.getSize().y * 4;
 	if (fwrite(pixels, 1, size, ffmpeg) != size)
-		throw std::runtime_error("Failed to write frame to ffmpeg stdin");
+		throw std::runtime_error{"FfmpegPopenEncoder: fwrite: Failed to write frame to ffmpeg stdin"};
 }
 
 } // namespace audioviz
