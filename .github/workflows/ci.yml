@@ -100,7 +100,9 @@ jobs:
       - name: Download MinGW
         run: |
           curl -Lo mingw64.7z https://github.com/niXman/mingw-builds-binaries/releases/download/15.1.0-rt_v12-rev0/x86_64-15.1.0-release-posix-seh-ucrt-rt_v12-rev0.7z
-          7z x mingw64.7z -o"C:\" >nul
+          if (!(Test-Path mingw64.7z)) { Write-Error "Download failed"; exit 1 }
+          7z x mingw64.7z -o"C:\" > nul
+          if (!(Test-Path "C:\mingw64\bin\gcc.exe")) { Write-Error "Extraction failed"; exit 1 }
 
       - name: Add MinGW to PATH
         run: echo "C:\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
