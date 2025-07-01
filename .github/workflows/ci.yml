@@ -89,3 +89,35 @@ jobs:
             build/luaviz/luaviz*
             build/test/*-test
             shaders/
+
+  build-windows-mingw:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download MinGW
+        run: |
+          curl -Lo mingw64.zip https://github.com/brechtsanders/winlibs_mingw/releases/download/12.2.0-16.0.0-10.0.0-msvcrt-r5/winlibs-x86_64-posix-seh-gcc-12.2.0-llvm-16.0.0-mingw-w64msvcrt-10.0.0-r5.zip
+          7z x mingw64.zip -o"C:\Program Files" > nul
+
+      - name: Add MinGW to PATH
+        run: echo "C:\Program Files\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
+
+      - name: Configure CMake
+        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+
+      - name: Build project
+        run: cmake --build build -j $env:NUMBER_OF_PROCESSORS
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: audioviz-build-windows-mingw
+          path: |
+            build/libaudioviz/libaudioviz.*
+            build/ttviz/ttviz.exe
+            build/luaviz/luaviz.exe
+            build/test/*-test.exe
+            shaders/
