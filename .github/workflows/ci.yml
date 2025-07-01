@@ -106,7 +106,7 @@ jobs:
         run: echo "C:\Program Files\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DGITHUB_CI=1 -DLUAVIZ_BUILD_LUA=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DGITHUB_CI=1 -DLUAVIZ_BUILD_LUA=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1 -DCMAKE_VERBOSE_MAKEFILE=1
 
       - name: Build project
         run: cmake --build build -j $env:NUMBER_OF_PROCESSORS
