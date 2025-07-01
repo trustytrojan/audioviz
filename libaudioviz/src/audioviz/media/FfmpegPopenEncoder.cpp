@@ -5,20 +5,16 @@
 #include <iostream>
 #include <stdexcept>
 
-#ifdef _WIN32
-#include <SFML/OpenGL.hpp>
-#else
-#include <GL/glew.h>
-#endif
-
 namespace audioviz
 {
 
 FfmpegPopenEncoder::FfmpegPopenEncoder(
 	const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+	: video_size{viz.size}
 {
-	// pbos = {0};
-	video_size = viz.size;
+#ifndef _WIN32
+	glewInit(); // otherwise the line below segfaults
+#endif
 	glGenBuffers(NUM_PBOS, pbos);
 
 	const unsigned int byte_size = viz.size.x * viz.size.y * 4; // 4 refers to channel count
@@ -88,29 +84,29 @@ void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
 {
 	glBindTexture(GL_TEXTURE_2D, txr.getNativeHandle());
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, video_size.x, video_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, txr.getNativeHandle(), 0);
-
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[current_frame % NUM_PBOS]);
 	glReadPixels(0, 0, video_size.x, video_size.y, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
 	// Map previous PBO and write to FFmpeg
-	int prev_idx = (current_frame + 1) % NUM_PBOS;
+	const auto prev_idx = (current_frame + 1) % NUM_PBOS;
+
 	if (current_frame >= NUM_PBOS - 1)
-	{ // Only start reading after we've filled the queue
+	{
+		// Only start reading after we've filled the queue
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[prev_idx]);
-		auto ptr = static_cast<std::uint8_t *>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
+		const auto *const ptr = static_cast<std::byte *>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
 		if (ptr)
-			fwrite(ptr, 1, video_size.x * video_size.y * 4, ffmpeg);
+			fwrite(ptr, 1, 4 * video_size.x * video_size.y, ffmpeg);
 		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 	}
+
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glFlush();
-	current_frame++;
 
-	// send_frame(txr.copyToImage());
+	++current_frame;
 }
 
 void FfmpegPopenEncoder::send_frame(const sf::Image &img)

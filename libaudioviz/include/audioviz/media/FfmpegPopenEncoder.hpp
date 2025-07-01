@@ -6,19 +6,26 @@
 #include <cstdio>
 #include <string>
 
+#ifdef _WIN32
+#include <SFML/OpenGL.hpp>
+#else
+#include <GL/glew.h>
+#endif
+
 namespace audioviz
 {
 
 class FfmpegPopenEncoder : public FfmpegEncoder
 {
-	static const int NUM_PBOS = 2;
-	unsigned int pbos[NUM_PBOS]; // this is basically a ring buffer of pixel buffer objects (PBOs) to avoid stalls
-	unsigned int fbo;
-	unsigned int intermediateFBO;
-	unsigned int intermediateTexture;
-	int current_frame = 0;
-	sf::Vector2u video_size;
+	static const int NUM_PBOS{2};
 
+	GLuint pbos[NUM_PBOS]{}; // this is basically a ring buffer of pixel buffer objects (PBOs) to avoid stalls
+	GLuint fbo;
+	GLuint intermediateFBO;
+	GLuint intermediateTexture;
+	int current_frame{};
+
+	const sf::Vector2u video_size;
 	FILE *ffmpeg;
 
 public:
