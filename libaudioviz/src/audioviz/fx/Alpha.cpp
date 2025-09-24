@@ -11,7 +11,7 @@ Alpha::Alpha(float alpha)
 	: alpha{alpha}
 {
 	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_alpha_frag, sf::Shader::Type::Fragment))
-		throw std::runtime_error{"failed to load add shader!"};
+		throw std::runtime_error{"failed to load alpha shader!"};
 }
 
 void Alpha::apply(RenderTexture &rt) const

@@ -61,15 +61,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: |
-          brew update
-          brew install \
-            glew \
-            cmake \
-            sfml \
-            fftw \
-            lua \
-            portaudio
+        run: brew install glew sfml fftw lua portaudio
 
       - name: Configure CMake
         run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1

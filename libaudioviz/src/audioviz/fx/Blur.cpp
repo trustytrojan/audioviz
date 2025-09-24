@@ -13,7 +13,7 @@ Blur::Blur(float hrad, float vrad, int n_passes)
 	  n_passes{n_passes}
 {
 	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_blur_frag, sf::Shader::Type::Fragment))
-		throw std::runtime_error{"failed to load add shader!"};
+		throw std::runtime_error{"failed to load blur shader!"};
 }
 
 void Blur::apply(RenderTexture &rt) const

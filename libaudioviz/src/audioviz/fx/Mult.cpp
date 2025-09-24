@@ -11,7 +11,7 @@ Mult::Mult(float factor)
 	: factor{factor}
 {
 	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_mult_frag, sf::Shader::Type::Fragment))
-		throw std::runtime_error{"failed to load add shader!"};
+		throw std::runtime_error{"failed to load mult shader!"};
 }
 
 void Mult::apply(RenderTexture &rt) const
