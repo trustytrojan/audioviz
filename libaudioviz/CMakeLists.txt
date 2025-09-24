@@ -43,7 +43,6 @@ else() # be specific if you discover more differences
 endif()
 
 # Generate header files with embedded shader source code
-include(${CMAKE_SOURCE_DIR}/cmake/embed.cmake)
 file(GLOB SHADER_SOURCES "${CMAKE_SOURCE_DIR}/shaders/*.frag")
 foreach(shader_source IN LISTS SHADER_SOURCES)
     get_filename_component(shader_name ${shader_source} NAME)
