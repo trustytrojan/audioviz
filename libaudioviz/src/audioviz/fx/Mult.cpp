@@ -1,6 +1,6 @@
 #include <audioviz/fx/Mult.hpp>
 
-#include "generated_headers/mult.frag.h"
+#include "shader_headers/mult.frag.h"
 
 static sf::Shader shader;
 

@@ -1,6 +1,6 @@
 #include <audioviz/fx/Alpha.hpp>
 
-#include "generated_headers/alpha.frag.h"
+#include "shader_headers/alpha.frag.h"
 
 static sf::Shader shader;
 

@@ -1,6 +1,6 @@
 #include <audioviz/fx/Blur.hpp>
 
-#include "generated_headers/blur.frag.h"
+#include "shader_headers/blur.frag.h"
 
 static sf::Shader shader;
 

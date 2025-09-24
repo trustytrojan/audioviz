@@ -1,6 +1,6 @@
 #include <audioviz/fx/Add.hpp>
 
-#include "generated_headers/add.frag.h"
+#include "shader_headers/add.frag.h"
 
 static sf::Shader shader;
 
