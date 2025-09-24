@@ -14,19 +14,28 @@ below is a great video explaining some of the fundamentals of programming with a
 
 [Cinamark - How do computers even render audio...?](https://youtu.be/md79DDofGVo)
 
-## building
+## building & running
+
+### all platforms
+make sure you are running executables from the project root directory (the folder you git cloned)! this is because audioviz needs to find effect shader files, which are in `shaders`, and not copied to the `build` directory. (will change this eventually by having the shaders embedded in source code at compile time).
+
 ### linux
 1. install any required dependencies below
 2. run `cmake -S. -Bbuild && cmake --build build -j$(nproc)` or use your IDE of choice with CMake support
+3. run build executables from the project root (as explained above)
 
 ### windows
 1. install any required dependencies below using `winget`:
    - lua can be installed with `winget install devcom.lua`
    - ffmpeg can be installed with `winget install gyan.ffmpeg.shared`
 2. run `cmake -S. -Bbuild && cmake --build build` or use your IDE of choice with CMake support
+3. run build executables from the project root (as explained above)
+
+#### dll problem
+on 64-bit systems, built executables dynamically link to FFTW and PortAudio, which are downloaded by the CMake build system at configure time into the `build` directory (or whatever you passed to `-B` when configuring). so **if nothing happens when you run an audioviz executable from the terminal**, and it returned a non-zero exit code, you need to append `;build` to your `PATH` environment variable so that the libraries can be found. you can do this by running `$env:PATH += ';build'` in PowerShell, or `set PATH=%PATH%;build` in CMD. if you want this to persist for every PowerShell/CMD you open, add the *absolute* path to your `build` directory to your user environment variables.
 
 ### macOS
-havent tried building just yet because of lack of native opengl support (SFML requirement). but opengl -> metal compatibility layers exist; building/testing contributions are welcome!
+thanks to CI, i discovered that the build process is the same as with linux. just use brew for package management. however i don't own a functional mac at the moment and have **not** tested the CI builds.
 
 ## libraries/software used
 - **libaudioviz**

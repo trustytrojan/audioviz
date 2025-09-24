@@ -17,3 +17,5 @@ windows_deps
 *.ini
 *.jpg
 *.webp
+*.ps1
+*.mp3
