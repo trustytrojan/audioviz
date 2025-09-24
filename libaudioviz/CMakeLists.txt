@@ -28,6 +28,8 @@ target_include_directories(audioviz
 	PUBLIC ${portaudio-pp_SOURCE_DIR}/include
 )
 
+# popen() on MinGW expects a 'b' to differentiate text/binary,
+# but on Linux it errors if a 'b' is there, so we have to do this...
 if(WIN32)
 	target_compile_definitions(audioviz
 		PUBLIC POPEN_R_MODE="rb"
@@ -39,3 +41,16 @@ else() # be specific if you discover more differences
 		PUBLIC POPEN_W_MODE="w"
 	)
 endif()
+
+# Generate header files with embedded shader source code
+file(GLOB SHADER_SOURCES "${CMAKE_SOURCE_DIR}/shaders/*.frag")
+foreach(shader_source IN LISTS SHADER_SOURCES)
+    get_filename_component(shader_name ${shader_source} NAME)
+    set(shader_header "${CMAKE_BINARY_DIR}/shader_headers/${shader_name}.h")
+    set(shader_variable "audioviz_shader_${shader_name}")
+    string(REPLACE "." "_" shader_variable ${shader_variable})
+	file(READ ${shader_source} file_content)
+    set(header_content "#include <string_view>\ninline const std::string_view ${shader_variable}{R\"glsl(${file_content})glsl\"};")
+    file(WRITE "${CMAKE_BINARY_DIR}/shader_headers/${shader_name}.h" "${header_content}")
+endforeach()
+target_include_directories(audioviz PRIVATE ${CMAKE_BINARY_DIR}/shader_headers)
