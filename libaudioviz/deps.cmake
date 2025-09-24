@@ -44,6 +44,10 @@ if(WIN32 AND NOT FFTW3_FOUND)
 		target_link_directories(audioviz PUBLIC ${fftw_SOURCE_DIR})
 		target_include_directories(audioviz PUBLIC ${fftw_SOURCE_DIR})
 		target_link_libraries(audioviz PUBLIC fftw3f-3)
+
+		# this is so that we only need to append the build dir to the PATH before running,
+		# making that process a bit less error-prone
+		file(COPY ${fftw_SOURCE_DIR}/libfftw3f-3.dll DESTINATION ${CMAKE_BINARY_DIR})
 	else()
 		message("other architecture detected, fetching fftw source...")
 		set(BUILD_TESTS OFF)
