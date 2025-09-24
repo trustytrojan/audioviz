@@ -34,11 +34,10 @@ jobs:
             liblua5.4-dev \
             portaudio19-dev \
             libfftw3-dev \
-            libudev-dev \
-            ffmpeg
+            libudev-dev
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DGITHUB_CI=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j $(nproc)
@@ -70,11 +69,10 @@ jobs:
             sfml \
             fftw \
             lua \
-            portaudio \
-            ffmpeg
+            portaudio
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DGITHUB_CI=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j $(sysctl -n hw.ncpu)
@@ -104,7 +102,7 @@ jobs:
           echo "C:\Program Files\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DGITHUB_CI=1 -DLUAVIZ_BUILD_LUA=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DLUAVIZ_BUILD_LUA=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j $env:NUMBER_OF_PROCESSORS

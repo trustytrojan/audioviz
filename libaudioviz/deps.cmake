@@ -26,11 +26,6 @@ if(APPLE OR WIN32)
 	target_link_libraries(audioviz PUBLIC OpenGL::GL)
 endif()
 
-## ffmpeg (just the ffmpeg & ffprobe executables, libs no longer needed)
-if(NOT GITHUB_CI)
-	include(FindFFmpeg)
-endif()
-
 ## fftw
 if(NOT ANDROID)
 	# termux's fftw package is missing FFTW3LibraryDepends.cmake, so don't bother finding
