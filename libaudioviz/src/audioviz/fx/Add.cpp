@@ -1,6 +1,8 @@
 #include <audioviz/fx/Add.hpp>
 
-static sf::Shader shader{std::filesystem::path{"shaders/add.frag"}, sf::Shader::Type::Fragment};
+#include "generated_headers/add.frag.h"
+
+static sf::Shader shader;
 
 namespace audioviz::fx
 {
@@ -8,6 +10,8 @@ namespace audioviz::fx
 Add::Add(float addend)
 	: addend{addend}
 {
+	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_add_frag, sf::Shader::Type::Fragment))
+		throw std::runtime_error{"failed to load add shader!"};
 }
 
 void Add::apply(RenderTexture &rt) const
