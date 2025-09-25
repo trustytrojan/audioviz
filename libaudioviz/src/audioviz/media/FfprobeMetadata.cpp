@@ -1,11 +1,12 @@
 #include <audioviz/media/FfprobeMetadata.hpp>
+#include <audioviz/util.hpp>
 #include <iostream>
 #include <sstream>
 
 FfprobeMetadata::FfprobeMetadata(const std::string &media_url)
 {
 	const auto command{"ffprobe -v warning -show_format -show_streams -print_format json \"" + media_url + '"'};
-	const auto ffprobe{popen(command.c_str(), "r")};
+	const auto ffprobe{audioviz::util::popen_utf8(command, POPEN_R_MODE)};
 	if (!ffprobe)
 		throw std::runtime_error{std::string{"popen: "} + strerror(errno)};
 
@@ -21,7 +22,7 @@ FfprobeMetadata::FfprobeMetadata(const std::string &media_url)
 	case 0:
 		break;
 	default:
-		std::cerr << "ffmpeg failed with exit code " << status << '\n';
+		std::cerr << __func__ << ": pclose returned: " << status << '\n';
 		return;
 	}
 

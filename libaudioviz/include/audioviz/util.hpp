@@ -1,7 +1,11 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <cstdio>
 #include <functional>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace audioviz::util
 {
@@ -23,5 +27,8 @@ std::string detect_vaapi_device();
 #endif
 
 std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath);
+
+FILE *popen_utf8(const std::string &command, const char *mode);
+sf::String utf8_to_sf_string(const std::string &text);
 
 } // namespace audioviz::util

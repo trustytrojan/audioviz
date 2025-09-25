@@ -61,7 +61,8 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	// end on shortest input stream
 	cmd_stream << "-shortest " << outfile;
 
-	ffmpeg = popen(cmd_stream.str().c_str(), POPEN_W_MODE);
+	const auto command = cmd_stream.str();
+	ffmpeg = util::popen_utf8(command, POPEN_W_MODE);
 	if (!ffmpeg)
 		throw std::runtime_error{"Failed to start ffmpeg process with popen" + std::string{strerror(errno)}};
 }

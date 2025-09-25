@@ -5,8 +5,43 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <Windows.h>
+std::wstring utf8_to_wide(const std::string &str)
+{
+	if (str.empty())
+		return {};
+	const auto required = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+	if (required == 0)
+		return {};
+	std::wstring wide(static_cast<size_t>(required), L'\0');
+	if (MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, wide.data(), required) == 0)
+		return {};
+	wide.resize(static_cast<size_t>(required - 1));
+	return wide;
+}
+#endif
+
 namespace audioviz::util
 {
+
+FILE *popen_utf8(const std::string &command, const char *mode)
+{
+#ifdef _WIN32
+	const auto wide_command = utf8_to_wide(command);
+	const auto wide_mode = utf8_to_wide(mode ? std::string{mode} : std::string{"r"});
+	if (!wide_command.empty() && !wide_mode.empty())
+		return _wpopen(wide_command.c_str(), wide_mode.c_str());
+	return _popen(command.c_str(), mode ? mode : "r");
+#else
+	return ::popen(command.c_str(), mode);
+#endif
+}
+
+sf::String utf8_to_sf_string(const std::string &text)
+{
+	return sf::String::fromUtf8(text.begin(), text.end());
+}
 
 sf::Color hsv2rgb(float h, const float s, const float v)
 {
@@ -162,7 +197,7 @@ std::string detect_vaapi_device()
 			continue;
 		}
 
-		const auto status = pclose(pipe);
+		const auto status = ::pclose(pipe);
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		{
 			std::cerr << "detect_vaapi_device: success, returning " << path << '\n';
@@ -178,12 +213,12 @@ std::string detect_vaapi_device()
 std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 {
 	const auto cmd{"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
-	std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
+	// std::cout << __func__ << ": running command: '" << cmd << "'\n"; // this is going to display garbage ascii
 
-	const auto pipe = popen(cmd.c_str(), POPEN_R_MODE);
+	const auto pipe = popen_utf8(cmd, POPEN_R_MODE);
 	if (!pipe)
 	{
-		std::cerr << __FUNCTION__ << ": popen: " << strerror(errno) << '\n';
+		std::cerr << __func__ << ": popen: " << strerror(errno) << '\n';
 		return {};
 	}
 
@@ -199,12 +234,12 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 	switch (const auto rc = pclose(pipe))
 	{
 	case -1:
-		std::cerr << __FUNCTION__ << ": pclose: " << strerror(errno) << '\n';
+		std::cerr << __func__ << ": pclose: " << strerror(errno) << '\n';
 		return {};
 	case 0:
 		return {{buffer.data(), buffer.size()}};
 	default:
-		std::cerr << __FUNCTION__ << ": pclose returned: " << rc << '\n';
+		std::cerr << __func__ << ": pclose returned: " << rc << '\n';
 		return {};
 	}
 }
@@ -224,16 +259,16 @@ std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPat
 	const std::string tmpFile = "cover_attachment_tmp";
 	const std::string cmd = "ffmpeg -v warning -y -dump_attachment:t=" + tmpFile + " -i \"" + mediaPath + "\"";
 
-	std::cout << __FUNCTION__ << ": running command: '" << cmd << "'\n";
+	std::cout << __func__ << ": running command: '" << cmd << "'\n";
 	int rc = std::system(cmd.c_str());
 	if (rc != 0) {
-		std::cerr << __FUNCTION__ << ": ffmpeg command failed with code " << rc << '\n';
+		std::cerr << __func__ << ": ffmpeg command failed with code " << rc << '\n';
 		return {};
 	}
 
 	sf::Texture texture;
 	if (!texture.loadFromFile(tmpFile)) {
-		std::cerr << __FUNCTION__ << ": failed to load texture from " << tmpFile << '\n';
+		std::cerr << __func__ << ": failed to load texture from " << tmpFile << '\n';
 		std::remove(tmpFile.c_str());
 		return {};
 	}
