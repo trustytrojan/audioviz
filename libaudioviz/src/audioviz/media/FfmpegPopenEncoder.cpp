@@ -81,9 +81,13 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 
 void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
 {
-	glBindTexture(GL_TEXTURE_2D, txr.getNativeHandle());
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, video_size.x, video_size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, txr.getNativeHandle(), 0);
+
+	GLint previous_pack_alignment = 0;
+	glGetIntegerv(GL_PACK_ALIGNMENT, &previous_pack_alignment);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[current_frame % NUM_PBOS]);
 	glReadPixels(0, 0, video_size.x, video_size.y, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
@@ -101,8 +105,8 @@ void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
 	}
 
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+	glPixelStorei(GL_PACK_ALIGNMENT, previous_pack_alignment);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	glFlush();
 
 	++current_frame;
