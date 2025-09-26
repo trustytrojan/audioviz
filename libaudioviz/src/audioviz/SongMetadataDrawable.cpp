@@ -1,4 +1,5 @@
 #include <audioviz/SongMetadataDrawable.hpp>
+#include <audioviz/util.hpp>
 
 namespace audioviz
 {
@@ -12,9 +13,9 @@ SongMetadataDrawable::SongMetadataDrawable(sf::Text &title_text, sf::Text &artis
 void SongMetadataDrawable::use_metadata(const Media &media)
 {
 	if (const auto title = media.title(); !title.empty())
-		title_text.setString(title);
+		title_text.setString(util::utf8_to_sf_string(title));
 	if (const auto artist = media.artist(); !artist.empty())
-		artist_text.setString(artist);
+		artist_text.setString(util::utf8_to_sf_string(artist));
 }
 
 void SongMetadataDrawable::set_album_cover(const sf::Texture &txr, const sf::Vector2f size)
