@@ -1,8 +1,8 @@
+#include <GL/glew.h>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
 #include <iostream>
 #include <stdexcept>
-#include <GL/glew.h>
 
 namespace audioviz
 {
@@ -14,7 +14,6 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	glewInit();
 	glGenBuffers(NUM_PBOS, pbos);
 
-	const unsigned int byte_size = viz.size.x * viz.size.y * 4; // 4 refers to channel count
 	for (unsigned int pbo : pbos)
 	{
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo);
@@ -46,10 +45,13 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	if (vcodec.find("vaapi") != std::string::npos)
 	{
 		if (const auto vaapi_device = util::detect_vaapi_device(); !vaapi_device.empty())
-			cmd_stream << "-vaapi_device " << vaapi_device << " -vf format=nv12,hwupload ";
+			cmd_stream << "-vaapi_device " << vaapi_device << " -vf vflip,format=nv12,hwupload ";
 		else
 			std::cerr << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
 	}
+#else
+	// vertically flip because pixels from opengl functions are bottom-up rows
+	cmd_stream << "-vf vflip ";
 #endif
 
 	// stream mapping
@@ -62,8 +64,8 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	cmd_stream << "-shortest " << outfile;
 
 	const auto command = cmd_stream.str();
-	ffmpeg = util::popen_utf8(command, POPEN_W_MODE);
-	if (!ffmpeg)
+	std::cout << "FfmpegPopenEncoder: command: " << command << '\n';
+	if (!(ffmpeg = util::popen_utf8(command, POPEN_W_MODE)))
 		throw std::runtime_error{"Failed to start ffmpeg process with popen" + std::string{strerror(errno)}};
 }
 
@@ -74,7 +76,6 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 		fflush(ffmpeg);
 		if (pclose(ffmpeg) == -1)
 			perror("FfmpegPopenEncoder: pclose");
-		ffmpeg = nullptr;
 	}
 }
 
@@ -94,8 +95,8 @@ void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
 		// Only start reading after we've filled the queue
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[prev_idx]);
 		const auto *const ptr = static_cast<std::byte *>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
-		if (ptr)
-			fwrite(ptr, 1, 4 * video_size.x * video_size.y, ffmpeg);
+		if (ptr && fwrite(ptr, 1, byte_size, ffmpeg) < byte_size)
+			throw std::runtime_error{"FfmpegPopenEncoder: fwrite returned < size!"};
 		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 	}
 
@@ -109,10 +110,9 @@ void FfmpegPopenEncoder::send_frame(const sf::Texture &txr)
 
 void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 {
-	const auto pixels = img.getPixelsPtr();
-	std::size_t size = img.getSize().x * img.getSize().y * 4;
-	if (fwrite(pixels, 1, size, ffmpeg) != size)
-		throw std::runtime_error{"FfmpegPopenEncoder: fwrite: Failed to write frame to ffmpeg stdin"};
+	assert(img.getSize() == video_size && "passed image size != configured video size!");
+	if (fwrite(img.getPixelsPtr(), 1, byte_size, ffmpeg) < byte_size)
+		throw std::runtime_error{"FfmpegPopenEncoder: fwrite returned < size!"};
 }
 
 } // namespace audioviz
