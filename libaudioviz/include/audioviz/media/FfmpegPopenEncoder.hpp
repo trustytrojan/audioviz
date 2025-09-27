@@ -21,6 +21,7 @@ class FfmpegPopenEncoder : public FfmpegEncoder
 	int current_frame{};
 
 	const sf::Vector2u video_size;
+	const size_t byte_size{4 * video_size.x * video_size.y};
 	FILE *ffmpeg;
 
 public:
