@@ -2,11 +2,21 @@ name: Build
 
 on:
   push:
-    branches:
-      - main
+    branches: main
+    paths:
+      - .github/workflows/*
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - '**/*.cpp'
+      - '**/*.hpp'
   pull_request:
-    branches:
-      - main
+    branches: main
+    paths:
+      - .github/workflows/*
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - '**/*.cpp'
+      - '**/*.hpp'
 
 jobs:
   build-linux:
