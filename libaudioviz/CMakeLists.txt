@@ -44,13 +44,20 @@ endif()
 
 # Generate header files with embedded shader source code
 file(GLOB SHADER_SOURCES "${CMAKE_SOURCE_DIR}/shaders/*.frag")
-foreach(shader_source IN LISTS SHADER_SOURCES)
-    get_filename_component(shader_name ${shader_source} NAME)
-    set(shader_header "${CMAKE_BINARY_DIR}/shader_headers/${shader_name}.h")
-    set(shader_variable "audioviz_shader_${shader_name}")
-    string(REPLACE "." "_" shader_variable ${shader_variable})
-	file(READ ${shader_source} file_content)
-    set(header_content "#include <string_view>\ninline const std::string_view ${shader_variable}{R\"glsl(${file_content})glsl\"};")
-    file(WRITE "${CMAKE_BINARY_DIR}/shader_headers/${shader_name}.h" "${header_content}")
+set(SHADER_HEADERS)
+set(SHADER_HEADER_DIR "${CMAKE_BINARY_DIR}/shader_headers")
+foreach(SHADER_SOURCE IN LISTS SHADER_SOURCES)
+    get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
+    set(SHADER_HEADER "${SHADER_HEADER_DIR}/${SHADER_NAME}.h")
+    list(APPEND SHADER_HEADERS ${SHADER_HEADER})
+    add_custom_command(
+        OUTPUT ${SHADER_HEADER}
+        COMMAND ${CMAKE_COMMAND} -DSHADER_SOURCE=${SHADER_SOURCE} -DSHADER_HEADER_DIR=${SHADER_HEADER_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shader_header.cmake
+        DEPENDS ${SHADER_SOURCE}
+        COMMENT "Generating shader header ${SHADER_NAME}.h"
+    )
 endforeach()
+add_custom_target(generate_shader_headers DEPENDS ${SHADER_HEADERS})
+add_dependencies(audioviz generate_shader_headers)
+
 target_include_directories(audioviz PRIVATE ${CMAKE_BINARY_DIR}/shader_headers)
