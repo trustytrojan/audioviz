@@ -10,6 +10,17 @@ Layer::Layer(const std::string &name, const sf::Vector2u size, const int antiali
 {
 }
 
+void Layer::add_effect(fx::Effect *const effect)
+{
+	effect->setRtSize(_fx_rt.getSize());
+	effects.emplace_back(effect);
+}
+
+void Layer::add_drawable(const sf::Drawable *const drawable)
+{
+	drawables.emplace_back(drawable);
+}
+
 void Layer::orig_draw(const sf::Drawable &drawable)
 {
 	_orig_rt.draw(drawable);

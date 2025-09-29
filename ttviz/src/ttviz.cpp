@@ -106,7 +106,7 @@ void ttviz::layers_init(const int antialiasing)
 
 	{ // particles layer
 		auto &particles = add_layer("particles", antialiasing);
-		particles.drawables.emplace_back(&ps);
+		particles.add_drawable(&ps);
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
@@ -139,7 +139,7 @@ void ttviz::layers_init(const int antialiasing)
 
 	{ // spectrum layer
 		auto &spectrum = add_layer("spectrum", antialiasing);
-		spectrum.drawables.emplace_back(&ss);
+		spectrum.add_drawable(&ss);
 		spectrum.set_orig_cb([&](auto &) { ss.update(sa); });
 		spectrum.set_fx_cb(
 			[&](auto &orig_rt, auto &fx_rt, auto &target)
@@ -167,23 +167,23 @@ void ttviz::add_default_effects()
 	if (const auto bg = get_layer("bg"))
 	{
 		// clang-format off
-		bg->effects.emplace_back(
+		bg->add_effect(
 			media->has_video_stream()
 				? new audioviz::fx::Blur{2.5, 2.5, 5}
 				: new audioviz::fx::Blur{7.5, 7.5, 15});
 		// clang-format on
 		if (!media->has_video_stream())
-			bg->effects.emplace_back(new audioviz::fx::Mult{0.75});
+			bg->add_effect(new audioviz::fx::Mult{0.75});
 		if (media->attached_pic())
 			// this will set the background WITH the blur affect we just added
 			set_background(*media->attached_pic());
 	}
 
 	if (const auto particles = get_layer("particles"))
-		particles->effects.emplace_back(new audioviz::fx::Blur{1, 1, 10});
+		particles->add_effect(new audioviz::fx::Blur{1, 1, 10});
 
 	if (const auto spectrum = get_layer("spectrum"))
-		spectrum->effects.emplace_back(new audioviz::fx::Blur{3, 3, 10});
+		spectrum->add_effect(new audioviz::fx::Blur{3, 3, 10});
 }
 
 void ttviz::set_album_cover(const std::string &image_path, const sf::Vector2f size)

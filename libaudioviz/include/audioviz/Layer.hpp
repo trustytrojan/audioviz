@@ -43,7 +43,6 @@ private:
 	OrigCb orig_cb;
 	FxCb fx_cb = DRAW_FX_RT;
 
-public:
 	/**
 	 * The effects, in order, that will be applied to the "original"
 	 * render-texture when `apply_fx()` is called.
@@ -56,7 +55,11 @@ public:
 	 */
 	std::vector<const sf::Drawable *> drawables;
 
+public:
 	Layer(const std::string &name, sf::Vector2u size, int antialiasing);
+
+	void add_effect(fx::Effect *);
+	void add_drawable(const sf::Drawable *);
 
 	/**
 	 * @returns The name of this layer.

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <audioviz/RenderTexture.hpp>
 #include <audioviz/fx/Effect.hpp>
 
 namespace audioviz::fx
@@ -15,8 +16,10 @@ struct Blur : Effect
 {
 	float hrad, vrad;
 	int n_passes;
+	std::unique_ptr<RenderTexture> rt2;
 	Blur(float hrad, float vrad, int n_passes);
 	void apply(RenderTexture &rt) const override;
+	void setRtSize(sf::Vector2u) override;
 };
 
 } // namespace audioviz::fx
