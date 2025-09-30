@@ -19,13 +19,13 @@ Main::Main(const int argc, const char *const *const argv)
 		start_in_window(viz);
 		break;
 	case 1:
-		encode(viz, encode_args[0]);
+		viz.encode(encode_args[0]);
 		break;
 	case 2:
-		encode(viz, encode_args[0], encode_args[1]);
+		viz.encode(encode_args[0], encode_args[1]);
 		break;
 	case 3:
-		encode(viz, encode_args[0], encode_args[1], encode_args[2]);
+		viz.encode(encode_args[0], encode_args[1], encode_args[2]);
 		break;
 	default:
 		throw std::logic_error("--encode requires 1-3 arguments");
