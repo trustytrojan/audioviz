@@ -11,20 +11,17 @@ void FrequencyAnalyzer::_scale_max::calc(const FrequencyAnalyzer &fa)
 {
 	const auto max = fa.fftw.output_size();
 	linear = max;
-	log = ::log(max);
-	sqrt = ::sqrt(max);
-	cbrt = ::cbrt(max);
-	nthroot = ::pow(max, fa.nthroot_inv);
+	log = ::logf(max);
+	sqrt = ::sqrtf(max);
+	cbrt = ::cbrtf(max);
+	nthroot = ::powf(max, fa.nthroot_inv);
 }
 
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
-	: fft_size{fft_size}, inv_fft_size{1.0f / fft_size}
+	: fft_size{fft_size},
+	  inv_fft_size{1.0f / fft_size}
 {
 	set_fft_size(fft_size);
-	scale_max.calc(*this);
-	compute_index_ratios();
-	compute_window_values();
-
 	m_spline_x.reserve(2048);
 	m_spline_y.reserve(2048);
 }
@@ -72,7 +69,15 @@ void FrequencyAnalyzer::set_nth_root(const int nth_root)
 
 void FrequencyAnalyzer::copy_to_input(const float *const wavedata)
 {
-	memcpy(fftw.input(), wavedata, fft_size * sizeof(float));
+	const auto input = fftw.input();
+
+	// this can be optimized by SIMD iff we convert from interleaved to planar beforehand...
+
+	if (window_func)
+		for (int i = 0; i < fft_size; ++i)
+			input[i] = wavedata[i] * window_values[i];
+	else
+		memcpy(input, wavedata, fft_size * sizeof(float));
 }
 
 void FrequencyAnalyzer::copy_channel_to_input(
@@ -91,9 +96,15 @@ void FrequencyAnalyzer::copy_channel_to_input(
 		return;
 	}
 
+	// this can be optimized by SIMD iff we convert from interleaved to planar beforehand...
+
 	const auto input = fftw.input();
-	for (int i = 0; i < fft_size; ++i)
-		input[i] = audio[i * num_channels + channel];
+	if (window_func)
+		for (int i = 0; i < fft_size; ++i)
+			input[i] = audio[i * num_channels + channel] * window_values[i];
+	else
+		for (int i = 0; i < fft_size; ++i)
+			input[i] = audio[i * num_channels + channel];
 }
 
 void FrequencyAnalyzer::render(std::vector<float> &spectrum)
@@ -101,12 +112,7 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 	const int size = spectrum.size();
 	assert(size);
 
-	// apply window function on input
-	const auto input = fftw.input();
-	if (window_func)
-		for (int i = 0; i < fft_size; ++i)
-			input[i] *= window_values[i];
-
+	// window function already applied in copy_to_input()
 	// execute fft and get output
 	fftw.execute();
 	const auto output = fftw.output();
@@ -120,7 +126,7 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 		const auto [re, im] = output[i];
 		// must divide by fft_size here to counteract the correlation
 		// between fft_size and the average amplitude across the spectrum vector.
-		const float amplitude = ::sqrt((re * re) + (im * im)) * inv_fft_size;
+		const float amplitude = ::sqrtf((re * re) + (im * im)) * inv_fft_size;
 		const auto index = std::max(0, std::min((int)(index_ratios[i] * size), size - 1));
 
 		switch (am)
@@ -155,18 +161,18 @@ float FrequencyAnalyzer::calc_index_ratio(const float i) const
 	case Scale::LINEAR:
 		return i / scale_max.linear;
 	case Scale::LOG:
-		return log(i ? i : 1) / scale_max.log;
+		return logf(i ? i : 1) / scale_max.log;
 	case Scale::NTH_ROOT:
 		switch (nth_root)
 		{
 		case 1:
 			return i / scale_max.linear;
 		case 2:
-			return sqrt(i) / scale_max.sqrt;
+			return sqrtf(i) / scale_max.sqrt;
 		case 3:
-			return cbrt(i) / scale_max.cbrt;
+			return cbrtf(i) / scale_max.cbrt;
 		default:
-			return pow(i, nthroot_inv) / scale_max.nthroot;
+			return powf(i, nthroot_inv) / scale_max.nthroot;
 		}
 	default:
 		throw std::logic_error("FrequencySpectrum::calc_index_ratio: default case hit");
