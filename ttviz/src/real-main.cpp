@@ -1,8 +1,5 @@
 #include "Main.hpp"
 
-#include <stdexcept>
-#include <vector>
-
 static int run_main(const int argc, const char *const *const argv)
 {
 	try
@@ -29,6 +26,8 @@ int main(const int argc, const char *const *const argv)
 
 #include <Windows.h>
 #include <shellapi.h>
+#include <stdexcept>
+#include <vector>
 
 static std::string wide_to_utf8(const wchar_t *wide)
 {

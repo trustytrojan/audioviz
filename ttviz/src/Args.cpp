@@ -111,10 +111,6 @@ Args::Args(const int argc, const char *const *const argv)
 		.nargs(1, 3)
 		.validate();
 
-	add_argument("--enc-window")
-		.help("when used with --encode, renders the current frame being encoded to a window")
-		.flag();
-
 	add_argument("--ffpath")
 		.help("specify path to ffmpeg executable used by '--encode'");
 

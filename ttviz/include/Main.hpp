@@ -27,7 +27,7 @@ class Main
 	using CS = audioviz::ColorSettings;
 
 	std::string ffmpeg_path;
-	bool no_vsync = false, enc_window = false;
+	bool no_vsync = false;
 
 	const Args args;
 	FA fa{3000};

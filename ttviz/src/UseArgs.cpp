@@ -11,7 +11,6 @@ void Main::use_args(ttviz &viz)
 
 	viz.set_framerate(args.get<uint>("-r"));
 	no_vsync = args.get<bool>("--no-vsync");
-	enc_window = args.get<bool>("--enc-window");
 
 	// no-default-value params
 	if (const auto ffpath = args.present("--ffpath"))
