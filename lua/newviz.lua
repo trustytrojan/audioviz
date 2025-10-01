@@ -27,7 +27,7 @@ media = luaviz.FfmpegPopenMedia.new(arg[1], {})
 viz = luaviz.Base.new(SIZE, media)
 viz:set_audio_frames_needed(FFT_SIZE)
 viz:set_audio_playback_enabled(true)
--- viz:set_timing_text_enabled(true)
+viz:set_timing_text_enabled(true)
 
 -- iosevka is a great font, use hardware h264 encoder (available on my laptop)
 if luaviz.os == 'linux' then

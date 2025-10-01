@@ -25,7 +25,6 @@ class SpectrumDrawable : public sf::Drawable
 	sf::IntRect rect;
 	bool backwards{};
 	bool debug_rect{};
-	sf::Transform tf;
 
 	struct
 	{

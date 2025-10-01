@@ -1,6 +1,7 @@
 #include <audioviz/Base.hpp>
 #include <audioviz/media/FfmpegEncoder.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
+#include <format>
 #include <iostream>
 
 #define capture_time(label, code)            \
@@ -22,7 +23,7 @@ Base::Base(const sf::Vector2u size, Media *const media)
 	  final_rt{size}
 {
 	assert(media && this->media);
-	timing_text.setPosition({size.x - 300, 30});
+	timing_text.setPosition({size.x - 500, 30});
 	timing_text.setCharacterSize(18);
 	timing_text.setFillColor({255, 255, 255, 150});
 }
@@ -68,12 +69,8 @@ bool Base::next_frame()
 	media->buffer_audio(std::max(audio_frames_needed, afpvf));
 
 #ifdef AUDIOVIZ_PORTAUDIO
-	// clang-format off
 	if (audio_enabled && media->audio_buffer_frames() >= afpvf)
-	{
-		capture_time("play_audio", play_audio());
-	}
-	// clang-format on
+		capture_time("play_audio", play_audio()); // NOLINT
 #endif
 
 	if (media->audio_buffer_frames() < audio_frames_needed)
@@ -92,8 +89,13 @@ bool Base::next_frame()
 
 	if (tt_enabled)
 	{
-		timing_text.setString(tt_ss.str());
-		tt_ss.str("");
+		auto s = std::format("{:<20}{:<6}{:<6}{:<6}{:<6}\n", "", "curr", "avg", "min", "max");
+		for (const auto &[label, stat] : timing_stats)
+		{
+			s += std::format(
+				"{:<20}{:<6.2f}{:<6.2f}{:<6.2f}{:<6.2f}\n", label, stat.current, stat.avg(), stat.min, stat.max);
+		}
+		timing_text.setString(s);
 	}
 
 	return true;
@@ -110,7 +112,15 @@ void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 
 void Base::capture_elapsed_time(const std::string &label, const sf::Clock &clock)
 {
-	tt_ss << std::setw(20) << std::left << label << clock.getElapsedTime().asMicroseconds() / 1e3f << "ms\n";
+	auto &stat = timing_stats[label];
+	const float time_ms = clock.getElapsedTime().asMicroseconds() / 1e3f;
+	stat.current = time_ms;
+	if (time_ms < stat.min)
+		stat.min = time_ms;
+	if (time_ms > stat.max)
+		stat.max = time_ms;
+	stat.total += time_ms;
+	stat.count++;
 }
 
 void Base::set_framerate(const int framerate)
