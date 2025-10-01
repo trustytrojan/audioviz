@@ -14,9 +14,6 @@ set(BUILD_SHARED_LIBS OFF) # static preferred
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# define the path of our additional CMake modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
 if(APPLE)
 	# for homebrew setups
 	link_directories(/opt/homebrew/lib)

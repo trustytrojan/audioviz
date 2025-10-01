@@ -27,7 +27,7 @@ Base::Base(const sf::Vector2u size, Media *const media)
 	timing_text.setFillColor({255, 255, 255, 150});
 }
 
-Base::~Base()
+Base::~Base() noexcept
 {
 	delete media;
 }
@@ -149,9 +149,6 @@ void Base::perform_fft(fft::FrequencyAnalyzer &fa, fft::AudioAnalyzer &aa)
 
 void Base::start_in_window(const std::string &window_title)
 {
-#ifdef AUDIOVIZ_PORTAUDIO
-	set_audio_playback_enabled(true);
-#endif
 	sf::RenderWindow window{
 		sf::VideoMode{size},
 		window_title,
