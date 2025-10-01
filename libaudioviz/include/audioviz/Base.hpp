@@ -42,9 +42,9 @@ private:
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	// PortAudio stuff for live playback
-	pa::PortAudio pa_init;
+	pa::Init pa_init;
 	pa::Stream pa_stream{0, 2, paFloat32, media->audio_sample_rate(), afpvf};
-	bool audio_enabled{false};
+	bool audio_enabled{true};
 #endif
 
 public:
@@ -56,7 +56,7 @@ public:
 
 	// media needs to be freed
 	// we will take ownership of it for now
-	~Base();
+	~Base() noexcept;
 
 	/// layer api
 

@@ -143,6 +143,12 @@ Args::Args(const int argc, const char *const *const argv)
 	add_argument("--timing-text")
 		.help("show timing info for different stages of the render pipeline")
 		.flag();
+
+#ifdef AUDIOVIZ_PORTAUDIO
+	add_argument("--no-audio")
+		.help("disable live audio output")
+		.flag();
+#endif
 	// clang-format on
 
 	try

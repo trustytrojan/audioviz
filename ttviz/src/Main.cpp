@@ -39,10 +39,6 @@ static const char *layer_name_getter(void *user_data, int idx)
 
 void Main::start_in_window(audioviz::Base &viz)
 {
-#ifdef AUDIOVIZ_PORTAUDIO
-	viz.set_audio_playback_enabled(true);
-#endif
-
 	sf::RenderWindow window{
 		sf::VideoMode{viz.size},
 		"ttviz",
