@@ -139,6 +139,10 @@ Args::Args(const int argc, const char *const *const argv)
 		.default_value(std::vector<float>{0.9, 0.7, 1, 0, 0, 0})
 		.scan<'f', float>()
 		.validate();
+	
+	add_argument("--timing-text")
+		.help("show timing info for different stages of the render pipeline")
+		.flag();
 	// clang-format on
 
 	try
