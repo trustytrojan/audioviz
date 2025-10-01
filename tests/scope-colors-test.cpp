@@ -43,7 +43,7 @@ int main(const int argc, const char *const *const argv)
 
 	std::vector<float> left_channel(size.x), spectrum(fft_size);
 
-	pa::PortAudio _;
+	pa::Init _;
 	pa::Stream pa_stream{0, media->audio_channels(), paFloat32, media->audio_sample_rate()};
 	pa_stream.start();
 

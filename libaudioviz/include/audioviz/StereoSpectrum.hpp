@@ -67,7 +67,7 @@ public:
 	void configure_analyzer(fft::StereoAnalyzer &sa)
 	{
 		assert(_left.bar_count() == _right.bar_count());
-		sa.resize(_left.bar_count());
+		_left.configure_analyzer(sa);
 	}
 
 	/**

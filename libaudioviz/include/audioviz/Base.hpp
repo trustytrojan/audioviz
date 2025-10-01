@@ -9,6 +9,9 @@
 #include <audioviz/Layer.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/media/Media.hpp>
+#include <limits>
+#include <map>
+#include <string>
 
 namespace audioviz
 {
@@ -35,9 +38,17 @@ private:
 	int afpvf{media->audio_sample_rate() / framerate}; // audio frames per video frame
 	RenderTexture final_rt;
 
-	// timing text
 	sf::Text timing_text{font};
-	std::ostringstream tt_ss;
+	struct TimingStat
+	{
+		float min{std::numeric_limits<float>::max()};
+		float max{0.0f};
+		float total{0.0f};
+		size_t count{0};
+		float current{0.0f};
+		float avg() const { return (count == 0) ? 0.0f : total / count; }
+	};
+	std::map<std::string, TimingStat> timing_stats;
 	bool tt_enabled{};
 
 #ifdef AUDIOVIZ_PORTAUDIO
