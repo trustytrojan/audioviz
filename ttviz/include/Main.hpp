@@ -10,7 +10,6 @@
 #include <audioviz/VerticalBar.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 
-#include <cstdlib>
 #include <string>
 
 class Main
