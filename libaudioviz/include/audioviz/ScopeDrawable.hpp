@@ -100,6 +100,7 @@ public:
 
 			shapes[i].setFillColor(color.calculate_color((float)i / shapes.size()));
 
+			// only rectangles have `setSize`, not circles
 			if constexpr (std::is_base_of_v<sf::RectangleShape, ShapeType>)
 				if (!fill_in)
 				{
