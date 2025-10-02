@@ -25,6 +25,12 @@ void VerticalPill::setHeight(const float height)
 	update();
 }
 
+void VerticalPill::setSize(const sf::Vector2f size)
+{
+	setWidth(size.x);
+	setHeight(size.y);
+}
+
 sf::Vector2f VerticalPill::getPoint(const std::size_t index) const
 {
 	const auto angle = static_cast<float>(index) / static_cast<float>(getPointCount()) * sf::degrees(360);

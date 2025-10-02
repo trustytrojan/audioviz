@@ -3,7 +3,6 @@
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <audioviz/ColorSettings.hpp>
-#include <cmath>
 #include <span>
 
 namespace audioviz
@@ -20,8 +19,6 @@ class ScopeDrawable : public sf::Drawable
 	} shape;
 	bool fill_in = false;
 	const ColorSettings &color;
-	sf::Angle angle = sf::degrees(0);
-	sf::Transformable tf;
 	std::vector<ShapeType> shapes;
 
 public:
@@ -67,50 +64,71 @@ public:
 
 	void set_fill_in(const bool b) { fill_in = b; }
 	void set_backwards(const bool b) { backwards = b; }
-	void set_rotation_angle(const sf::Angle angle) { tf.setRotation(angle); }
-
-	void set_center_point(const double radius, const sf::Angle angle)
-	{
-		sf::Vector2f origin_{rect.size.x / 2.f, rect.size.y / 2.f};
-		sf::Vector2f coord{origin_.x + radius * cos(angle.asRadians()), origin_.y - radius * sin(angle.asRadians())};
-		tf.setPosition({coord});
-	}
-
 	size_t get_shape_count() const { return shapes.size(); }
 
 	void update(const std::span<float> &audio)
 	{
-		assert(audio.size() >= shapes.size());
-
 		for (int i = 0; i < (int)shapes.size(); ++i)
 		{
+			float audio_val;
+			if (audio.empty())
+			{
+				audio_val = 0.0f;
+			}
+			else if (shapes.size() == 1)
+			{
+				audio_val = audio[0];
+			}
+			else if (audio.size() == shapes.size())
+			{
+				audio_val = audio[i];
+			}
+			else
+			{
+				float t = static_cast<float>(i) / (shapes.size() - 1);
+				float pos = t * (audio.size() - 1);
+				size_t idx = static_cast<size_t>(pos);
+				float frac = pos - idx;
+				if (idx + 1 < audio.size())
+					audio_val = audio[idx] * (1 - frac) + audio[idx + 1] * frac;
+				else
+					audio_val = audio[idx];
+			}
+
 			const auto half_height = rect.size.y / 2.f;
 			const auto half_heightx = rect.size.x / 2.f;
 
 			shapes[i].setFillColor(color.calculate_color((float)i / shapes.size()));
 
-			if (!fill_in)
-			{
-				shapes[i].setPosition({
-					shapes[i].getPosition().x,
-					std::clamp(half_height + (-half_height * audio[i]), 0.f, (float)rect.size.y),
-				});
-			}
+			// only rectangles have `setSize`, not circles
+			if constexpr (std::is_base_of_v<sf::RectangleShape, ShapeType>)
+				if (!fill_in)
+				{
+					shapes[i].setPosition({
+						shapes[i].getPosition().x,
+						std::clamp(half_height + (-half_height * audio_val), 0.f, (float)rect.size.y),
+					});
+				}
+				else
+				{
+					shapes[i].setPosition({
+						shapes[i].getPosition().x,
+						std::clamp(half_height, 0.f, (float)rect.size.y),
+					});
+					shapes[i].setSize({shape.width, (-half_height * audio_val)});
+				}
 			else
-			{
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
-					std::clamp(half_height, 0.f, (float)rect.size.y),
+					std::clamp(half_height + (-half_height * audio_val), 0.f, (float)rect.size.y),
 				});
-				shapes[i].setSize({shape.width, (-half_height * audio[i])});
-			}
 		}
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{
 		for (const auto &shape : shapes)
-			target.draw(shape, tf.getTransform());
+			target.draw(shape, states);
 	}
 
 private:
@@ -122,7 +140,7 @@ private:
 		for (int i = 0; i < shapes.size(); ++i)
 		{
 			if constexpr (std::is_base_of_v<sf::CircleShape, ShapeType>)
-				shapes[i].setRadius(shape.width);
+				shapes[i].setRadius(shape.width / 2.f);
 			else if constexpr (std::is_base_of_v<sf::RectangleShape, ShapeType>)
 				shapes[i].setSize({shape.width, shape.width});
 			else

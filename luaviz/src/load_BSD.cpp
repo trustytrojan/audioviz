@@ -27,7 +27,6 @@ void table::load_BSD()
 		"configure_analyzer", &SD::configure_analyzer,
 		"bar_count", &SD::bar_count,
 		"update", &SD::update,
-		"update_colors", &SD::update_colors,
 		"set_debug_rect", &SD::set_debug_rect
 	);
 	// clang-format on

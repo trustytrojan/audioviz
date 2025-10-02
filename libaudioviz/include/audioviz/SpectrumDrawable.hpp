@@ -83,8 +83,17 @@ public:
 		update_bars();
 	}
 
+	/**
+	 * Use this to resize the analyzer's spectrum vector to be the same length
+	 * as the number of bars we are rendering. This is REQUIRED before calling `update`.
+	 */
 	void configure_analyzer(fft::AudioAnalyzer &aa) { aa.resize(bars.size()); }
 
+	/**
+	 * Update the heights of the bars using the provided `spectrum` data.
+	 * Requires that `spectrum.size() >= bars.size()`. Call `configure_analyzer`
+	 * before performing FFT to satisfy that requirement.
+	 */
 	void update(const std::vector<float> &spectrum)
 	{
 		assert(spectrum.size() >= bars.size());
@@ -95,28 +104,27 @@ public:
 		}
 	}
 
-	void update_colors()
-	{
-		for (int i = 0; i < (int)bars.size(); ++i)
-			bars[i].setFillColor(color.calculate_color((float)i / bars.size()));
-	}
-
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override
 	{
 		for (const auto &bar : bars)
 			target.draw(bar, states);
 		if (debug_rect)
 		{
+			// shows the rect of the object
 			sf::RectangleShape r{sf::Vector2f{rect.size}};
 			r.setFillColor(sf::Color::Transparent);
 			r.setOutlineThickness(1);
-			r.setOutlineColor(sf::Color::White);
 			r.setPosition(sf::Vector2f{rect.position});
+
+			// shows the origin of the object
 			sf::CircleShape c{5};
 			c.setPosition(sf::Vector2f{rect.position});
+
+			// draw with states,
 			target.draw(r, states);
 			target.draw(c, states);
 
+			// then draw without any states in red, to show how any render states may have transformed the object
 			r.setOutlineColor(sf::Color::Red);
 			c.setFillColor(sf::Color::Red);
 			target.draw(r);

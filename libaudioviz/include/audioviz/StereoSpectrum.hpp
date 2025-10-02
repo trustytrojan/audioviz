@@ -19,9 +19,23 @@ public:
 	{
 	}
 
+	StereoSpectrum(const ColorSettings &colorL, const ColorSettings &colorR)
+		: _left{colorL},
+		  _right{colorR}
+	{
+	}
+
 	StereoSpectrum(const sf::IntRect &rect, const ColorSettings &color)
 		: _left{color},
 		  _right{color},
+		  rect{rect}
+	{
+		update_spectrum_rects();
+	}
+
+	StereoSpectrum(const sf::IntRect &rect, const ColorSettings &colorL, const ColorSettings &colorR)
+		: _left{colorL},
+		  _right{colorR},
 		  rect{rect}
 	{
 		update_spectrum_rects();

@@ -23,8 +23,6 @@ void table::load_BSC()
 		"set_shape_spacing", &SD::set_shape_spacing,
 		"set_fill_in", &SD::set_fill_in,
 		"set_backwards", &SD::set_backwards,
-		"set_rotation_angle", &SD::set_rotation_angle,
-		"set_center_point", &SD::set_center_point,
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 	// clang-format on
