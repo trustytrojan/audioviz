@@ -1,9 +1,47 @@
+#include <audioviz/Base.hpp>
 #include <audioviz/StereoSpectrum.hpp>
 #include <audioviz/VerticalBar.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/media/Media.hpp>
+#include <audioviz/media/FfmpegPopenMedia.hpp>
+
+#include <SFML/Graphics.hpp>
 #include <iostream>
-#include <portaudio.hpp>
+
+struct SpectrumTest : audioviz::Base
+{
+	const int fft_size = 3000;
+	audioviz::ColorSettings color;
+	audioviz::StereoSpectrum<audioviz::VerticalBar> ss;
+	audioviz::fft::FrequencyAnalyzer fa;
+	audioviz::fft::StereoAnalyzer sa;
+	SpectrumTest(sf::Vector2u size, const std::string &media_url);
+};
+
+SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
+	: Base{size, new audioviz::FfmpegPopenMedia{media_url, size}},
+	  ss{{{}, (sf::Vector2i)size}, color},
+	  fa{fft_size}
+{
+	ss.set_left_backwards(true);
+	ss.set_bar_width(10);
+	ss.set_bar_spacing(5);
+
+	set_audio_frames_needed(fft_size);
+	ss.configure_analyzer(sa);
+
+	set_audio_playback_enabled(true);
+
+	auto &spectrum_layer = add_layer("spectrum");
+	spectrum_layer.add_drawable(&ss);
+	spectrum_layer.set_orig_cb(
+		[&](auto &orig_rt)
+		{
+			sa.analyze(fa, media->audio_buffer().data(), true);
+			ss.update(sa);
+		});
+
+	start_in_window("spectrum-test");
+}
 
 int main(const int argc, const char *const *const argv)
 {
@@ -14,70 +52,5 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	const sf::Vector2u size{std::stoi(argv[1]), std::stoi(argv[2])};
-	sf::RenderWindow window{sf::VideoMode{size}, "ScopeDrawableTest"};
-	window.setVerticalSyncEnabled(true);
-
-	audioviz::ColorSettings color;
-	const auto framerate = 60;
-
-	audioviz::StereoSpectrum<audioviz::VerticalBar> ss{color};
-	ss.set_left_backwards(true);
-	ss.set_rect({{}, (sf::Vector2i)size});
-	ss.set_bar_width(10);
-	ss.set_bar_spacing(5);
-
-	// number of audio FRAMES needed for fft
-	const auto fft_size = 3000;
-	audioviz::fft::FrequencyAnalyzer fa{fft_size};
-	audioviz::fft::StereoAnalyzer sa;
-
-	std::unique_ptr<audioviz::Media> media{audioviz::Media::create(argv[3])};
-
-	// number of audio FRAMES per video frame
-	const int afpvf{media->audio_sample_rate() / framerate};
-
-	pa::Init _;
-	pa::Stream pa_stream{0, media->audio_channels(), paFloat32, media->audio_sample_rate()};
-	pa_stream.start();
-
-	int frames{};
-
-	while (window.isOpen())
-	{
-		// handle events
-		while (const auto event = window.pollEvent())
-			if (event->is<sf::Event::Closed>())
-				window.close();
-
-		// ensure we have at least fft_samples samples
-		media->buffer_audio(fft_size);
-		if (media->audio_buffer_frames() < fft_size)
-		{
-			std::cout << "not enough audio for fft, breaking loop\n";
-			break;
-		}
-
-		ss.configure_analyzer(sa);
-		sa.analyze(fa, media->audio_buffer().data(), true);
-		ss.update(sa);
-
-		try
-		{
-			pa_stream.write(media->audio_buffer().data(), afpvf);
-		}
-		catch (const pa::Error &e)
-		{
-			if (e.code != paOutputUnderflowed)
-				throw;
-			std::cerr << e.what() << '\n';
-		}
-
-		media->audio_buffer_erase(afpvf);
-
-		window.clear();
-		window.draw(ss);
-		window.display();
-
-		std::cerr << "\r\e[2Kframes: " << frames++;
-	}
+	SpectrumTest viz{size, argv[3]};
 }

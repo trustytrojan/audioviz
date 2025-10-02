@@ -21,10 +21,8 @@ else()
 endif()
 
 ## OpenGL (also caused by optimization changes)
-if(APPLE OR WIN32)
-	find_package(OpenGL COMPONENTS OpenGL REQUIRED)
-	target_link_libraries(audioviz PUBLIC OpenGL::GL)
-endif()
+find_package(OpenGL COMPONENTS OpenGL REQUIRED)
+target_link_libraries(audioviz PUBLIC OpenGL::GL)
 
 ## fftw
 if(NOT ANDROID)
@@ -78,12 +76,21 @@ FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download
 FetchContent_MakeAvailable(json)
 target_link_libraries(audioviz PUBLIC nlohmann_json::nlohmann_json)
 
+## r8brain-free-src
+FetchContent_Declare(r8brain-free-src URL https://github.com/avaneev/r8brain-free-src/archive/master.tar.gz)
+FetchContent_MakeAvailable(r8brain-free-src)
+target_include_directories(audioviz PUBLIC ${r8brain-free-src_SOURCE_DIR})
+target_sources(audioviz PUBLIC
+    ${r8brain-free-src_SOURCE_DIR}/r8bbase.cpp
+    ${r8brain-free-src_SOURCE_DIR}/pffft.cpp
+)
+
 ### TEMPORARY - libaudioviz should not be responsible for audio playback.
 ### but to keep things stable i will leave this as is for now.
 ## portaudio (optional)
 if(AUDIOVIZ_USE_PORTAUDIO)
-	FetchContent_Declare(portaudio-pp URL https://github.com/trustytrojan/portaudio-pp/archive/main.tar.gz)
-	FetchContent_MakeAvailable(portaudio-pp)
-	target_compile_definitions(audioviz PUBLIC AUDIOVIZ_PORTAUDIO)
-	target_link_libraries(audioviz PUBLIC portaudio-pp::portaudio-pp)
+    FetchContent_Declare(portaudio-pp URL https://github.com/trustytrojan/portaudio-pp/archive/main.tar.gz)
+    FetchContent_MakeAvailable(portaudio-pp)
+    target_compile_definitions(audioviz PUBLIC AUDIOVIZ_PORTAUDIO)
+    target_link_libraries(audioviz PUBLIC portaudio-pp::portaudio-pp)
 endif()

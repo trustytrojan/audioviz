@@ -34,8 +34,13 @@ protected:
 private:
 	std::vector<const sf::Drawable *> final_drawables;
 	int framerate{60};
+
+protected:
+	// audio frames per video frame
+	int afpvf{media->audio_sample_rate() / framerate};
 	int audio_frames_needed{};
-	int afpvf{media->audio_sample_rate() / framerate}; // audio frames per video frame
+
+private:
 	RenderTexture final_rt;
 
 	sf::Text timing_text{font};
@@ -55,7 +60,7 @@ private:
 	// PortAudio stuff for live playback
 	pa::Init pa_init;
 	pa::Stream pa_stream{0, 2, paFloat32, media->audio_sample_rate(), afpvf};
-	bool audio_enabled{true};
+	bool audio_enabled{};
 #endif
 
 public:
