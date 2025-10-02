@@ -76,15 +76,6 @@ FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download
 FetchContent_MakeAvailable(json)
 target_link_libraries(audioviz PUBLIC nlohmann_json::nlohmann_json)
 
-## r8brain-free-src
-FetchContent_Declare(r8brain-free-src URL https://github.com/avaneev/r8brain-free-src/archive/master.tar.gz)
-FetchContent_MakeAvailable(r8brain-free-src)
-target_include_directories(audioviz PUBLIC ${r8brain-free-src_SOURCE_DIR})
-target_sources(audioviz PUBLIC
-    ${r8brain-free-src_SOURCE_DIR}/r8bbase.cpp
-    ${r8brain-free-src_SOURCE_DIR}/pffft.cpp
-)
-
 ### TEMPORARY - libaudioviz should not be responsible for audio playback.
 ### but to keep things stable i will leave this as is for now.
 ## portaudio (optional)
