@@ -20,7 +20,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(audioviz PUBLIC -Wno-subobject-linkage)
 endif()
 
-target_compile_options(audioviz PUBLIC -Wno-narrowing)
+target_compile_options(audioviz
+	PUBLIC -Wno-narrowing
+	PUBLIC -ffast-math
+)
 
 target_include_directories(audioviz
 	PUBLIC include # our headers

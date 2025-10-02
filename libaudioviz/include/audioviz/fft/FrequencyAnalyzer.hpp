@@ -1,7 +1,8 @@
 #pragma once
 
 #include <audioviz/fft/fftwf_dft_r2c_1d.hpp>
-#include <cstring>
+#include <audioviz/aligned_allocator.hpp>
+#include <cmath>
 #include <functional>
 #include <tk-spline.hpp>
 #include <vector>
@@ -51,6 +52,7 @@ public:
 private:
 	// fft size
 	int fft_size;
+	float inv_fft_size;
 
 	// nth root
 	int nth_root{2};
@@ -74,9 +76,13 @@ private:
 	// struct to hold the "max"s used in `calc_index_ratio`
 	struct _scale_max
 	{
-		double linear, log, sqrt, cbrt, nthroot;
+		float linear, log, sqrt, cbrt, nthroot;
 		void calc(const FrequencyAnalyzer &fa);
 	} scale_max;
+
+	std::vector<float> index_ratios;
+	std::vector<float, fftw_allocator<float>> window_values;
+	std::vector<double> m_spline_x, m_spline_y;
 
 public:
 	/**
@@ -156,6 +162,8 @@ private:
 	int calc_index(int i, int max_index) const;
 	float calc_index_ratio(float i) const;
 	void interpolate(std::vector<float> &spectrum);
+	void compute_index_ratios();
+	void compute_window_values();
 };
 
 } // namespace audioviz::fft

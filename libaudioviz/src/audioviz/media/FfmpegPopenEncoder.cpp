@@ -3,6 +3,7 @@
 #include <audioviz/util.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <cstring>
 
 namespace audioviz
 {
