@@ -65,8 +65,6 @@ public:
 	 */
 	void add_default_effects();
 
-	void draw(sf::RenderTarget &target, sf::RenderStates) const override;
-
 	// set background image with optional effects: blur and color-multiply
 	void set_background(const sf::Texture &texture);
 

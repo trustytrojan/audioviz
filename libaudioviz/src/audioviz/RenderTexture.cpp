@@ -8,7 +8,6 @@ RenderTexture::RenderTexture(const sf::Vector2u size, int antialiasing)
 {
 }
 
-// Copy the contents of `other` to this render-texture.
 void RenderTexture::copy(const RenderTexture &other)
 {
 	draw(other.sprite());
