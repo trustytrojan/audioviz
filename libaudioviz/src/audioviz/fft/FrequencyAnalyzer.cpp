@@ -112,46 +112,46 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 	const int size = spectrum.size();
 	assert(size);
 
-	// window function already applied in copy_to_input()
+	if (size != known_spectrum_size)
+	{
+		known_spectrum_size = size;
+		compute_index_ratios();
+	}
+
 	// execute fft and get output
 	fftw.execute();
-	const auto output = fftw.output();
 
 	// zero out array since we are accumulating
 	std::ranges::fill(spectrum, 0);
 
 	// map frequency bins of freqdata to spectrum
-	for (int i = 0; i < fftw.output_size(); ++i)
+	for (int i = 0; i < known_spectrum_size; ++i)
 	{
-		const auto [re, im] = output[i];
+		const auto [start, end] = spectrum_to_fftw_indices[i];
+
+		if (start == -1)
+			continue;
+
+		float max_amplitude{};
+#pragma GCC ivdep
+		for (int j = start; j < end; ++j)
+		{
+			// do NOT use destructuring of the fftwf_complex!
+			// THIS allows the compiler to vectorize this entire loop body!
+			const float re = fftw.output()[j][0];
+			const float im = fftw.output()[j][1];
+			const float amplitude = (re * re) + (im * im);
+			max_amplitude = std::max(max_amplitude, amplitude);
+		}
+
 		// must divide by fft_size here to counteract the correlation
 		// between fft_size and the average amplitude across the spectrum vector.
-		const float amplitude = ::sqrtf((re * re) + (im * im)) * inv_fft_size;
-		const auto index = std::max(0, std::min((int)(index_ratios[i] * size), size - 1));
-
-		switch (am)
-		{
-		case AccumulationMethod::SUM:
-			spectrum[index] += amplitude;
-			break;
-
-		case AccumulationMethod::MAX:
-			spectrum[index] = std::max(spectrum[index], amplitude);
-			break;
-
-		default:
-			throw std::logic_error("FrequencySpectrum::render: switch(accum_type): default case hit");
-		}
+		spectrum[i] = sqrtf(max_amplitude) * inv_fft_size;
 	}
 
 	// apply interpolation if necessary
 	if (interp != InterpolationType::NONE && scale != Scale::LINEAR)
 		interpolate(spectrum);
-}
-
-int FrequencyAnalyzer::calc_index(const int i, const int max_index) const
-{
-	return std::max(0, std::min(int(calc_index_ratio(i) * max_index), max_index - 1));
 }
 
 float FrequencyAnalyzer::calc_index_ratio(const float i) const
@@ -181,9 +181,25 @@ float FrequencyAnalyzer::calc_index_ratio(const float i) const
 
 void FrequencyAnalyzer::compute_index_ratios()
 {
-	index_ratios.resize(fftw.output_size());
+	spectrum_to_fftw_indices.assign(known_spectrum_size, {-1, -1});
+
+	fftw_to_spectrum_index.resize(fftw.output_size());
 	for (int i = 0; i < fftw.output_size(); ++i)
-		index_ratios[i] = calc_index_ratio(i);
+	{
+		const int spectrum_index = calc_index_ratio(i) * known_spectrum_size;
+		fftw_to_spectrum_index[i] = std::clamp(spectrum_index, 0, known_spectrum_size - 1);
+	}
+
+	if (known_spectrum_size > 0)
+	{
+		for (int i = 0; i < fftw.output_size(); ++i)
+		{
+			const auto spectrum_index = fftw_to_spectrum_index[i];
+			if (spectrum_to_fftw_indices[spectrum_index].first == -1)
+				spectrum_to_fftw_indices[spectrum_index].first = i;
+			spectrum_to_fftw_indices[spectrum_index].second = i + 1;
+		}
+	}
 }
 
 void FrequencyAnalyzer::compute_window_values()

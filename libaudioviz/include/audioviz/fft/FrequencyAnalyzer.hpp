@@ -80,7 +80,9 @@ private:
 		void calc(const FrequencyAnalyzer &fa);
 	} scale_max;
 
-	std::vector<float> index_ratios;
+	int known_spectrum_size{};
+	std::vector<int> fftw_to_spectrum_index;
+	std::vector<std::pair<int, int>> spectrum_to_fftw_indices;
 	std::vector<float, fftw_allocator<float>> window_values;
 	std::vector<double> m_spline_x, m_spline_y;
 
@@ -159,7 +161,6 @@ public:
 	void render(std::vector<float> &spectrum);
 
 private:
-	int calc_index(int i, int max_index) const;
 	float calc_index_ratio(float i) const;
 	void interpolate(std::vector<float> &spectrum);
 	void compute_index_ratios();
