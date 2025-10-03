@@ -16,6 +16,9 @@ Main::Main(const int argc, const char *const *const argv)
 	{
 	case 0:
 		// default behavior: render to window
+		if (!args.get<bool>("--no-audio"))
+			// ONLY enable audio when starting in window
+			viz.set_audio_playback_enabled(true);
 		start_in_window(viz);
 		break;
 	case 1:

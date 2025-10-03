@@ -38,21 +38,19 @@ void Base::set_audio_playback_enabled(const bool enabled)
 {
 	if (enabled)
 	{
-		audio_enabled = true;
-		pa_stream.start();
+		if (!_pa)
+			_pa.emplace(*this);
+		_pa->stream.start();
 	}
-	else
-	{
-		audio_enabled = false;
-		pa_stream.stop();
-	}
+	else if (_pa)
+		_pa->stream.stop();
 }
 
 void Base::play_audio()
 {
 	try // to play the audio
 	{
-		pa_stream.write(media->audio_buffer().data(), afpvf);
+		_pa->stream.write(media->audio_buffer().data(), afpvf);
 	}
 	catch (const pa::Error &e)
 	{
@@ -69,7 +67,7 @@ bool Base::next_frame()
 	media->buffer_audio(std::max(audio_frames_needed, afpvf));
 
 #ifdef AUDIOVIZ_PORTAUDIO
-	if (audio_enabled && media->audio_buffer_frames() >= afpvf)
+	if (_pa && _pa->stream.is_active() && media->audio_buffer_frames() >= afpvf)
 		capture_time("play_audio", play_audio()); // NOLINT
 #endif
 

@@ -57,10 +57,16 @@ private:
 	bool tt_enabled{};
 
 #ifdef AUDIOVIZ_PORTAUDIO
-	// PortAudio stuff for live playback
-	pa::Init pa_init;
-	pa::Stream pa_stream{0, 2, paFloat32, media->audio_sample_rate(), afpvf};
-	bool audio_enabled{};
+	struct _pa
+	{
+		pa::Init _;
+		pa::Stream stream;
+		_pa(const Base &viz)
+			: stream{0, 2, paFloat32, viz.media->audio_sample_rate(), viz.afpvf}
+		{
+		}
+	};
+	std::optional<_pa> _pa;
 #endif
 
 public:
