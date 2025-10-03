@@ -34,7 +34,7 @@ bool Base::next_frame(const std::span<const float> audio_buffer)
 {
 	if (audio_buffer.size() / 2 < audio_frames_needed) // assuming stereo
 	{
-		std::cout << "not enough audio frames, returning false\n";
+		std::cerr << "Base::next_frame: not enough audio frames, returning false\n";
 		return false;
 	}
 
@@ -134,12 +134,16 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 	pa_stream.start();
 #endif
 
-	bool running = true;
-	while (window.isOpen() && running)
+	while (window.isOpen())
 	{
 		const auto frames = std::max(audio_frames_needed, afpvf);
 		const auto samples = frames * media.audio_channels();
 		media.buffer_audio(frames);
+		if (media.audio_buffer_frames() < afpvf)
+		{
+			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
+			break;
+		}
 		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
 
 #ifdef AUDIOVIZ_PORTAUDIO
@@ -155,8 +159,7 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		}
 #endif
 
-		running = next_frame(audio_chunk);
-		if (!running)
+		if (!next_frame(audio_chunk))
 			break;
 
 		// slide audio window just enough to ensure the next video
@@ -183,6 +186,11 @@ void Base::encode(Media &media, const std::string &outfile, const std::string &v
 		const auto frames = std::max(audio_frames_needed, afpvf);
 		const auto samples = frames * media.audio_channels();
 		media.buffer_audio(frames);
+		if (media.audio_buffer_frames() < afpvf)
+		{
+			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
+			break;
+		}
 		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
 
 		running = next_frame(audio_chunk);
