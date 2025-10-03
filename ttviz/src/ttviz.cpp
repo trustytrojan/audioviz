@@ -4,27 +4,22 @@
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <iostream>
 
-ttviz::ttviz(
-	const sf::Vector2u size, const std::string &media_url, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
-	: Base{size, new audioviz::FfmpegPopenMedia{media_url, size}},
+ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
+	: Base{size},
+	  media{media},
 	  fa{fa},
 	  color{color},
 	  ss{ss},
-	  scope{{{}, (sf::Vector2i)size}, color},
 	  ps{ps},
 	  video_bg{size}
 {
-	// for now only stereo is supported
-	// this will be moved into its own class eventually
-	if (media->audio_channels() != 2)
-		throw std::runtime_error("only stereo audio is supported!");
-
 	// default spectrum margin
 	// this sets the StereoSpectrum's rectangle (necessary for it to render)
 	set_spectrum_margin(10);
 
 	// create stereo "mirror" effect
 	ss.set_left_backwards(true);
+	ss.configure_analyzer(sa);
 
 	metadata_init();
 	layers_init(antialiasing);
@@ -33,26 +28,21 @@ ttviz::ttviz(
 	// needs to be called AFTER album cover is set because the text position depends on album cover size
 	metadata.set_position({30, 30});
 
-	// scope setup
-	scope.set_shape_spacing(0);
-	scope.set_shape_width(2);
-	scope.set_fill_in(true);
-
-	if (media->attached_pic())
+	if (media.attached_pic())
 	{
-		metadata.set_album_cover(*media->attached_pic(), {150, 150});
-		set_background(*media->attached_pic()); // this is safe bc we already called `layers_init`
+		metadata.set_album_cover(*media.attached_pic(), {150, 150});
+		set_background(*media.attached_pic()); // this is safe bc we already called `layers_init`
 	}
 
 	// VERY IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// now that two things are dependent on different amounts of audio, take the max of their dependencies
-	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
+	set_audio_frames_needed(std::max(fa.get_fft_size(), afpvf));
 }
 
-void ttviz::perform_fft()
+void ttviz::update(std::span<const float> audio_buffer)
 {
-	ss.configure_analyzer(sa);
-	audioviz::Base::perform_fft(fa, sa);
+	sa.analyze(fa, audio_buffer.data(), true);
+	color.increment_wheel_time();
 }
 
 void ttviz::layers_init(const int antialiasing)
@@ -60,16 +50,16 @@ void ttviz::layers_init(const int antialiasing)
 	{ // bg layer
 		auto &bg = add_layer("bg", antialiasing);
 
-		if (media->has_video_stream()) // set_orig_cb() to draw video frames on the layer
+		if (media.has_video_stream()) // set_orig_cb() to draw video frames on the layer
 		{
 			bg.set_orig_cb(
-				[this, frames_to_wait{get_framerate() / media->video_framerate()}](auto &orig_rt)
+				[this, frames_to_wait{get_framerate() / media.video_framerate()}](auto &orig_rt)
 				{
 					if (vfcount < frames_to_wait)
 						++vfcount;
 					else
 					{
-						if (media->read_video_frame(video_bg))
+						if (media.read_video_frame(video_bg))
 							orig_rt.draw(sf::Sprite{video_bg});
 						else
 							std::cerr << "media->read_video_frame returned false????????\n";
@@ -88,32 +78,12 @@ void ttviz::layers_init(const int antialiasing)
 		bg.set_fx_cb(audioviz::Layer::DRAW_FX_RT);
 	}
 
-	/*{ // scope layer
-		auto &scope_layer = add_layer("scope", antialiasing);
-		scope_layer.set_orig_cb(
-			[&](auto &orig_rt)
-			{
-				float left_channel[scope.get_shape_count()];
-				for (int i = 0; i < scope.get_shape_count(); ++i)
-					left_channel[i] = media->audio_buffer()[i * media->astream().nb_channels() + 0];
-				scope.update({left_channel, scope.get_shape_count()});
-				orig_rt.clear(sf::Color::Transparent);
-				orig_rt.draw(scope);
-				orig_rt.display();
-			});
-		scope_layer.set_fx_cb(viz::Layer::DRAW_FX_RT);
-	}*/
-
 	{ // particles layer
 		auto &particles = add_layer("particles", antialiasing);
 		particles.add_drawable(&ps);
 		particles.set_orig_cb(
 			[&](auto &orig_rt)
 			{
-				// this HAS to be done before particles or spectrum, as both depend
-				// on fft being performed on the current audio buffer for this frame
-				perform_fft();
-
 				// lock the tickrate of the particles at 60hz for non-60fps output
 				const auto framerate = get_framerate();
 
@@ -168,15 +138,15 @@ void ttviz::add_default_effects()
 	{
 		// clang-format off
 		bg->add_effect(
-			media->has_video_stream()
+			media.has_video_stream()
 				? new audioviz::fx::Blur{2.5, 2.5, 5}
 				: new audioviz::fx::Blur{7.5, 7.5, 15});
 		// clang-format on
-		if (!media->has_video_stream())
+		if (!media.has_video_stream())
 			bg->add_effect(new audioviz::fx::Mult{0.75});
-		if (media->attached_pic())
+		if (media.attached_pic())
 			// this will set the background WITH the blur affect we just added
-			set_background(*media->attached_pic());
+			set_background(*media.attached_pic());
 	}
 
 	if (const auto particles = get_layer("particles"))
@@ -203,7 +173,7 @@ void ttviz::metadata_init()
 	artist_text.setFillColor({255, 255, 255, 150});
 
 	// set text using stream/format metadata
-	metadata.use_metadata(*media);
+	metadata.use_metadata(media);
 }
 
 void ttviz::set_spectrum_margin(const int margin)
@@ -231,15 +201,6 @@ void ttviz::set_background(const sf::Texture &txr)
 void ttviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 {
 	spectrum_bm = bm;
-}
-
-bool ttviz::next_frame()
-{
-	// pasting this here for imgui!!!!!!!!!!!!!!!!!!!!!
-	set_audio_frames_needed(std::max(fa.get_fft_size(), (int)scope.get_shape_count()));
-	const auto next_frame_ready = Base::next_frame();
-	color.increment_wheel_time();
-	return next_frame_ready;
 }
 
 void ttviz::draw(sf::RenderTarget &target, const sf::RenderStates states) const

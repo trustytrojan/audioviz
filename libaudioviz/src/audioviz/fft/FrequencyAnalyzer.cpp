@@ -181,6 +181,9 @@ float FrequencyAnalyzer::calc_index_ratio(const float i) const
 
 void FrequencyAnalyzer::compute_index_ratios()
 {
+	if (!known_spectrum_size)
+		return;
+
 	spectrum_to_fftw_indices.assign(known_spectrum_size, {-1, -1});
 
 	fftw_to_spectrum_index.resize(fftw.output_size());
