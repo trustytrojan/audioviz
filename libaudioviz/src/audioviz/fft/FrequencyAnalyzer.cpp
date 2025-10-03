@@ -2,7 +2,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <immintrin.h>
 #include <stdexcept>
 
 namespace audioviz::fft
