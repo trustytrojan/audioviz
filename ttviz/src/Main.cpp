@@ -1,6 +1,9 @@
 #include "Main.hpp"
+
+#ifdef TTVIZ_IMGUI_SFML
 #include "imgui-SFML.h"
 #include "imgui.h"
+#endif
 
 Main::Main(const int argc, const char *const *const argv)
 	: args{argc, argv}
@@ -35,13 +38,16 @@ Main::Main(const int argc, const char *const *const argv)
 	}
 }
 
+#ifdef TTVIZ_IMGUI_SFML
 static const char *layer_name_getter(void *user_data, int idx)
 {
 	return (*(const std::vector<audioviz::Layer> *)user_data)[idx].get_name().c_str();
 }
+#endif
 
 void Main::start_in_window(audioviz::Base &viz)
 {
+#ifdef TTVIZ_IMGUI_SFML
 	sf::RenderWindow window{
 		sf::VideoMode{viz.size},
 		"ttviz",
@@ -87,4 +93,7 @@ void Main::start_in_window(audioviz::Base &viz)
 		window.display();
 	}
 	ImGui::SFML::Shutdown();
+#else
+	viz.start_in_window("ttviz");
+#endif
 }
