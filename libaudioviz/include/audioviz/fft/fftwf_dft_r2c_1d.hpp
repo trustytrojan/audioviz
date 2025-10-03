@@ -7,7 +7,7 @@ namespace audioviz::fft
 
 class fftwf_dft_r2c_1d
 {
-	int N;
+	int N, outN;
 	float *in;
 	fftwf_complex *out;
 	fftwf_plan p;
@@ -24,7 +24,7 @@ public:
 	inline float *input() { return in; }
 	inline const fftwf_complex *output() const { return out; }
 	inline int input_size() const { return N; }
-	inline int output_size() const { return N / 2 + 1; }
+	inline int output_size() const { return outN; }
 };
 
 } // namespace audioviz::fft

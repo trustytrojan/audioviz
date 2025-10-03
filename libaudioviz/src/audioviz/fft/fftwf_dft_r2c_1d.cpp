@@ -7,6 +7,7 @@ namespace audioviz::fft
 void fftwf_dft_r2c_1d::init(const int N)
 {
 	this->N = N;
+	this->outN = N / 2 + 1;
 	in = (float *)fftwf_malloc(sizeof(float) * N);
 	out = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * output_size());
 	p = fftwf_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE);

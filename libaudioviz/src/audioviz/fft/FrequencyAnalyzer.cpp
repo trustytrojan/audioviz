@@ -112,10 +112,8 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 	const int size = spectrum.size();
 	assert(size);
 
-	// window function already applied in copy_to_input()
 	// execute fft and get output
 	fftw.execute();
-	const auto output = fftw.output();
 
 	// zero out array since we are accumulating
 	std::ranges::fill(spectrum, 0);
@@ -123,25 +121,15 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 	// map frequency bins of freqdata to spectrum
 	for (int i = 0; i < fftw.output_size(); ++i)
 	{
-		const auto [re, im] = output[i];
+		const auto [re, im] = fftw.output()[i];
+
 		// must divide by fft_size here to counteract the correlation
 		// between fft_size and the average amplitude across the spectrum vector.
 		const float amplitude = ::sqrtf((re * re) + (im * im)) * inv_fft_size;
 		const auto index = std::max(0, std::min((int)(index_ratios[i] * size), size - 1));
 
-		switch (am)
-		{
-		case AccumulationMethod::SUM:
-			spectrum[index] += amplitude;
-			break;
-
-		case AccumulationMethod::MAX:
-			spectrum[index] = std::max(spectrum[index], amplitude);
-			break;
-
-		default:
-			throw std::logic_error("FrequencySpectrum::render: switch(accum_type): default case hit");
-		}
+		// take the max of each amplitude as being representative for this spectrum index
+		spectrum[index] = std::max(spectrum[index], amplitude);
 	}
 
 	// apply interpolation if necessary
