@@ -27,16 +27,20 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 	ss.set_bar_spacing(5);
 
 	set_audio_frames_needed(fft_size);
-	ss.configure_analyzer(sa);
+	ss.configure_analyzer(sa); // only need to configure once since the spectrum isnt changing size
 
 	set_audio_playback_enabled(true);
+#ifdef __linux__
+	set_timing_text_enabled(true);
+	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+#endif
 
 	auto &spectrum_layer = add_layer("spectrum");
 	spectrum_layer.add_drawable(&ss);
 	spectrum_layer.set_orig_cb(
 		[&](auto &orig_rt)
 		{
-			sa.analyze(fa, media->audio_buffer().data(), true);
+			perform_fft(fa, sa);
 			ss.update(sa);
 		});
 
