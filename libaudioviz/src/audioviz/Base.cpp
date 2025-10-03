@@ -87,11 +87,11 @@ bool Base::next_frame()
 
 	if (tt_enabled)
 	{
-		auto s = std::format("{:<20}{:<6}{:<6}{:<6}{:<6}\n", "", "curr", "avg", "min", "max");
+		auto s = std::format("{:<20}{:<7}{:<7}{:<7}{:<7}\n", "", "curr", "avg", "min", "max");
 		for (const auto &[label, stat] : timing_stats)
 		{
 			s += std::format(
-				"{:<20}{:<6.2f}{:<6.2f}{:<6.2f}{:<6.2f}\n", label, stat.current, stat.avg(), stat.min, stat.max);
+				"{:<20}{:<7.3f}{:<7.3f}{:<7.3f}{:<7.3f}\n", label, stat.current, stat.avg(), stat.min, stat.max);
 		}
 		timing_text.setString(s);
 	}
