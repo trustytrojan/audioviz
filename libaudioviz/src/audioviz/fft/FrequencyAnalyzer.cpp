@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#include <immintrin.h>
 #include <stdexcept>
 
 namespace audioviz::fft
@@ -125,17 +126,28 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 	std::ranges::fill(spectrum, 0);
 
 	// map frequency bins of freqdata to spectrum
-	for (int i = 0; i < fftw.output_size(); ++i)
+	for (int i = 0; i < known_spectrum_size; ++i)
 	{
-		const auto [re, im] = fftw.output()[i];
+		const auto [start, end] = spectrum_to_fftw_indices[i];
+
+		if (start == -1)
+			continue;
+
+		float max_amplitude{};
+#pragma GCC ivdep
+		for (int j = start; j < end; ++j)
+		{
+			// do NOT use destructuring of the fftwf_complex!
+			// THIS allows the compiler to vectorize this entire loop body!
+			const float re = fftw.output()[j][0];
+			const float im = fftw.output()[j][1];
+			const float amplitude = (re * re) + (im * im);
+			max_amplitude = std::max(max_amplitude, amplitude);
+		}
 
 		// must divide by fft_size here to counteract the correlation
 		// between fft_size and the average amplitude across the spectrum vector.
-		const float amplitude = ::sqrtf((re * re) + (im * im)) * inv_fft_size;
-		const auto index = fftw_to_spectrum_index[i];
-
-		// take the max of each amplitude as being representative for this spectrum index
-		spectrum[index] = std::max(spectrum[index], amplitude);
+		spectrum[i] = sqrtf(max_amplitude) * inv_fft_size;
 	}
 
 	// apply interpolation if necessary
@@ -170,11 +182,24 @@ float FrequencyAnalyzer::calc_index_ratio(const float i) const
 
 void FrequencyAnalyzer::compute_index_ratios()
 {
+	spectrum_to_fftw_indices.assign(known_spectrum_size, {-1, -1});
+
 	fftw_to_spectrum_index.resize(fftw.output_size());
 	for (int i = 0; i < fftw.output_size(); ++i)
 	{
 		const int spectrum_index = calc_index_ratio(i) * known_spectrum_size;
 		fftw_to_spectrum_index[i] = std::clamp(spectrum_index, 0, known_spectrum_size - 1);
+	}
+
+	if (known_spectrum_size > 0)
+	{
+		for (int i = 0; i < fftw.output_size(); ++i)
+		{
+			const auto spectrum_index = fftw_to_spectrum_index[i];
+			if (spectrum_to_fftw_indices[spectrum_index].first == -1)
+				spectrum_to_fftw_indices[spectrum_index].first = i;
+			spectrum_to_fftw_indices[spectrum_index].second = i + 1;
+		}
 	}
 }
 

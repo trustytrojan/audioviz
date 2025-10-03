@@ -82,6 +82,7 @@ private:
 
 	int known_spectrum_size{};
 	std::vector<int> fftw_to_spectrum_index;
+	std::vector<std::pair<int, int>> spectrum_to_fftw_indices;
 	std::vector<float, fftw_allocator<float>> window_values;
 	std::vector<double> m_spline_x, m_spline_y;
 
