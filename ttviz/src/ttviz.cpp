@@ -4,6 +4,16 @@
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <iostream>
 
+#define capture_time(label, code)            \
+	if (timing_text_enabled())               \
+	{                                        \
+		sf::Clock _clock;                    \
+		code;                                \
+		capture_elapsed_time(label, _clock); \
+	}                                        \
+	else                                     \
+		code;
+
 ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
 	: Base{size},
 	  media{media},
@@ -41,7 +51,7 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color,
 
 void ttviz::update(std::span<const float> audio_buffer)
 {
-	sa.analyze(fa, audio_buffer.data(), true);
+	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
 	color.increment_wheel_time();
 }
 
