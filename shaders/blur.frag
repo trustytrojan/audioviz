@@ -22,16 +22,19 @@ uniform vec2 direction;
 void main()
 {
 	// normalize coordinates
-	vec2 coord = gl_FragCoord.xy;
+	vec2 coord_uv = gl_FragCoord.xy / size;
+	vec2 dir_uv = direction / size;
 
 	// start with the original color, apply first weight.
-	gl_FragColor = texture2D(image, coord / size) * weight[0];
+	gl_FragColor = texture2D(image, coord_uv) * weight[0];
 
 	// then, using `weight[1]` and `weight[2]`,
 	for (int i = 1; i <= 2; ++i)
 	{
 		// add the color of nearby pixels.
-		gl_FragColor += texture2D(image, (coord + direction * offset[i]) / size) * weight[i];
-		gl_FragColor += texture2D(image, (coord - direction * offset[i]) / size) * weight[i];
+		vec2 offset_dir_uv = dir_uv * offset[i];
+		vec4 addend_plus = texture2D(image, (coord_uv + offset_dir_uv));
+		vec4 addend_minus = texture2D(image, (coord_uv - offset_dir_uv));
+		gl_FragColor += (addend_plus + addend_minus) * weight[i];
 	}
 }
