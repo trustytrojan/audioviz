@@ -29,6 +29,7 @@ class Main
 	bool no_vsync = false;
 
 	const Args args;
+	std::unique_ptr<audioviz::Media> media;
 	FA fa{3000};
 	CS cs;
 	SS ss{cs};

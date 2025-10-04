@@ -1,8 +1,11 @@
 #include <audioviz/Base.hpp>
-#include <audioviz/media/FfmpegEncoder.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <format>
 #include <iostream>
+
+#ifdef AUDIOVIZ_PORTAUDIO
+#include <portaudio.hpp>
+#endif
 
 #define capture_time(label, code)            \
 	if (tt_enabled)                          \
@@ -17,73 +20,29 @@
 namespace audioviz
 {
 
-Base::Base(const sf::Vector2u size, Media *const media)
+Base::Base(const sf::Vector2u size)
 	: size{size},
-	  media{media},
 	  final_rt{size}
 {
-	assert(media && this->media);
 	timing_text.setPosition({size.x - 500, 30});
 	timing_text.setCharacterSize(18);
 	timing_text.setFillColor({255, 255, 255, 150});
 }
 
-Base::~Base() noexcept
+bool Base::next_frame(const std::span<const float> audio_buffer)
 {
-	delete media;
-}
-
-#ifdef AUDIOVIZ_PORTAUDIO
-void Base::set_audio_playback_enabled(const bool enabled)
-{
-	if (enabled)
+	if (audio_buffer.size() / 2 < audio_frames_needed) // assuming stereo
 	{
-		if (!_pa)
-			_pa.emplace(*this);
-		_pa->stream.start();
-	}
-	else if (_pa)
-		_pa->stream.stop();
-}
-
-void Base::play_audio()
-{
-	try // to play the audio
-	{
-		_pa->stream.write(media->audio_buffer().data(), afpvf);
-	}
-	catch (const pa::Error &e)
-	{
-		if (e.code != paOutputUnderflowed)
-			throw;
-		std::cerr << e.what() << '\n';
-	}
-}
-#endif
-
-bool Base::next_frame()
-{
-	assert(media);
-	media->buffer_audio(std::max(audio_frames_needed, afpvf));
-
-#ifdef AUDIOVIZ_PORTAUDIO
-	if (_pa && _pa->stream.is_active() && media->audio_buffer_frames() >= afpvf)
-		capture_time("play_audio", play_audio()); // NOLINT
-#endif
-
-	if (media->audio_buffer_frames() < audio_frames_needed)
-	{
-		std::cout << "not enough audio frames, returning false\n";
+		std::cerr << "Base::next_frame: not enough audio frames, returning false\n";
 		return false;
 	}
+
+	update(audio_buffer);
 
 	final_rt.clear();
 	for (auto &layer : layers)
 		capture_time("layer '" + layer.get_name() + "'", layer.full_lifecycle(final_rt));
 	final_rt.display();
-
-	// THE IMPORTANT PART: erase already consumed audio
-	media->audio_buffer_erase(afpvf);
 
 	if (tt_enabled)
 	{
@@ -124,7 +83,13 @@ void Base::capture_elapsed_time(const std::string &label, const sf::Clock &clock
 void Base::set_framerate(const int framerate)
 {
 	this->framerate = framerate;
-	afpvf = media->audio_sample_rate() / framerate;
+	afpvf = audio_sample_rate / framerate;
+}
+
+void Base::set_samplerate(const int samplerate)
+{
+	audio_sample_rate = samplerate;
+	afpvf = audio_sample_rate / framerate;
 }
 
 Layer &Base::add_layer(const std::string &name, const int antialiasing)
@@ -147,16 +112,12 @@ void Base::remove_layer(const std::string &name)
 
 void Base::add_final_drawable(const Drawable &d)
 {
-	final_drawables.emplace_back(std::addressof(d));
+	final_drawables.emplace_back(&d);
 }
 
-void Base::perform_fft(fft::FrequencyAnalyzer &fa, fft::AudioAnalyzer &aa)
+void Base::start_in_window(Media &media, const std::string &window_title)
 {
-	capture_time("fft", aa.analyze(fa, media->audio_buffer().data(), true));
-}
-
-void Base::start_in_window(const std::string &window_title)
-{
+	set_samplerate(media.audio_sample_rate());
 	sf::RenderWindow window{
 		sf::VideoMode{size},
 		window_title,
@@ -165,25 +126,85 @@ void Base::start_in_window(const std::string &window_title)
 		{.antiAliasingLevel = 4},
 	};
 	window.setVerticalSyncEnabled(true);
-	while (window.isOpen() && next_frame())
+
+#ifdef AUDIOVIZ_PORTAUDIO
+	pa::Init pa_init;
+	pa::Stream pa_stream{0, media.audio_channels(), paFloat32, media.audio_sample_rate(), afpvf};
+	pa_stream.start();
+#endif
+
+	while (window.isOpen())
 	{
+		const auto frames = std::max(audio_frames_needed, afpvf);
+		const auto samples = frames * media.audio_channels();
+		media.buffer_audio(frames);
+		if (media.audio_buffer_frames() < afpvf)
+		{
+			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
+			break;
+		}
+		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
+
+#ifdef AUDIOVIZ_PORTAUDIO
+		try
+		{
+			pa_stream.write(audio_chunk.data(), afpvf);
+		}
+		catch (const pa::Error &e)
+		{
+			if (e.code != paOutputUnderflowed)
+				throw;
+			std::cerr << e.what() << '\n';
+		}
+#endif
+
+		if (!next_frame(audio_chunk))
+			break;
+
+		// slide audio window just enough to ensure the next video
+		// frame isn't reusing audio from this one
+		media.audio_buffer_erase(afpvf);
+
 		while (const auto event = window.pollEvent())
 			if (event->is<sf::Event::Closed>())
 				window.close();
+		window.clear();
 		window.draw(*this);
 		window.display();
 	}
 }
 
-void Base::encode(const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+void Base::encode(Media &media, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
-	const auto ffmpeg{std::make_unique<FfmpegPopenEncoder>(*this, outfile, vcodec, acodec)};
+	set_samplerate(media.audio_sample_rate());
+	FfmpegPopenEncoder ffmpeg{media.url, *this, outfile, vcodec, acodec};
 	RenderTexture rt{size, 4};
-	while (next_frame())
+
+	bool running = true;
+	while (running)
 	{
+		const auto frames = std::max(audio_frames_needed, afpvf);
+		const auto samples = frames * media.audio_channels();
+		media.buffer_audio(frames);
+		if (media.audio_buffer_frames() < afpvf)
+		{
+			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
+			break;
+		}
+		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
+
+		running = next_frame(audio_chunk);
+		if (!running)
+			break;
+
+		// slide audio window just enough to ensure the next video
+		// frame isn't reusing audio from this one
+		media.audio_buffer_erase(afpvf);
+
+		rt.clear();
 		rt.draw(*this);
 		rt.display();
-		ffmpeg->send_frame(rt.getTexture());
+		ffmpeg.send_frame(rt.getTexture());
 	}
 }
 

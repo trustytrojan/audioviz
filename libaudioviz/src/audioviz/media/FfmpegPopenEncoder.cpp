@@ -1,15 +1,19 @@
 #include <GL/glew.h>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <audioviz/util.hpp>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <cstring>
 
 namespace audioviz
 {
 
 FfmpegPopenEncoder::FfmpegPopenEncoder(
-	const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
+	const std::string &media_url,
+	const audioviz::Base &viz,
+	const std::string &outfile,
+	const std::string &vcodec,
+	const std::string &acodec)
 	: video_size{viz.size}
 {
 	glewInit();
@@ -25,7 +29,6 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-	const auto &url = viz.get_media_url();
 	std::ostringstream cmd_stream;
 	cmd_stream << "ffmpeg -hide_banner -hwaccel auto -y ";
 
@@ -37,9 +40,9 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 
 	// input 1: media used in audioviz
 	cmd_stream << "-ss -0.1 ";
-	if (url.find("http") != std::string::npos)
+	if (media_url.find("http") != std::string::npos)
 		cmd_stream << "-reconnect 1 ";
-	cmd_stream << "-i \"" << url << "\" ";
+	cmd_stream << "-i \"" << media_url << "\" ";
 
 #ifdef __linux__
 	// if on linux and vaapi encoder used, detect a vaapi device for usage

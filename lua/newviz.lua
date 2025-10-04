@@ -26,7 +26,6 @@ rcps = luaviz.CircleParticleSystem.new({ { 0, 0 }, { 1280, 720 } }, 45)
 media = luaviz.FfmpegPopenMedia.new(arg[1], {})
 viz = luaviz.Base.new(SIZE, media)
 viz:set_audio_frames_needed(FFT_SIZE)
-viz:set_audio_playback_enabled(true)
 viz:set_timing_text_enabled(true)
 
 -- iosevka is a great font, use hardware h264 encoder (available on my laptop)
@@ -159,5 +158,5 @@ smd:set_text_pos(luaviz.SMDTextPosition.BOTTOM)
 
 viz:add_final_drawable(smd)
 
-viz:start_in_window(arg[0])
--- viz:encode('out.mp4', vcodec, 'copy')
+viz:start_in_window(media, arg[0])
+-- viz:encode(media, 'out.mp4', vcodec, 'copy')

@@ -39,9 +39,9 @@ public:
 private:
 	std::string name;
 	RenderTexture _orig_rt, _fx_rt;
-	bool auto_fx = true;
+	bool auto_fx{true};
 	OrigCb orig_cb;
-	FxCb fx_cb = DRAW_FX_RT;
+	FxCb fx_cb{DRAW_FX_RT};
 
 	/**
 	 * The effects, in order, that will be applied to the "original"
@@ -65,8 +65,6 @@ public:
 	 * @returns The name of this layer.
 	 */
 	inline const std::string &get_name() const { return name; }
-
-	inline const RenderTexture &fx_rt() const { return _fx_rt; }
 
 	/**
 	 * Calls `draw(...)` on the "original" render-texture. Useful if you want to prepopulate

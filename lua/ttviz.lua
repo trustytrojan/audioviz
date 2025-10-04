@@ -141,7 +141,7 @@ end)
 
 -- blend the layer onto the final picture by adding colors (involves transparency)
 spectrum_layer:set_fx_cb(function(orig_rt, fx_rt, target)
-	target:draw(fx_rt:sprite(), luaviz.sfBlendModes.Add)
+	target:draw(fx_rt:sprite(), luaviz.GreatAmazingBlendMode)
 	target:draw(orig_rt:sprite())
 end)
 
@@ -153,4 +153,4 @@ spectrum_layer:add_effect(spectrum_blur)
 viz:add_final_drawable(smd)
 
 -- watch the viz!!!!!!!!!!!!!!!
-viz:start_in_window(arg[0])
+viz:start_in_window(media, arg[0])

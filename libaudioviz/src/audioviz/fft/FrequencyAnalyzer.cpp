@@ -18,8 +18,7 @@ void FrequencyAnalyzer::_scale_max::calc(const FrequencyAnalyzer &fa)
 }
 
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
-	: fft_size{fft_size},
-	  inv_fft_size{1.0f / fft_size}
+	: fft_size{fft_size}
 {
 	set_fft_size(fft_size);
 	m_spline_x.reserve(2048);
@@ -181,6 +180,9 @@ float FrequencyAnalyzer::calc_index_ratio(const float i) const
 
 void FrequencyAnalyzer::compute_index_ratios()
 {
+	if (!known_spectrum_size)
+		return;
+
 	spectrum_to_fftw_indices.assign(known_spectrum_size, {-1, -1});
 
 	fftw_to_spectrum_index.resize(fftw.output_size());

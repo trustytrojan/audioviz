@@ -4,7 +4,7 @@ namespace audioviz
 {
 
 Sprite::Sprite(const sf::Texture &txr)
-	: sf::Sprite(txr)
+	: sf::Sprite{txr}
 {
 }
 
@@ -21,7 +21,7 @@ void Sprite::scale_to(const sf::Vector2f size)
 {
 	const auto trsize = getTextureRect().size;
 	const auto scale_factor = std::min(size.x / trsize.x, size.y / trsize.y);
-	setScale(sf::Vector2f{scale_factor, scale_factor});
+	setScale({scale_factor, scale_factor});
 }
 
 void Sprite::fill_screen(const sf::Vector2u size)
@@ -34,7 +34,7 @@ void Sprite::fill_screen(const sf::Vector2u size)
 
 sf::Vector2f Sprite::get_size() const
 {
-	return sf::Vector2f(getTextureRect().size).componentWiseMul(getScale());
+	return sf::Vector2f{getTextureRect().size}.componentWiseMul(getScale());
 }
 
 } // namespace audioviz

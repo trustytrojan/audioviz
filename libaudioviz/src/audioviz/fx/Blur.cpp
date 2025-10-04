@@ -19,26 +19,21 @@ Blur::Blur(float hrad, float vrad, int n_passes)
 void Blur::apply(RenderTexture &rt) const
 {
 	shader.setUniform("size", sf::Glsl::Vec2{rt.getSize()});
+
 	for (int i = 0; i < n_passes; ++i)
 	{
-		shader.setUniform("direction", sf::Glsl::Vec2{hrad, 0}); // horizontal blur
-		// maybe check rt2 for null? super rare that this would be a problem though
-		rt2->clear();
+		// horizontal blur
+		shader.setUniform("direction", sf::Glsl::Vec2{hrad, 0});
 		rt2->draw(rt.sprite(), &shader);
 		rt2->display();
-		rt.draw(rt2->sprite());
+
+		// vertical blur
+		shader.setUniform("direction", sf::Glsl::Vec2{0, vrad});
+		rt.draw(rt2->sprite(), &shader);
 		rt.display();
 
-		shader.setUniform("direction", sf::Glsl::Vec2{0, vrad}); // vertical blur
-		rt2->clear();
-		rt2->draw(rt.sprite(), &shader);
-		rt2->display();
-		rt.draw(rt2->sprite());
-		rt.display();
-
-		// the blur can point in any direction (hence the name of the uniform),
-		// but anything other than horizontal/vertical will give you astigmatism.
-		// experiment to your liking.
+		// clean slate for next pass
+		rt2->clear(sf::Color::Transparent);
 	}
 }
 

@@ -2,14 +2,13 @@
 
 #include <SFML/Graphics.hpp>
 #include <audioviz/Base.hpp>
-#include <audioviz/media/FfmpegEncoder.hpp>
 #include <cstdio>
 #include <string>
 
 namespace audioviz
 {
 
-class FfmpegPopenEncoder : public FfmpegEncoder
+class FfmpegPopenEncoder
 {
 	static const int NUM_PBOS{2};
 
@@ -26,7 +25,11 @@ class FfmpegPopenEncoder : public FfmpegEncoder
 
 public:
 	FfmpegPopenEncoder(
-		const audioviz::Base &viz, const std::string &outfile, const std::string &vcodec, const std::string &acodec);
+		const std::string &media_url,
+		const audioviz::Base &viz,
+		const std::string &outfile,
+		const std::string &vcodec,
+		const std::string &acodec);
 	~FfmpegPopenEncoder();
 
 	void send_frame(const sf::Image &img);
