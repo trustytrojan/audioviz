@@ -18,8 +18,7 @@ void FrequencyAnalyzer::_scale_max::calc(const FrequencyAnalyzer &fa)
 }
 
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
-	: fft_size{fft_size},
-	  inv_fft_size{1.0f / fft_size}
+	: fft_size{fft_size}
 {
 	set_fft_size(fft_size);
 	m_spline_x.reserve(2048);

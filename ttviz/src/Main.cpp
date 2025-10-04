@@ -32,7 +32,7 @@ Main::Main(const int argc, const char *const *const argv)
 		viz.encode(*media, encode_args[0], encode_args[1], encode_args[2]);
 		break;
 	default:
-		throw std::logic_error("--encode requires 1-3 arguments");
+		throw std::logic_error{"--encode requires 1-3 arguments"};
 	}
 }
 

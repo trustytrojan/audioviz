@@ -68,9 +68,6 @@ public:
 	// set background image with optional effects: blur and color-multiply
 	void set_background(const sf::Texture &texture);
 
-	// set margins around the output size for the spectrum to respect
-	void set_spectrum_margin(int margin);
-
 	// set blend mode for spectrum against target
 	void set_spectrum_blendmode(const sf::BlendMode &);
 

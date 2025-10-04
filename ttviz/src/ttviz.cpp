@@ -23,13 +23,9 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color,
 	  ps{ps},
 	  video_bg{size}
 {
-	// default spectrum margin
-	// this sets the StereoSpectrum's rectangle (necessary for it to render)
-	set_spectrum_margin(10);
-
 	// create stereo "mirror" effect
 	ss.set_left_backwards(true);
-	ss.configure_analyzer(sa);
+	ss.set_rect({{}, {size.x, size.y - 10}});
 
 	metadata_init();
 	layers_init(antialiasing);
@@ -41,6 +37,7 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color,
 
 void ttviz::update(std::span<const float> audio_buffer)
 {
+	ss.configure_analyzer(sa);
 	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
 	color.increment_wheel_time();
 }
@@ -182,12 +179,6 @@ void ttviz::metadata_init()
 
 	// metadata should be drawn on top of the final canvas for blending purposes
 	add_final_drawable(metadata);
-}
-
-void ttviz::set_spectrum_margin(const int margin)
-{
-	ss.set_rect({{margin, margin}, {size.x - 2 * margin, size.y - 2 * margin}});
-	sa.resize(ss.get_bar_count());
 }
 
 void ttviz::set_background(const sf::Texture &txr)
