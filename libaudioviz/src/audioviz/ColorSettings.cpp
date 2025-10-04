@@ -4,41 +4,6 @@
 namespace audioviz
 {
 
-void ColorSettings::set_mode(const Mode mode)
-{
-	this->mode = mode;
-}
-
-void ColorSettings::set_solid_color(const sf::Color color)
-{
-	solid = color;
-}
-
-void ColorSettings::set_wheel_hsv(const sf::Vector3f hsv)
-{
-	wheel.hsv = hsv;
-}
-
-void ColorSettings::set_wheel_ranges_start_hsv(const sf::Vector3f hsv)
-{
-	wheel.start_hsv = hsv;
-}
-
-void ColorSettings::set_wheel_ranges_end_hsv(const sf::Vector3f hsv)
-{
-	wheel.end_hsv = hsv;
-}
-
-void ColorSettings::set_wheel_rate(const float rate)
-{
-	wheel.rate = rate;
-}
-
-void ColorSettings::increment_wheel_time()
-{
-	wheel.time += wheel.rate;
-}
-
 sf::Color ColorSettings::calculate_color(const float index_ratio) const
 {
 	switch (mode)

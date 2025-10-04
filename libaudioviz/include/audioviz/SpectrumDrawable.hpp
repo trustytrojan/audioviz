@@ -97,11 +97,16 @@ public:
 	void update(const std::vector<float> &spectrum)
 	{
 		assert(spectrum.size() >= bars.size());
-		for (int i = 0; i < (int)bars.size(); ++i)
-		{
-			bars[i].setFillColor(color.calculate_color((float)i / bars.size()));
-			bars[i].setHeight(std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y));
-		}
+		if (color.wheel.rate != 0)
+			for (int i = 0; i < (int)bars.size(); ++i)
+			{
+				// setFillColor is expensive, only call it if we need to!
+				update_bar_color(i);
+				bars[i].setHeight(std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y));
+			}
+		else
+			for (int i = 0; i < (int)bars.size(); ++i)
+				bars[i].setHeight(std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y));
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override

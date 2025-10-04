@@ -2,14 +2,13 @@
 
 #include <SFML/Graphics.hpp>
 #include <audioviz/Base.hpp>
-#include <audioviz/media/FfmpegEncoder.hpp>
 #include <cstdio>
 #include <string>
 
 namespace audioviz
 {
 
-class FfmpegPopenEncoder : public FfmpegEncoder
+class FfmpegPopenEncoder
 {
 	static const int NUM_PBOS{2};
 

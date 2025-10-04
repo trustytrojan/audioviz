@@ -1,5 +1,4 @@
 #include <audioviz/Base.hpp>
-#include <audioviz/media/FfmpegEncoder.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <format>
 #include <iostream>
@@ -169,6 +168,7 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		while (const auto event = window.pollEvent())
 			if (event->is<sf::Event::Closed>())
 				window.close();
+		window.clear();
 		window.draw(*this);
 		window.display();
 	}
@@ -201,6 +201,7 @@ void Base::encode(Media &media, const std::string &outfile, const std::string &v
 		// frame isn't reusing audio from this one
 		media.audio_buffer_erase(afpvf);
 
+		rt.clear();
 		rt.draw(*this);
 		rt.display();
 		ffmpeg.send_frame(rt.getTexture());

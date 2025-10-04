@@ -86,3 +86,5 @@ i recommend using vscode as it integrates well with git with no effort. get the 
   - involves knowing the tempo of the song
   - want a small translucent flash overlay that flashes to the beat of music
   - copy the osu! stars effect
+- configurable opengl version and profile at runtime, along with compatible shaders
+  - could lead to better performance on newer gpus
