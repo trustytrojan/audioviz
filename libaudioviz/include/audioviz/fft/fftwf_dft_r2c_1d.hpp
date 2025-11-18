@@ -16,11 +16,12 @@ class fftwf_dft_r2c_1d
 	void cleanup();
 
 public:
-	inline fftwf_dft_r2c_1d(const int N) { init(N); }
+	fftwf_dft_r2c_1d(const int N);
 	inline ~fftwf_dft_r2c_1d() { cleanup(); }
 
 	void set_n(const int N);
 	inline void execute() { fftwf_execute(p); }
+
 	inline float *input() { return in; }
 	inline const fftwf_complex *output() const { return out; }
 	inline int input_size() const { return N; }

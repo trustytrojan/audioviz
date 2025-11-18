@@ -5,6 +5,8 @@
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <vector>
 
+#include "imgui.h"
+
 namespace audioviz
 {
 
@@ -91,12 +93,12 @@ public:
 
 	/**
 	 * Update the heights of the bars using the provided `spectrum` data.
-	 * Requires that `spectrum.size() >= bars.size()`. Call `configure_analyzer`
+	 * Requires that `spectrum.size() == bars.size()`. Call `configure_analyzer`
 	 * before performing FFT to satisfy that requirement.
 	 */
 	void update(const std::vector<float> &spectrum)
 	{
-		assert(spectrum.size() >= bars.size());
+		assert(spectrum.size() == bars.size());
 		if (color.wheel.rate != 0)
 			for (int i = 0; i < (int)bars.size(); ++i)
 			{
@@ -138,6 +140,58 @@ public:
 	}
 
 	inline int bar_count() const { return bars.size(); }
+
+	void draw_imgui()
+	{
+		// Bar parameters
+		int temp_width = bar.width;
+		if (ImGui::SliderInt("Bar Width", &temp_width, 1, 50))
+			set_bar_width(temp_width);
+
+		int temp_spacing = bar.spacing;
+		if (ImGui::SliderInt("Bar Spacing", &temp_spacing, 0, 50))
+			set_bar_spacing(temp_spacing);
+
+		// Multiplier
+		ImGui::SliderFloat("Multiplier", &multiplier, 0.1f, 20.0f);
+
+		// Backwards toggle
+		bool temp_backwards = backwards;
+		if (ImGui::Checkbox("Backwards", &temp_backwards))
+			set_backwards(temp_backwards);
+
+		// Debug rect toggle
+		ImGui::Checkbox("Debug Rect", &debug_rect);
+
+		// Rect position and size
+		ImGui::Text("Bounding Box:");
+		ImGui::Indent();
+
+		int rect_pos[2] = {rect.position.x, rect.position.y};
+		if (ImGui::InputInt2("Position", rect_pos))
+		{
+			sf::IntRect new_rect = rect;
+			new_rect.position = {rect_pos[0], rect_pos[1]};
+			set_rect(new_rect);
+		}
+
+		int rect_size[2] = {rect.size.x, rect.size.y};
+		if (ImGui::InputInt2("Size", rect_size))
+		{
+			if (rect_size[0] > 0 && rect_size[1] > 0)
+			{
+				sf::IntRect new_rect = rect;
+				new_rect.size = {rect_size[0], rect_size[1]};
+				set_rect(new_rect);
+			}
+		}
+
+		ImGui::Unindent();
+
+		// Display current bar count (read-only)
+		ImGui::Separator();
+		ImGui::Text("Bar Count: %d", bar_count());
+	}
 
 private:
 	// call after changing any property of the spectrum/bars that will change their positions or colors

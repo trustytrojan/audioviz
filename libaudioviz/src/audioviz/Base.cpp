@@ -3,6 +3,9 @@
 #include <format>
 #include <iostream>
 
+#include <imgui.h>
+#include <imgui-SFML.h>
+
 #ifdef AUDIOVIZ_PORTAUDIO
 #include <portaudio.hpp>
 #endif
@@ -206,6 +209,87 @@ void Base::encode(Media &media, const std::string &outfile, const std::string &v
 		rt.display();
 		ffmpeg.send_frame(rt.getTexture());
 	}
+}
+
+void Base::start_in_window_with_imgui(Media &media, const std::string &window_title)
+{
+	set_samplerate(media.audio_sample_rate());
+	sf::RenderWindow window{
+		sf::VideoMode{size},
+		window_title,
+		sf::Style::Titlebar | sf::Style::Close,
+		sf::State::Windowed,
+		{.antiAliasingLevel = 4},
+	};
+	window.setVerticalSyncEnabled(true);
+
+	// Initialize ImGui-SFML
+	if (!ImGui::SFML::Init(window))
+	{
+		std::cerr << "Failed to initialize ImGui-SFML\n";
+		return;
+	}
+
+#ifdef AUDIOVIZ_PORTAUDIO
+	pa::Init pa_init;
+	pa::Stream pa_stream{0, media.audio_channels(), paFloat32, media.audio_sample_rate(), afpvf};
+	pa_stream.start();
+#endif
+
+	sf::Clock deltaClock;
+
+	while (window.isOpen())
+	{
+		const auto frames = std::max(audio_frames_needed, afpvf);
+		const auto samples = frames * media.audio_channels();
+		media.buffer_audio(frames);
+		if (media.audio_buffer_frames() < afpvf)
+		{
+			std::cerr << "Base::start_in_window_with_imgui: not enough audio frames, breaking loop\n";
+			break;
+		}
+		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
+
+#ifdef AUDIOVIZ_PORTAUDIO
+		try
+		{
+			pa_stream.write(audio_chunk.data(), afpvf);
+		}
+		catch (const pa::Error &e)
+		{
+			if (e.code != paOutputUnderflowed)
+				throw;
+			std::cerr << e.what() << '\n';
+		}
+#endif
+
+		// Process events
+		while (const auto event = window.pollEvent())
+		{
+			ImGui::SFML::ProcessEvent(window, *event);
+
+			if (event->is<sf::Event::Closed>())
+				window.close();
+		}
+
+		// Update ImGui
+		ImGui::SFML::Update(window, deltaClock.restart());
+
+		if (!next_frame(audio_chunk))
+			break;
+
+		// slide audio window just enough to ensure the next video
+		// frame isn't reusing audio from this one
+		media.audio_buffer_erase(afpvf);
+
+		window.clear();
+		window.draw(*this);
+		ImGui::SFML::Render(window);
+		window.display();
+	}
+
+	// Cleanup
+	ImGui::SFML::Shutdown();
 }
 
 } // namespace audioviz
