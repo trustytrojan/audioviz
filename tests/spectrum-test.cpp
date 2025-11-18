@@ -21,7 +21,7 @@ struct SpectrumTest : audioviz::Base
 {
 	const int fft_size = 3000;
 	audioviz::ColorSettings color;
-	audioviz::StereoSpectrum<audioviz::VerticalBar> ss;
+	audioviz::SpectrumDrawable<audioviz::VerticalBar> spectrum;
 	audioviz::fft::FrequencyAnalyzer fa;
 	audioviz::fft::StereoAnalyzer sa;
 	SpectrumTest(sf::Vector2u size, const std::string &media_url);
@@ -30,13 +30,12 @@ struct SpectrumTest : audioviz::Base
 
 SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
-	  ss{{{}, (sf::Vector2i)size}, color},
+	  spectrum{{{}, (sf::Vector2i)size}, color},
 	  fa{fft_size}
 {
-	ss.set_left_backwards(true);
-	ss.set_bar_width(10);
-	ss.set_bar_spacing(5);
-	ss.configure_analyzer(sa); // only need to configure once since the spectrum isnt changing bar count
+	spectrum.set_bar_width(10);
+	spectrum.set_bar_spacing(5);
+	spectrum.configure_analyzer(sa); // only need to configure once since the spectrum isnt changing bar count
 
 	set_audio_frames_needed(fft_size);
 
@@ -46,7 +45,7 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 #endif
 
 	// if we make this a layer, we can capture the full draw time
-	add_final_drawable(ss);
+	add_final_drawable(spectrum);
 
 	audioviz::FfmpegPopenMedia media{media_url, size};
 	start_in_window(media, "spectrum-test");
@@ -55,7 +54,7 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 void SpectrumTest::update(const std::span<const float> audio_buffer)
 {
 	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
-	capture_time("ss_update", ss.update(sa));
+	capture_time("ss_update", spectrum.update(sa.left_data()));
 }
 
 int main(const int argc, const char *const *const argv)
