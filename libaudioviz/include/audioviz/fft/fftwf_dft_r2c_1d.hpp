@@ -16,7 +16,7 @@ class fftwf_dft_r2c_1d
 	void cleanup();
 
 public:
-	fftwf_dft_r2c_1d(const int N);
+	inline fftwf_dft_r2c_1d(const int N) { init(N); }
 	inline ~fftwf_dft_r2c_1d() { cleanup(); }
 
 	void set_n(const int N);

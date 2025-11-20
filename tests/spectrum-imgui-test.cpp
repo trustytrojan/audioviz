@@ -44,15 +44,18 @@ SpectrumImGuiTest::SpectrumImGuiTest(sf::Vector2u size, const std::string &media
 
 void SpectrumImGuiTest::update(const std::span<const float> audio_buffer)
 {
-	// Draw ImGui controls right here in update
+	ImGui::Begin("Frequency Analyzer Controls");
+	fa.draw_imgui();
+	ImGui::End();
+
 	ImGui::Begin("Spectrum Controls");
 	spectrum.draw_imgui();
 	ImGui::End();
 
 	// now that spectrum values CAN CHANGE VIA IMGUI, we NEED
-	// to ALWAYS configure the analyzer!
+	// to ALWAYS configure the analyzer! (std::vector::resize isn't stupid, dw)
 	spectrum.configure_analyzer(aa);
-	aa.analyze(fa, audio_buffer.data(), true);
+	aa.analyze(fa, audio_buffer.data(), true); // interleaved still needs to be true...
 	spectrum.update(aa.get_spectrum_data(0));
 }
 

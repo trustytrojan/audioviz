@@ -4,6 +4,8 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "imgui.h"
+
 namespace audioviz::fft
 {
 
@@ -131,7 +133,7 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 		if (start == -1)
 			continue;
 
-		float max_amplitude{};
+		float accumulated_amplitude{};
 #pragma GCC ivdep
 		for (int j = start; j < end; ++j)
 		{
@@ -140,12 +142,20 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 			const float re = fftw.output()[j][0];
 			const float im = fftw.output()[j][1];
 			const float amplitude = (re * re) + (im * im);
-			max_amplitude = std::max(max_amplitude, amplitude);
+			switch (am)
+			{
+			case AccumulationMethod::MAX:
+				accumulated_amplitude = std::max(accumulated_amplitude, amplitude);
+				break;
+			case AccumulationMethod::SUM:
+				accumulated_amplitude += amplitude;
+				break;
+			}
 		}
 
 		// must divide by fft_size here to counteract the correlation
 		// between fft_size and the average amplitude across the spectrum vector.
-		spectrum[i] = sqrtf(max_amplitude) * inv_fft_size;
+		spectrum[i] = sqrtf(accumulated_amplitude) * inv_fft_size;
 	}
 
 	// apply interpolation if necessary
@@ -233,12 +243,56 @@ void FrequencyAnalyzer::interpolate(std::vector<float> &spectrum)
 	if (m_spline_x.size() < 3)
 		return;
 
-	spline.set_points(m_spline_x, m_spline_y, (tk::spline::spline_type)interp);
+	static const tk::spline::spline_type spline_type_table[] = {
+		(tk::spline::spline_type)0,
+		tk::spline::spline_type::linear,
+		tk::spline::spline_type::cspline,
+		tk::spline::spline_type::cspline_hermite};
+
+	spline.set_points(m_spline_x, m_spline_y, spline_type_table[(int)interp]);
 
 	// only copy spline values to fill in the gaps
 	for (int i = 0; i < size; ++i)
 		if (!spectrum[i])
 			spectrum[i] = spline(i);
+}
+
+void FrequencyAnalyzer::draw_imgui()
+{
+	// FFT size (must be even). Keep user's intent when stepping: if they
+	// decreased, move down to the next even; if they increased, move up.
+	int fft_tmp = fft_size;
+	if (ImGui::InputInt("FFT Size", &fft_tmp) && fft_tmp > 0)
+		set_fft_size(fft_tmp);
+
+	// Scale selection
+	int scale_i = static_cast<int>(scale);
+	if (ImGui::Combo("Scale", &scale_i, "Linear\0Log\0Nth Root\0"))
+		set_scale(static_cast<Scale>(scale_i));
+	if (static_cast<Scale>(scale_i) == Scale::NTH_ROOT)
+	{
+		int nth_tmp = nth_root;
+		if (ImGui::SliderInt("Nth Root", &nth_tmp, 1, 32))
+			set_nth_root(nth_tmp);
+	}
+
+	// Interpolation type
+	int interp_i = static_cast<int>(interp);
+	if (ImGui::Combo("Interpolation", &interp_i, "None\0Linear\0CSpline\0CSpline Hermite\0"))
+		set_interp_type(static_cast<InterpolationType>(interp_i));
+
+	// Accumulation method
+	int am_i = static_cast<int>(am);
+	if (ImGui::Combo("Accumulation", &am_i, "Sum\0Max\0"))
+		set_accum_method(static_cast<AccumulationMethod>(am_i));
+
+	// Window function selection
+	static const WindowFunction *const wf_table[] = {{}, &WF_HANNING, &WF_HAMMING, &WF_BLACKMAN};
+	if (ImGui::Combo("Window", &wf_i, "None\0Hanning\0Hamming\0Blackman\0"))
+	{
+		const auto wf = wf_table[wf_i];
+		set_window_func(wf ? *wf : WindowFunction{});
+	}
 }
 
 } // namespace audioviz::fft

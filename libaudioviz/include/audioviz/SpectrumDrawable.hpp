@@ -189,7 +189,6 @@ public:
 		ImGui::Unindent();
 
 		// Display current bar count (read-only)
-		ImGui::Separator();
 		ImGui::Text("Bar Count: %d", bar_count());
 	}
 
