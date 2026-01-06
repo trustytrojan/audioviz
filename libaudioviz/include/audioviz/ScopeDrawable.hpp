@@ -113,28 +113,15 @@ public:
 			shapes[i].setFillColor(color.calculate_color((float)i / shapes.size()));
 
 			// only rectangles have `setSize`, not circles
-			if constexpr (std::is_base_of_v<sf::RectangleShape, ShapeType>)
-				if (!fill_in)
-				{
-					shapes[i].setPosition({
-						shapes[i].getPosition().x,
-						std::clamp(
-							rect.position.y + half_height - (half_height * audio_val),
-							(float)rect.position.y,
-							(float)(rect.position.y + rect.size.y)),
-					});
-				}
-				else
-				{
-					shapes[i].setPosition({
-						shapes[i].getPosition().x,
-						std::clamp(
-							rect.position.y + half_height,
-							(float)rect.position.y,
-							(float)(rect.position.y + rect.size.y)),
-					});
-					shapes[i].setSize({shape.width, (-half_height * audio_val)});
-				}
+			if (std::is_base_of_v<sf::RectangleShape, ShapeType> && fill_in)
+			{
+				shapes[i].setPosition({
+					shapes[i].getPosition().x,
+					std::clamp(
+						rect.position.y + half_height, (float)rect.position.y, (float)(rect.position.y + rect.size.y)),
+				});
+				shapes[i].setSize({shape.width, (-half_height * audio_val)});
+			}
 			else
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
