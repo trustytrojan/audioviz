@@ -5,6 +5,8 @@
 #include <audioviz/ColorSettings.hpp>
 #include <span>
 
+#include "imgui.h"
+
 namespace audioviz
 {
 
@@ -62,7 +64,17 @@ public:
 		update_shapes();
 	}
 
-	void set_fill_in(const bool b) { fill_in = b; }
+	void set_fill_in(const bool b)
+	{
+		if (fill_in == b)
+			return;
+		fill_in = b;
+		// Reset shape sizes when toggling fill_in mode
+		if constexpr (std::is_base_of_v<sf::RectangleShape, ShapeType>)
+			for (auto &s : shapes)
+				s.setSize({this->shape.width, this->shape.width});
+	}
+
 	void set_backwards(const bool b) { backwards = b; }
 	size_t get_shape_count() const { return shapes.size(); }
 
@@ -129,6 +141,56 @@ public:
 	{
 		for (const auto &shape : shapes)
 			target.draw(shape, states);
+	}
+
+	void draw_imgui()
+	{
+		// Shape parameters
+		int temp_width = shape.width;
+		if (ImGui::SliderInt("Shape Width", &temp_width, 1, 50))
+			set_shape_width(temp_width);
+
+		int temp_spacing = shape.spacing;
+		if (ImGui::SliderInt("Shape Spacing", &temp_spacing, 0, 50))
+			set_shape_spacing(temp_spacing);
+
+		// Fill in toggle
+		bool temp_fill_in = fill_in;
+		if (ImGui::Checkbox("Fill In", &temp_fill_in))
+			set_fill_in(temp_fill_in);
+
+		// Backwards toggle
+		bool temp_backwards = backwards;
+		if (ImGui::Checkbox("Backwards##scope", &temp_backwards))
+			set_backwards(temp_backwards);
+
+		// Rect position and size
+		ImGui::Text("Bounding Box:");
+		ImGui::Indent();
+
+		int rect_pos[2] = {rect.position.x, rect.position.y};
+		if (ImGui::InputInt2("Position##scope", rect_pos))
+		{
+			sf::IntRect new_rect = rect;
+			new_rect.position = {rect_pos[0], rect_pos[1]};
+			set_rect(new_rect);
+		}
+
+		int rect_size[2] = {rect.size.x, rect.size.y};
+		if (ImGui::InputInt2("Size##scope", rect_size))
+		{
+			if (rect_size[0] > 0 && rect_size[1] > 0)
+			{
+				sf::IntRect new_rect = rect;
+				new_rect.size = {rect_size[0], rect_size[1]};
+				set_rect(new_rect);
+			}
+		}
+
+		ImGui::Unindent();
+
+		// Display current shape count (read-only)
+		ImGui::Text("Shape Count: %zu", get_shape_count());
 	}
 
 private:
