@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <audioviz/ColorSettings.hpp>
+#include <audioviz/util.hpp>
 #include <span>
 
 #include "imgui.h"
@@ -108,7 +109,6 @@ public:
 			}
 
 			const auto half_height = rect.size.y / 2.f;
-			const auto half_heightx = rect.size.x / 2.f;
 
 			shapes[i].setFillColor(color.calculate_color((float)i / shapes.size()));
 
@@ -118,21 +118,30 @@ public:
 				{
 					shapes[i].setPosition({
 						shapes[i].getPosition().x,
-						std::clamp(half_height + (-half_height * audio_val), 0.f, (float)rect.size.y),
+						std::clamp(
+							rect.position.y + half_height - (half_height * audio_val),
+							(float)rect.position.y,
+							(float)(rect.position.y + rect.size.y)),
 					});
 				}
 				else
 				{
 					shapes[i].setPosition({
 						shapes[i].getPosition().x,
-						std::clamp(half_height, 0.f, (float)rect.size.y),
+						std::clamp(
+							rect.position.y + half_height,
+							(float)rect.position.y,
+							(float)(rect.position.y + rect.size.y)),
 					});
 					shapes[i].setSize({shape.width, (-half_height * audio_val)});
 				}
 			else
 				shapes[i].setPosition({
 					shapes[i].getPosition().x,
-					std::clamp(half_height + (-half_height * audio_val), 0.f, (float)rect.size.y),
+					std::clamp(
+						rect.position.y + half_height - (half_height * audio_val),
+						(float)rect.position.y,
+						(float)(rect.position.y + rect.size.y)),
 				});
 		}
 	}
@@ -191,6 +200,10 @@ public:
 
 		// Display current shape count (read-only)
 		ImGui::Text("Shape Count: %zu", get_shape_count());
+
+		const auto drag = util::imgui_drag_resize(rect);
+		if (drag.moved || drag.resized)
+			set_rect(drag.rect);
 	}
 
 private:

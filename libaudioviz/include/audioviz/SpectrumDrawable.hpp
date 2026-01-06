@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <audioviz/ColorSettings.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
+#include <audioviz/util.hpp>
 #include <vector>
 
 #include "imgui.h"
@@ -190,6 +191,10 @@ public:
 
 		// Display current bar count (read-only)
 		ImGui::Text("Bar Count: %d", bar_count());
+
+		const auto drag = util::imgui_drag_resize(rect);
+		if (drag.moved || drag.resized)
+			set_rect(drag.rect);
 	}
 
 private:
