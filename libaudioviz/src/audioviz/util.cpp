@@ -302,7 +302,7 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 	ImVec2 min{vpp.x + rect.position.x, vpp.y + rect.position.y};
 	ImVec2 max{min.x + rect.size.x, min.y + rect.size.y};
 
-	dl->AddRect(min, max, IM_COL32(255, 255, 0, 180), 0.0f, 0, 1.0f);
+	// dl->AddRect(min, max, IM_COL32(255, 255, 0, 255), 0.0f, 0, 1.0f);
 
 	struct Handle
 	{
@@ -348,7 +348,10 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 		const bool active = ImGui::IsItemActive();
 		ImGui::PopID();
 
-		dl->AddRectFilled(handles[i].a, handles[i].b, IM_COL32(255, 255, 0, active ? 180 : 80));
+		if (handles[i].kind == Handle::Move)
+			dl->AddRect(handles[i].a, handles[i].b, IM_COL32(255, 255, 0, active ? 180 : 80));
+		else
+			dl->AddRectFilled(handles[i].a, handles[i].b, IM_COL32(255, 255, 0, active ? 180 : 80));
 
 		if (!active)
 			continue;
