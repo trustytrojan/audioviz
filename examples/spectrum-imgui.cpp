@@ -39,7 +39,7 @@ SpectrumImGuiTest::SpectrumImGuiTest(sf::Vector2u size, const std::string &media
 	add_final_drawable(spectrum);
 
 	audioviz::FfmpegPopenMedia media{media_url, size};
-	start_in_window_with_imgui(media, "spectrum-imgui-test");
+	start_in_window(media, "spectrum-imgui-test");
 }
 
 void SpectrumImGuiTest::update(const std::span<const float> audio_buffer)

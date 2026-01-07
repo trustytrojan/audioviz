@@ -30,7 +30,7 @@ ScopeImGuiTest::ScopeImGuiTest(sf::Vector2u size, const std::string &media_url)
 	add_final_drawable(scope);
 
 	audioviz::FfmpegPopenMedia media{media_url, size};
-	start_in_window_with_imgui(media, "scope-imgui-test");
+	start_in_window(media, "scope-imgui-test");
 }
 
 void ScopeImGuiTest::update(const std::span<const float> audio_buffer)
