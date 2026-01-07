@@ -8,7 +8,7 @@
 #include "fftw_allocator.hpp"
 #include "fftwf_dft_r2c_1d.hpp"
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 /**
@@ -175,4 +175,4 @@ private:
 	void compute_window_values();
 };
 
-} // namespace audioviz::fft
+} // namespace audioviz

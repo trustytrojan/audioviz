@@ -6,7 +6,7 @@
 
 // const auto WISDOM_FILENAME = "audioviz.wisdom";
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 void fftwf_dft_r2c_1d::init(const int N)
@@ -37,4 +37,4 @@ void fftwf_dft_r2c_1d::set_n(const int N)
 	init(N);
 }
 
-} // namespace audioviz::fft
+} // namespace audioviz

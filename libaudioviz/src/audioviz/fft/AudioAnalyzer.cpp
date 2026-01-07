@@ -1,7 +1,7 @@
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <stdexcept>
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 AudioAnalyzer::AudioAnalyzer(const int num_channels)
@@ -31,4 +31,4 @@ const std::vector<float> &AudioAnalyzer::get_spectrum_data(const int channel_ind
 	return _spectrum_data_per_channel[channel_index];
 }
 
-} // namespace audioviz::fft
+} // namespace audioviz

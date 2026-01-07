@@ -15,8 +15,8 @@ class ttviz : public audioviz::Base
 {
 	using BarType = audioviz::VerticalBar;
 	using ParticleShapeType = sf::CircleShape;
-	using FA = audioviz::fft::FrequencyAnalyzer;
-	using SA = audioviz::fft::StereoAnalyzer;
+	using FA = audioviz::FrequencyAnalyzer;
+	using SA = audioviz::StereoAnalyzer;
 	using CS = audioviz::ColorSettings;
 	using SS = audioviz::StereoSpectrum<BarType>;
 	using SD = audioviz::ScopeDrawable<sf::RectangleShape>;

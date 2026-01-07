@@ -2,7 +2,7 @@
 
 #include <fftw3.h>
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 class fftwf_dft_r2c_1d
@@ -28,4 +28,4 @@ public:
 	inline int output_size() const { return outN; }
 };
 
-} // namespace audioviz::fft
+} // namespace audioviz

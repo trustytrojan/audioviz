@@ -18,7 +18,7 @@ class Main
 	using ParticleShapeType = sf::CircleShape;
 	using ShapeType = sf::RectangleShape;
 
-	using FA = audioviz::fft::FrequencyAnalyzer;
+	using FA = audioviz::FrequencyAnalyzer;
 	using SC = audioviz::ScopeDrawable<ShapeType>;
 	using SD = audioviz::SpectrumDrawable<BarType>;
 	using SS = audioviz::StereoSpectrum<BarType>;

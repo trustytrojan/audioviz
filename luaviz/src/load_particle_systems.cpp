@@ -37,9 +37,9 @@ void table::load_particle_systems()
 		"set_rect", &CPS::set_rect,
 		"set_particle_count", &CPS::set_particle_count,
 		"update", sol::overload(
-			static_cast<void(CPS::*)(const fft::AudioAnalyzer &, const CPS::UpdateOptions &)>(&CPS::update),
+			static_cast<void(CPS::*)(const AudioAnalyzer &, const CPS::UpdateOptions &)>(&CPS::update),
 			static_cast<void(CPS::*)(const std::vector<float> &, const CPS::UpdateOptions &)>(&CPS::update),
-			[](CPS &self, const fft::AudioAnalyzer &aa) { self.update(aa); },
+			[](CPS &self, const AudioAnalyzer &aa) { self.update(aa); },
 			[](CPS &self, const std::vector<float> &v) { self.update(v); }
 		),
 		"set_particle_textures", &CPS::set_particle_textures,
@@ -61,8 +61,8 @@ void table::load_particle_systems()
 		"set_rect", &RPS::set_rect,
 		"set_particle_count", &RPS::set_particle_count,
 		"update", sol::overload(
-			static_cast<void(RPS::*)(const fft::AudioAnalyzer &, const RPS::UpdateOptions &)>(&RPS::update),
-			[](RPS &self, const fft::AudioAnalyzer &aa) { self.update(aa); }
+			static_cast<void(RPS::*)(const AudioAnalyzer &, const RPS::UpdateOptions &)>(&RPS::update),
+			[](RPS &self, const AudioAnalyzer &aa) { self.update(aa); }
 		),
 		"set_particle_textures", &RPS::set_particle_textures,
 		"set_color", sol::overload(

@@ -90,7 +90,7 @@ public:
 	 * Use this to resize the analyzer's spectrum vector to be the same length
 	 * as the number of bars we are rendering. This is REQUIRED before calling `update`.
 	 */
-	void configure_analyzer(fft::AudioAnalyzer &aa) { aa.resize(bars.size()); }
+	void configure_analyzer(AudioAnalyzer &aa) { aa.resize(bars.size()); }
 
 	/**
 	 * Update the heights of the bars using the provided `spectrum` data.

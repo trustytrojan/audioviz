@@ -6,7 +6,7 @@
 
 #include "imgui.h"
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 void FrequencyAnalyzer::_scale_max::calc(const FrequencyAnalyzer &fa)
@@ -295,4 +295,4 @@ void FrequencyAnalyzer::draw_imgui()
 	}
 }
 
-} // namespace audioviz::fft
+} // namespace audioviz

@@ -9,8 +9,8 @@ namespace luaviz
 
 void table::load_AA_SA()
 {
-	using AA = fft::AudioAnalyzer;
-	using SA = fft::StereoAnalyzer;
+	using AA = AudioAnalyzer;
+	using SA = StereoAnalyzer;
 	// clang-format off
 	new_usertype<AA>("AudioAnalyzer",
 		"new", sol::constructors<AA(int)>(),

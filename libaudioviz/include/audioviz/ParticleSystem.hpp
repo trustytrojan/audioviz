@@ -148,7 +148,7 @@ public:
 		update(displacement_direction * additional_displacement * options.multiplier);
 	}
 
-	void update(const fft::AudioAnalyzer &aa, const UpdateOptions &options = {})
+	void update(const AudioAnalyzer &aa, const UpdateOptions &options = {})
 	{
 		float avg{}; // didn't initialize this for the longest time... yikes.
 		for (int i = 0; i < aa.get_num_channels(); ++i)

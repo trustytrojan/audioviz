@@ -2,7 +2,7 @@
 
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 class AudioAnalyzer
@@ -32,4 +32,4 @@ public:
 	const std::vector<float> &get_spectrum_data(int channel_index) const;
 };
 
-} // namespace audioviz::fft
+} // namespace audioviz

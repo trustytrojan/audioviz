@@ -22,8 +22,8 @@ struct SpectrumTest : audioviz::Base
 	const int fft_size = 3000;
 	audioviz::ColorSettings color;
 	audioviz::SpectrumDrawable<audioviz::VerticalBar> spectrum;
-	audioviz::fft::FrequencyAnalyzer fa;
-	audioviz::fft::StereoAnalyzer sa;
+	audioviz::FrequencyAnalyzer fa;
+	audioviz::StereoAnalyzer sa;
 	SpectrumTest(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
 };
