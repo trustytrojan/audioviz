@@ -6,9 +6,8 @@ namespace audioviz
 {
 
 /**
- * A `Particle` is an object that can freely move in 2D space.
- * The type of object that moves is up to the caller.
- * @tparam ShapeType Must be a subclass of `sf::Transformable`.
+ * An object that can move in 2D space.
+ * The type parameter `ShapeType` must be a subclass of `sf::Transformable`.
  */
 template <typename ShapeType>
 class Particle : public ShapeType
@@ -18,7 +17,6 @@ class Particle : public ShapeType
 
 public:
 	void updatePosition() { this->setPosition(this->getPosition() + velocity); }
-
 	void setVelocity(const sf::Vector2f velocity) { this->velocity = velocity; }
 };
 

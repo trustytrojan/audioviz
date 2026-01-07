@@ -5,24 +5,24 @@
 namespace audioviz
 {
 
+/**
+ * Generic media file interface with access to audio, video, and metadata.
+ * Provides a manual audio buffer to
+ */
 class Media
 {
-public:
-	static Media *create(const std::string &url, sf::Vector2u video_size = {});
-
-private:
 	std::vector<float> _audio_buffer;
 
 public:
 	const std::string url;
-	const sf::Vector2u video_size;
 
-	Media(const std::string &url, sf::Vector2u video_size = {});
+	Media(const std::string &url);
 	virtual ~Media() = default; // fixes clangd warning
 
 	/**
-	 * Read `samples` audio SAMPLES (not FRAMES) from the underlying source
-	 * into `buf`. Typically not used publically.
+	 * Read `samples` audio SAMPLES (NOT FRAMES) from the underlying source
+	 * into `buf`. Typically not used publicly. You should prefer using the
+	 * built-in audio buffer instead.
 	 */
 	virtual size_t read_audio_samples(float *buf, int samples) = 0;
 
@@ -41,8 +41,7 @@ public:
 	virtual std::string artist() const = 0;
 
 	/**
-	 * Guarantees that up to `frames` audio frames are buffered and accessible
-	 * via `audio_buffer()`.
+	 * Guarantees that up to `frames` audio frames are buffered and accessible via `audio_buffer()`.
 	 */
 	void buffer_audio(const int frames);
 
@@ -57,7 +56,7 @@ public:
 	void audio_buffer_erase(const int frames);
 
 	/**
-	 * Returns the number of audio frames (dependent on `audio_channels()`) in the buffer.
+	 * Returns the number of audio FRAMES (NOT samples) in the buffer.
 	 */
 	inline int audio_buffer_frames() const { return _audio_buffer.size() / audio_channels(); }
 };

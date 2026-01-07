@@ -22,12 +22,12 @@ class Base : public sf::Drawable
 public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
-	std::vector<Layer> layers;
 
 protected:
 	sf::Font font;
 
 private:
+	std::vector<Layer> layers;
 	std::vector<const sf::Drawable *> final_drawables;
 	int audio_sample_rate{};
 	int framerate{60};

@@ -1,11 +1,12 @@
 #pragma once
 
-#include <audioviz/aligned_allocator.hpp>
-#include <audioviz/fft/fftwf_dft_r2c_1d.hpp>
 #include <cmath>
 #include <functional>
 #include <tk-spline.hpp>
 #include <vector>
+
+#include "fftw_allocator.hpp"
+#include "fftwf_dft_r2c_1d.hpp"
 
 namespace audioviz::fft
 {

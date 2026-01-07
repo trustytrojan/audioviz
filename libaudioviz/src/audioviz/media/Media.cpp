@@ -4,14 +4,8 @@
 namespace audioviz
 {
 
-Media *Media::create(const std::string &url, const sf::Vector2u video_size)
-{
-	return new FfmpegPopenMedia{url, video_size};
-}
-
-Media::Media(const std::string &url, const sf::Vector2u video_size)
-	: url{url},
-	  video_size{video_size}
+Media::Media(const std::string &url)
+	: url{url}
 {
 }
 

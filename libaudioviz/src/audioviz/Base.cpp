@@ -118,6 +118,13 @@ void Base::add_final_drawable(const Drawable &d)
 	final_drawables.emplace_back(&d);
 }
 
+/*
+TODO: You want to make libaudioviz more usage-agnostic by removing portaudio/imgui dependencies.
+Libaudioviz by itself should be a machine that produces user-defined video from ambiguous audio.
+Let client programs/callers/end-users handle the gathering of audio and whether drawables are editable.
+Also, rename the `tests` folder to `examples` and remove the `-test` suffix from the program names.
+*/
+
 void Base::start_in_window(Media &media, const std::string &window_title)
 {
 	set_samplerate(media.audio_sample_rate());

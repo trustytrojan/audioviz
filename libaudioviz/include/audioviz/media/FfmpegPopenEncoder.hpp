@@ -12,7 +12,7 @@ class FfmpegPopenEncoder
 {
 	static const int NUM_PBOS{2};
 
-	// GLuint is just unsigned, save including header-in-header
+	// GLuint is just unsigned
 	unsigned pbos[NUM_PBOS]{}; // this is basically a ring buffer of pixel buffer objects (PBOs) to avoid stalls
 	unsigned fbo;
 	unsigned intermediateFBO;
