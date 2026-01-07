@@ -38,6 +38,10 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color,
 void ttviz::update(std::span<const float> audio_buffer)
 {
 	// imgui calls go here
+#ifdef AUDIOVIZ_IMGUI
+	ps.draw_imgui();
+#endif
+
 	ss.configure_analyzer(sa);
 	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
 	color.increment_wheel_time();
