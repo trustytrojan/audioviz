@@ -41,12 +41,6 @@ class Main
 	Main &operator=(Main &&) = delete;
 
 	void use_args(ttviz &);
-	void start_in_window(audioviz::Base &);
-	void encode(
-		audioviz::Base &,
-		const std::string &outfile,
-		const std::string &vcodec = "h264",
-		const std::string &acodec = "copy");
 
 public:
 	Main(const int argc, const char *const *const argv);

@@ -6,6 +6,7 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.24)
 endif()
 
 option(AUDIOVIZ_USE_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
+option(AUDIOVIZ_USE_IMGUI "Build with ImGui for controllable objects" ON)
 option(AUDIOVIZ_BUILD_EXAMPLES "Build the example programs" ON)
 option(AUDIOVIZ_BUILD_LUAVIZ "Build the Lua binding" ON)
 option(AUDIOVIZ_BUILD_TTVIZ "Build the reference audioviz implementation" ON)

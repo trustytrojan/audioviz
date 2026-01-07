@@ -6,7 +6,9 @@
 #include <audioviz/util.hpp>
 #include <span>
 
+#ifdef AUDIOVIZ_IMGUI
 #include "imgui.h"
+#endif
 
 namespace audioviz
 {
@@ -139,6 +141,7 @@ public:
 			target.draw(shape, states);
 	}
 
+#ifdef AUDIOVIZ_IMGUI
 	void draw_imgui()
 	{
 		// Shape parameters
@@ -192,6 +195,7 @@ public:
 		if (drag.moved || drag.resized)
 			set_rect(drag.rect);
 	}
+#endif
 
 private:
 	void update_shapes()

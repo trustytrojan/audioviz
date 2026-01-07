@@ -6,7 +6,9 @@
 #include <audioviz/util.hpp>
 #include <vector>
 
+#ifdef AUDIOVIZ_IMGUI
 #include "imgui.h"
+#endif
 
 namespace audioviz
 {
@@ -142,6 +144,7 @@ public:
 
 	inline int bar_count() const { return bars.size(); }
 
+#ifdef AUDIOVIZ_IMGUI
 	void draw_imgui()
 	{
 		// Bar parameters
@@ -196,6 +199,7 @@ public:
 		if (drag.moved || drag.resized)
 			set_rect(drag.rect);
 	}
+#endif
 
 private:
 	// call after changing any property of the spectrum/bars that will change their positions or colors

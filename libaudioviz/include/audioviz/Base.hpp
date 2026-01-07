@@ -93,11 +93,7 @@ public:
 	// quick way to start your viz in a window!!!!!!!!
 	void start_in_window(Media &media, const std::string &window_title);
 
-	// start your viz in a window with ImGui initialized!!!!!!!!
-	void start_in_window_with_imgui(Media &media, const std::string &window_title);
-
 	// render this viz to a video file!!!!!!!!
-	// not implemented yet: just steal it from ttviz
 	void encode(
 		Media &media,
 		const std::string &outfile,
@@ -106,7 +102,7 @@ public:
 
 protected:
 	void capture_elapsed_time(const std::string &label, const sf::Clock &);
-	virtual void update(std::span<const float> /*audio_buffer*/) {}
+	virtual void update(std::span<const float> audio_buffer) {}
 };
 
 } // namespace audioviz
