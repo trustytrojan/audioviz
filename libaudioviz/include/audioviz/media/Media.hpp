@@ -7,7 +7,8 @@ namespace audioviz
 
 /**
  * Generic media file interface with access to audio, video, and metadata.
- * Provides a manual audio buffer to
+ * Provides an audio buffer to guarantee a certain amount of audio regardless
+ * of the implementation's reading quirks.
  */
 class Media
 {

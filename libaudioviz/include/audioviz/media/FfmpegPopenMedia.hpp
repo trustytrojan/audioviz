@@ -15,8 +15,8 @@ class FfmpegPopenMedia : public Media
 
 public:
 	/**
-	 * Create an `FfmpegPopenMedia` with the provided URL. Optionally provide the desired video size
-	 * for video frames to be scaled to by 
+	 * Create an `FfmpegPopenMedia` with the provided URL. Optionally provide the desired size
+	 * for video frames to be scaled to by `ffmpeg`.
 	 */
 	FfmpegPopenMedia(const std::string &url, sf::Vector2u scaled_video_size = {});
 	~FfmpegPopenMedia();

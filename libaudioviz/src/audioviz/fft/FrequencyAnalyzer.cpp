@@ -4,7 +4,9 @@
 #include <cstring>
 #include <stdexcept>
 
+#ifdef AUDIOVIZ_IMGUI
 #include "imgui.h"
+#endif
 
 namespace audioviz
 {
@@ -257,6 +259,7 @@ void FrequencyAnalyzer::interpolate(std::vector<float> &spectrum)
 			spectrum[i] = spline(i);
 }
 
+#ifdef AUDIOVIZ_IMGUI
 void FrequencyAnalyzer::draw_imgui()
 {
 	// FFT size (must be even). Keep user's intent when stepping: if they
@@ -294,5 +297,6 @@ void FrequencyAnalyzer::draw_imgui()
 		set_window_func(wf ? *wf : WindowFunction{});
 	}
 }
+#endif
 
 } // namespace audioviz
