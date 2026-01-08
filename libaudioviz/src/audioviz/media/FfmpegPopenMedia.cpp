@@ -53,7 +53,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u de
 			ss << "-s " << desired_video_size.x << 'x' << desired_video_size.y << ' ';
 #else
 		// va-api probably doesn't exist on this platform, software scale instead
-		ss << "-s " << video_size.x << 'x' << video_size.y << ' ';
+		ss << "-s " << desired_video_size.x << 'x' << desired_video_size.y << ' ';
 #endif
 
 		ss << "-pix_fmt rgba -f rawvideo -";
