@@ -22,12 +22,12 @@ class Base : public sf::Drawable
 public:
 	// audioviz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
-	std::vector<Layer> layers;
 
 protected:
 	sf::Font font;
 
 private:
+	std::vector<Layer> layers;
 	std::vector<const sf::Drawable *> final_drawables;
 	int audio_sample_rate{};
 	int framerate{60};
@@ -94,7 +94,6 @@ public:
 	void start_in_window(Media &media, const std::string &window_title);
 
 	// render this viz to a video file!!!!!!!!
-	// not implemented yet: just steal it from ttviz
 	void encode(
 		Media &media,
 		const std::string &outfile,
@@ -103,7 +102,7 @@ public:
 
 protected:
 	void capture_elapsed_time(const std::string &label, const sf::Clock &);
-	virtual void update(std::span<const float> /*audio_buffer*/) {}
+	virtual void update(std::span<const float> audio_buffer) {}
 };
 
 } // namespace audioviz

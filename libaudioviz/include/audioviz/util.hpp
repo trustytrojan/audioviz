@@ -30,4 +30,15 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath);
 FILE *popen_utf8(const std::string &command, const char *mode);
 sf::String utf8_to_sf_string(const std::string &text);
 
+#ifdef AUDIOVIZ_IMGUI
+struct DragResizeResult
+{
+	bool moved{};
+	bool resized{};
+	sf::IntRect rect{};
+};
+
+DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size = 8.f);
+#endif
+
 } // namespace audioviz::util

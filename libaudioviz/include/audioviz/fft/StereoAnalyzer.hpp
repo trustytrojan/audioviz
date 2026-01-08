@@ -2,7 +2,7 @@
 
 #include <audioviz/fft/AudioAnalyzer.hpp>
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 /**
@@ -20,4 +20,4 @@ public:
 	inline const std::vector<float> &right_data() const { return get_spectrum_data(1); }
 };
 
-} // namespace audioviz::fft
+} // namespace audioviz

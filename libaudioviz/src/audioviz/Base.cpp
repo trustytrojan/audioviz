@@ -3,6 +3,11 @@
 #include <format>
 #include <iostream>
 
+#ifdef AUDIOVIZ_IMGUI
+#include <imgui.h>
+#include <imgui-SFML.h>
+#endif
+
 #ifdef AUDIOVIZ_PORTAUDIO
 #include <portaudio.hpp>
 #endif
@@ -115,23 +120,41 @@ void Base::add_final_drawable(const Drawable &d)
 	final_drawables.emplace_back(&d);
 }
 
+/*
+TODO: You want to make libaudioviz more usage-agnostic by removing portaudio/imgui dependencies.
+Libaudioviz by itself should be a machine that produces user-defined video from ambiguous audio.
+Let client programs/callers/end-users handle the gathering of audio and whether drawables are editable.
+Also, rename the `tests` folder to `examples` and remove the `-test` suffix from the program names.
+*/
+
 void Base::start_in_window(Media &media, const std::string &window_title)
 {
 	set_samplerate(media.audio_sample_rate());
 	sf::RenderWindow window{
 		sf::VideoMode{size},
 		window_title,
-		sf::Style::Titlebar,
+		sf::Style::Titlebar | sf::Style::Close,
 		sf::State::Windowed,
 		{.antiAliasingLevel = 4},
 	};
 	window.setVerticalSyncEnabled(true);
+
+#ifdef AUDIOVIZ_IMGUI
+	// Initialize ImGui-SFML
+	if (!ImGui::SFML::Init(window))
+	{
+		std::cerr << "Failed to initialize ImGui-SFML\n";
+		return;
+	}
+#endif
 
 #ifdef AUDIOVIZ_PORTAUDIO
 	pa::Init pa_init;
 	pa::Stream pa_stream{0, media.audio_channels(), paFloat32, media.audio_sample_rate(), afpvf};
 	pa_stream.start();
 #endif
+
+	sf::Clock deltaClock;
 
 	while (window.isOpen())
 	{
@@ -158,6 +181,21 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		}
 #endif
 
+		// Process events
+		while (const auto event = window.pollEvent())
+		{
+#ifdef AUDIOVIZ_IMGUI
+			ImGui::SFML::ProcessEvent(window, *event);
+#endif
+
+			if (event->is<sf::Event::Closed>())
+				window.close();
+		}
+
+#ifdef AUDIOVIZ_IMGUI
+		ImGui::SFML::Update(window, deltaClock.restart());
+#endif
+
 		if (!next_frame(audio_chunk))
 			break;
 
@@ -165,13 +203,17 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		// frame isn't reusing audio from this one
 		media.audio_buffer_erase(afpvf);
 
-		while (const auto event = window.pollEvent())
-			if (event->is<sf::Event::Closed>())
-				window.close();
 		window.clear();
 		window.draw(*this);
+#ifdef AUDIOVIZ_IMGUI
+		ImGui::SFML::Render(window);
+#endif
 		window.display();
 	}
+
+#ifdef AUDIOVIZ_IMGUI
+	ImGui::SFML::Shutdown();
+#endif
 }
 
 void Base::encode(Media &media, const std::string &outfile, const std::string &vcodec, const std::string &acodec)

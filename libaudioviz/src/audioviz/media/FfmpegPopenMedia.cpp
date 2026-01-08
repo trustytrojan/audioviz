@@ -5,8 +5,9 @@
 namespace audioviz
 {
 
-FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u video_size)
-	: Media{url, video_size},
+FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u desired_video_size)
+	: Media{url},
+	  scaled_video_size{desired_video_size},
 	  metadata{url}
 {
 	_attached_pic = util::getAttachedPicture(url);
@@ -27,7 +28,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 			throw std::runtime_error{std::string{"audio: popen: "} + strerror(errno)};
 	}
 
-	if (has_video_stream() && video_size.x && video_size.y)
+	if (has_video_stream() && desired_video_size.x && desired_video_size.y)
 	{ // create video decoder
 		std::ostringstream ss;
 		ss << "ffmpeg -v warning -hwaccel auto ";
@@ -45,14 +46,14 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u vi
 		if (const auto vaapi_device{util::detect_vaapi_device()}; !vaapi_device.empty())
 		{
 			// use vaapi-accelerated scaling!
-			ss << "-vaapi_device " << vaapi_device << " -vf format=nv12,hwupload,scale_vaapi=" << video_size.x << ':'
-			   << video_size.y << ",hwdownload ";
+			ss << "-vaapi_device " << vaapi_device << " -vf format=nv12,hwupload,scale_vaapi=" << desired_video_size.x
+			   << ':' << desired_video_size.y << ",hwdownload ";
 		}
 		else
-			ss << "-s " << video_size.x << 'x' << video_size.y << ' ';
+			ss << "-s " << desired_video_size.x << 'x' << desired_video_size.y << ' ';
 #else
 		// va-api probably doesn't exist on this platform, software scale instead
-		ss << "-s " << video_size.x << 'x' << video_size.y << ' ';
+		ss << "-s " << desired_video_size.x << 'x' << desired_video_size.y << ' ';
 #endif
 
 		ss << "-pix_fmt rgba -f rawvideo -";
@@ -84,9 +85,9 @@ bool FfmpegPopenMedia::read_video_frame(sf::Texture &txr)
 {
 	if (!video)
 		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] no video stream available!"};
-	if (!txr.resize(video_size))
+	if (!txr.resize(scaled_video_size))
 		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] texture resize failed!"};
-	const auto bytes_to_read{4 * video_size.x * video_size.y};
+	const auto bytes_to_read{4 * scaled_video_size.x * scaled_video_size.y};
 
 #ifdef _WIN32
 	// windows doesnt like large stacks so we have to heap-allocate instead

@@ -78,7 +78,7 @@ public:
 		return _left.bar_count();
 	}
 
-	void configure_analyzer(fft::StereoAnalyzer &sa)
+	void configure_analyzer(StereoAnalyzer &sa)
 	{
 		assert(_left.bar_count() == _right.bar_count());
 		_left.configure_analyzer(sa);
@@ -89,7 +89,7 @@ public:
 	 * `sa`'s spectrum buffers are properly sized for this `StereoSpectrum`!!!!
 	 * Otherwise you will get an assertion error!!! Call `configure_analyzer` to help you with this.
 	 */
-	void update(const fft::StereoAnalyzer &sa)
+	void update(const StereoAnalyzer &sa)
 	{
 		_left.update(sa.left_data());
 		_right.update(sa.right_data());

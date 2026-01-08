@@ -8,7 +8,7 @@ namespace luaviz
 
 void table::load_FA()
 {
-	using FA = fft::FrequencyAnalyzer;
+	using FA = FrequencyAnalyzer;
 	// clang-format off
 	new_enum("WindowFunction",
 		"NONE", nullptr,

@@ -8,12 +8,17 @@ namespace audioviz
 
 class FfmpegPopenMedia : public Media
 {
+	const sf::Vector2u scaled_video_size;
 	FILE *audio{}, *video{};
 	FfprobeMetadata metadata;
 	std::optional<sf::Texture> _attached_pic;
 
 public:
-	FfmpegPopenMedia(const std::string &url, sf::Vector2u video_size = {});
+	/**
+	 * Create an `FfmpegPopenMedia` with the provided URL. Optionally provide the desired size
+	 * for video frames to be scaled to by `ffmpeg`.
+	 */
+	FfmpegPopenMedia(const std::string &url, sf::Vector2u scaled_video_size = {});
 	~FfmpegPopenMedia();
 
 	size_t read_audio_samples(float *buf, int samples) override;

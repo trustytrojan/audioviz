@@ -6,9 +6,10 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.24)
 endif()
 
 option(AUDIOVIZ_USE_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
-option(AUDIOVIZ_TESTS "Build the small test programs in the 'test' directory" OFF)
-option(AUDIOVIZ_LUAVIZ "Build luaviz: the Lua binding" ON)
-option(AUDIOVIZ_TTVIZ "Build ttviz: the first audioviz visualizer" ON)
+option(AUDIOVIZ_USE_IMGUI "Build with ImGui for controllable objects" ON)
+option(AUDIOVIZ_BUILD_EXAMPLES "Build the example programs" ON)
+option(AUDIOVIZ_BUILD_LUAVIZ "Build the Lua binding" ON)
+option(AUDIOVIZ_BUILD_TTVIZ "Build the reference audioviz implementation" ON)
 
 set(BUILD_SHARED_LIBS OFF) # static preferred
 set(CMAKE_CXX_STANDARD 23)
@@ -22,14 +23,14 @@ endif()
 
 add_subdirectory(libaudioviz)
 
-if(AUDIOVIZ_TTVIZ)
+if(AUDIOVIZ_BUILD_TTVIZ)
 	add_subdirectory(ttviz)
 endif()
 
-if(AUDIOVIZ_TESTS)
-	add_subdirectory(tests)
+if(AUDIOVIZ_BUILD_EXAMPLES)
+	add_subdirectory(examples)
 endif()
 
-if(AUDIOVIZ_LUAVIZ)
+if(AUDIOVIZ_BUILD_LUAVIZ)
 	add_subdirectory(luaviz)
 endif()

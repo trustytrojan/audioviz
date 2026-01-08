@@ -21,7 +21,7 @@ struct Base : public audioviz::Base
 {
 	audioviz::Media &media;
 
-	void perform_fft(audioviz::fft::FrequencyAnalyzer &fa, audioviz::fft::AudioAnalyzer &aa)
+	void perform_fft(audioviz::FrequencyAnalyzer &fa, audioviz::AudioAnalyzer &aa)
 	{
 		capture_time("fft", aa.analyze(fa, media.audio_buffer().data(), true));
 	}

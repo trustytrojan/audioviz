@@ -1,13 +1,14 @@
 #pragma once
 
-#include <audioviz/fft/fftwf_dft_r2c_1d.hpp>
-#include <audioviz/aligned_allocator.hpp>
 #include <cmath>
 #include <functional>
 #include <tk-spline.hpp>
 #include <vector>
 
-namespace audioviz::fft
+#include "fftw_allocator.hpp"
+#include "fftwf_dft_r2c_1d.hpp"
+
+namespace audioviz
 {
 
 /**
@@ -27,9 +28,9 @@ public:
 	enum class InterpolationType
 	{
 		NONE,
-		LINEAR = tk::spline::linear,
-		CSPLINE = tk::spline::cspline,
-		CSPLINE_HERMITE = tk::spline::cspline_hermite
+		LINEAR,
+		CSPLINE,
+		CSPLINE_HERMITE
 	};
 
 	enum class AccumulationMethod
@@ -72,6 +73,7 @@ private:
 
 	// window function
 	WindowFunction window_func{WF_BLACKMAN};
+	int wf_i{3}; // for imgui
 
 	// struct to hold the "max"s used in `calc_index_ratio`
 	struct _scale_max
@@ -138,6 +140,14 @@ public:
 	 */
 	void set_nth_root(int nth_root);
 
+#ifdef AUDIOVIZ_IMGUI
+	/**
+	 * Draw ImGui controls for tuning analyzer parameters at runtime.
+	 * This calls the public setters so changes take effect immediately.
+	 */
+	void draw_imgui();
+#endif
+
 	/**
 	 * Copies the `wavedata` to the FFT processor for rendering.
 	 * @param wavedata input wave sample data, expected to be of size `fft_size`
@@ -167,4 +177,4 @@ private:
 	void compute_window_values();
 };
 
-} // namespace audioviz::fft
+} // namespace audioviz

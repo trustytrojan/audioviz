@@ -5,7 +5,7 @@ file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/*.cpp
 )
 
-if(LINUX AND AUDIOVIZ_LUAVIZ AND NOT LUAVIZ_EXECUTABLE)
+if(LINUX AND AUDIOVIZ_BUILD_LUAVIZ AND NOT LUAVIZ_EXECUTABLE)
 	# relocation issues arise when luaviz links to a static libaudioviz
 	set(BUILD_SHARED_LIBS ON)
 endif()
@@ -25,23 +25,23 @@ target_compile_options(audioviz PUBLIC
 	-ffast-math
 )
 
-target_include_directories(audioviz
-	PUBLIC include # our headers
-	PUBLIC ${CMAKE_BINARY_DIR} # single-header libs
-	PUBLIC ${portaudio-pp_SOURCE_DIR}/include
+target_include_directories(audioviz PUBLIC
+	include # our headers
+	${CMAKE_BINARY_DIR} # single-header libs
+	${portaudio-pp_SOURCE_DIR}/include
 )
 
 # popen() on MinGW expects a 'b' to differentiate text/binary,
 # but on Linux it errors if a 'b' is there, so we have to do this...
 if(WIN32)
-	target_compile_definitions(audioviz
-		PUBLIC POPEN_R_MODE="rb"
-		PUBLIC POPEN_W_MODE="wb"
+	target_compile_definitions(audioviz PUBLIC
+		POPEN_R_MODE="rb"
+		POPEN_W_MODE="wb"
 	)
 else() # be specific if you discover more differences
-	target_compile_definitions(audioviz
-		PUBLIC POPEN_R_MODE="r"
-		PUBLIC POPEN_W_MODE="w"
+	target_compile_definitions(audioviz PUBLIC
+		POPEN_R_MODE="r"
+		POPEN_W_MODE="w"
 	)
 endif()
 

@@ -2,7 +2,7 @@
 
 #include <fftw3.h>
 
-namespace audioviz::fft
+namespace audioviz
 {
 
 class fftwf_dft_r2c_1d
@@ -21,10 +21,11 @@ public:
 
 	void set_n(const int N);
 	inline void execute() { fftwf_execute(p); }
+
 	inline float *input() { return in; }
 	inline const fftwf_complex *output() const { return out; }
 	inline int input_size() const { return N; }
 	inline int output_size() const { return outN; }
 };
 
-} // namespace audioviz::fft
+} // namespace audioviz
