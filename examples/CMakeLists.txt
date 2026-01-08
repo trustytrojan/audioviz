@@ -2,7 +2,7 @@ link_libraries(audioviz)
 add_executable(stereo-scope stereo-scope.cpp)
 add_executable(stereo-spectrum stereo-spectrum.cpp)
 # add_executable(glow-test glow-test.cpp)
-add_executable(transform-rect-sfml transform-rect-sfml.cpp)
+add_executable(shake-bass shake-bass.cpp)
 
 if(AUDIOVIZ_USE_IMGUI)
 	add_executable(spectrum-imgui spectrum-imgui.cpp)
