@@ -163,7 +163,7 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		media.buffer_audio(frames);
 		if (media.audio_buffer_frames() < afpvf)
 		{
-			std::cerr << "Base::start_in_window_with_imgui: not enough audio frames, breaking loop\n";
+			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
 			break;
 		}
 		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
