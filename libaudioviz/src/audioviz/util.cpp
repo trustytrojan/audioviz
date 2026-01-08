@@ -280,6 +280,7 @@ std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPat
 }
 */
 
+#ifdef AUDIOVIZ_IMGUI
 DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 {
 	DragResizeResult out{false, false, rect};
@@ -418,5 +419,6 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 
 	return out;
 }
+#endif
 
 } // namespace audioviz::util
