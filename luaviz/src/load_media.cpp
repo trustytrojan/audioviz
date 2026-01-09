@@ -16,7 +16,8 @@ void table::load_media()
 			if (const auto pic = self.attached_pic())
 				return *pic;
 			return sol::nullopt;
-		}
+		},
+		"audio_sample_rate", &Media::audio_sample_rate
 	);
 
 	new_usertype<FfmpegPopenMedia>("FfmpegPopenMedia",

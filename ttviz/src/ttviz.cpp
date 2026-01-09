@@ -39,7 +39,7 @@ void ttviz::update(std::span<const float> audio_buffer)
 {
 	// imgui calls go here
 #ifdef AUDIOVIZ_IMGUI
-	ps.draw_imgui();
+	// ps.draw_imgui();
 #endif
 
 	ss.configure_analyzer(sa);
@@ -83,7 +83,7 @@ void ttviz::layers_init(const int antialiasing)
 	}
 
 	auto &particles = add_layer("particles", antialiasing);
-	particles.add_drawable(&ps);
+	particles.add_draw({ps});
 	particles.set_orig_cb(
 		[&](auto &orig_rt)
 		{
@@ -110,7 +110,7 @@ void ttviz::layers_init(const int antialiasing)
 		});
 
 	auto &spectrum = add_layer("spectrum", antialiasing);
-	spectrum.add_drawable(&ss);
+	spectrum.add_draw({ss});
 	spectrum.set_orig_cb([&](auto &) { ss.update(sa); });
 	spectrum.set_fx_cb(
 		[&](auto &orig_rt, auto &fx_rt, auto &target)

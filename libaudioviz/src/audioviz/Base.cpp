@@ -4,8 +4,8 @@
 #include <iostream>
 
 #ifdef AUDIOVIZ_IMGUI
-#include <imgui.h>
 #include <imgui-SFML.h>
+#include <imgui.h>
 #endif
 
 #ifdef AUDIOVIZ_PORTAUDIO
@@ -68,6 +68,8 @@ void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 	target.draw(final_rt.sprite());
 	for (const auto drawable : final_drawables)
 		target.draw(*drawable);
+	for (const auto dc : final_drawables2)
+		target.draw(dc.drawable, dc.states);
 	if (tt_enabled)
 		target.draw(timing_text);
 }
@@ -118,6 +120,11 @@ void Base::remove_layer(const std::string &name)
 void Base::add_final_drawable(const Drawable &d)
 {
 	final_drawables.emplace_back(&d);
+}
+
+void Base::add_final_drawable2(const Drawable &d, sf::RenderStates rs)
+{
+	final_drawables2.emplace_back(d, rs);
 }
 
 /*

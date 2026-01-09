@@ -118,8 +118,30 @@ public:
 			}
 			p.setFillColor({r, g, b, a});
 
-			if (!rect.contains((sf::Vector2i) new_pos))
-				teleport_particle_opposite_side(p);
+			// ONLY reset position to start side once it reaches opposite side
+			switch (start_side)
+			{
+			case StartSide::BOTTOM:
+				if (new_pos.y <= rect.position.y)
+					p.setPosition(
+						{random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
+				break;
+			case StartSide::TOP:
+				if (new_pos.y >= rect.position.y + rect.size.y)
+					p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), 0});
+				break;
+			case StartSide::LEFT:
+				if (new_pos.x >= rect.position.x + rect.size.x)
+					p.setPosition({0, random<float>(rect.position.y, rect.position.y + rect.size.y)});
+				break;
+			case StartSide::RIGHT:
+				if (new_pos.x <= rect.position.x)
+					p.setPosition({
+						rect.position.x + rect.size.x,
+						random<float>(rect.position.y, rect.position.y + rect.size.y),
+					});
+				break;
+			}
 		}
 	}
 
@@ -182,7 +204,7 @@ public:
 
 		// Check each particle and reinitialize only those out of bounds
 		for (auto &p : particles)
-			if (!rect.contains((sf::Vector2i) p.getPosition()))
+			if (!rect.contains((sf::Vector2i)p.getPosition()))
 				teleport_particle_opposite_side(p);
 	}
 

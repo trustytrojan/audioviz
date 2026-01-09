@@ -1,18 +1,13 @@
 #pragma once
 
-#include "SpaceEffect.hpp"
+#include <SFML/Graphics.hpp>
+#include <audioviz/fft/AudioAnalyzer.hpp>
 
-namespace audioviz::fx
+namespace audioviz::fx::Shake
 {
 
-// Applies a screen-space shake/jitter by offsetting sprite vertices.
-struct Shake : SpaceEffect
-{
-	sf::Vector2f amplitude; // in pixels
-	float frequency;        // oscillations per second-ish
-
-	Shake(sf::Vector2f amplitude, float frequency = 20.f);
-	void apply(sf::RenderTarget &, const sf::Drawable &) const override;
-};
+void setParameters(const AudioAnalyzer &aa, int sample_rate_hz, int fft_size, float multiplier);
+void setParameters(sf::Vector2f amplitude, float frequency);
+const sf::Shader &getShader();
 
 } // namespace audioviz::fx

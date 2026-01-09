@@ -7,7 +7,6 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include <numbers>
 
 #define capture_time(label, code)            \
 	if (timing_text_enabled())               \
@@ -31,7 +30,6 @@ struct ShakeBassTest : audioviz::Base
 	float sample_rate_hz{};
 
 	sf::RectangleShape rect;
-	audioviz::fx::Shake shake;
 
 	ShakeBassTest(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
@@ -41,8 +39,7 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 	: Base{size},
 	  fa{fft_size},
 	  aa{2},
-	  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}},
-	  shake{{0.f, 0.f}, 25.f}
+	  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 {
 	aa.resize(spectrum_size);
 	set_audio_frames_needed(fft_size);
@@ -53,18 +50,9 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 	rect.setOutlineColor(sf::Color::White);
 	rect.setOutlineThickness(1);
 
-	// One layer, one drawable, one effect.
-	auto &layer = add_layer("shake");
-	// layer.add_drawable(&rect);
-	// layer.add_effect(&shake);
-	layer.set_orig_cb(
-		[&](auto &orig_rt)
-		{
-			// orig_rt.draw(rect, &shake);
-			orig_rt.clear();
-			shake.apply(orig_rt, rect);
-			orig_rt.display();
-		});
+	// auto &layer = add_layer("shake");
+	// layer.add_draw({rect, &audioviz::fx::Shake::getShader()});
+	add_final_drawable2(rect, &audioviz::fx::Shake::getShader());
 
 #ifdef __linux__
 	set_timing_text_enabled(true);
@@ -79,32 +67,7 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 void ShakeBassTest::update(const std::span<const float> audio_buffer)
 {
 	capture_time("fft", aa.analyze(fa, audio_buffer.data(), true, true));
-
-	// Match ParticleSystem::update(const AudioAnalyzer&, UpdateOptions) behavior:
-	// - average weighted bass max across channels
-	// - scale by rect height
-	// - apply displacement_func(scaled_avg / calm_factor)
-	const float multiplier = 100.f;
-	const float max_hz = 500.f;
-	const float falloff_power = 0.f;
-
-	float amp_sum = 0.f;
-	float hz_sum = 0.f;
-
-	for (int ch = 0; ch < aa.get_num_channels(); ++ch)
-	{
-		const auto &spec = aa.get_spectrum_data(ch);
-		const auto idx = audioviz::util::weighted_max_index(spec, expf, 100.f);
-		amp_sum += spec[idx];
-		hz_sum += (static_cast<float>(idx) * sample_rate_hz) / static_cast<float>(fft_size);
-	}
-
-	const float amp_avg = amp_sum / aa.get_num_channels();
-	const float hz_avg = hz_sum / aa.get_num_channels();
-
-	const float amp = amp_avg * multiplier;
-	shake.amplitude = {amp, amp};
-	shake.frequency = 2.f * std::numbers::pi_v<float> * hz_avg; // convert Hz -> rad/s for sin()
+	audioviz::fx::Shake::setParameters(aa, sample_rate_hz, fft_size, 100.f);
 }
 
 int main(const int argc, const char *const *const argv)

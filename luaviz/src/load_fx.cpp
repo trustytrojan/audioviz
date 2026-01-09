@@ -1,3 +1,4 @@
+#include "audioviz/fx/Shake.hpp"
 #include "table.hpp"
 #include <audioviz/fx/Add.hpp>
 #include <audioviz/fx/Alpha.hpp>
@@ -12,7 +13,7 @@ namespace luaviz
 void table::load_fx()
 {
 	// clang-format off
-	new_usertype<fx::PostProcessEffect>("Effect",
+	new_usertype<fx::PostProcessEffect>("PostProcessEffect",
 		"", sol::no_constructor
 	);
 
@@ -41,6 +42,15 @@ void table::load_fx()
 		"alpha", sol::property(&fx::Alpha::alpha),
 		sol::base_classes, sol::bases<fx::PostProcessEffect>()
 	);
+
+	set_function("Shake_setParameters", static_cast<void(*)(const AudioAnalyzer &, int, int, float)>(&fx::Shake::setParameters));
+	set_function("Shake_getShader", [] { return std::ref(fx::Shake::getShader()); });
+	// set("Shake", shake_tb);
+
+	// create_named("Shake",
+	// 	"setParameters", static_cast<void(*)(const AudioAnalyzer &, int, int, float)>(&fx::Shake::setParameters),
+	// 	"getShader", &fx::Shake::getShader
+	// );
 	// clang-format on
 }
 

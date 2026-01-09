@@ -72,7 +72,8 @@ void table::load_sf_types()
 	new_usertype<sf::RenderStates>("sfRenderStates",
 		"new", sol::constructors<sf::RenderStates()>(),
 		"blendMode", &sf::RenderStates::blendMode,
-		"transform", &sf::RenderStates::transform
+		"transform", &sf::RenderStates::transform,
+		"shader", &sf::RenderStates::shader
 	);
 
 	new_usertype<sf::Transform>("sfTransform",

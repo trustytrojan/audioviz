@@ -34,12 +34,17 @@ void SongMetadataDrawable::set_position(const sf::Vector2f pos)
 
 void SongMetadataDrawable::draw(sf::RenderTarget &target, const sf::RenderStates states) const
 {
+	sf::RectangleShape rs;
+	rs.setSize(ac_spr.get_size());
+	rs.setFillColor(sf::Color::Transparent);
+	rs.setOutlineColor(sf::Color::White);
+	rs.setOutlineThickness(1);
 	if (ac_txr.getNativeHandle())
-		target.draw(ac_spr, states);
+		target.draw(rs, states);
 	if (!title_text.getString().isEmpty())
-		target.draw(title_text, states);
+		target.draw(title_text);
 	if (!artist_text.getString().isEmpty())
-		target.draw(artist_text, states);
+		target.draw(artist_text);
 }
 
 void SongMetadataDrawable::update_text_positions()

@@ -29,6 +29,7 @@ protected:
 private:
 	std::vector<Layer> layers;
 	std::vector<const sf::Drawable *> final_drawables;
+	std::vector<Layer::DrawCall> final_drawables2;
 	int audio_sample_rate{};
 	int framerate{60};
 
@@ -66,6 +67,7 @@ public:
 	void remove_layer(const std::string &name);
 
 	void add_final_drawable(const sf::Drawable &);
+	void add_final_drawable2(const sf::Drawable &, sf::RenderStates);
 
 	/**
 	 * Prepare the next frame to be drawn with `draw()`. Runs all layers.

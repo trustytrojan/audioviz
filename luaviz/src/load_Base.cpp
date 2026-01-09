@@ -22,6 +22,7 @@ void table::load_Base()
 		"get_layer", &Base::get_layer,
 		"remove_layer", &Base::remove_layer,
 		"add_final_drawable", &Base::add_final_drawable,
+		"add_final_drawable2", &Base::add_final_drawable2,
 		"set_text_font", &Base::set_text_font,
 		"set_audio_frames_needed", &Base::set_audio_frames_needed,
 		"start_in_window", &Base::start_in_window,

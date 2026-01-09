@@ -28,6 +28,8 @@ viz = luaviz.Base.new(SIZE, media)
 viz:set_audio_frames_needed(FFT_SIZE)
 viz:set_timing_text_enabled(true)
 
+samplerate = media:audio_sample_rate()
+
 -- iosevka is a great font, use hardware h264 encoder (available on my laptop)
 if luaviz.os == 'linux' then
 	font_path = '/usr/share/fonts/TTF/Iosevka-Regular.ttc'
@@ -66,7 +68,7 @@ if attached_pic then
 	bg_spr:fill_screen(SIZE)
 
 	bg_layer = viz:add_layer('bg', 0)
-	bg_layer:add_drawable(bg_spr)
+	bg_layer:add_draw(bg_spr)
 	-- we need to store the effects in variables for now, otherwise they get garbage collected...
 	bg_blur = luaviz.Blur.new(7.5, 7.5, 15)
 	bg_darken = luaviz.Mult.new(.75)
@@ -90,6 +92,9 @@ particles_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
 	lbsd:configure_analyzer(sa)
 	viz:perform_fft(fa, sa)
+
+	luaviz.Shake_setParameters(sa, samplerate, FFT_SIZE, 1000)
+
 	lcps:update(sa:left_data(), updopts)
 	rcps:update(sa:right_data(), updopts)
 	orig_rt:draw(lcps)
@@ -156,7 +161,13 @@ smd:set_position({ SIZE[1] // 2 - AC_SIZE[1] // 2, SIZE[2] // 2 - AC_SIZE[2] // 
 smd:use_metadata(media)
 smd:set_text_pos(luaviz.SMDTextPosition.BOTTOM)
 
-viz:add_final_drawable(smd)
+-- THE SHAKE SHADER IS GOING TO ONLY PUSH IT DOWN
+-- BECAUSE IT'S USING A LESS PRECISE SPECTRUM!!!!!
+-- add more control to FrequencyAnalyzer to fix this problem!
+
+final_rs = luaviz.sfRenderStates.new()
+final_rs.shader = luaviz.Shake_getShader()
+viz:add_final_drawable2(smd, final_rs)
 
 viz:start_in_window(media, arg[0])
 -- viz:encode(media, 'out.mp4', vcodec, 'copy')
