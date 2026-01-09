@@ -6,8 +6,8 @@
 #include <audioviz/util.hpp>
 
 #include <SFML/Graphics.hpp>
-#include <cmath>
 #include <iostream>
+#include <numbers>
 
 #define capture_time(label, code)            \
 	if (timing_text_enabled())               \
@@ -28,6 +28,7 @@ struct ShakeBassTest : audioviz::Base
 
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa;
+	float sample_rate_hz{};
 
 	sf::RectangleShape rect;
 	audioviz::fx::Shake shake;
@@ -71,6 +72,7 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 #endif
 
 	audioviz::FfmpegPopenMedia media{media_url, size};
+	sample_rate_hz = static_cast<float>(media.audio_sample_rate());
 	start_in_window(media, "shake-bass");
 }
 
@@ -82,25 +84,27 @@ void ShakeBassTest::update(const std::span<const float> audio_buffer)
 	// - average weighted bass max across channels
 	// - scale by rect height
 	// - apply displacement_func(scaled_avg / calm_factor)
-	float avg{};
-	for (int i = 0; i < aa.get_num_channels(); ++i)
-		avg += audioviz::util::weighted_max(aa.get_spectrum_data(i), sqrtf, 100.f);
-	avg /= aa.get_num_channels();
+	const float multiplier = 100.f;
+	const float max_hz = 500.f;
+	const float falloff_power = 0.f;
 
-	const float calm_factor = 5.f;
-	const float multiplier = 10.f;
-	const auto scaled_avg = static_cast<float>(rect.getSize().y) * avg;
-	const auto additional_displacement = sqrtf(scaled_avg / calm_factor);
-	const auto amp = additional_displacement * multiplier;
+	float amp_sum = 0.f;
+	float hz_sum = 0.f;
 
+	for (int ch = 0; ch < aa.get_num_channels(); ++ch)
+	{
+		const auto &spec = aa.get_spectrum_data(ch);
+		const auto idx = audioviz::util::weighted_max_index(spec, expf, 100.f);
+		amp_sum += spec[idx];
+		hz_sum += (static_cast<float>(idx) * sample_rate_hz) / static_cast<float>(fft_size);
+	}
+
+	const float amp_avg = amp_sum / aa.get_num_channels();
+	const float hz_avg = hz_sum / aa.get_num_channels();
+
+	const float amp = amp_avg * multiplier;
 	shake.amplitude = {amp, amp};
-
-	int avg_index{};
-	for (int i = 0; i < aa.get_num_channels(); ++i)
-		avg_index += audioviz::util::weighted_max_index(aa.get_spectrum_data(i), sqrtf, 100.f);
-	avg_index /= aa.get_num_channels();
-
-	shake.frequency = (avg_index / static_cast<float>(spectrum_size)) * 20000.f;
+	shake.frequency = 2.f * std::numbers::pi_v<float> * hz_avg; // convert Hz -> rad/s for sin()
 }
 
 int main(const int argc, const char *const *const argv)
