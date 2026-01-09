@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstring>
 #include <stdexcept>
+#include <algorithm>
 
 #include "imgui.h"
 
@@ -108,7 +109,7 @@ void FrequencyAnalyzer::copy_channel_to_input(
 			input[i] = audio[i * num_channels + channel];
 }
 
-void FrequencyAnalyzer::render(std::vector<float> &spectrum)
+void FrequencyAnalyzer::render(std::vector<float> &spectrum, bool skip_post_processing)
 {
 	const int size = spectrum.size();
 	assert(size);
@@ -121,6 +122,19 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum)
 
 	// execute fft and get output
 	fftw.execute();
+
+	if (skip_post_processing)
+	{
+		assert(size == fftw.output_size());
+		for (int i = 0; i < size; ++i)
+		{
+			const float re = fftw.output()[i][0];
+			const float im = fftw.output()[i][1];
+			const float amplitude = (re * re) + (im * im);
+			spectrum[i] = sqrtf(amplitude) * inv_fft_size;
+		}
+		return;
+	}
 
 	// zero out array since we are accumulating
 	std::ranges::fill(spectrum, 0);

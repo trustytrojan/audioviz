@@ -15,12 +15,12 @@ void AudioAnalyzer::resize(const int size)
 	std::ranges::for_each(_spectrum_data_per_channel, [=](auto &v) { v.resize(size); });
 }
 
-void AudioAnalyzer::analyze(FrequencyAnalyzer &fa, const float *const audio, const bool interleaved)
+void AudioAnalyzer::analyze(FrequencyAnalyzer &fa, const float *const audio, const bool interleaved, bool skip_post_processing)
 {
 	for (int i = 0; i < _num_channels; ++i)
 	{
 		fa.copy_channel_to_input(audio, _num_channels, i, interleaved);
-		fa.render(_spectrum_data_per_channel[i]);
+		fa.render(_spectrum_data_per_channel[i], skip_post_processing);
 	}
 }
 

@@ -26,7 +26,7 @@ public:
 	 * the second, and so on until `audio[num_channels - 1]`. Then
 	 * the pattern repeats.
 	 */
-	void analyze(FrequencyAnalyzer &fa, const float *audio, bool interleaved);
+	void analyze(FrequencyAnalyzer &fa, const float *audio, bool interleaved, bool skip_post_processing = false);
 
 	inline int get_num_channels() const { return _num_channels; }
 	const std::vector<float> &get_spectrum_data(int channel_index) const;

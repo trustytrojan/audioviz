@@ -22,7 +22,9 @@
 struct ShakeBassTest : audioviz::Base
 {
 	const int fft_size = 3000;
-	const int spectrum_size = 512;
+
+	// we want maximum frequency resolution to shake at precisely the right frequency!
+	const int spectrum_size = fft_size / 2 + 1;
 
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa;
@@ -74,7 +76,7 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 
 void ShakeBassTest::update(const std::span<const float> audio_buffer)
 {
-	capture_time("fft", aa.analyze(fa, audio_buffer.data(), true));
+	capture_time("fft", aa.analyze(fa, audio_buffer.data(), true, true));
 
 	// Match ParticleSystem::update(const AudioAnalyzer&, UpdateOptions) behavior:
 	// - average weighted bass max across channels
@@ -82,7 +84,7 @@ void ShakeBassTest::update(const std::span<const float> audio_buffer)
 	// - apply displacement_func(scaled_avg / calm_factor)
 	float avg{};
 	for (int i = 0; i < aa.get_num_channels(); ++i)
-		avg += audioviz::util::weighted_max(aa.get_spectrum_data(i), sqrtf);
+		avg += audioviz::util::weighted_max(aa.get_spectrum_data(i), sqrtf, 100.f);
 	avg /= aa.get_num_channels();
 
 	const float calm_factor = 5.f;
@@ -92,6 +94,13 @@ void ShakeBassTest::update(const std::span<const float> audio_buffer)
 	const auto amp = additional_displacement * multiplier;
 
 	shake.amplitude = {amp, amp};
+
+	int avg_index{};
+	for (int i = 0; i < aa.get_num_channels(); ++i)
+		avg_index += audioviz::util::weighted_max_index(aa.get_spectrum_data(i), sqrtf, 100.f);
+	avg_index /= aa.get_num_channels();
+
+	shake.frequency = (avg_index / static_cast<float>(spectrum_size)) * 20000.f;
 }
 
 int main(const int argc, const char *const *const argv)

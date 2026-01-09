@@ -166,7 +166,7 @@ public:
 	 * either the `copy_to_input` or `copy_channel_to_input` method.
 	 * @param spectrum Output vector to store resulting spectrum
 	 */
-	void render(std::vector<float> &spectrum);
+	void render(std::vector<float> &spectrum, bool skip_post_processing = false);
 
 private:
 	float calc_index_ratio(float i) const;
