@@ -13,7 +13,7 @@ void main()
 	float t = time * frequency;
 	float ox = sin(t) + sin(t * 1.7);
 	float oy = cos(t * 1.3) + cos(t);
-	vec2 offset = vec2(ox, oy) * (amplitude * 0.5);
+	vec2 offset = vec2(ox, oy) * amplitude;
 
 	pos.xy += offset;
 
