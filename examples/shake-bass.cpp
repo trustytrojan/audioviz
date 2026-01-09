@@ -57,7 +57,9 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 	layer.set_orig_cb(
 		[&](auto &orig_rt)
 		{
-			orig_rt.draw(rect, &shake);
+			// orig_rt.draw(rect, &shake);
+			orig_rt.clear();
+			shake.apply(orig_rt, rect);
 			orig_rt.display();
 		});
 

@@ -10,7 +10,7 @@ Layer::Layer(const std::string &name, const sf::Vector2u size, const int antiali
 {
 }
 
-void Layer::add_effect(fx::Effect *const effect)
+void Layer::add_effect(fx::PostProcessEffect *const effect)
 {
 	effect->setRtSize(_fx_rt.getSize());
 	effects.emplace_back(effect);

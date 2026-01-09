@@ -18,7 +18,7 @@ void table::load_Layer()
 		{
 			self.add_drawable(drawable);
 		},
-		"add_effect", [](Layer &self, fx::Effect *const effect)
+		"add_effect", [](Layer &self, fx::PostProcessEffect *const effect)
 		{
 			self.add_effect(effect);
 		}

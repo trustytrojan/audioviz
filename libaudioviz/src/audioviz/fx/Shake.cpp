@@ -1,6 +1,5 @@
 #include <audioviz/fx/Shake.hpp>
 
-#include "shader_headers/copy.frag.h"
 #include "shader_headers/shake.vert.h"
 
 #include <SFML/System/Clock.hpp>
@@ -20,15 +19,13 @@ Shake::Shake(const sf::Vector2f amplitude, const float frequency)
 		throw std::runtime_error{"failed to load shake shader!"};
 }
 
-void Shake::apply(RenderTexture &rt) const
+void Shake::apply(sf::RenderTarget &target, const sf::Drawable &drawable) const
 {
-	shader.setUniform("size", sf::Glsl::Vec2{rt.getSize()});
 	shader.setUniform("time", _clock.getElapsedTime().asSeconds());
 	shader.setUniform("frequency", frequency);
 	shader.setUniform("amplitude", sf::Glsl::Vec2{amplitude});
 
-	rt.draw(rt.sprite(), &shader);
-	rt.display();
+	target.draw(drawable, &shader);
 }
 
 } // namespace audioviz::fx

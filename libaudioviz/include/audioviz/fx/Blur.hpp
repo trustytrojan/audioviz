@@ -1,7 +1,7 @@
 #pragma once
 
 #include <audioviz/RenderTexture.hpp>
-#include <audioviz/fx/Effect.hpp>
+#include <audioviz/fx/PostProcessEffect.hpp>
 
 namespace audioviz::fx
 {
@@ -12,7 +12,7 @@ namespace audioviz::fx
  * `hrad` and `vrad` are the horizontal and vertical blur radii, respectively.
  * It is recommended to use a zero-alpha background if this is being used to create a glow.
  */
-struct Blur : Effect
+struct Blur : PostProcessEffect
 {
 	float hrad, vrad;
 	int n_passes;

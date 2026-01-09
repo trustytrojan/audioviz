@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <audioviz/RenderTexture.hpp>
-#include <audioviz/fx/Effect.hpp>
+#include <audioviz/fx/PostProcessEffect.hpp>
 #include <functional>
 #include <vector>
 
@@ -47,7 +47,7 @@ private:
 	 * The effects, in order, that will be applied to the "original"
 	 * render-texture when `apply_fx()` is called.
 	 */
-	std::vector<const fx::Effect *> effects;
+	std::vector<const fx::PostProcessEffect *> effects;
 
 	/**
 	 * The drawables to draw on this layer. If they have state that needs to be updated
@@ -58,7 +58,7 @@ private:
 public:
 	Layer(const std::string &name, sf::Vector2u size, int antialiasing);
 
-	void add_effect(fx::Effect *);
+	void add_effect(fx::PostProcessEffect *);
 	void add_drawable(const sf::Drawable *);
 
 	/**

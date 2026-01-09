@@ -1,13 +1,13 @@
 #pragma once
 
-#include <audioviz/fx/Effect.hpp>
+#include <audioviz/fx/PostProcessEffect.hpp>
 
 namespace audioviz::fx
 {
 
 // Multiplies the entire texture's COLORS by a factor.
 // Alphas are not affected.
-struct Mult : public Effect
+struct Mult : public PostProcessEffect
 {
 	float factor;
 	Mult(float factor);
