@@ -12,13 +12,6 @@ void table::load_particle_systems()
 	using RPS = ParticleSystem<sf::RectangleShape>;
 
 	// clang-format off
-	new_enum("ParticleSystemStartSide",
-		"BOTTOM", CPS::StartSide::BOTTOM,
-		"TOP", CPS::StartSide::TOP,
-		"LEFT", CPS::StartSide::LEFT,
-		"RIGHT", CPS::StartSide::RIGHT
-	);
-
 	new_usertype<CPS::UpdateOptions>("ParticleSystemUpdateOptions",
 		"calm_factor", sol::property(&CPS::UpdateOptions::calm_factor),
 		"multiplier", sol::property(&CPS::UpdateOptions::multiplier),
@@ -33,7 +26,6 @@ void table::load_particle_systems()
 			return CPS(table_to_intrect(rect), particle_count);
 		}),
 		"set_displacement_direction", &CPS::set_displacement_direction,
-		"set_start_side", &CPS::set_start_side,
 		"set_rect", &CPS::set_rect,
 		"set_particle_count", &CPS::set_particle_count,
 		"update", sol::overload(
@@ -57,7 +49,6 @@ void table::load_particle_systems()
 			return RPS(table_to_intrect(rect), particle_count);
 		}),
 		"set_displacement_direction", &RPS::set_displacement_direction,
-		"set_start_side", &RPS::set_start_side,
 		"set_rect", &RPS::set_rect,
 		"set_particle_count", &RPS::set_particle_count,
 		"update", sol::overload(

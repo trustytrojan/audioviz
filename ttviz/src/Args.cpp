@@ -124,11 +124,6 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("disable vsync (not recommended)")
 		.flag();
 
-	add_argument("--ps-startside")
-		.help("start side of particles: 'top', 'bottom', 'left', 'right'")
-		.choices("top", "bottom", "left", "right")
-		.default_value("bottom");
-
 	add_argument("--no-fx")
 		.help("don't add default effects")
 		.flag();

@@ -70,7 +70,7 @@ std::array<AudioAnalyzer::ShakeBand, 3>
 AudioAnalyzer::ChannelData::compute_multiband_shake(int sample_rate_hz, int fft_size) const
 {
 	// Calculate the index limit for the total bass range
-	constexpr float max_freq_hz{250};
+	constexpr float max_freq_hz{200};
 	const size_t max_total_index = max_freq_hz * fft_size / sample_rate_hz;
 	const auto total_bass_bins = std::clamp(max_total_index + 1, 1ul, fft_output.size());
 

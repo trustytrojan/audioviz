@@ -21,8 +21,8 @@ LBSD_POS = { 1280, 0 }
 RBSD_POS = { 0, 720 }
 lbsd = luaviz.BarSpectrumDrawable.new({ LBSD_POS, SPECTRUM_SIZE }, cs)
 rbsd = luaviz.BarSpectrumDrawable.new({ RBSD_POS, SPECTRUM_SIZE }, cs)
-lcps = luaviz.CircleParticleSystem.new({ { 0, 0 }, { 1280, 720 } }, 45)
-rcps = luaviz.CircleParticleSystem.new({ { 0, 0 }, { 1280, 720 } }, 45)
+lcps = luaviz.CircleParticleSystem.new({ LBSD_POS, SPECTRUM_SIZE }, 45)
+rcps = luaviz.CircleParticleSystem.new({ RBSD_POS, SPECTRUM_SIZE }, 45)
 media = luaviz.FfmpegPopenMedia.new(arg[1], {})
 viz = luaviz.Base.new(SIZE, media)
 viz:set_audio_frames_needed(FFT_SIZE)
@@ -44,14 +44,14 @@ viz:set_text_font(font_path)
 -- aka set the analyzer's buffer size to have enough data for all the spectrum bars
 assert(lbsd:bar_count() == rbsd:bar_count(), 'bar counts are not the same!')
 
-lcps:set_start_side(luaviz.ParticleSystemStartSide.LEFT)
-rcps:set_start_side(luaviz.ParticleSystemStartSide.RIGHT)
 lbsd:set_backwards(true)
 rbsd:set_backwards(true)
 lbsd:set_bar_width(5)
 rbsd:set_bar_width(5)
 lbsd:set_bar_spacing(2)
 rbsd:set_bar_spacing(2)
+lbsd:set_multiplier(3)
+rbsd:set_multiplier(3)
 
 lstates = luaviz.sfRenderStates.new()
 lstates.transform:rotateDegrees(90, LBSD_POS)
@@ -83,8 +83,8 @@ if attached_pic then
 	rbsd:update_bar_colors()
 end
 
-updopts = luaviz.ParticleSystemUpdateOptions.new()
-updopts.multiplier = 1.25
+-- updopts = luaviz.ParticleSystemUpdateOptions.new()
+-- updopts.multiplier = 1.25
 
 -- lcps:set_color({ 80, 191, 122, 255 })
 -- rcps:set_color({ 80, 191, 122, 255 })
@@ -94,12 +94,12 @@ particles_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
 	viz:perform_fft(fa, sa)
 
-	luaviz.Shake_setParameters(sa, samplerate, FFT_SIZE, 50, ac_spr_center)
+	luaviz.Shake_setParameters(sa, samplerate, FFT_SIZE, 25, ac_spr_center)
 
-	lcps:update(sa, samplerate, FFT_SIZE, 0, updopts)
-	rcps:update(sa, samplerate, FFT_SIZE, 1, updopts)
-	orig_rt:draw(lcps)
-	orig_rt:draw(rcps)
+	lcps:update(sa, samplerate, FFT_SIZE, 0)
+	rcps:update(sa, samplerate, FFT_SIZE, 1)
+	orig_rt:draw(lcps, lstates)
+	orig_rt:draw(rcps, rstates)
 	orig_rt:display()
 end)
 particles_layer:set_fx_cb(function(orig_rt, fx_rt, target)
