@@ -18,19 +18,22 @@ namespace audioviz::fx::Shake
 
 void setParameters(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, float multiplier)
 {
-	aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 250);
-	float amp_avg{}, hz_avg{};
-	for (int ch = 0; ch < aa.num_channels(); ++ch)
-	{
-		const auto &ch_data = aa.get_channel_data(ch);
-		amp_avg += ch_data.peak_amplitude;
-		hz_avg += ch_data.peak_frequency_hz;
-	}
-	amp_avg /= aa.num_channels();
-	hz_avg /= aa.num_channels();
-	const float amp = amp_avg * multiplier;
-	const auto frequency = 2.f * std::numbers::pi_v<float> * hz_avg; // convert Hz -> rad/s for sin()
-	setParameters({amp, amp}, frequency);
+	auto bands = aa.compute_multiband_shake(sample_rate_hz, fft_size);
+
+	// Apply multiplier to amplitudes and convert frequencies to radians
+	sf::Vector3f frequencies, amplitudes;
+	frequencies.x = bands[0].frequency_hz * 2.f * std::numbers::pi_v<float>;
+	frequencies.y = bands[1].frequency_hz * 2.f * std::numbers::pi_v<float>;
+	frequencies.z = bands[2].frequency_hz * 2.f * std::numbers::pi_v<float>;
+
+	amplitudes.x = bands[0].amplitude * multiplier;
+	amplitudes.y = bands[1].amplitude * multiplier;
+	amplitudes.z = bands[2].amplitude * multiplier;
+
+	init();
+	shader.setUniform("time", _clock.getElapsedTime().asSeconds());
+	shader.setUniform("frequencies", frequencies);
+	shader.setUniform("amplitudes", amplitudes);
 }
 
 void setParameters(sf::Vector2f amplitude, float frequency)

@@ -94,7 +94,7 @@ particles_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
 	viz:perform_fft(fa, sa)
 
-	luaviz.Shake_setParameters(sa, samplerate, FFT_SIZE, 25, ac_spr_center)
+	luaviz.Shake_setParameters(sa, samplerate, FFT_SIZE, 50, ac_spr_center)
 
 	lcps:update(sa, samplerate, FFT_SIZE, 0, updopts)
 	rcps:update(sa, samplerate, FFT_SIZE, 1, updopts)

@@ -7,6 +7,13 @@ namespace audioviz
 
 class AudioAnalyzer
 {
+public:
+	struct ShakeBand
+	{
+		float frequency_hz{0.f};
+		float amplitude{0.f};
+	};
+
 	struct ChannelData
 	{
 		std::vector<float> fft_output;
@@ -16,6 +23,7 @@ class AudioAnalyzer
 		friend AudioAnalyzer;
 		void reset_data() { peak_frequency_hz = peak_amplitude = -1; }
 		void compute_peak_freq_amp(int sample_rate_hz, int fft_size, const float max_freq_hz);
+		std::array<ShakeBand, 3> compute_multiband_shake(int sample_rate_hz, int fft_size) const;
 	};
 
 	const int _num_channels;
@@ -24,9 +32,9 @@ class AudioAnalyzer
 public:
 	AudioAnalyzer(int num_channels);
 
-	void execute_fft(
-		FrequencyAnalyzer &fa, std::span<const float> audio, bool interleaved);
+	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio, bool interleaved);
 	void compute_peak_freq_amp(int sample_rate_hz, int fft_size, const float max_freq_hz);
+	std::array<ShakeBand, 3> compute_multiband_shake(int sample_rate_hz, int fft_size);
 
 	inline int num_channels() const { return _num_channels; }
 
