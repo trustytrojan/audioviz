@@ -7,29 +7,12 @@ uniform vec3 frequencies;
 uniform vec3 amplitudes;
 
 // Helper: Generates a chaotic, non-circular shake for a specific band
-vec2 get_band_shake(float t, float freq, float amp) {
-    // 1. Artificially speed up the time to avoid the "aliasing slow-down".
-    //    We multiply by 5.0 so even low bass moves fast.
-    t *= 5.0;
-    
-    // 2. The "Prime Number Scramble"
-    //    We use different multipliers for every sine wave (1.0, 1.4, 1.7, 2.3).
-    //    This ensures X and Y never lock into a circle.
-    
-    // X-Axis: Sum of two sines
-    float x = sin(t * freq) 
-            + cos(t * freq * 1.73);
-            
-    // Y-Axis: Sum of two cosines with completely different periods
-    float y = sin(t * freq * 1.41) 
-            + cos(t * freq * 2.39);
-
-    vec2 raw = vec2(x, y) * amp;
-
-    return vec2(
-        raw.x * cos(t * 69) - raw.y * sin(t * 72),
-        raw.x * sin(t * 21) + raw.y * cos(t * 67)
-    );
+vec2 get_band_shake(float t, float freq, float amp)
+{
+    t *= 5. * freq;
+    float x = sin(t) + cos(t * 1.73);
+    float y = sin(t * 1.41) + cos(t * 2.39);
+    return vec2(x, y) * amp;
 }
 
 void main()

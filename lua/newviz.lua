@@ -26,7 +26,7 @@ rcps = luaviz.CircleParticleSystem.new({ RBSD_POS, SPECTRUM_SIZE }, 45)
 media = luaviz.FfmpegPopenMedia.new(arg[1], {})
 viz = luaviz.Base.new(SIZE, media)
 viz:set_audio_frames_needed(FFT_SIZE)
-viz:set_timing_text_enabled(true)
+-- viz:set_timing_text_enabled(true)
 
 samplerate = media:audio_sample_rate()
 

@@ -29,7 +29,8 @@ void AudioAnalyzer::compute_peak_freq_amp(const int sample_rate_hz, const int ff
 		channel.compute_peak_freq_amp(sample_rate_hz, fft_size, max_freq_hz);
 }
 
-std::array<AudioAnalyzer::ShakeBand, 3> AudioAnalyzer::compute_multiband_shake(const int sample_rate_hz, const int fft_size)
+std::array<AudioAnalyzer::ShakeBand, 3>
+AudioAnalyzer::compute_multiband_shake(const int sample_rate_hz, const int fft_size)
 {
 	std::array<ShakeBand, 3> result = {};
 
@@ -70,30 +71,27 @@ std::array<AudioAnalyzer::ShakeBand, 3>
 AudioAnalyzer::ChannelData::compute_multiband_shake(int sample_rate_hz, int fft_size) const
 {
 	// Calculate the index limit for the total bass range
-	constexpr float max_freq_hz{200};
+	constexpr float max_freq_hz{150}; // TODO: make this configurable
 	const size_t max_total_index = max_freq_hz * fft_size / sample_rate_hz;
 	const auto total_bass_bins = std::clamp(max_total_index + 1, 1ul, fft_output.size());
 
-	std::array<ShakeBand, 3> bands = {};
+	std::array<ShakeBand, 3> bands;
 
 	// Divide the bass range into 3 equal chunks
 	// (Or you can use fixed Hz ranges like 0-60, 60-120, 120-250)
-	size_t chunk_size = total_bass_bins / 3;
-	if (chunk_size == 0)
-		chunk_size = 1;
+	const auto chunk_size = std::max(1ul, total_bass_bins / 3);
 
 	for (int i = 0; i < 3; i++)
 	{
 		size_t start = i * chunk_size;
 		size_t end = std::min((i + 1) * chunk_size, total_bass_bins);
 
-		// Find max in this specific sub-band
-		// Note: weighted_max_index needs to handle the pointer offset correctly
-		const auto idx_local = util::weighted_max_index({fft_output.data() + start, end - start}, expf);
-		const auto idx_global = start + idx_local;
+		const auto begin = fft_output.begin();
+		const auto max_it = std::max_element(begin + start, begin + end);
+		const auto index = max_it.base() - begin.base();
 
-		bands[i].amplitude = fft_output[idx_global];
-		bands[i].frequency_hz = ((float)idx_global * (float)sample_rate_hz) / (float)fft_size;
+		bands[i].amplitude = *max_it;
+		bands[i].frequency_hz = ((float)index * (float)sample_rate_hz) / (float)fft_size;
 	}
 
 	return bands;
