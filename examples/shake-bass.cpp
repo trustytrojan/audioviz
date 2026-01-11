@@ -1,5 +1,5 @@
 #include <audioviz/Base.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
+#include <audioviz/fft/StereoAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fx/Shake.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
@@ -26,7 +26,7 @@ struct ShakeBassTest : audioviz::Base
 	const int spectrum_size = fft_size / 2 + 1;
 
 	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer aa;
+	audioviz::StereoAnalyzer sa;
 	float sample_rate_hz{};
 
 	sf::RectangleShape rect;
@@ -38,10 +38,8 @@ struct ShakeBassTest : audioviz::Base
 ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_url)
 	: Base{size},
 	  fa{fft_size},
-	  aa{2},
 	  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 {
-	aa.resize(spectrum_size);
 	set_audio_frames_needed(fft_size);
 
 	rect.setOrigin(rect.getGeometricCenter());
@@ -66,8 +64,8 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 
 void ShakeBassTest::update(const std::span<const float> audio_buffer)
 {
-	capture_time("fft", aa.analyze(fa, audio_buffer.data(), true, true));
-	audioviz::fx::Shake::setParameters(aa, sample_rate_hz, fft_size, 100.f);
+	capture_time("fft", sa.execute_fft(fa, audio_buffer, true));
+	audioviz::fx::Shake::setParameters(sa, sample_rate_hz, fft_size, 100.f);
 }
 
 int main(const int argc, const char *const *const argv)

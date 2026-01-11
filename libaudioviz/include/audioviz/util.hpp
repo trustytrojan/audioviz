@@ -4,8 +4,8 @@
 #include <cstdio>
 #include <functional>
 #include <optional>
+#include <span>
 #include <string>
-#include <vector>
 
 namespace audioviz::util
 {
@@ -15,27 +15,17 @@ sf::Vector3f interpolate(float t, sf::Vector3f start_hsv, sf::Vector3f end_hsv);
 sf::Vector3f interpolate_and_reverse(float t, sf::Vector3f start_hsv, sf::Vector3f end_hsv);
 
 /**
- * Returns the index of the weighted maximum within the bass frequencies of `vec`.
- * 
- * Analyzes the first `1 / size_divisor` elements (default: lowest ~28% for bass).
- * Within that range:
- * - First half gets full weight (1.0)
- * - Second half gets weighted by `weight_func(distance_to_end)` to emphasize the strongest bass
- * 
- * @param vec Input spectrum (typically from FrequencyAnalyzer)
- * @param weight_func Function to apply to distances (default: linear; use sqrtf for perceptual weighting)
- * @param size_divisor Divisor for spectrum range (default: 3.5 = ~28% of spectrum = bass range)
- * @return Index into original `vec` of the weighted-maximum bass bin
+ * Returns the index of the maximum after applying a weight to each value.
+ *
+ * Every index is weighted based on its normalized distance to the end of the span:
+ * - For i == 0 (furthest from end), distance_to_end == 1
+ * - For i == size-1 (at end), distance_to_end == 0
+ *
+ * If `weight_func` is empty, the distance value itself is used as the weight (linear).
+ *
+ * Callers that want to analyze only a subset (e.g., bass bins) should pass a subspan/first() view.
  */
-size_t weighted_max_index(
-	const std::vector<float> &vec,
-	const std::function<float(float)> &weight_func = {},
-	const float size_divisor = 3.5f); // generally the lower third of the frequency spectrum is considered bass
-
-float weighted_max(
-	const std::vector<float> &vec,
-	const std::function<float(float)> &weight_func = {},
-	const float size_divisor = 3.5f); // generally the lower third of the frequency spectrum is considered bass
+size_t weighted_max_index(std::span<const float> values, const std::function<float(float)> &weight_func = {});
 
 inline const sf::BlendMode GreatAmazingBlendMode{sf::BlendMode::Factor::OneMinusDstColor, sf::BlendMode::Factor::One};
 

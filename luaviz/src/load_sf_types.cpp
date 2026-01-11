@@ -99,6 +99,10 @@ void table::load_sf_types()
 		"Cyan", sf::Color::Cyan,
 		"Transparent", sf::Color::Transparent
 	);
+
+	new_usertype<sf::Vector2f>("sfVector2f",
+		"new", sol::constructors<sf::Vector2f(float, float)>()
+	);
 	// clang-format on
 }
 

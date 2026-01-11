@@ -42,8 +42,7 @@ void ttviz::update(std::span<const float> audio_buffer)
 	// ps.draw_imgui();
 #endif
 
-	ss.configure_analyzer(sa);
-	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
+	capture_time("fft", sa.execute_fft(fa, audio_buffer, true));
 	color.increment_wheel_time();
 }
 
@@ -91,12 +90,12 @@ void ttviz::layers_init(const int antialiasing)
 			const auto framerate = get_framerate();
 
 			if (framerate < 60)
-				ps.update(sa, {.multiplier = 60.f / framerate});
+				ps.update(sa, media.audio_sample_rate(), fa.get_fft_size(), {.multiplier = 60.f / framerate});
 			else if (framerate == 60)
-				ps.update(sa);
+				ps.update(sa, media.audio_sample_rate(), fa.get_fft_size());
 			else if (framerate > 60 && frame_count >= (framerate / 60.))
 			{
-				ps.update(sa);
+				ps.update(sa, media.audio_sample_rate(), fa.get_fft_size());
 				frame_count = 0;
 			}
 
@@ -111,7 +110,7 @@ void ttviz::layers_init(const int antialiasing)
 
 	auto &spectrum = add_layer("spectrum", antialiasing);
 	spectrum.add_draw({ss});
-	spectrum.set_orig_cb([&](auto &) { ss.update(sa); });
+	spectrum.set_orig_cb([&](auto &) { ss.update(fa, sa); });
 	spectrum.set_fx_cb(
 		[&](auto &orig_rt, auto &fx_rt, auto &target)
 		{

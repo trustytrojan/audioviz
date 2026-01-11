@@ -16,8 +16,8 @@ public:
 	{
 	}
 
-	inline const std::vector<float> &left_data() const { return get_spectrum_data(0); }
-	inline const std::vector<float> &right_data() const { return get_spectrum_data(1); }
+	inline std::span<const float> left_data() const { return get_channel_data(0).fft_output; }
+	inline std::span<const float> right_data() const { return get_channel_data(1).fft_output; }
 };
 
 } // namespace audioviz

@@ -79,6 +79,8 @@ if attached_pic then
 	cs:set_mode(luaviz.ColorMode.SOLID)
 	-- cs:set_solid_color({ 199, 220, 241, 255 })
 	-- cs:set_solid_color({ 90, 75, 94, 255 })
+	lbsd:update_bar_colors()
+	rbsd:update_bar_colors()
 end
 
 updopts = luaviz.ParticleSystemUpdateOptions.new()
@@ -90,13 +92,12 @@ updopts.multiplier = 1.25
 particles_layer = viz:add_layer('particles', 0)
 particles_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
-	lbsd:configure_analyzer(sa)
 	viz:perform_fft(fa, sa)
 
-	luaviz.Shake_setParameters(sa, samplerate, FFT_SIZE, 1000)
+	luaviz.Shake_setParameters(sa, samplerate, FFT_SIZE, 25, ac_spr_center)
 
-	lcps:update(sa:left_data(), updopts)
-	rcps:update(sa:right_data(), updopts)
+	lcps:update(sa, samplerate, FFT_SIZE, 0, updopts)
+	rcps:update(sa, samplerate, FFT_SIZE, 1, updopts)
 	orig_rt:draw(lcps)
 	orig_rt:draw(rcps)
 	orig_rt:display()
@@ -114,8 +115,8 @@ spectrum_layer:set_orig_cb(function(orig_rt)
 	orig_rt:clear({ 0, 0, 0, 0 })
 	-- cs:set_solid_color({ 80, 191, 122, 255 })
 	-- cs:set_solid_color(luaviz.sfColors.Magenta)
-	lbsd:update(sa:left_data())
-	rbsd:update(sa:right_data())
+	lbsd:update(fa, sa, 0)
+	rbsd:update(fa, sa, 1)
 	orig_rt:draw(lbsd, lstates)
 	orig_rt:draw(rbsd, rstates)
 	orig_rt:display()
@@ -160,6 +161,7 @@ smd:set_position({ SIZE[1] // 2 - AC_SIZE[1] // 2, SIZE[2] // 2 - AC_SIZE[2] // 
 -- smd:set_position({ 30, 30 })
 smd:use_metadata(media)
 smd:set_text_pos(luaviz.SMDTextPosition.BOTTOM)
+ac_spr_center = smd:get_ac_spr_center()
 
 -- THE SHAKE SHADER IS GOING TO ONLY PUSH IT DOWN
 -- BECAUSE IT'S USING A LESS PRECISE SPECTRUM!!!!!

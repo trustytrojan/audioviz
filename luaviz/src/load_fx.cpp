@@ -43,15 +43,8 @@ void table::load_fx()
 		sol::base_classes, sol::bases<fx::PostProcessEffect>()
 	);
 
-	set_function("Shake_setParameters", static_cast<void(*)(const AudioAnalyzer &, int, int, float)>(&fx::Shake::setParameters));
+	set_function("Shake_setParameters", static_cast<void(*)(AudioAnalyzer &, int, int, float)>(&fx::Shake::setParameters));
 	set_function("Shake_getShader", [] { return std::ref(fx::Shake::getShader()); });
-	// set("Shake", shake_tb);
-
-	// create_named("Shake",
-	// 	"setParameters", static_cast<void(*)(const AudioAnalyzer &, int, int, float)>(&fx::Shake::setParameters),
-	// 	"getShader", &fx::Shake::getShader
-	// );
-	// clang-format on
 }
 
 } // namespace luaviz

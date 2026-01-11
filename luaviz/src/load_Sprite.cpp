@@ -20,6 +20,7 @@ void table::load_Sprite()
 		{
 			self.fill_screen(table_to_vec2<unsigned>(size));
 		},
+		"get_center", &Sprite::get_center,
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 	// clang-format on

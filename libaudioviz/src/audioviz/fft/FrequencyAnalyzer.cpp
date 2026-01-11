@@ -1,9 +1,9 @@
+#include <algorithm>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <cassert>
 #include <cmath>
-#include <cstring>
+#include <print>
 #include <stdexcept>
-#include <algorithm>
 
 #include "imgui.h"
 
@@ -34,7 +34,7 @@ void FrequencyAnalyzer::set_fft_size(const int fft_size)
 	inv_fft_size = 1.0f / fft_size;
 	fftw.set_n(fft_size);
 	scale_max.calc(*this);
-	compute_index_ratios();
+	compute_index_mappings();
 	compute_window_values();
 }
 
@@ -57,7 +57,7 @@ void FrequencyAnalyzer::set_accum_method(const AccumulationMethod am)
 void FrequencyAnalyzer::set_scale(const Scale scale)
 {
 	this->scale = scale;
-	compute_index_ratios();
+	compute_index_mappings();
 }
 
 void FrequencyAnalyzer::set_nth_root(const int nth_root)
@@ -66,80 +66,75 @@ void FrequencyAnalyzer::set_nth_root(const int nth_root)
 		throw std::invalid_argument("FrequencySpectrum::set_nth_root: nth_root cannot be zero!");
 	this->nth_root = nth_root;
 	nthroot_inv = 1.f / nth_root;
-	compute_index_ratios();
+	compute_index_mappings();
 }
 
-void FrequencyAnalyzer::copy_to_input(const float *const wavedata)
+void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
 {
-	const auto input = fftw.input();
+	assert(wavedata.size() == fft_size);
 
-	// this can be optimized by SIMD iff we convert from interleaved to planar beforehand...
-
+	// this can be optimized by SIMD if we use a planar format...
+	const auto fftw_input = fftw.input();
 	if (window_func)
 		for (int i = 0; i < fft_size; ++i)
-			input[i] = wavedata[i] * window_values[i];
+			fftw_input[i] = wavedata[i] * window_values[i];
 	else
-		memcpy(input, wavedata, fft_size * sizeof(float));
+		std::ranges::copy(wavedata, fftw_input);
 }
 
 void FrequencyAnalyzer::copy_channel_to_input(
-	const float *const audio, const int num_channels, const int channel, const bool interleaved)
+	std::span<const float> audio, const int num_channels, const int channel, const bool interleaved)
 {
-	if (num_channels <= 0)
-		throw std::invalid_argument("num_channels <= 0");
-	if (channel < 0)
-		throw std::invalid_argument("channel <= 0");
-	if (channel >= num_channels)
-		throw std::runtime_error("channel > num_channels");
+	assert(num_channels > 0);
+	assert(audio.size() >= fft_size * num_channels);
+	assert(channel >= 0);
+	assert(channel < num_channels);
 
 	if (!interleaved)
 	{
-		copy_to_input(audio + (channel * fft_size));
+		copy_to_input(audio.subspan(channel * fft_size));
 		return;
 	}
 
-	// this can be optimized by SIMD iff we convert from interleaved to planar beforehand...
-
-	const auto input = fftw.input();
+	// this can be optimized by SIMD if we use a planar format...
+	const auto fftw_input = fftw.input();
 	if (window_func)
 		for (int i = 0; i < fft_size; ++i)
-			input[i] = audio[i * num_channels + channel] * window_values[i];
+			fftw_input[i] = audio[i * num_channels + channel] * window_values[i];
 	else
 		for (int i = 0; i < fft_size; ++i)
-			input[i] = audio[i * num_channels + channel];
+			fftw_input[i] = audio[i * num_channels + channel];
 }
 
-void FrequencyAnalyzer::render(std::vector<float> &spectrum, bool skip_post_processing)
+void FrequencyAnalyzer::execute_fft(std::span<float> output)
 {
-	const int size = spectrum.size();
-	assert(size);
+	fftw.execute();
+	const int size = output.size();
+	assert(size == fftw.output_size());
+	for (int i = 0; i < size; ++i)
+	{
+		const float re = fftw.output()[i][0];
+		const float im = fftw.output()[i][1];
+		// must divide by fft_size here to counteract the correlation
+		// between fft_size and the average amplitude across the spectrum vector.
+		output[i] = sqrtf((re * re) + (im * im)) * inv_fft_size;
+	}
+}
+
+void FrequencyAnalyzer::bin_pack(std::span<float> out, std::span<const float> in)
+{
+	assert(in.size() == fftw.output_size());
+	const int size = out.size();
 
 	if (size != known_spectrum_size)
 	{
 		known_spectrum_size = size;
-		compute_index_ratios();
+		compute_index_mappings();
 	}
 
-	// execute fft and get output
-	fftw.execute();
+	// just keep doing it here for consistency
+	std::ranges::fill(out, 0);
 
-	if (skip_post_processing)
-	{
-		assert(size == fftw.output_size());
-		for (int i = 0; i < size; ++i)
-		{
-			const float re = fftw.output()[i][0];
-			const float im = fftw.output()[i][1];
-			const float amplitude = (re * re) + (im * im);
-			spectrum[i] = sqrtf(amplitude) * inv_fft_size;
-		}
-		return;
-	}
-
-	// zero out array since we are accumulating
-	std::ranges::fill(spectrum, 0);
-
-	// map frequency bins of freqdata to spectrum
 	for (int i = 0; i < known_spectrum_size; ++i)
 	{
 		const auto [start, end] = spectrum_to_fftw_indices[i];
@@ -148,14 +143,9 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum, bool skip_post_proc
 			continue;
 
 		float accumulated_amplitude{};
-#pragma GCC ivdep
 		for (int j = start; j < end; ++j)
 		{
-			// do NOT use destructuring of the fftwf_complex!
-			// THIS allows the compiler to vectorize this entire loop body!
-			const float re = fftw.output()[j][0];
-			const float im = fftw.output()[j][1];
-			const float amplitude = (re * re) + (im * im);
+			const float amplitude = in[j];
 			switch (am)
 			{
 			case AccumulationMethod::MAX:
@@ -167,14 +157,8 @@ void FrequencyAnalyzer::render(std::vector<float> &spectrum, bool skip_post_proc
 			}
 		}
 
-		// must divide by fft_size here to counteract the correlation
-		// between fft_size and the average amplitude across the spectrum vector.
-		spectrum[i] = sqrtf(accumulated_amplitude) * inv_fft_size;
+		out[i] = accumulated_amplitude;
 	}
-
-	// apply interpolation if necessary
-	if (interp != InterpolationType::NONE && scale != Scale::LINEAR)
-		interpolate(spectrum);
 }
 
 float FrequencyAnalyzer::calc_index_ratio(const float i) const
@@ -202,44 +186,38 @@ float FrequencyAnalyzer::calc_index_ratio(const float i) const
 	}
 }
 
-void FrequencyAnalyzer::compute_index_ratios()
+void FrequencyAnalyzer::compute_index_mappings()
 {
 	if (!known_spectrum_size)
 		return;
 
 	spectrum_to_fftw_indices.assign(known_spectrum_size, {-1, -1});
 
-	fftw_to_spectrum_index.resize(fftw.output_size());
 	for (int i = 0; i < fftw.output_size(); ++i)
 	{
-		const int spectrum_index = calc_index_ratio(i) * known_spectrum_size;
-		fftw_to_spectrum_index[i] = std::clamp(spectrum_index, 0, known_spectrum_size - 1);
-	}
-
-	if (known_spectrum_size > 0)
-	{
-		for (int i = 0; i < fftw.output_size(); ++i)
-		{
-			const auto spectrum_index = fftw_to_spectrum_index[i];
-			if (spectrum_to_fftw_indices[spectrum_index].first == -1)
-				spectrum_to_fftw_indices[spectrum_index].first = i;
-			spectrum_to_fftw_indices[spectrum_index].second = i + 1;
-		}
+		const int spectrum_index =
+			std::clamp((int)(calc_index_ratio(i) * known_spectrum_size), 0, known_spectrum_size - 1);
+		if (spectrum_to_fftw_indices[spectrum_index].first == -1)
+			spectrum_to_fftw_indices[spectrum_index].first = i;
+		spectrum_to_fftw_indices[spectrum_index].second = i + 1;
 	}
 }
 
 void FrequencyAnalyzer::compute_window_values()
 {
-	if (window_func)
-	{
-		window_values.resize(fft_size);
-		for (int i = 0; i < fft_size; ++i)
-			window_values[i] = window_func(i, fft_size);
-	}
+	if (!window_func)
+		return;
+
+	window_values.resize(fft_size);
+	for (int i = 0; i < fft_size; ++i)
+		window_values[i] = window_func(i, fft_size);
 }
 
-void FrequencyAnalyzer::interpolate(std::vector<float> &spectrum)
+void FrequencyAnalyzer::interpolate(std::span<float> spectrum)
 {
+	if (interp == InterpolationType::NONE || scale == Scale::LINEAR)
+		return;
+
 	const int size = spectrum.size();
 
 	// separate the nonzero values (y's) and their indices (x's)
@@ -257,11 +235,9 @@ void FrequencyAnalyzer::interpolate(std::vector<float> &spectrum)
 	if (m_spline_x.size() < 3)
 		return;
 
-	static const tk::spline::spline_type spline_type_table[] = {
-		(tk::spline::spline_type)0,
-		tk::spline::spline_type::linear,
-		tk::spline::spline_type::cspline,
-		tk::spline::spline_type::cspline_hermite};
+	using spline_type = tk::spline::spline_type;
+	static const spline_type spline_type_table[] = {
+		(spline_type)0, spline_type::linear, spline_type::cspline, spline_type::cspline_hermite};
 
 	spline.set_points(m_spline_x, m_spline_y, spline_type_table[(int)interp]);
 

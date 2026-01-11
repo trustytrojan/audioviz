@@ -37,10 +37,10 @@ void table::load_particle_systems()
 		"set_rect", &CPS::set_rect,
 		"set_particle_count", &CPS::set_particle_count,
 		"update", sol::overload(
-			static_cast<void(CPS::*)(const AudioAnalyzer &, const CPS::UpdateOptions &)>(&CPS::update),
-			static_cast<void(CPS::*)(const std::vector<float> &, const CPS::UpdateOptions &)>(&CPS::update),
-			[](CPS &self, const AudioAnalyzer &aa) { self.update(aa); },
-			[](CPS &self, const std::vector<float> &v) { self.update(v); }
+			static_cast<void(CPS::*)(AudioAnalyzer &, int, int, const CPS::UpdateOptions &)>(&CPS::update),
+			static_cast<void(CPS::*)(AudioAnalyzer &, int, int, int, const CPS::UpdateOptions &)>(&CPS::update),
+			[](CPS &self, AudioAnalyzer &aa, int sample_rate_hz, int fft_size) { self.update(aa, sample_rate_hz, fft_size); },
+			[](CPS &self, AudioAnalyzer &aa, int sample_rate_hz, int fft_size, int channel) { self.update(aa, sample_rate_hz, fft_size, channel); }
 		),
 		"set_particle_textures", &CPS::set_particle_textures,
 		"set_debug_rect", &CPS::set_debug_rect,
@@ -61,8 +61,8 @@ void table::load_particle_systems()
 		"set_rect", &RPS::set_rect,
 		"set_particle_count", &RPS::set_particle_count,
 		"update", sol::overload(
-			static_cast<void(RPS::*)(const AudioAnalyzer &, const RPS::UpdateOptions &)>(&RPS::update),
-			[](RPS &self, const AudioAnalyzer &aa) { self.update(aa); }
+			static_cast<void(RPS::*)(AudioAnalyzer &, int, int, const RPS::UpdateOptions &)>(&RPS::update),
+			[](RPS &self, AudioAnalyzer &aa, int sample_rate_hz, int fft_size) { self.update(aa, sample_rate_hz, fft_size); }
 		),
 		"set_particle_textures", &RPS::set_particle_textures,
 		"set_color", sol::overload(

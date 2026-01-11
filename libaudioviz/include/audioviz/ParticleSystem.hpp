@@ -145,20 +145,22 @@ public:
 		}
 	}
 
-	void update(const std::vector<float> &spectrum_data, const UpdateOptions &options = {})
+	void update(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, const UpdateOptions &options = {})
 	{
-		const auto scaled_avg = rect.size.y * util::weighted_max(spectrum_data, options.weight_func);
+		aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 1'000);
+		float avg{}; // didn't initialize this for the longest time... yikes.
+		for (int ch = 0; ch < aa.num_channels(); ++ch)
+			avg += aa.get_channel_data(ch).peak_amplitude;
+		avg /= aa.num_channels();
+		const auto scaled_avg = rect.size.y * avg;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
 		update(displacement_direction * additional_displacement * options.multiplier);
 	}
 
-	void update(const AudioAnalyzer &aa, const UpdateOptions &options = {})
+	void update(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, int channel, const UpdateOptions &options = {})
 	{
-		float avg{}; // didn't initialize this for the longest time... yikes.
-		for (int i = 0; i < aa.get_num_channels(); ++i)
-			avg += util::weighted_max(aa.get_spectrum_data(i), options.weight_func);
-		avg /= aa.get_num_channels();
-		const auto scaled_avg = rect.size.y * avg;
+		aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 1'000);
+		const auto scaled_avg = rect.size.y * aa.get_channel_data(channel).peak_amplitude;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
 		update(displacement_direction * additional_displacement * options.multiplier);
 	}

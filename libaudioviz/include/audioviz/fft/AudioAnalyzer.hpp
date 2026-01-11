@@ -7,29 +7,34 @@ namespace audioviz
 
 class AudioAnalyzer
 {
-private:
+	struct ChannelData
+	{
+		std::vector<float> fft_output;
+		float peak_frequency_hz{-1}, peak_amplitude{-1};
+
+	private:
+		friend AudioAnalyzer;
+		void reset_data() { peak_frequency_hz = peak_amplitude = -1; }
+		void compute_peak_freq_amp(int sample_rate_hz, int fft_size, const float max_freq_hz);
+	};
+
 	const int _num_channels;
-	std::vector<std::vector<float>> _spectrum_data_per_channel;
+	std::vector<ChannelData> channel_data;
 
 public:
 	AudioAnalyzer(int num_channels);
-	AudioAnalyzer(const AudioAnalyzer &) = delete;
-	AudioAnalyzer &operator=(const AudioAnalyzer &) = delete;
-	AudioAnalyzer(AudioAnalyzer &&) = delete;
-	AudioAnalyzer &operator=(AudioAnalyzer &&) = delete;
-	void resize(int size);
 
-	/**
-	 * Analyze interleaved 32-bit floating point audio.
-	 * Remember that interleaved means the samples are arranged
-	 * such that `audio[0]` belongs to the first channel, `audio[1]`
-	 * the second, and so on until `audio[num_channels - 1]`. Then
-	 * the pattern repeats.
-	 */
-	void analyze(FrequencyAnalyzer &fa, const float *audio, bool interleaved, bool skip_post_processing = false);
+	void execute_fft(
+		FrequencyAnalyzer &fa, std::span<const float> audio, bool interleaved);
+	void compute_peak_freq_amp(int sample_rate_hz, int fft_size, const float max_freq_hz);
 
-	inline int get_num_channels() const { return _num_channels; }
-	const std::vector<float> &get_spectrum_data(int channel_index) const;
+	inline int num_channels() const { return _num_channels; }
+
+	inline const ChannelData &get_channel_data(const int ch) const
+	{
+		assert(ch >= 0 && ch < _num_channels);
+		return channel_data[ch];
+	}
 };
 
 } // namespace audioviz

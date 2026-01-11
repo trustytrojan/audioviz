@@ -135,38 +135,30 @@ sf::Vector3f interpolate_and_reverse(float t, sf::Vector3f start_hsv, sf::Vector
 	return {h, s, v};
 }
 
-float weighted_max(
-	const std::vector<float> &vec, const std::function<float(float)> &weight_func, const float size_divisor)
+size_t weighted_max_index(std::span<const float> values, const std::function<float(float)> &weight_func)
 {
-	return vec[weighted_max_index(vec, weight_func, size_divisor)];
-}
+	if (values.empty())
+		throw std::invalid_argument{"weighted_max_index: empty span"};
+	if (values.size() == 1)
+		return 0;
 
-size_t weighted_max_index(
-	const std::vector<float> &vec, const std::function<float(float)> &weight_func, const float size_divisor)
-{
-	const auto _weighted_max_index = [&](const auto begin, const auto end, const auto weight_start)
+	const auto size = values.size();
+	size_t max_index{};
+	float max_value{values[0]};
+
+	for (size_t i = 1; i < size; ++i)
 	{
-		auto max_value = *begin;
-		auto max_index = 0;
-		const auto total_distance = static_cast<float>(std::distance(weight_start, end));
-		for (auto it = begin; it < end; ++it)
+		const float distance_to_end = static_cast<float>((size - 1) - i) / static_cast<float>(size - 1); // 1..0
+		const float weight = weight_func ? weight_func(distance_to_end) : distance_to_end;
+		const float value = values[i] * weight;
+		if (value > max_value)
 		{
-			const auto unweighted = std::distance(it, end) / total_distance;
-			const auto weight = (it < weight_start) ? 1.f : (weight_func ? weight_func(unweighted) : unweighted);
-			const auto value = *it * weight;
-
-			if (value > max_value)
-			{
-				max_value = value;
-				max_index = std::distance(begin, it);
-			}
+			max_value = value;
+			max_index = i;
 		}
-		return max_index;
-	};
+	}
 
-	const auto begin = vec.begin();
-	const auto amount = vec.size() / size_divisor;
-	return _weighted_max_index(begin, begin + amount, begin + (amount / 2));
+	return max_index;
 }
 
 #ifdef __linux__
