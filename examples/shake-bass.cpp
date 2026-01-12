@@ -22,9 +22,6 @@ struct ShakeBassTest : audioviz::Base
 {
 	const int fft_size = 3000;
 
-	// we want maximum frequency resolution to shake at precisely the right frequency!
-	const int spectrum_size = fft_size / 2 + 1;
-
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::StereoAnalyzer sa;
 	float sample_rate_hz{};
