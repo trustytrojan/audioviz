@@ -16,9 +16,6 @@ below is a great video explaining some of the fundamentals of programming with a
 
 ## building & running
 
-### all platforms
-make sure you are running executables from the project root directory (the folder you git cloned)! this is because audioviz needs to find effect shader files, which are in `shaders`, and not copied to the `build` directory. (will change this eventually by having the shaders embedded in source code at compile time).
-
 ### linux
 1. install any required dependencies below
 2. run `cmake -S. -Bbuild && cmake --build build -j$(nproc)` or use your IDE of choice with CMake support
