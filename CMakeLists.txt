@@ -21,6 +21,9 @@ if(APPLE)
 	include_directories(/opt/homebrew/include)
 endif()
 
+list(APPEND CMAKE_C_FLAGS_RELEASE -march=native)
+list(APPEND CMAKE_C_FLAGS_RELWITHDEBINFO -march=native)
+
 add_subdirectory(libaudioviz)
 
 if(AUDIOVIZ_BUILD_TTVIZ)

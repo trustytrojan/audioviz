@@ -21,11 +21,9 @@ class ParticleSystem : public sf::Drawable
 public:
 	struct UpdateOptions
 	{
-		float calm_factor = 5, multiplier = 1;
-		std::function<float(float)> weight_func = sqrtf, displacement_func = sqrtf;
+		float calm_factor{5}, multiplier{1};
+		std::function<float(float)> weight_func{sqrtf}, displacement_func{sqrtf};
 	};
-
-
 
 private:
 	template <typename T>
@@ -35,28 +33,34 @@ private:
 		return std::uniform_real_distribution<>(min, max)(gen);
 	}
 
+	int framerate;
 	sf::IntRect rect;
 	std::vector<Particle<ParticleShape>> particles;
-	sf::Vector2f displacement_direction{0, -1};
+	float timestep_scale{1.f};
 	bool debug_rect{};
 
 public:
-	ParticleSystem(const sf::IntRect &rect, const int particle_count)
-		: rect{rect},
-		  particles{particle_count}
+	ParticleSystem(const sf::IntRect &rect, const int particle_count, const int framerate)
+		: framerate{framerate},
+		  rect{rect},
+		  particles{particle_count},
+		  timestep_scale{framerate > 0 ? 60.f / framerate : 1.f}
 	{
 		init_particles();
 	}
 
-	void update(sf::Vector2f additional_displacement = {0, 0})
+	void update(float additional_displacement = 0.f)
 	{
+		const float scaled_displacement = additional_displacement * timestep_scale;
+		const sf::Vector2f displacement{0.f, -scaled_displacement};
+
 		for (auto &p : particles)
 		{
 			// let the particle move using its velocity
 			p.updatePosition();
 
-			// then apply additional displacement
-			auto new_pos = p.getPosition() + additional_displacement;
+			// then apply additional displacement upward
+			auto new_pos = p.getPosition() + displacement;
 
 			float width = 0;
 			if constexpr (std::is_same_v<ParticleShape, sf::CircleShape>)
@@ -98,7 +102,7 @@ public:
 		avg /= aa.num_channels();
 		const auto scaled_avg = rect.size.y * avg;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
-		update(displacement_direction * additional_displacement * options.multiplier);
+		update(additional_displacement * options.multiplier);
 	}
 
 	void update(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, int channel, const UpdateOptions &options = {})
@@ -106,7 +110,7 @@ public:
 		aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 250);
 		const auto scaled_avg = rect.size.y * aa.get_channel_data(channel).peak_amplitude;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
-		update(displacement_direction * additional_displacement * options.multiplier);
+		update(additional_displacement * options.multiplier);
 	}
 
 	inline void set_debug_rect(bool b) { debug_rect = b; }
@@ -133,10 +137,6 @@ public:
 			target.draw(c);
 		}
 	}
-
-	void set_displacement_direction(sf::Vector2f displacement) { displacement_direction = displacement; }
-
-
 
 	void set_rect(const sf::IntRect &rect)
 	{
@@ -236,7 +236,10 @@ private:
 			random<float>(rect.position.x, rect.position.x + rect.size.x),
 			rect.position.y + rect.size.y * random<float>(1, 2),
 		});
-		p.setVelocity({random<float>(-0.5, 0.5), random<float>(-2, 0)});
+
+		const auto vx = random<float>(-0.5f, 0.5f) * timestep_scale;
+		const auto vy = random<float>(-2.f, 0.f) * timestep_scale;
+		p.setVelocity({vx, vy});
 	}
 
 	void init_particles()
@@ -247,8 +250,7 @@ private:
 
 	void teleport_particle_opposite_side(Particle<ParticleShape> &p)
 	{
-		p.setPosition(
-			{random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
+		p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
 	}
 };
 

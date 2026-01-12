@@ -168,9 +168,9 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		const auto frames = std::max(audio_frames_needed, afpvf);
 		const auto samples = frames * media.audio_channels();
 		media.buffer_audio(frames);
-		if (media.audio_buffer_frames() < afpvf)
+		if (media.audio_buffer_frames() < frames)
 		{
-			std::cerr << "Base::start_in_window_with_imgui: not enough audio frames, breaking loop\n";
+			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
 			break;
 		}
 		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
@@ -226,8 +226,10 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 void Base::encode(Media &media, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	set_samplerate(media.audio_sample_rate());
+	// Create OpenGL context first (sf::RenderWindow usually does this for us) otherwise GL extensions will be null!
+	sf::Context c;
 	FfmpegPopenEncoder ffmpeg{media.url, *this, outfile, vcodec, acodec};
-	RenderTexture rt{size, 4};
+	RenderTexture rt{size, 4}; 
 
 	bool running = true;
 	while (running)

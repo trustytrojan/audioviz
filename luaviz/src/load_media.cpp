@@ -22,10 +22,7 @@ void table::load_media()
 
 	new_usertype<FfmpegPopenMedia>("FfmpegPopenMedia",
 		sol::base_classes, sol::bases<Media>(),
-		"new", sol::factories([](const std::string &url, const sol::table &size)
-		{
-			return new FfmpegPopenMedia{url, table_to_vec2<unsigned>(size)};
-		})
+		"new", sol::constructors<FfmpegPopenMedia(const std::string &, float)>()
 	);
 	// clang-format on
 }

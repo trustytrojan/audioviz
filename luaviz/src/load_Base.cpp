@@ -28,6 +28,7 @@ void table::load_Base()
 		"start_in_window", &Base::start_in_window,
 		"encode", &Base::encode,
 		"get_framerate", &Base::get_framerate,
+		"set_framerate", &Base::set_framerate,
 		"set_timing_text_enabled", &Base::set_timing_text_enabled,
 		"perform_fft", &Base::perform_fft,
 		sol::base_classes, sol::bases<sf::Drawable>()
