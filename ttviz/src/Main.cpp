@@ -10,6 +10,7 @@ Main::Main(const int argc, const char *const *const argv)
 	ttviz viz{size, *media, fa, cs, ss, ps};
 	ps.set_rect({{}, (sf::Vector2i)size});
 	use_args(viz);
+	ps.set_framerate(viz.get_framerate());
 
 	// --encode: render to video file
 	switch (const auto &encode_args = args.get<std::vector<std::string>>("--encode"); encode_args.size())

@@ -33,7 +33,6 @@ private:
 		return std::uniform_real_distribution<>(min, max)(gen);
 	}
 
-	int framerate;
 	sf::IntRect rect;
 	std::vector<Particle<ParticleShape>> particles;
 	float timestep_scale{1.f};
@@ -41,12 +40,18 @@ private:
 
 public:
 	ParticleSystem(const sf::IntRect &rect, const int particle_count, const int framerate)
-		: framerate{framerate},
-		  rect{rect},
+		: rect{rect},
 		  particles{particle_count},
 		  timestep_scale{framerate > 0 ? 60.f / framerate : 1.f}
 	{
 		init_particles();
+	}
+
+	void set_framerate(int framerate)
+	{
+		timestep_scale = framerate > 0 ? 60.f / framerate : 1.f;
+		for (auto &p : particles)
+			update_particle_velocity(p);
 	}
 
 	void update(float additional_displacement = 0.f)
@@ -240,6 +245,12 @@ private:
 		const auto vx = random<float>(-0.5f, 0.5f) * timestep_scale;
 		const auto vy = random<float>(-2.f, 0.f) * timestep_scale;
 		p.setVelocity({vx, vy});
+	}
+
+	void update_particle_velocity(Particle<ParticleShape> &p)
+	{
+		const auto [x, y] = p.getVelocity();
+		p.setVelocity({x * timestep_scale, y * timestep_scale});
 	}
 
 	void init_particles()
