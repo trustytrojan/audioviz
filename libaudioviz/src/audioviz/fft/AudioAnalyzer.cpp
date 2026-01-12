@@ -61,7 +61,7 @@ void AudioAnalyzer::ChannelData::compute_peak_freq_amp(
 	if (peak_frequency_hz != -1 && peak_amplitude != -1)
 		return;
 	const size_t max_index = max_freq_hz * fft_size / sample_rate_hz;
-	const auto bass_bins = std::clamp(max_index + 1, 1ul, fft_output.size());
+	const auto bass_bins = std::clamp(max_index + 1, (size_t)1, fft_output.size());
 	const auto idx = util::weighted_max_index({fft_output.data(), bass_bins}, expf);
 	peak_amplitude = fft_output[idx];
 	peak_frequency_hz = ((float)idx * (float)sample_rate_hz) / (float)fft_size;
@@ -73,7 +73,7 @@ AudioAnalyzer::ChannelData::compute_multiband_shake(int sample_rate_hz, int fft_
 	// Calculate the index limit for the total bass range
 	constexpr float max_freq_hz{150}; // TODO: make this configurable
 	const size_t max_total_index = max_freq_hz * fft_size / sample_rate_hz;
-	const auto total_bass_bins = std::clamp(max_total_index + 1, 1ul, fft_output.size());
+	const auto total_bass_bins = std::clamp(max_total_index + 1, (size_t)1, fft_output.size());
 
 	std::array<ShakeBand, 3> bands;
 

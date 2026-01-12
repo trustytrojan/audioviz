@@ -49,7 +49,7 @@ void FfmpegPopenMedia::init_video()
 		ss << "-s " << scaled_video_size.x << 'x' << scaled_video_size.y << ' ';
 #else
 	// va-api probably doesn't exist on this platform, software scale instead
-	ss << "-s " << video_size.x << 'x' << video_size.y << ' ';
+	ss << "-s " << scaled_video_size.x << 'x' << scaled_video_size.y << ' ';
 #endif
 
 	ss << "-pix_fmt rgba -f rawvideo -";
