@@ -140,11 +140,13 @@ public:
 	 */
 	void set_nth_root(int nth_root);
 
+#ifdef AUDIOVIZ_IMGUI
 	/**
 	 * Draw ImGui controls for tuning analyzer parameters at runtime.
 	 * This calls the public setters so changes take effect immediately.
 	 */
 	void draw_imgui();
+#endif
 
 	/**
 	 * Copies the `wavedata` to the FFT processor for rendering.
