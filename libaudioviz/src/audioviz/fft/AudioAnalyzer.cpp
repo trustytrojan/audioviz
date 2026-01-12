@@ -79,7 +79,7 @@ AudioAnalyzer::ChannelData::compute_multiband_shake(int sample_rate_hz, int fft_
 
 	// Divide the bass range into 3 equal chunks
 	// (Or you can use fixed Hz ranges like 0-60, 60-120, 120-250)
-	const auto chunk_size = std::max(1ul, total_bass_bins / 3);
+	const auto chunk_size = std::max((size_t)1, total_bass_bins / 3);
 
 	for (int i = 0; i < 3; i++)
 	{

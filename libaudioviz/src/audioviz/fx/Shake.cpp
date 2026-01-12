@@ -22,9 +22,9 @@ void setParameters(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, float mu
 
 	// Apply multiplier to amplitudes and convert frequencies to radians
 	sf::Vector3f frequencies, amplitudes;
-	frequencies.x = bands[0].frequency_hz * 2.f * std::numbers::pi_v<float>;
-	frequencies.y = bands[1].frequency_hz * 2.f * std::numbers::pi_v<float>;
-	frequencies.z = bands[2].frequency_hz * 2.f * std::numbers::pi_v<float>;
+	frequencies.x = bands[0].frequency_hz * 2.f * M_PI;
+	frequencies.y = bands[1].frequency_hz * 2.f * M_PI;
+	frequencies.z = bands[2].frequency_hz * 2.f * M_PI;
 
 	amplitudes.x = bands[0].amplitude * multiplier;
 	amplitudes.y = bands[1].amplitude * multiplier;
