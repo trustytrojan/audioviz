@@ -36,14 +36,6 @@ void setParameters(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, float mu
 	shader.setUniform("amplitudes", amplitudes);
 }
 
-void setParameters(sf::Vector2f amplitude, float frequency)
-{
-	init();
-	shader.setUniform("time", _clock.getElapsedTime().asSeconds());
-	shader.setUniform("frequency", frequency);
-	shader.setUniform("amplitude", amplitude);
-}
-
 const sf::Shader &getShader()
 {
 	init();

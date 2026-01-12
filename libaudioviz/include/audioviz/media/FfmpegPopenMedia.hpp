@@ -6,6 +6,11 @@
 namespace audioviz
 {
 
+/**
+ * Implementation of `Media` using the `ffmpeg` binary for audio/video, and
+ * `ffprobe` for metadata. Uses hardware-acceleration when possible for video
+ * decoding and scaling.
+ */
 class FfmpegPopenMedia : public Media
 {
 	const sf::Vector2u scaled_video_size{};
@@ -18,8 +23,8 @@ class FfmpegPopenMedia : public Media
 
 public:
 	/**
-	 * Create an `FfmpegPopenMedia` with the provided URL. Optionally provide the desired video size
-	 * for video frames to be scaled to by 
+	 * Open the media at the provided URL. Optionally provide the desired video size
+	 * for video frames to be scaled to by `ffmpeg`.
 	 */
 	FfmpegPopenMedia(const std::string &url, sf::Vector2u scaled_video_size, float start_time_sec = {});
 	FfmpegPopenMedia(const std::string &url, float start_time_sec = {});

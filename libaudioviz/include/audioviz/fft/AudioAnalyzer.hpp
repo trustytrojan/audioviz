@@ -17,11 +17,11 @@ public:
 	struct ChannelData
 	{
 		std::vector<float> fft_output;
-		float peak_frequency_hz{-1}, peak_amplitude{-1};
+		bool peaks_computed{};
+		float peak_frequency_hz, peak_amplitude;
 
 	private:
 		friend AudioAnalyzer;
-		void reset_data() { peak_frequency_hz = peak_amplitude = -1; }
 		void compute_peak_freq_amp(int sample_rate_hz, int fft_size, const float max_freq_hz);
 		std::array<ShakeBand, 3> compute_multiband_shake(int sample_rate_hz, int fft_size) const;
 	};

@@ -19,7 +19,7 @@ void AudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, const std::span<const flo
 		fa.copy_channel_to_input(audio, _num_channels, ch, interleaved);
 		channel_data[ch].fft_output.resize(fa.get_fft_size() / 2 + 1);
 		fa.execute_fft(channel_data[ch].fft_output);
-		channel_data[ch].reset_data();
+		channel_data[ch].peaks_computed = {};
 	}
 }
 
@@ -58,13 +58,14 @@ AudioAnalyzer::compute_multiband_shake(const int sample_rate_hz, const int fft_s
 void AudioAnalyzer::ChannelData::compute_peak_freq_amp(
 	const int sample_rate_hz, const int fft_size, const float max_freq_hz)
 {
-	if (peak_frequency_hz != -1 && peak_amplitude != -1)
+	if (peaks_computed)
 		return;
 	const size_t max_index = max_freq_hz * fft_size / sample_rate_hz;
 	const auto bass_bins = std::clamp(max_index + 1, (size_t)1, fft_output.size());
 	const auto idx = util::weighted_max_index({fft_output.data(), bass_bins}, expf);
 	peak_amplitude = fft_output[idx];
 	peak_frequency_hz = ((float)idx * (float)sample_rate_hz) / (float)fft_size;
+	peaks_computed = true;
 }
 
 std::array<AudioAnalyzer::ShakeBand, 3>
