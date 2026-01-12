@@ -23,7 +23,7 @@ struct SpectrumTest : audioviz::Base
 	audioviz::ColorSettings color;
 	audioviz::SpectrumDrawable<audioviz::VerticalBar> spectrum;
 	audioviz::FrequencyAnalyzer fa;
-	audioviz::StereoAnalyzer sa;
+	audioviz::AudioAnalyzer aa{1};
 	SpectrumTest(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
 };
@@ -35,7 +35,6 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 {
 	spectrum.set_bar_width(10);
 	spectrum.set_bar_spacing(5);
-	spectrum.configure_analyzer(sa); // only need to configure once since the spectrum isnt changing bar count
 
 	set_audio_frames_needed(fft_size);
 
@@ -53,8 +52,8 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 
 void SpectrumTest::update(const std::span<const float> audio_buffer)
 {
-	capture_time("fft", sa.analyze(fa, audio_buffer.data(), true));
-	capture_time("ss_update", spectrum.update(sa.left_data()));
+	capture_time("fft", aa.execute_fft(fa, audio_buffer, true));
+	capture_time("ss_update", spectrum.update(fa, aa, 0));
 }
 
 int main(const int argc, const char *const *const argv)

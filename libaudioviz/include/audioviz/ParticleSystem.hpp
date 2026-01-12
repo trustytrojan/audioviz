@@ -21,16 +21,8 @@ class ParticleSystem : public sf::Drawable
 public:
 	struct UpdateOptions
 	{
-		float calm_factor = 5, multiplier = 1;
-		std::function<float(float)> weight_func = sqrtf, displacement_func = sqrtf;
-	};
-
-	enum class StartSide
-	{
-		BOTTOM,
-		TOP,
-		LEFT,
-		RIGHT
+		float calm_factor{5}, multiplier{1};
+		std::function<float(float)> weight_func{sqrtf}, displacement_func{sqrtf};
 	};
 
 private:
@@ -43,27 +35,37 @@ private:
 
 	sf::IntRect rect;
 	std::vector<Particle<ParticleShape>> particles;
-	sf::Vector2f displacement_direction{0, 1};
-	StartSide start_side = StartSide::BOTTOM;
+	float timestep_scale{1.f};
 	bool debug_rect{};
 
 public:
-	ParticleSystem(const sf::IntRect &rect, const int particle_count)
+	ParticleSystem(const sf::IntRect &rect, const int particle_count, const int framerate)
 		: rect{rect},
-		  particles{particle_count}
+		  particles{particle_count},
+		  timestep_scale{framerate > 0 ? 60.f / framerate : 1.f}
 	{
 		init_particles();
 	}
 
-	void update(sf::Vector2f additional_displacement = {0, 0})
+	void set_framerate(int framerate)
 	{
+		timestep_scale = framerate > 0 ? 60.f / framerate : 1.f;
+		for (auto &p : particles)
+			update_particle_velocity(p);
+	}
+
+	void update(float additional_displacement = 0.f)
+	{
+		const float scaled_displacement = additional_displacement * timestep_scale;
+		const sf::Vector2f displacement{0.f, -scaled_displacement};
+
 		for (auto &p : particles)
 		{
 			// let the particle move using its velocity
 			p.updatePosition();
 
-			// then apply additional displacement
-			auto new_pos = p.getPosition() + additional_displacement;
+			// then apply additional displacement upward
+			auto new_pos = p.getPosition() + displacement;
 
 			float width = 0;
 			if constexpr (std::is_same_v<ParticleShape, sf::CircleShape>)
@@ -72,73 +74,48 @@ public:
 				width = p.getSize().x;
 
 			// make sure particles don't escape the rect
-			switch (start_side)
-			{
-			case StartSide::BOTTOM:
-			case StartSide::TOP:
-				if (new_pos.x >= (rect.position.x + rect.size.x))
-					// teleport from right edge to left
-					new_pos.x = rect.position.x + -width;
-				else if (new_pos.x + width < 0)
-					// teleport from left edge to right
-					new_pos.x = (rect.position.x + rect.size.x);
-				break;
-			case StartSide::LEFT:
-			case StartSide::RIGHT:
-				if (new_pos.y >= (rect.position.y + rect.size.y))
-					// teleport from bottom edge to top
-					new_pos.y = rect.position.y + -width;
-				else if (new_pos.y + width < 0)
-					// teleport from top edge to bottom
-					new_pos.y = (rect.position.y + rect.size.y);
-				break;
-			}
+			if (new_pos.x >= (rect.position.x + rect.size.x))
+				// teleport from right edge to left
+				new_pos.x = rect.position.x + -width;
+			else if (new_pos.x + width < 0)
+				// teleport from left edge to right
+				new_pos.x = (rect.position.x + rect.size.x);
 
 			p.setPosition(new_pos);
 
 			// sqrt of remaining distance to 0 causes the fading out to only start halfway up the screen
 			// linear is too sudden
 
-			// decrease alpha with distance from start side
+			// decrease alpha with distance from bottom
 			auto [r, g, b, a] = p.getFillColor();
-			switch (start_side)
-			{
-			case StartSide::BOTTOM:
-				a = sqrtf((new_pos.y - rect.position.y) / rect.size.y) * 255;
-				break;
-			case StartSide::TOP:
-				a = sqrtf((rect.position.y + rect.size.y - new_pos.y) / rect.size.y) * 255;
-				break;
-			case StartSide::LEFT:
-				a = sqrtf((rect.position.x + rect.size.x - new_pos.x) / rect.size.x) * 255;
-				break;
-			case StartSide::RIGHT:
-				a = sqrtf((new_pos.x - rect.position.x) / rect.size.x) * 255;
-				break;
-			}
+			a = sqrtf((new_pos.y - rect.position.y) / rect.size.y) * 255;
 			p.setFillColor({r, g, b, a});
 
-			if (!rect.contains((sf::Vector2i) new_pos))
-				teleport_particle_opposite_side(p);
+			// ONLY reset position to start side once it reaches opposite side
+			if (new_pos.y <= rect.position.y)
+				p.setPosition(
+					{random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
 		}
 	}
 
-	void update(const std::vector<float> &spectrum_data, const UpdateOptions &options = {})
+	void update(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, const UpdateOptions &options = {})
 	{
-		const auto scaled_avg = rect.size.y * util::weighted_max(spectrum_data, options.weight_func);
-		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
-		update(displacement_direction * additional_displacement * options.multiplier);
-	}
-
-	void update(const AudioAnalyzer &aa, const UpdateOptions &options = {})
-	{
+		aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 250);
 		float avg{}; // didn't initialize this for the longest time... yikes.
-		for (int i = 0; i < aa.get_num_channels(); ++i)
-			avg += util::weighted_max(aa.get_spectrum_data(i), options.weight_func);
-		avg /= aa.get_num_channels();
+		for (int ch = 0; ch < aa.num_channels(); ++ch)
+			avg += aa.get_channel_data(ch).peak_amplitude;
+		avg /= aa.num_channels();
 		const auto scaled_avg = rect.size.y * avg;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
-		update(displacement_direction * additional_displacement * options.multiplier);
+		update(additional_displacement * options.multiplier);
+	}
+
+	void update(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, int channel, const UpdateOptions &options = {})
+	{
+		aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 250);
+		const auto scaled_avg = rect.size.y * aa.get_channel_data(channel).peak_amplitude;
+		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
+		update(additional_displacement * options.multiplier);
 	}
 
 	inline void set_debug_rect(bool b) { debug_rect = b; }
@@ -166,14 +143,6 @@ public:
 		}
 	}
 
-	void set_displacement_direction(sf::Vector2f displacement) { displacement_direction = displacement; }
-
-	void set_start_side(StartSide side)
-	{
-		start_side = side;
-		init_particles();
-	}
-
 	void set_rect(const sf::IntRect &rect)
 	{
 		if (this->rect == rect)
@@ -182,7 +151,7 @@ public:
 
 		// Check each particle and reinitialize only those out of bounds
 		for (auto &p : particles)
-			if (!rect.contains((sf::Vector2i) p.getPosition()))
+			if (!rect.contains((sf::Vector2i)p.getPosition()))
 				teleport_particle_opposite_side(p);
 	}
 
@@ -206,7 +175,6 @@ public:
 
 	inline size_t get_particle_count() const { return particles.size(); }
 	inline sf::IntRect get_rect() const { return rect; }
-	inline StartSide get_start_side() const { return start_side; }
 	inline bool get_debug_rect() const { return debug_rect; }
 
 #ifdef AUDIOVIZ_IMGUI
@@ -221,12 +189,6 @@ public:
 		bool temp_debug = debug_rect;
 		if (ImGui::Checkbox("Debug Rect##particles", &temp_debug))
 			set_debug_rect(temp_debug);
-
-		// Start side selection
-		const char *sides[] = {"Bottom", "Top", "Left", "Right"};
-		int current_side = static_cast<int>(start_side);
-		if (ImGui::Combo("Start Side", &current_side, sides, 4))
-			set_start_side(static_cast<StartSide>(current_side));
 
 		// Rect position and size
 		ImGui::Text("Bounding Box:");
@@ -275,42 +237,20 @@ private:
 
 		// start some particles offscreen, so the beginning sequence feels less "sudden"
 		// otherwise all of them come out at once and it looks bad
-		// sets displacement_direction based on which side we are starting on
-		switch (start_side)
-		{
-		case StartSide::BOTTOM:
-			p.setPosition({
-				random<float>(rect.position.x, rect.position.x + rect.size.x),
-				rect.position.y + rect.size.y * random<float>(1, 1.5),
-			});
-			p.setVelocity({random<float>(-0.5, 0.5), random<float>(-2, 0)});
-			displacement_direction = {0, -1};
-			break;
-		case StartSide::TOP:
-			p.setPosition({
-				random<float>(rect.position.x, rect.position.x + rect.size.x),
-				rect.position.y + rect.size.y * random<float>(-.5, 0),
-			});
-			p.setVelocity({random<float>(-0.5, 0.5), random<float>(0, 2)});
-			displacement_direction = {0, 1};
-			break;
-		case StartSide::LEFT:
-			p.setPosition({
-				rect.position.x + rect.size.x * random<float>(-2, -1),
-				random<float>(rect.position.y, rect.position.y + rect.size.y),
-			});
-			p.setVelocity({random<float>(0, 2), random<float>(-0.5, 0.5)});
-			displacement_direction = {1, 0};
-			break;
-		case StartSide::RIGHT:
-			p.setPosition({
-				rect.position.x + rect.size.x * random<float>(1, 2),
-				random<float>(rect.position.y, rect.position.y + rect.size.y),
-			});
-			p.setVelocity({random<float>(-2, 0), random<float>(-0.5, 0.5)});
-			displacement_direction = {-1, 0};
-			break;
-		}
+		p.setPosition({
+			random<float>(rect.position.x, rect.position.x + rect.size.x),
+			rect.position.y + rect.size.y * random<float>(1, 2),
+		});
+
+		const auto vx = random<float>(-0.5f, 0.5f) * timestep_scale;
+		const auto vy = random<float>(-2.f, 0.f) * timestep_scale;
+		p.setVelocity({vx, vy});
+	}
+
+	void update_particle_velocity(Particle<ParticleShape> &p)
+	{
+		const auto [x, y] = p.getVelocity();
+		p.setVelocity({x * timestep_scale, y * timestep_scale});
 	}
 
 	void init_particles()
@@ -321,25 +261,7 @@ private:
 
 	void teleport_particle_opposite_side(Particle<ParticleShape> &p)
 	{
-		switch (start_side)
-		{
-		case StartSide::BOTTOM:
-			p.setPosition(
-				{random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
-			break;
-		case StartSide::TOP:
-			p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y});
-			break;
-		case StartSide::LEFT:
-			p.setPosition({rect.position.x, random<float>(rect.position.y, rect.position.y + rect.size.y)});
-			break;
-		case StartSide::RIGHT:
-			p.setPosition({
-				rect.position.x + rect.size.x,
-				random<float>(rect.position.y, rect.position.y + rect.size.y),
-			});
-			break;
-		}
+		p.setPosition({random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
 	}
 };
 

@@ -24,7 +24,7 @@ SpectrumImGuiTest::SpectrumImGuiTest(sf::Vector2u size, const std::string &media
 	: Base{size},
 	  spectrum{{{}, (sf::Vector2i)size}, color},
 	  fa{fft_size},
-	  aa{2}
+	  aa{1}
 {
 	spectrum.set_bar_width(10);
 	spectrum.set_bar_spacing(5);
@@ -52,11 +52,8 @@ void SpectrumImGuiTest::update(const std::span<const float> audio_buffer)
 	spectrum.draw_imgui();
 	ImGui::End();
 
-	// now that spectrum values CAN CHANGE VIA IMGUI, we NEED
-	// to ALWAYS configure the analyzer! (std::vector::resize isn't stupid, dw)
-	spectrum.configure_analyzer(aa);
-	aa.analyze(fa, audio_buffer.data(), true); // interleaved still needs to be true...
-	spectrum.update(aa.get_spectrum_data(0));
+	aa.execute_fft(fa, audio_buffer, true); // interleaved still needs to be true...
+	spectrum.update(fa, aa, 0);
 }
 
 int main(const int argc, const char *const *const argv)

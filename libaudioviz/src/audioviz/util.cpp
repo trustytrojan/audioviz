@@ -135,45 +135,30 @@ sf::Vector3f interpolate_and_reverse(float t, sf::Vector3f start_hsv, sf::Vector
 	return {h, s, v};
 }
 
-float weighted_max(
-	const std::vector<float> &vec,
-	const std::function<float(float)> &weight_func,
-	const float size_divisor) // generally the lower third of the frequency spectrum is considered bass
+size_t weighted_max_index(std::span<const float> values, const std::function<float(float)> &weight_func)
 {
-	/**
-	 * TODO: rewrite weighted max function to have slightly lower weight as frequencies approach 20hz,
-	 * aka the first spectrum bar/element in either data vector.
-	 */
+	if (values.empty())
+		throw std::invalid_argument{"weighted_max_index: empty span"};
+	if (values.size() == 1)
+		return 0;
 
-	const auto _weighted_max = [&](const auto begin, const auto end, const auto weight_start)
+	const auto size = values.size();
+	size_t max_index{};
+	float max_value{values[0]};
+
+	for (size_t i = 1; i < size; ++i)
 	{
-		auto max_value = *begin;
-		const auto total_distance = static_cast<float>(std::distance(weight_start, end));
-		for (auto it = begin; it < end; ++it)
+		const float distance_to_end = static_cast<float>((size - 1) - i) / static_cast<float>(size - 1); // 1..0
+		const float weight = weight_func ? weight_func(distance_to_end) : distance_to_end;
+		const float value = values[i] * weight;
+		if (value > max_value)
 		{
-			// weight each element before it is compared
-			const auto unweighted = std::distance(it, end) / total_distance;
-
-			// clang-format off
-			const auto weight = (it < weight_start)
-				? 1.f
-				: (weight_func ? weight_func(unweighted) : unweighted);
-			// clang-format on
-
-			const auto value = *it * weight;
-
-			if (value > max_value)
-				max_value = value;
+			max_value = value;
+			max_index = i;
 		}
-		return max_value;
-	};
+	}
 
-	const auto begin = vec.begin();
-	const auto amount = vec.size() / size_divisor;
-	return _weighted_max(
-		begin,
-		begin + amount,		   // only the first 50% of the range will have full weight
-		begin + (amount / 2)); // these are generally the strongest bass frequencies to the ear
+	return max_index;
 }
 
 #ifdef __linux__
@@ -280,7 +265,6 @@ std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPat
 }
 */
 
-#ifdef AUDIOVIZ_IMGUI
 DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 {
 	DragResizeResult out{false, false, rect};
@@ -419,6 +403,5 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 
 	return out;
 }
-#endif
 
 } // namespace audioviz::util

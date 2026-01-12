@@ -24,10 +24,10 @@ void table::load_BSD()
 		"set_bar_width", &SD::set_bar_width,
 		"set_bar_spacing", &SD::set_bar_spacing,
 		"set_backwards", &SD::set_backwards,
-		"configure_analyzer", &SD::configure_analyzer,
 		"bar_count", &SD::bar_count,
-		"update", &SD::update,
-		"set_debug_rect", &SD::set_debug_rect
+		"update", static_cast<void (SD::*)(FrequencyAnalyzer&, AudioAnalyzer&, int)>(&SD::update),
+		"set_debug_rect", &SD::set_debug_rect,
+		"update_bar_colors", &SD::update_bar_colors
 	);
 	// clang-format on
 }

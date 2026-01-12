@@ -67,26 +67,6 @@ void Main::use_args(ttviz &viz)
 		}
 	}
 
-	{ // start position of particles
-		static const std::unordered_map<std::string, PS::StartSide> pos_map{
-			{"top", PS::StartSide::TOP},
-			{"bottom", PS::StartSide::BOTTOM},
-			{"left", PS::StartSide::LEFT},
-			{"right", PS::StartSide::RIGHT},
-		};
-
-		const auto &pos_str = args.get("--ps-startside");
-
-		try
-		{
-			ps.set_start_side(pos_map.at(pos_str));
-		}
-		catch (std::out_of_range)
-		{
-			throw std::invalid_argument{"--start-position: unknown start position: " + pos_str};
-		}
-	}
-
 	{ // interpolation type
 		static const std::unordered_map<std::string, FA::InterpolationType> it_map{
 			{"none", FA::InterpolationType::NONE},

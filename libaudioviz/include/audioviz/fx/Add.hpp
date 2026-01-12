@@ -1,12 +1,12 @@
 #pragma once
 
-#include <audioviz/fx/Effect.hpp>
+#include <audioviz/fx/PostProcessEffect.hpp>
 
 namespace audioviz::fx
 {
 
 // Adds an addend to the entire texture's COLORS. Alphas are not affected.
-struct Add : Effect
+struct Add : PostProcessEffect
 {
 	float addend;
 	Add(float addend);

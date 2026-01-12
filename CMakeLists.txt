@@ -21,6 +21,11 @@ if(APPLE)
 	include_directories(/opt/homebrew/include)
 endif()
 
+if(CMAKE_BUILD_TYPE MATCHES Rel)
+	message(STATUS "------------HERE--------------")
+	add_compile_options(-march=native)
+endif()
+
 add_subdirectory(libaudioviz)
 
 if(AUDIOVIZ_BUILD_TTVIZ)

@@ -72,19 +72,7 @@ i recommend using vscode as it integrates well with git with no effort. get the 
 ```
 
 ## todo list / goals
-- figure out what to do with the shaders in order to make fully static binaries
-- ✅️ `ScopeDrawable` class
-  - extra: audio window customization independent of shape size
-    - hint: use libswresample from ffmpeg
-- 🔄 luaviz: the lua binding
-  - 🔄 freshen up api for consumption
-  - document the api
 - 🔄 interactive gui (long term)
   - ✅️ integrate imgui-sfml into project
-  - develop imgui window for each audioviz implementation
-- add components/effects based on rhythm
-  - involves knowing the tempo of the song
-  - want a small translucent flash overlay that flashes to the beat of music
-  - copy the osu! stars effect
-- configurable opengl version and profile at runtime, along with compatible shaders
-  - could lead to better performance on newer gpus
+  - 🔄 develop imgui window for each customizable object
+- rhythm-based effects, with(out) spectral analysis

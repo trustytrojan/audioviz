@@ -13,8 +13,7 @@ void table::load_AA_SA()
 	using SA = StereoAnalyzer;
 	// clang-format off
 	new_usertype<AA>("AudioAnalyzer",
-		"new", sol::constructors<AA(int)>(),
-		"resize", &AA::resize
+		"new", sol::constructors<AA(int)>()
 	);
 
 	new_usertype<SA>("StereoAnalyzer",

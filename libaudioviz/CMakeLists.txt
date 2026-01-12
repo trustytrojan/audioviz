@@ -46,7 +46,10 @@ else() # be specific if you discover more differences
 endif()
 
 # Generate header files with embedded shader source code
-file(GLOB SHADER_SOURCES "${CMAKE_SOURCE_DIR}/shaders/*.frag")
+file(GLOB SHADER_SOURCES
+	"${CMAKE_SOURCE_DIR}/shaders/*.frag"
+	"${CMAKE_SOURCE_DIR}/shaders/*.vert"
+)
 set(SHADER_HEADERS)
 set(SHADER_HEADER_DIR "${CMAKE_BINARY_DIR}/shader_headers")
 foreach(SHADER_SOURCE IN LISTS SHADER_SOURCES)

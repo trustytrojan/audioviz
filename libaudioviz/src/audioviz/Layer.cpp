@@ -10,15 +10,15 @@ Layer::Layer(const std::string &name, const sf::Vector2u size, const int antiali
 {
 }
 
-void Layer::add_effect(fx::Effect *const effect)
+void Layer::add_effect(fx::PostProcessEffect *const effect)
 {
 	effect->setRtSize(_fx_rt.getSize());
 	effects.emplace_back(effect);
 }
 
-void Layer::add_drawable(const sf::Drawable *const drawable)
+void Layer::add_draw(DrawCall dc)
 {
-	drawables.emplace_back(drawable);
+	draws.emplace_back(dc);
 }
 
 void Layer::orig_draw(const sf::Drawable &drawable)
@@ -56,13 +56,13 @@ void Layer::apply_fx()
 
 void Layer::full_lifecycle(sf::RenderTarget &target)
 {
-	if (!drawables.empty())
+	if (!draws.empty())
 		_orig_rt.clear(sf::Color::Transparent);
 	if (orig_cb)
 		orig_cb(_orig_rt);
-	for (const auto drawable : drawables)
-		_orig_rt.draw(*drawable);
-	if (!drawables.empty())
+	for (const auto dc : draws)
+		_orig_rt.draw(dc.drawable, dc.states);
+	if (!draws.empty())
 		_orig_rt.display();
 	if (auto_fx)
 		apply_fx();

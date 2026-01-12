@@ -26,6 +26,7 @@ class SpectrumDrawable : public sf::Drawable
 	float multiplier{4};
 
 	// internal data
+	std::vector<float> m_spectrum;
 	std::vector<BarType> bars;
 	sf::IntRect rect;
 	bool backwards{};
@@ -88,18 +89,15 @@ public:
 		update_bars();
 	}
 
-	/**
-	 * Use this to resize the analyzer's spectrum vector to be the same length
-	 * as the number of bars we are rendering. This is REQUIRED before calling `update`.
-	 */
-	void configure_analyzer(AudioAnalyzer &aa) { aa.resize(bars.size()); }
+	void update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, int channel)
+	{
+		m_spectrum.resize(bars.size());
+		fa.bin_pack(m_spectrum, aa.get_channel_data(channel).fft_output);
+		fa.interpolate(m_spectrum);
+		update(m_spectrum);
+	}
 
-	/**
-	 * Update the heights of the bars using the provided `spectrum` data.
-	 * Requires that `spectrum.size() == bars.size()`. Call `configure_analyzer`
-	 * before performing FFT to satisfy that requirement.
-	 */
-	void update(const std::vector<float> &spectrum)
+	void update(std::span<const float> spectrum)
 	{
 		assert(spectrum.size() == bars.size());
 		if (color.wheel.rate != 0)
@@ -200,6 +198,12 @@ public:
 			set_rect(drag.rect);
 	}
 #endif
+
+	void update_bar_colors()
+	{
+		for (int i = 0; i < bars.size(); ++i)
+			update_bar_color(i);
+	}
 
 private:
 	// call after changing any property of the spectrum/bars that will change their positions or colors

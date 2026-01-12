@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: main
+    branches: [main]
     paths:
       - .github/workflows/*
       - '**/CMakeLists.txt'
@@ -10,7 +10,7 @@ on:
       - '**/*.cpp'
       - '**/*.hpp'
   pull_request:
-    branches: main
+    branches: [main]
     paths:
       - .github/workflows/*
       - '**/CMakeLists.txt'
@@ -19,7 +19,7 @@ on:
       - '**/*.hpp'
 
 jobs:
-  build-linux:
+  linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -47,7 +47,7 @@ jobs:
             libudev-dev
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j $(nproc)
@@ -55,15 +55,15 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: audioviz-build-linux
+          name: audioviz-linux
           path: |
             build/libaudioviz/libaudioviz.*
             build/ttviz/ttviz
             build/luaviz/luaviz*
-            build/test/*-test
+            build/examples/*
             shaders/
 
-  build-macos:
+  macos:
     runs-on: macos-latest
 
     steps:
@@ -74,7 +74,7 @@ jobs:
         run: brew install glew sfml fftw lua portaudio
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j $(sysctl -n hw.ncpu)
@@ -82,29 +82,32 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: audioviz-build-macos
+          name: audioviz-macos
           path: |
             build/libaudioviz/libaudioviz.*
             build/ttviz/ttviz
             build/luaviz/luaviz*
-            build/test/*-test
+            build/examples/*
             shaders/
 
-  build-windows-mingw:
+  windows-mingw:
     runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # - name: Setup MinGW
+      #   run: |
+      #     curl -Lo mingw64.7z https://github.com/niXman/mingw-builds-binaries/releases/download/15.1.0-rt_v12-rev0/x86_64-15.1.0-release-posix-seh-ucrt-rt_v12-rev0.7z
+      #     7z x mingw64.7z -o"C:\Program Files\"
+      #     echo "C:\Program Files\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
+
       - name: Setup MinGW
-        run: |
-          curl -Lo mingw64.7z https://github.com/niXman/mingw-builds-binaries/releases/download/15.1.0-rt_v12-rev0/x86_64-15.1.0-release-posix-seh-ucrt-rt_v12-rev0.7z
-          7z x mingw64.7z -o"C:\Program Files\"
-          echo "C:\Program Files\mingw64\bin" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
+        uses: egor-tensin/setup-mingw@v3
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DLUAVIZ_BUILD_LUA=1 -DAUDIOVIZ_TESTS=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DLUAVIZ_BUILD_LUA=1 -DLUAVIZ_EXECUTABLE=1
 
       - name: Build project
         run: cmake --build build -j $env:NUMBER_OF_PROCESSORS
@@ -112,10 +115,10 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: audioviz-build-windows-mingw
+          name: audioviz-windows-mingw
           path: |
             build/libaudioviz/libaudioviz.*
             build/ttviz/ttviz.exe
             build/luaviz/luaviz.exe
-            build/test/*-test.exe
+            build/examples/*.exe
             shaders/

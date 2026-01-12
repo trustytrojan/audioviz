@@ -4,6 +4,7 @@
 #include <functional>
 #include <tk-spline.hpp>
 #include <vector>
+#include <span>
 
 #include "fftw_allocator.hpp"
 #include "fftwf_dft_r2c_1d.hpp"
@@ -83,7 +84,6 @@ private:
 	} scale_max;
 
 	int known_spectrum_size{};
-	std::vector<int> fftw_to_spectrum_index;
 	std::vector<std::pair<int, int>> spectrum_to_fftw_indices;
 	std::vector<float, fftw_allocator<float>> window_values;
 	std::vector<double> m_spline_x, m_spline_y;
@@ -152,7 +152,7 @@ public:
 	 * Copies the `wavedata` to the FFT processor for rendering.
 	 * @param wavedata input wave sample data, expected to be of size `fft_size`
 	 */
-	void copy_to_input(const float *wavedata);
+	void copy_to_input(std::span<const float> wavedata);
 
 	/**
 	 * Copies a specific channel of the audio to the FFT processor, which is of size `fft_size`.
@@ -160,20 +160,15 @@ public:
 	 * @throws `std::invalid_argument` if `channel` is not in the range `[0, num_channels)`
 	 * @throws `std::invalid_argument` if `num_channels <= 0`
 	 */
-	void copy_channel_to_input(const float *audio, int num_channels, int channel, bool interleaved);
+	void copy_channel_to_input(std::span<const float> audio, int num_channels, int channel, bool interleaved);
 
-	/**
-	 * Renders a frequency spectrum using the stored wave data.
-	 * @note You must copy wave data to the FFT processor using
-	 * either the `copy_to_input` or `copy_channel_to_input` method.
-	 * @param spectrum Output vector to store resulting spectrum
-	 */
-	void render(std::vector<float> &spectrum);
+	void execute_fft(std::span<float> output);
+	void bin_pack(std::span<float> out, std::span<const float> in);
+	void interpolate(std::span<float> spectrum);
 
 private:
 	float calc_index_ratio(float i) const;
-	void interpolate(std::vector<float> &spectrum);
-	void compute_index_ratios();
+	void compute_index_mappings();
 	void compute_window_values();
 };
 

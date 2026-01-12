@@ -32,9 +32,4 @@ void Sprite::fill_screen(const sf::Vector2u size)
 	scale_to({max_dim, max_dim});
 }
 
-sf::Vector2f Sprite::get_size() const
-{
-	return sf::Vector2f{getTextureRect().size}.componentWiseMul(getScale());
-}
-
 } // namespace audioviz

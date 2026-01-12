@@ -78,21 +78,11 @@ public:
 		return _left.bar_count();
 	}
 
-	void configure_analyzer(StereoAnalyzer &sa)
+	void update(FrequencyAnalyzer &fa, StereoAnalyzer &sa)
 	{
 		assert(_left.bar_count() == _right.bar_count());
-		_left.configure_analyzer(sa);
-	}
-
-	/**
-	 * @warning It is the CALLER's responsibility to make sure that
-	 * `sa`'s spectrum buffers are properly sized for this `StereoSpectrum`!!!!
-	 * Otherwise you will get an assertion error!!! Call `configure_analyzer` to help you with this.
-	 */
-	void update(const StereoAnalyzer &sa)
-	{
-		_left.update(sa.left_data());
-		_right.update(sa.right_data());
+		_left.update(fa, sa, 0);
+		_right.update(fa, sa, 1);
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override

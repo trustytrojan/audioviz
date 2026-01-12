@@ -27,6 +27,7 @@ void table::load_SMD()
 			self.set_position(table_to_vec2<float>(pos));
 		},
 		"set_text_pos", &SMD::set_text_pos,
+		"get_ac_spr_center", &SMD::get_ac_spr_center,
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 	// clang-format on

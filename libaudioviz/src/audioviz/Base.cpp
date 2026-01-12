@@ -4,8 +4,8 @@
 #include <iostream>
 
 #ifdef AUDIOVIZ_IMGUI
-#include <imgui.h>
 #include <imgui-SFML.h>
+#include <imgui.h>
 #endif
 
 #ifdef AUDIOVIZ_PORTAUDIO
@@ -68,6 +68,8 @@ void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 	target.draw(final_rt.sprite());
 	for (const auto drawable : final_drawables)
 		target.draw(*drawable);
+	for (const auto dc : final_drawables2)
+		target.draw(dc.drawable, dc.states);
 	if (tt_enabled)
 		target.draw(timing_text);
 }
@@ -120,6 +122,11 @@ void Base::add_final_drawable(const Drawable &d)
 	final_drawables.emplace_back(&d);
 }
 
+void Base::add_final_drawable2(const Drawable &d, sf::RenderStates rs)
+{
+	final_drawables2.emplace_back(d, rs);
+}
+
 /*
 TODO: You want to make libaudioviz more usage-agnostic by removing portaudio/imgui dependencies.
 Libaudioviz by itself should be a machine that produces user-defined video from ambiguous audio.
@@ -161,7 +168,7 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		const auto frames = std::max(audio_frames_needed, afpvf);
 		const auto samples = frames * media.audio_channels();
 		media.buffer_audio(frames);
-		if (media.audio_buffer_frames() < afpvf)
+		if (media.audio_buffer_frames() < frames)
 		{
 			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
 			break;
@@ -219,8 +226,10 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 void Base::encode(Media &media, const std::string &outfile, const std::string &vcodec, const std::string &acodec)
 {
 	set_samplerate(media.audio_sample_rate());
+	// Create OpenGL context first (sf::RenderWindow usually does this for us) otherwise GL extensions will be null!
+	sf::Context c;
 	FfmpegPopenEncoder ffmpeg{media.url, *this, outfile, vcodec, acodec};
-	RenderTexture rt{size, 4};
+	RenderTexture rt{size, 4}; 
 
 	bool running = true;
 	while (running)

@@ -32,6 +32,7 @@ public:
 	void use_metadata(const Media &);
 	void set_album_cover(const sf::Texture &txr, const sf::Vector2f size);
 	void set_position(const sf::Vector2f pos);
+	inline sf::Vector2f get_ac_spr_center() { return ac_spr.get_center(); }
 	void draw(sf::RenderTarget &target, const sf::RenderStates states) const override;
 
 	inline void set_text_pos(const TextPosition tp)

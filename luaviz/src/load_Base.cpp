@@ -22,11 +22,13 @@ void table::load_Base()
 		"get_layer", &Base::get_layer,
 		"remove_layer", &Base::remove_layer,
 		"add_final_drawable", &Base::add_final_drawable,
+		"add_final_drawable2", &Base::add_final_drawable2,
 		"set_text_font", &Base::set_text_font,
 		"set_audio_frames_needed", &Base::set_audio_frames_needed,
 		"start_in_window", &Base::start_in_window,
 		"encode", &Base::encode,
 		"get_framerate", &Base::get_framerate,
+		"set_framerate", &Base::set_framerate,
 		"set_timing_text_enabled", &Base::set_timing_text_enabled,
 		"perform_fft", &Base::perform_fft,
 		sol::base_classes, sol::bases<sf::Drawable>()

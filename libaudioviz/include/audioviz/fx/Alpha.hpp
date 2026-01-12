@@ -1,12 +1,12 @@
 #pragma once
 
-#include <audioviz/fx/Effect.hpp>
+#include <audioviz/fx/PostProcessEffect.hpp>
 
 namespace audioviz::fx
 {
 
 // Sets the alpha of the entire texture.
-struct Alpha : Effect
+struct Alpha : PostProcessEffect
 {
 	float alpha;
 	Alpha(float alpha);

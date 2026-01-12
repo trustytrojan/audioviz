@@ -5,10 +5,10 @@
 namespace audioviz::fx
 {
 
-class Effect
+class PostProcessEffect
 {
 public:
-	virtual ~Effect() = default;
+	virtual ~PostProcessEffect() = default;
 
 	// Apply this effect onto a render-texture.
 	virtual void apply(RenderTexture &) const = 0;

@@ -14,11 +14,17 @@ void table::load_Layer()
 		"set_orig_cb", &Layer::set_orig_cb,
 		"set_fx_cb", &Layer::set_fx_cb,
 		"set_auto_fx", &Layer::set_auto_fx,
-		"add_drawable", [](Layer &self, const sf::Drawable *const drawable)
-		{
-			self.add_drawable(drawable);
-		},
-		"add_effect", [](Layer &self, fx::Effect *const effect)
+		"add_draw", sol::overload(
+			[](Layer &self, const sf::Drawable *const drawable, const sf::RenderStates *const rs)
+			{
+				self.add_draw({*drawable, *rs});
+			},
+			[](Layer &self, const sf::Drawable *const drawable)
+			{
+				self.add_draw({*drawable});
+			}
+		),
+		"add_effect", [](Layer &self, fx::PostProcessEffect *const effect)
 		{
 			self.add_effect(effect);
 		}

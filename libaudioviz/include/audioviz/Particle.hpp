@@ -16,8 +16,9 @@ class Particle : public ShapeType
 	sf::Vector2f velocity;
 
 public:
-	void updatePosition() { this->setPosition(this->getPosition() + velocity); }
-	void setVelocity(const sf::Vector2f velocity) { this->velocity = velocity; }
+	inline void updatePosition() { this->setPosition(this->getPosition() + velocity); }
+	inline void setVelocity(const sf::Vector2f velocity) { this->velocity = velocity; }
+	inline sf::Vector2f getVelocity() const { return velocity; }
 };
 
 } // namespace audioviz

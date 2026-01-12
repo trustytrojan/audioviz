@@ -33,7 +33,7 @@ class Main
 	FA fa{3000};
 	CS cs;
 	SS ss{cs};
-	PS ps{{}, 50};
+	PS ps{{}, 50, 0};
 
 	Main(const Main &) = delete;
 	Main &operator=(const Main &) = delete;

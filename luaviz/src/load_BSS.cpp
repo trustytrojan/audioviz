@@ -29,7 +29,6 @@ void table::load_BSS()
 		"set_right_backwards", &SS::set_right_backwards,
 		"update", &SS::update,
 		"get_bar_count", &SS::get_bar_count,
-		"configure_analyzer", &SS::configure_analyzer,
 		sol::base_classes, sol::bases<sf::Drawable>()
 	);
 	// clang-format on

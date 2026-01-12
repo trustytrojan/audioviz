@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <audioviz/RenderTexture.hpp>
-#include <audioviz/fx/Effect.hpp>
+#include <audioviz/fx/PostProcessEffect.hpp>
 #include <functional>
 #include <vector>
 
@@ -36,6 +36,12 @@ public:
 		target.draw(fx_rt.sprite());
 	};
 
+	struct DrawCall
+	{
+		const sf::Drawable &drawable;
+		const sf::RenderStates states;
+	};
+
 private:
 	std::string name;
 	RenderTexture _orig_rt, _fx_rt;
@@ -47,19 +53,27 @@ private:
 	 * The effects, in order, that will be applied to the "original"
 	 * render-texture when `apply_fx()` is called.
 	 */
-	std::vector<const fx::Effect *> effects;
+	std::vector<const fx::PostProcessEffect *> effects;
 
 	/**
-	 * The drawables to draw on this layer. If they have state that needs to be updated
-	 * over time, do so in a lambda function passed to `set_orig_cb`.
+	 * The draw calls to perform on this layer.
 	 */
-	std::vector<const sf::Drawable *> drawables;
+	std::vector<DrawCall> draws;
 
 public:
 	Layer(const std::string &name, sf::Vector2u size, int antialiasing);
 
-	void add_effect(fx::Effect *);
-	void add_drawable(const sf::Drawable *);
+	/**
+	 * Add a draw call to perform on this layer. If more control over rendering is needed,
+	 * use the `set_orig_cb`/`set_fx_cb` callback API instead.
+	 */
+	void add_draw(DrawCall);
+
+	/**
+	 * Add a post-processing effect to apply on the layer after all draw calls
+	 * are executed.
+	 */
+	void add_effect(fx::PostProcessEffect *);
 
 	/**
 	 * @returns The name of this layer.
