@@ -21,8 +21,10 @@ if(APPLE)
 	include_directories(/opt/homebrew/include)
 endif()
 
-list(APPEND CMAKE_C_FLAGS_RELEASE -march=native)
-list(APPEND CMAKE_C_FLAGS_RELWITHDEBINFO -march=native)
+if(CMAKE_BUILD_TYPE MATCHES Rel)
+	message(STATUS "------------HERE--------------")
+	add_compile_options(-march=native)
+endif()
 
 add_subdirectory(libaudioviz)
 

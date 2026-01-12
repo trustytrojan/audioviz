@@ -12,14 +12,14 @@ if not arg[1] then
 end
 
 -- constants
-FRAMERATE = 240
+FRAMERATE = 60
 SIZE = { 1280, 720 }
 UNROTATED_SIZE = { 720, 1280 }
 FFT_SIZE = 3000
 LEFT_POS = { 1280, 0 }
 RIGHT_POS = { 0, 720 }
 PARTICLE_COUNT = 45
-START_TIME_SEC = 20
+START_TIME_SEC = 0
 
 -- audio analyzer objects
 fa = luaviz.FrequencyAnalyzer.new(FFT_SIZE)
