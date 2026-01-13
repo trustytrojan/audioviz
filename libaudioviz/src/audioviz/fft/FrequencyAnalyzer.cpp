@@ -67,7 +67,7 @@ void FrequencyAnalyzer::copy_channel_to_input(
 			fftw_input[i] = audio[i * num_channels + channel];
 }
 
-void FrequencyAnalyzer::compute_amplitude(std::span<float> output)
+void FrequencyAnalyzer::compute_amplitude(std::span<float> output) const
 {
 	const int size = output.size();
 	assert(size == fftw.output_size());
@@ -78,6 +78,18 @@ void FrequencyAnalyzer::compute_amplitude(std::span<float> output)
 		// must divide by fft_size here to counteract the correlation
 		// between fft_size and the average amplitude across the spectrum vector.
 		output[i] = sqrtf((re * re) + (im * im)) * inv_fft_size;
+	}
+}
+
+void FrequencyAnalyzer::compute_phase(std::span<float> output) const
+{
+	const int size = output.size();
+	assert(size == fftw.output_size());
+	for (int i = 0; i < size; ++i)
+	{
+		const float re = fftw.output()[i][0];
+		const float im = fftw.output()[i][1];
+		output[i] = atan2f(im, re);
 	}
 }
 

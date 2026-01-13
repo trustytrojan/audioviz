@@ -1,7 +1,6 @@
 #include <audioviz/Base.hpp>
-#include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/SpectrumDrawable_new.hpp>
-#include <audioviz/VerticalBar.hpp>
+#include <audioviz/fft/AudioAnalyzer_new.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/Interpolator.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
@@ -21,22 +20,22 @@
 	else                                     \
 		code;
 
-constexpr float audio_duration_sec = 0.25;
+constexpr float audio_duration_sec = 0.1;
 
 struct SpectrumTest : audioviz::Base
 {
 	audioviz::FfmpegPopenMedia media;
 	int sample_rate_hz{media.audio_sample_rate()};
+	int num_channels{media.audio_channels()};
 	const int fft_size = audio_duration_sec * sample_rate_hz;
 	int max_fft_index;
 
-	std::vector<float> s;
+	std::vector<float> a, s;
 
 	audioviz::ColorSettings color;
-	// audioviz::SpectrumDrawable<audioviz::VerticalBar> spectrum;
 	audioviz::SpectrumDrawable_new spectrum;
 	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer aa{1};
+	audioviz::AudioAnalyzer_new aa{sample_rate_hz, fft_size};
 
 	audioviz::Interpolator ip;
 
@@ -50,12 +49,11 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 	  fa{fft_size},
 	  media{media_url, 10}
 {
-	std::println("fft_size: {}", fft_size);
+	std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
 
-	spectrum.set_bar_width(10);
+	spectrum.set_bar_width(1);
 	spectrum.set_bar_spacing(0);
 	// spectrum.set_bar_count(100);
-	// fa.set_scale(audioviz::FrequencyAnalyzer::Scale::LINEAR);
 
 	set_audio_frames_needed(fft_size);
 
@@ -64,11 +62,10 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
-	// if we make this a layer, we can capture the full draw time
-	// add_final_drawable(spectrum);
+	// so we can track the draw time
 	add_layer("spectrum").add_draw({spectrum});
 
-	max_fft_index = audioviz::util::bin_index_from_freq(350, sample_rate_hz, fa.get_fft_output_size());
+	max_fft_index = audioviz::util::bin_index_from_freq(500, sample_rate_hz, fa.get_fft_size());
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 
 	start_in_window(media, "spectrum-test");
@@ -76,17 +73,11 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 
 void SpectrumTest::update(const std::span<const float> audio_buffer)
 {
-	capture_time("fft", aa.execute_fft(fa, audio_buffer, true));
-
-	const auto &fft_amplitudes = aa.get_channel_data(0).fft_amplitudes;
-	const auto bar_count = spectrum.get_bar_count();
-	s.assign(bar_count, 0);
-
-	const auto increment = (float)bar_count / (float)max_fft_index;
-
-	for (int i = 0; i < max_fft_index; ++i)
-		s[i * increment] = fft_amplitudes[i];
-
+	a.resize(fft_size);
+	audioviz::util::strided_copy(a, audio_buffer, num_channels, 0);
+	capture_time("fft", aa.execute_fft(fa, a, true));
+	s.assign(spectrum.get_bar_count(), 0);
+	audioviz::util::spread_out(s, {aa.compute_amplitudes(fa).data(), max_fft_index});
 	capture_time("interpolate", ip.interpolate(s));
 	capture_time("spectrum_update", spectrum.update(s));
 }

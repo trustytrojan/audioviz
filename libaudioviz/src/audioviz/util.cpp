@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <audioviz/util.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <ranges>
 #include <stdexcept>
 
 #include "imgui.h"
@@ -402,6 +404,22 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 	out.rect.size.y = std::max(out.rect.size.y, 1);
 
 	return out;
+}
+
+void spread_out(std::span<float> out, std::span<const float> in)
+{
+	assert(out.size() >= in.size());
+	const auto increment = out.size() / (float)in.size();
+	for (int i = 0; i < in.size(); ++i)
+		out[i * increment] = in[i];
+}
+
+void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel)
+{
+	assert(num_channels > 0);
+	assert(out.size() * num_channels == in.size());
+	for (int i = 0; i < out.size(); ++i)
+		out[i] = in[i * num_channels + channel];
 }
 
 } // namespace audioviz::util

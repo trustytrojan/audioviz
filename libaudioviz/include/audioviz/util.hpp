@@ -46,4 +46,7 @@ inline int bin_index_from_freq(const int freq_hz, const int sample_rate_hz, cons
 	return freq_hz * bin_count / sample_rate_hz;
 }
 
+void spread_out(std::span<float> out, std::span<const float> in);
+void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel);
+
 } // namespace audioviz::util

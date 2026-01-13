@@ -89,7 +89,8 @@ public:
 	void copy_channel_to_input(std::span<const float> audio, int num_channels, int channel, bool interleaved);
 
 	inline void execute_fft() const { fftw.execute(); }
-	void compute_amplitude(std::span<float> output);
+	void compute_amplitude(std::span<float> output) const;
+	void compute_phase(std::span<float> output) const;
 
 private:
 	void compute_window_values();
