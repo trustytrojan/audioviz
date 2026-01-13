@@ -1,6 +1,7 @@
 #pragma once
 
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <cassert>
 
 namespace audioviz
 {

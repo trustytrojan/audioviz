@@ -1,5 +1,7 @@
 #pragma once
 
+#include "audioviz/fft/BinPacker.hpp"
+#include "audioviz/fft/Interpolator.hpp"
 #include <SFML/Graphics.hpp>
 #include <audioviz/ColorSettings.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
@@ -32,6 +34,8 @@ class SpectrumDrawable : public sf::Drawable
 	sf::IntRect rect;
 	bool backwards{};
 	bool debug_rect{};
+	BinPacker bp;
+	Interpolator ip;
 
 	struct
 	{
@@ -115,8 +119,8 @@ public:
 	void update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, int channel)
 	{
 		m_spectrum.resize(bars.size());
-		fa.bin_pack(m_spectrum, aa.get_channel_data(channel).fft_amplitudes);
-		fa.interpolate(m_spectrum);
+		bp.bin_pack(m_spectrum, aa.get_channel_data(channel).fft_amplitudes);
+		ip.interpolate(m_spectrum);
 		update(m_spectrum);
 	}
 

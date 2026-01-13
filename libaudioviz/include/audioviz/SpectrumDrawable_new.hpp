@@ -55,7 +55,6 @@ public:
 	 */
 	void set_bar_count(int desired_count);
 
-	void update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, int channel);
 	void update(std::span<const float> spectrum);
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override;

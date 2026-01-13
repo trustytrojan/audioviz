@@ -1,6 +1,6 @@
+#include <algorithm>
 #include <audioviz/SpectrumDrawable_new.hpp>
 #include <cassert>
-#include <algorithm>
 
 #ifdef AUDIOVIZ_IMGUI
 #include "imgui.h"
@@ -65,7 +65,7 @@ void SpectrumDrawable_new::set_bar_count(int desired_count)
 	// Calculate available width for bars: total_width - (count - 1) * spacing
 	const int total_spacing = (desired_count - 1) * bar.spacing;
 	const int available_width = rect.size.x - total_spacing;
-	
+
 	if (available_width <= 0)
 		return;
 
@@ -74,21 +74,13 @@ void SpectrumDrawable_new::set_bar_count(int desired_count)
 		set_bar_width(new_width);
 }
 
-void SpectrumDrawable_new::update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, int channel)
-{
-	m_spectrum.resize(bar_count);
-	fa.bin_pack(m_spectrum, aa.get_channel_data(channel).fft_amplitudes);
-	fa.interpolate(m_spectrum);
-	update(m_spectrum);
-}
-
 void SpectrumDrawable_new::update(std::span<const float> spectrum)
 {
 	assert(spectrum.size() >= bar_count);
-	
+
 	// Update vertex heights and colors
 	const bool update_colors = (color.wheel.rate != 0);
-	
+
 	for (int i = 0; i < bar_count; ++i)
 	{
 		const float height = std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y);
@@ -96,8 +88,9 @@ void SpectrumDrawable_new::update(std::span<const float> spectrum)
 		const int bl = get_bar_vertex_index(i, 1);
 		const int tr = get_bar_vertex_index(i, 2);
 		const int br = get_bar_vertex_index(i, 3);
-		const sf::Color bar_color = update_colors ? color.calculate_color((float)i / bar_count) : vertex_array[tl].color;
-		
+		const sf::Color bar_color =
+			update_colors ? color.calculate_color((float)i / bar_count) : vertex_array[tl].color;
+
 		const float bottom_y = rect.position.y + rect.size.y;
 		const float top_y = bottom_y - height;
 
@@ -211,7 +204,7 @@ void SpectrumDrawable_new::update_bar_colors()
 	for (int i = 0; i < bar_count; ++i)
 	{
 		const sf::Color bar_color = color.calculate_color((float)i / bar_count);
-		
+
 		for (int v = 0; v < 4; ++v)
 		{
 			const int idx = get_bar_vertex_index(i, v);
@@ -231,11 +224,16 @@ int SpectrumDrawable_new::get_bar_vertex_index(int bar_idx, int vertex_num) cons
 		return vertex_num;
 	switch (vertex_num)
 	{
-		case 0: return 6 * bar_idx - 1; // TL
-		case 1: return 6 * bar_idx + 1; // BL
-		case 2: return 6 * bar_idx + 2; // TR
-		case 3: return 6 * bar_idx + 3; // BR
-		default: return 0;
+	case 0:
+		return 6 * bar_idx - 1; // TL
+	case 1:
+		return 6 * bar_idx + 1; // BL
+	case 2:
+		return 6 * bar_idx + 2; // TR
+	case 3:
+		return 6 * bar_idx + 3; // BR
+	default:
+		return 0;
 	}
 }
 
@@ -247,7 +245,7 @@ void SpectrumDrawable_new::update_bars()
 		vertex_array.resize(0);
 		return;
 	}
-	
+
 	// Vertex count: 4 + (bar_count - 1) * 6 == bar_count * 6 - 2
 	vertex_array.resize(bar_count * 6 - 2);
 
@@ -260,9 +258,8 @@ void SpectrumDrawable_new::update_bars()
 
 	for (int i = 0; i < bar_count; ++i)
 	{
-		const float x = backwards
-			? rect.position.x + rect.size.x - bar.width - i * (bar.width + bar.spacing)
-			: rect.position.x + i * (bar.width + bar.spacing);
+		const float x = backwards ? rect.position.x + rect.size.x - bar.width - i * (bar.width + bar.spacing)
+								  : rect.position.x + i * (bar.width + bar.spacing);
 		const float left = x;
 		const float right = x + bar.width;
 		const sf::Color bar_color = color.calculate_color((float)i / bar_count);

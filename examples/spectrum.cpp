@@ -3,6 +3,7 @@
 #include <audioviz/SpectrumDrawable_new.hpp>
 #include <audioviz/VerticalBar.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <audioviz/fft/Interpolator.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/util.hpp>
 
@@ -37,6 +38,8 @@ struct SpectrumTest : audioviz::Base
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa{1};
 
+	audioviz::Interpolator ip;
+
 	SpectrumTest(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
 };
@@ -49,7 +52,7 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 {
 	std::println("fft_size: {}", fft_size);
 
-	spectrum.set_bar_width(1);
+	spectrum.set_bar_width(10);
 	spectrum.set_bar_spacing(0);
 	// spectrum.set_bar_count(100);
 	// fa.set_scale(audioviz::FrequencyAnalyzer::Scale::LINEAR);
@@ -63,7 +66,7 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 
 	// if we make this a layer, we can capture the full draw time
 	// add_final_drawable(spectrum);
-	add_layer("spectrum", 4).add_draw({spectrum});
+	add_layer("spectrum").add_draw({spectrum});
 
 	max_fft_index = audioviz::util::bin_index_from_freq(350, sample_rate_hz, fa.get_fft_output_size());
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
@@ -74,7 +77,6 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 void SpectrumTest::update(const std::span<const float> audio_buffer)
 {
 	capture_time("fft", aa.execute_fft(fa, audio_buffer, true));
-	// capture_time("spectrum_update", spectrum.update(fa, aa, 0));
 
 	const auto &fft_amplitudes = aa.get_channel_data(0).fft_amplitudes;
 	const auto bar_count = spectrum.get_bar_count();
@@ -85,12 +87,8 @@ void SpectrumTest::update(const std::span<const float> audio_buffer)
 	for (int i = 0; i < max_fft_index; ++i)
 		s[i * increment] = fft_amplitudes[i];
 
-	capture_time("interpolate", fa.interpolate(s));
-
+	capture_time("interpolate", ip.interpolate(s));
 	capture_time("spectrum_update", spectrum.update(s));
-
-	// fa.bin_pack(s, aa.get_channel_data(0).fft_amplitudes);
-	// spectrum.update(aa.get_channel_data(0).fft_amplitudes);
 }
 
 int main(const int argc, const char *const *const argv)

@@ -3,28 +3,16 @@
 #include <cassert>
 #include <cmath>
 #include <print>
-#include <stdexcept>
 
 #include "imgui.h"
 
 namespace audioviz
 {
 
-void FrequencyAnalyzer::_scale_max::calc(const int max, float nthroot_inv)
-{
-	linear = max;
-	log = ::logf(max);
-	sqrt = ::sqrtf(max);
-	cbrt = ::cbrtf(max);
-	nthroot = ::powf(max, nthroot_inv);
-}
-
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
 	: fft_size{fft_size}
 {
 	set_fft_size(fft_size);
-	m_spline_x.reserve(2048);
-	m_spline_y.reserve(2048);
 }
 
 void FrequencyAnalyzer::set_fft_size(const int fft_size)
@@ -33,40 +21,13 @@ void FrequencyAnalyzer::set_fft_size(const int fft_size)
 	inv_fft_size = 1.0f / fft_size;
 	fftw.set_n(fft_size);
 	std::println("fftw output size: {}", fftw.output_size());
-	scale_max.calc(fftw.output_size(), nthroot_inv);
-	compute_bin_pack_index_mappings(fftw.output_size(), bin_pack_input_size);
 	compute_window_values();
-}
-
-void FrequencyAnalyzer::set_interp_type(const InterpolationType interp)
-{
-	this->interp = interp;
 }
 
 void FrequencyAnalyzer::set_window_func(const WindowFunction wf)
 {
 	this->window_func = wf;
 	compute_window_values();
-}
-
-void FrequencyAnalyzer::set_accum_method(const AccumulationMethod am)
-{
-	this->am = am;
-}
-
-void FrequencyAnalyzer::set_scale(const Scale scale)
-{
-	this->scale = scale;
-	compute_bin_pack_index_mappings(fftw.output_size(), bin_pack_input_size);
-}
-
-void FrequencyAnalyzer::set_nth_root(const int nth_root)
-{
-	if (!nth_root)
-		throw std::invalid_argument("FrequencySpectrum::set_nth_root: nth_root cannot be zero!");
-	this->nth_root = nth_root;
-	nthroot_inv = 1.f / nth_root;
-	compute_bin_pack_index_mappings(fftw.output_size(), bin_pack_input_size);
 }
 
 void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
@@ -120,83 +81,6 @@ void FrequencyAnalyzer::compute_amplitude(std::span<float> output)
 	}
 }
 
-void FrequencyAnalyzer::bin_pack(std::span<float> out, std::span<const float> in)
-{
-	const auto out_size = out.size(), in_size = in.size();
-	assert(out_size <= in_size);
-	compute_bin_pack_index_mappings(out_size, in_size);
-
-	// just keep doing it here for consistency
-	std::ranges::fill(out, 0);
-
-	for (int i = 0; i < out_size; ++i)
-	{
-		const auto [start, end] = bin_pack_index_mapping[i];
-
-		if (start == -1)
-			continue;
-
-		float a{};
-		for (int j = start; j < end; ++j)
-		{
-			const float x = in[j];
-			if (am == AccumulationMethod::SUM)
-				a += x;
-			else
-				a = std::max(a, x);
-		}
-
-		out[i] = a;
-	}
-}
-
-float FrequencyAnalyzer::calc_index_ratio(const float i) const
-{
-	switch (scale)
-	{
-	case Scale::LINEAR:
-		return i / scale_max.linear;
-	case Scale::LOG:
-		return logf(i ? i : 1) / scale_max.log;
-	case Scale::NTH_ROOT:
-		switch (nth_root)
-		{
-		case 1:
-			return i / scale_max.linear;
-		case 2:
-			return sqrtf(i) / scale_max.sqrt;
-		case 3:
-			return cbrtf(i) / scale_max.cbrt;
-		default:
-			return powf(i, nthroot_inv) / scale_max.nthroot;
-		}
-	default:
-		throw std::logic_error("FrequencySpectrum::calc_index_ratio: default case hit");
-	}
-}
-
-void FrequencyAnalyzer::compute_bin_pack_index_mappings(const size_t out_size, const size_t in_size)
-{
-	// assert(out_size <= in_size);
-
-	// don't recompute mappings if out_size didn't change!
-	if (!out_size || bin_pack_index_mapping.size() == out_size)
-		return;
-
-	// this NEEDS to be updated for different in_sizes!
-	scale_max.calc(in_size, nthroot_inv);
-	bin_pack_input_size = in_size;
-	bin_pack_index_mapping.assign(out_size, {-1, -1});
-
-	for (int i = 0; i < in_size; ++i)
-	{
-		const int out_index = std::clamp((size_t)(calc_index_ratio(i) * out_size), (size_t)0, out_size - 1);
-		if (bin_pack_index_mapping[out_index].first == -1)
-			bin_pack_index_mapping[out_index].first = i;
-		bin_pack_index_mapping[out_index].second = i + 1;
-	}
-}
-
 void FrequencyAnalyzer::compute_window_values()
 {
 	if (!window_func)
@@ -207,40 +91,6 @@ void FrequencyAnalyzer::compute_window_values()
 		window_values[i] = window_func(i, fft_size);
 }
 
-void FrequencyAnalyzer::interpolate(std::span<float> spectrum)
-{
-	if (interp == InterpolationType::NONE || scale == Scale::LINEAR)
-		return;
-
-	const int size = spectrum.size();
-
-	// separate the nonzero values (y's) and their indices (x's)
-	m_spline_x.clear();
-	m_spline_y.clear();
-	for (int i = 0; i < size; ++i)
-	{
-		if (!spectrum[i])
-			continue;
-		m_spline_x.emplace_back(i);
-		m_spline_y.emplace_back(spectrum[i]);
-	}
-
-	// tk::spline::set_points throws if there are less than 3 points
-	if (m_spline_x.size() < 3)
-		return;
-
-	using spline_type = tk::spline::spline_type;
-	static const spline_type spline_type_table[] = {
-		(spline_type)0, spline_type::linear, spline_type::cspline, spline_type::cspline_hermite};
-
-	spline.set_points(m_spline_x, m_spline_y, spline_type_table[(int)interp]);
-
-	// only copy spline values to fill in the gaps
-	for (int i = 0; i < size; ++i)
-		if (!spectrum[i])
-			spectrum[i] = spline(i);
-}
-
 void FrequencyAnalyzer::draw_imgui()
 {
 	// FFT size (must be even). Keep user's intent when stepping: if they
@@ -248,27 +98,6 @@ void FrequencyAnalyzer::draw_imgui()
 	int fft_tmp = fft_size;
 	if (ImGui::InputInt("FFT Size", &fft_tmp) && fft_tmp > 0)
 		set_fft_size(fft_tmp);
-
-	// Scale selection
-	int scale_i = static_cast<int>(scale);
-	if (ImGui::Combo("Scale", &scale_i, "Linear\0Log\0Nth Root\0"))
-		set_scale(static_cast<Scale>(scale_i));
-	if (static_cast<Scale>(scale_i) == Scale::NTH_ROOT)
-	{
-		int nth_tmp = nth_root;
-		if (ImGui::SliderInt("Nth Root", &nth_tmp, 1, 32))
-			set_nth_root(nth_tmp);
-	}
-
-	// Interpolation type
-	int interp_i = static_cast<int>(interp);
-	if (ImGui::Combo("Interpolation", &interp_i, "None\0Linear\0CSpline\0CSpline Hermite\0"))
-		set_interp_type(static_cast<InterpolationType>(interp_i));
-
-	// Accumulation method
-	int am_i = static_cast<int>(am);
-	if (ImGui::Combo("Accumulation", &am_i, "Sum\0Max\0"))
-		set_accum_method(static_cast<AccumulationMethod>(am_i));
 
 	// Window function selection
 	static const WindowFunction *const wf_table[] = {{}, &WF_HANNING, &WF_HAMMING, &WF_BLACKMAN};
