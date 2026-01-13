@@ -74,13 +74,13 @@ public:
 
 	int get_bar_count() const
 	{
-		assert(_left.bar_count() == _right.bar_count());
-		return _left.bar_count();
+		assert(_left.get_bar_count() == _right.get_bar_count());
+		return _left.get_bar_count();
 	}
 
 	void update(FrequencyAnalyzer &fa, StereoAnalyzer &sa)
 	{
-		assert(_left.bar_count() == _right.bar_count());
+		assert(_left.get_bar_count() == _right.get_bar_count());
 		_left.update(fa, sa, 0);
 		_right.update(fa, sa, 1);
 	}
@@ -114,7 +114,7 @@ public:
 		_left.set_rect(left_half);
 		_right.set_rect(right_half);
 
-		assert(_left.bar_count() == _right.bar_count());
+		assert(_left.get_bar_count() == _right.get_bar_count());
 	}
 };
 

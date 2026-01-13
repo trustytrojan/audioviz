@@ -17,8 +17,9 @@ void AudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, const std::span<const flo
 	for (int ch = 0; ch < _num_channels; ++ch)
 	{
 		fa.copy_channel_to_input(audio, _num_channels, ch, interleaved);
-		channel_data[ch].fft_output.resize(fa.get_fft_size() / 2 + 1);
-		fa.execute_fft(channel_data[ch].fft_output);
+		fa.execute_fft();
+		channel_data[ch].fft_amplitudes.resize(fa.get_fft_output_size());
+		fa.compute_amplitude(channel_data[ch].fft_amplitudes);
 		channel_data[ch].peaks_computed = {};
 	}
 }
@@ -61,9 +62,9 @@ void AudioAnalyzer::ChannelData::compute_peak_freq_amp(
 	if (peaks_computed)
 		return;
 	const size_t max_index = max_freq_hz * fft_size / sample_rate_hz;
-	const auto bass_bins = std::clamp(max_index + 1, (size_t)1, fft_output.size());
-	const auto idx = util::weighted_max_index({fft_output.data(), bass_bins}, expf);
-	peak_amplitude = fft_output[idx];
+	const auto bass_bins = std::clamp(max_index + 1, (size_t)1, fft_amplitudes.size());
+	const auto idx = util::weighted_max_index({fft_amplitudes.data(), bass_bins}, expf);
+	peak_amplitude = fft_amplitudes[idx];
 	peak_frequency_hz = ((float)idx * (float)sample_rate_hz) / (float)fft_size;
 	peaks_computed = true;
 }
@@ -74,7 +75,7 @@ AudioAnalyzer::ChannelData::compute_multiband_shake(int sample_rate_hz, int fft_
 	// Calculate the index limit for the total bass range
 	constexpr float max_freq_hz{150}; // TODO: make this configurable
 	const size_t max_total_index = max_freq_hz * fft_size / sample_rate_hz;
-	const auto total_bass_bins = std::clamp(max_total_index + 1, (size_t)1, fft_output.size());
+	const auto total_bass_bins = std::clamp(max_total_index + 1, (size_t)1, fft_amplitudes.size());
 
 	std::array<ShakeBand, 3> bands;
 
@@ -87,7 +88,7 @@ AudioAnalyzer::ChannelData::compute_multiband_shake(int sample_rate_hz, int fft_
 		size_t start = i * chunk_size;
 		size_t end = std::min((i + 1) * chunk_size, total_bass_bins);
 
-		const auto begin = fft_output.begin();
+		const auto begin = fft_amplitudes.begin();
 		const auto max_it = std::max_element(begin + start, begin + end);
 		const auto index = max_it.base() - begin.base();
 
@@ -96,6 +97,29 @@ AudioAnalyzer::ChannelData::compute_multiband_shake(int sample_rate_hz, int fft_
 	}
 
 	return bands;
+}
+
+std::pair<std::size_t, std::size_t> AudioAnalyzer::extract_frequency_range(
+	int channel, float min_freq_hz, float max_freq_hz, int sample_rate_hz, int fft_size) const
+{
+	assert(channel >= 0 && channel < _num_channels);
+	const auto &fft_output = channel_data[channel].fft_amplitudes;
+
+	// Convert frequency to FFT bin indices
+	size_t min_idx = static_cast<size_t>(min_freq_hz * fft_size / sample_rate_hz);
+	size_t max_idx = static_cast<size_t>(max_freq_hz * fft_size / sample_rate_hz);
+
+	// Clamp to valid range
+	min_idx = std::min(min_idx, fft_output.size() - 1);
+	max_idx = std::min(max_idx, fft_output.size() - 1);
+
+	// Return the range (end_idx is inclusive)
+	if (min_idx <= max_idx && min_idx < fft_output.size())
+	{
+		return {min_idx, max_idx};
+	}
+
+	return {0, 0};
 }
 
 } // namespace audioviz

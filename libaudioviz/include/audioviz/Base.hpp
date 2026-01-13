@@ -90,6 +90,7 @@ public:
 	inline void set_text_font(const std::string &path) { font = sf::Font{path}; }
 
 	// users MUST call this to specify how much audio they need for their visualizers
+	// this is an overreach, only used in the terminal methods, make this a parameter of those instead
 	inline void set_audio_frames_needed(int needed) { audio_frames_needed = needed; }
 
 	// quick way to start your viz in a window!!!!!!!!

@@ -41,4 +41,9 @@ struct DragResizeResult
 
 DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size = 8.f);
 
+inline int bin_index_from_freq(const int freq_hz, const int sample_rate_hz, const int bin_count)
+{
+	return freq_hz * bin_count / sample_rate_hz;
+}
+
 } // namespace audioviz::util

@@ -5,6 +5,7 @@
 namespace audioviz
 {
 
+// TODO: revamp this with std::span<T> and std::vector<T, fftw_allocator<T>>
 class fftwf_dft_r2c_1d
 {
 	int N, outN;
@@ -20,9 +21,9 @@ public:
 	inline ~fftwf_dft_r2c_1d() { cleanup(); }
 
 	void set_n(const int N);
-	inline void execute() { fftwf_execute(p); }
+	inline void execute() const { fftwf_execute(p); }
 
-	inline float *input() { return in; }
+	inline float *input() const { return in; }
 	inline const fftwf_complex *output() const { return out; }
 	inline int input_size() const { return N; }
 	inline int output_size() const { return outN; }

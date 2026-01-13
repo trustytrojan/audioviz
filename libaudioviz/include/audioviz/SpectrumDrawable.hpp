@@ -4,6 +4,7 @@
 #include <audioviz/ColorSettings.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/util.hpp>
+#include <print>
 #include <vector>
 
 #ifdef AUDIOVIZ_IMGUI
@@ -89,17 +90,39 @@ public:
 		update_bars();
 	}
 
+	/**
+	 * Set the number of bars to display by calculating appropriate bar width and spacing.
+	 * Keeps spacing fixed and calculates the bar width needed to fit the desired count.
+	 * @param desired_count Number of bars to display
+	 */
+	void set_bar_count(int desired_count)
+	{
+		if (desired_count <= 0 || rect.size.x <= 0)
+			return;
+
+		// Calculate available width for bars: total_width - (count - 1) * spacing
+		const int total_spacing = (desired_count - 1) * bar.spacing;
+		const int available_width = rect.size.x - total_spacing;
+
+		if (available_width <= 0)
+			return;
+
+		const int new_width = available_width / desired_count;
+		if (new_width > 0)
+			set_bar_width(new_width);
+	}
+
 	void update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, int channel)
 	{
 		m_spectrum.resize(bars.size());
-		fa.bin_pack(m_spectrum, aa.get_channel_data(channel).fft_output);
+		fa.bin_pack(m_spectrum, aa.get_channel_data(channel).fft_amplitudes);
 		fa.interpolate(m_spectrum);
 		update(m_spectrum);
 	}
 
 	void update(std::span<const float> spectrum)
 	{
-		assert(spectrum.size() == bars.size());
+		assert(spectrum.size() >= bars.size());
 		if (color.wheel.rate != 0)
 			for (int i = 0; i < (int)bars.size(); ++i)
 			{
@@ -140,7 +163,7 @@ public:
 		}
 	}
 
-	inline int bar_count() const { return bars.size(); }
+	inline int get_bar_count() const { return bars.size(); }
 
 #ifdef AUDIOVIZ_IMGUI
 	void draw_imgui()
@@ -191,7 +214,7 @@ public:
 		ImGui::Unindent();
 
 		// Display current bar count (read-only)
-		ImGui::Text("Bar Count: %d", bar_count());
+		ImGui::Text("Bar Count: %d", get_bar_count());
 
 		const auto drag = util::imgui_drag_resize(rect);
 		if (drag.moved || drag.resized)

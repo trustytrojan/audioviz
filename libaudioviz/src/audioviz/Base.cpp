@@ -42,7 +42,7 @@ bool Base::next_frame(const std::span<const float> audio_buffer)
 		return false;
 	}
 
-	update(audio_buffer);
+	capture_time("update", update(audio_buffer));
 
 	final_rt.clear();
 	for (auto &layer : layers)

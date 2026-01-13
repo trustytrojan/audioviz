@@ -2,6 +2,7 @@
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <cassert>
 #include <cmath>
+#include <print>
 #include <stdexcept>
 
 #include "imgui.h"
@@ -9,14 +10,13 @@
 namespace audioviz
 {
 
-void FrequencyAnalyzer::_scale_max::calc(const FrequencyAnalyzer &fa)
+void FrequencyAnalyzer::_scale_max::calc(const int max, float nthroot_inv)
 {
-	const auto max = fa.fftw.output_size();
 	linear = max;
 	log = ::logf(max);
 	sqrt = ::sqrtf(max);
 	cbrt = ::cbrtf(max);
-	nthroot = ::powf(max, fa.nthroot_inv);
+	nthroot = ::powf(max, nthroot_inv);
 }
 
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
@@ -32,8 +32,9 @@ void FrequencyAnalyzer::set_fft_size(const int fft_size)
 	this->fft_size = fft_size;
 	inv_fft_size = 1.0f / fft_size;
 	fftw.set_n(fft_size);
-	scale_max.calc(*this);
-	compute_index_mappings();
+	std::println("fftw output size: {}", fftw.output_size());
+	scale_max.calc(fftw.output_size(), nthroot_inv);
+	compute_bin_pack_index_mappings(fftw.output_size(), bin_pack_input_size);
 	compute_window_values();
 }
 
@@ -56,7 +57,7 @@ void FrequencyAnalyzer::set_accum_method(const AccumulationMethod am)
 void FrequencyAnalyzer::set_scale(const Scale scale)
 {
 	this->scale = scale;
-	compute_index_mappings();
+	compute_bin_pack_index_mappings(fftw.output_size(), bin_pack_input_size);
 }
 
 void FrequencyAnalyzer::set_nth_root(const int nth_root)
@@ -65,7 +66,7 @@ void FrequencyAnalyzer::set_nth_root(const int nth_root)
 		throw std::invalid_argument("FrequencySpectrum::set_nth_root: nth_root cannot be zero!");
 	this->nth_root = nth_root;
 	nthroot_inv = 1.f / nth_root;
-	compute_index_mappings();
+	compute_bin_pack_index_mappings(fftw.output_size(), bin_pack_input_size);
 }
 
 void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
@@ -105,9 +106,8 @@ void FrequencyAnalyzer::copy_channel_to_input(
 			fftw_input[i] = audio[i * num_channels + channel];
 }
 
-void FrequencyAnalyzer::execute_fft(std::span<float> output)
+void FrequencyAnalyzer::compute_amplitude(std::span<float> output)
 {
-	fftw.execute();
 	const int size = output.size();
 	assert(size == fftw.output_size());
 	for (int i = 0; i < size; ++i)
@@ -122,41 +122,31 @@ void FrequencyAnalyzer::execute_fft(std::span<float> output)
 
 void FrequencyAnalyzer::bin_pack(std::span<float> out, std::span<const float> in)
 {
-	assert(in.size() == fftw.output_size());
-	const int size = out.size();
-
-	if (size != known_spectrum_size)
-	{
-		known_spectrum_size = size;
-		compute_index_mappings();
-	}
+	const auto out_size = out.size(), in_size = in.size();
+	assert(out_size <= in_size);
+	compute_bin_pack_index_mappings(out_size, in_size);
 
 	// just keep doing it here for consistency
 	std::ranges::fill(out, 0);
 
-	for (int i = 0; i < known_spectrum_size; ++i)
+	for (int i = 0; i < out_size; ++i)
 	{
-		const auto [start, end] = spectrum_to_fftw_indices[i];
+		const auto [start, end] = bin_pack_index_mapping[i];
 
 		if (start == -1)
 			continue;
 
-		float accumulated_amplitude{};
+		float a{};
 		for (int j = start; j < end; ++j)
 		{
-			const float amplitude = in[j];
-			switch (am)
-			{
-			case AccumulationMethod::MAX:
-				accumulated_amplitude = std::max(accumulated_amplitude, amplitude);
-				break;
-			case AccumulationMethod::SUM:
-				accumulated_amplitude += amplitude;
-				break;
-			}
+			const float x = in[j];
+			if (am == AccumulationMethod::SUM)
+				a += x;
+			else
+				a = std::max(a, x);
 		}
 
-		out[i] = accumulated_amplitude;
+		out[i] = a;
 	}
 }
 
@@ -185,20 +175,25 @@ float FrequencyAnalyzer::calc_index_ratio(const float i) const
 	}
 }
 
-void FrequencyAnalyzer::compute_index_mappings()
+void FrequencyAnalyzer::compute_bin_pack_index_mappings(const size_t out_size, const size_t in_size)
 {
-	if (!known_spectrum_size)
+	// assert(out_size <= in_size);
+
+	// don't recompute mappings if out_size didn't change!
+	if (!out_size || bin_pack_index_mapping.size() == out_size)
 		return;
 
-	spectrum_to_fftw_indices.assign(known_spectrum_size, {-1, -1});
+	// this NEEDS to be updated for different in_sizes!
+	scale_max.calc(in_size, nthroot_inv);
+	bin_pack_input_size = in_size;
+	bin_pack_index_mapping.assign(out_size, {-1, -1});
 
-	for (int i = 0; i < fftw.output_size(); ++i)
+	for (int i = 0; i < in_size; ++i)
 	{
-		const int spectrum_index =
-			std::clamp((int)(calc_index_ratio(i) * known_spectrum_size), 0, known_spectrum_size - 1);
-		if (spectrum_to_fftw_indices[spectrum_index].first == -1)
-			spectrum_to_fftw_indices[spectrum_index].first = i;
-		spectrum_to_fftw_indices[spectrum_index].second = i + 1;
+		const int out_index = std::clamp((size_t)(calc_index_ratio(i) * out_size), (size_t)0, out_size - 1);
+		if (bin_pack_index_mapping[out_index].first == -1)
+			bin_pack_index_mapping[out_index].first = i;
+		bin_pack_index_mapping[out_index].second = i + 1;
 	}
 }
 

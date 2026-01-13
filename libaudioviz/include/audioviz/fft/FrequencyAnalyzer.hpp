@@ -80,11 +80,11 @@ private:
 	struct _scale_max
 	{
 		float linear, log, sqrt, cbrt, nthroot;
-		void calc(const FrequencyAnalyzer &fa);
+		void calc(int new_max, float nthroot_inv);
 	} scale_max;
 
-	int known_spectrum_size{};
-	std::vector<std::pair<int, int>> spectrum_to_fftw_indices;
+	int bin_pack_input_size{};
+	std::vector<std::pair<int, int>> bin_pack_index_mapping;
 	std::vector<float, fftw_allocator<float>> window_values;
 	std::vector<double> m_spline_x, m_spline_y;
 
@@ -103,6 +103,7 @@ public:
 	 */
 	void set_fft_size(int fft_size);
 	inline int get_fft_size() const { return fft_size; }
+	inline int get_fft_output_size() const { return fftw.output_size(); }
 
 	/**
 	 * Set interpolation type.
@@ -162,13 +163,14 @@ public:
 	 */
 	void copy_channel_to_input(std::span<const float> audio, int num_channels, int channel, bool interleaved);
 
-	void execute_fft(std::span<float> output);
+	inline void execute_fft() const { fftw.execute(); }
+	void compute_amplitude(std::span<float> output);
 	void bin_pack(std::span<float> out, std::span<const float> in);
 	void interpolate(std::span<float> spectrum);
 
 private:
 	float calc_index_ratio(float i) const;
-	void compute_index_mappings();
+	void compute_bin_pack_index_mappings(size_t out_size, size_t in_size);
 	void compute_window_values();
 };
 
