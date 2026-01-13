@@ -6,9 +6,9 @@
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/media/Media.hpp>
 #include <limits>
-#include <map>
 #include <span>
 #include <string>
+#include <vector>
 
 namespace audioviz
 {
@@ -44,6 +44,7 @@ private:
 	sf::Text timing_text{font};
 	struct TimingStat
 	{
+		std::string name;
 		float min{std::numeric_limits<float>::max()};
 		float max{0.0f};
 		float total{0.0f};
@@ -51,7 +52,7 @@ private:
 		float current{0.0f};
 		float avg() const { return (count == 0) ? 0.0f : total / count; }
 	};
-	std::map<std::string, TimingStat> timing_stats;
+	std::vector<TimingStat> timing_stats;
 	bool tt_enabled{};
 
 public:
@@ -74,7 +75,7 @@ public:
 	 * @param audio_buffer A span of the audio data for this frame.
 	 * @returns Whether another frame can be prepared
 	 */
-	bool next_frame(std::span<const float> audio_buffer);
+	bool next_frame(std::span<const float> audio_buffer, int num_channels);
 
 	void draw(sf::RenderTarget &, sf::RenderStates) const override;
 
@@ -104,6 +105,7 @@ public:
 		const std::string &acodec = "copy");
 
 protected:
+	TimingStat &get_or_create_timing_stat(const std::string &label);
 	void capture_elapsed_time(const std::string &label, const sf::Clock &);
 	virtual void update(std::span<const float> audio_buffer) {}
 };

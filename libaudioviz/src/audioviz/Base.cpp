@@ -34,15 +34,16 @@ Base::Base(const sf::Vector2u size)
 	timing_text.setFillColor({255, 255, 255, 150});
 }
 
-bool Base::next_frame(const std::span<const float> audio_buffer)
+bool Base::next_frame(const std::span<const float> audio_buffer, int num_channels)
 {
-	if (audio_buffer.size() / 2 < audio_frames_needed) // assuming stereo
+	if (audio_buffer.size() < audio_frames_needed * num_channels) // assuming stereo
 	{
-		std::cerr << "Base::next_frame: not enough audio frames, returning false\n";
+		std::cerr << "[Base::next_frame] not enough audio frames, returning false\n";
 		return false;
 	}
 
-	capture_time("update", update(audio_buffer));
+	// capture_time("update", update(audio_buffer));
+	update(audio_buffer);
 
 	final_rt.clear();
 	for (auto &layer : layers)
@@ -52,10 +53,10 @@ bool Base::next_frame(const std::span<const float> audio_buffer)
 	if (tt_enabled)
 	{
 		auto s = std::format("{:<20}{:<7}{:<7}{:<7}{:<7}\n", "", "curr", "avg", "min", "max");
-		for (const auto &[label, stat] : timing_stats)
+		for (const auto &stat : timing_stats)
 		{
 			s += std::format(
-				"{:<20}{:<7.3f}{:<7.3f}{:<7.3f}{:<7.3f}\n", label, stat.current, stat.avg(), stat.min, stat.max);
+				"{:<20}{:<7.3f}{:<7.3f}{:<7.3f}{:<7.3f}\n", stat.name, stat.current, stat.avg(), stat.min, stat.max);
 		}
 		timing_text.setString(s);
 	}
@@ -74,9 +75,17 @@ void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 		target.draw(timing_text);
 }
 
+Base::TimingStat &Base::get_or_create_timing_stat(const std::string &label)
+{
+	auto it = std::ranges::find_if(timing_stats, [&label](auto &stat) { return stat.name == label; });
+	if (it != timing_stats.end())
+		return *it;
+	return timing_stats.emplace_back(label);
+}
+
 void Base::capture_elapsed_time(const std::string &label, const sf::Clock &clock)
 {
-	auto &stat = timing_stats[label];
+	auto &stat = get_or_create_timing_stat(label);
 	const float time_ms = clock.getElapsedTime().asMicroseconds() / 1e3f;
 	stat.current = time_ms;
 	if (time_ms < stat.min)
@@ -155,9 +164,11 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 	}
 #endif
 
+	const auto num_channels = media.audio_channels();
+
 #ifdef AUDIOVIZ_PORTAUDIO
 	pa::Init pa_init;
-	pa::Stream pa_stream{0, media.audio_channels(), paFloat32, media.audio_sample_rate(), afpvf};
+	pa::Stream pa_stream{0, num_channels, paFloat32, media.audio_sample_rate(), afpvf};
 	pa_stream.start();
 #endif
 
@@ -166,11 +177,11 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 	while (window.isOpen())
 	{
 		const auto frames = std::max(audio_frames_needed, afpvf);
-		const auto samples = frames * media.audio_channels();
+		const auto samples = frames * num_channels;
 		media.buffer_audio(frames);
 		if (media.audio_buffer_frames() < frames)
 		{
-			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
+			std::cerr << "[Base::start_in_window] not enough audio frames, breaking loop\n";
 			break;
 		}
 		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
@@ -203,7 +214,7 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		ImGui::SFML::Update(window, deltaClock.restart());
 #endif
 
-		if (!next_frame(audio_chunk))
+		if (!next_frame(audio_chunk, num_channels))
 			break;
 
 		// slide audio window just enough to ensure the next video
@@ -229,13 +240,14 @@ void Base::encode(Media &media, const std::string &outfile, const std::string &v
 	// Create OpenGL context first (sf::RenderWindow usually does this for us) otherwise GL extensions will be null!
 	sf::Context c;
 	FfmpegPopenEncoder ffmpeg{media.url, *this, outfile, vcodec, acodec};
-	RenderTexture rt{size, 4}; 
+	RenderTexture rt{size, 4};
+	const auto num_channels = media.audio_channels();
 
 	bool running = true;
 	while (running)
 	{
 		const auto frames = std::max(audio_frames_needed, afpvf);
-		const auto samples = frames * media.audio_channels();
+		const auto samples = frames * num_channels;
 		media.buffer_audio(frames);
 		if (media.audio_buffer_frames() < afpvf)
 		{
@@ -244,7 +256,7 @@ void Base::encode(Media &media, const std::string &outfile, const std::string &v
 		}
 		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
 
-		running = next_frame(audio_chunk);
+		running = next_frame(audio_chunk, num_channels);
 		if (!running)
 			break;
 

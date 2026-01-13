@@ -1,11 +1,15 @@
 link_libraries(audioviz)
-add_executable(stereo-scope stereo-scope.cpp)
-add_executable(spectrum spectrum.cpp)
-add_executable(polar-spectrum polar-spectrum.cpp)
-# add_executable(glow-test glow-test.cpp)
-add_executable(shake-bass shake-bass.cpp)
+
+function(add_example program_name)
+	add_executable(${program_name} "${program_name}.cpp")
+endfunction()
+
+add_example(stereo-scope)
+add_example(ranged-spectrum)
+add_example(polar-spectrum)
+add_example(shake-bass)
 
 if(AUDIOVIZ_USE_IMGUI)
-	add_executable(spectrum-imgui spectrum-imgui.cpp)
-	add_executable(scope-imgui scope-imgui.cpp)
+	add_example(spectrum-imgui)
+	add_example(scope-imgui)
 endif()

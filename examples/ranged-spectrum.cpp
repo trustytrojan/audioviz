@@ -22,7 +22,7 @@
 
 constexpr float audio_duration_sec = 0.1;
 
-struct SpectrumTest : audioviz::Base
+struct RangedSpectrum : audioviz::Base
 {
 	audioviz::FfmpegPopenMedia media;
 	int sample_rate_hz{media.audio_sample_rate()};
@@ -39,15 +39,15 @@ struct SpectrumTest : audioviz::Base
 
 	audioviz::Interpolator ip;
 
-	SpectrumTest(sf::Vector2u size, const std::string &media_url);
+	RangedSpectrum(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
 };
 
-SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
+RangedSpectrum::RangedSpectrum(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
 	  spectrum{{{}, (sf::Vector2i)size}, color},
 	  fa{fft_size},
-	  media{media_url, 10}
+	  media{media_url}
 {
 	std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
 
@@ -62,22 +62,23 @@ SpectrumTest::SpectrumTest(sf::Vector2u size, const std::string &media_url)
 	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
-	// so we can track the draw time
-	add_layer("spectrum").add_draw({spectrum});
+	// add_layer("spectrum").add_draw({spectrum});
+	add_final_drawable(spectrum);
 
-	max_fft_index = audioviz::util::bin_index_from_freq(500, sample_rate_hz, fa.get_fft_size());
+	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fa.get_fft_size());
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 
 	start_in_window(media, "spectrum-test");
 }
 
-void SpectrumTest::update(const std::span<const float> audio_buffer)
+void RangedSpectrum::update(const std::span<const float> audio_buffer)
 {
 	a.resize(fft_size);
-	audioviz::util::strided_copy(a, audio_buffer, num_channels, 0);
+	capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, 0));
 	capture_time("fft", aa.execute_fft(fa, a, true));
 	s.assign(spectrum.get_bar_count(), 0);
-	audioviz::util::spread_out(s, {aa.compute_amplitudes(fa).data(), max_fft_index});
+	// spread out into s only our desired frequency range
+	capture_time("spread_out", audioviz::util::spread_out(s, {aa.compute_amplitudes(fa).data(), max_fft_index}));
 	capture_time("interpolate", ip.interpolate(s));
 	capture_time("spectrum_update", spectrum.update(s));
 }
@@ -91,5 +92,5 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
-	SpectrumTest viz{size, argv[3]};
+	RangedSpectrum viz{size, argv[3]};
 }

@@ -16,7 +16,7 @@ void FfmpegPopenMedia::init_audio(float start_time_sec)
 	if (start_time_sec != 0)
 		ss << "-ss " << start_time_sec << ' ';
 	ss << "-i \"" << url << "\" ";
-	ss << "-f f32le - ";
+	ss << "-c:a pcm_f32le -f f32le - ";
 
 	const auto command = ss.str();
 	if (!(audio = util::popen_utf8(command, POPEN_R_MODE)))
