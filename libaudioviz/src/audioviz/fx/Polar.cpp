@@ -1,7 +1,7 @@
 #include "shader_headers/polar.vert.h"
 #include <audioviz/fx/Polar.hpp>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 static sf::Shader shader;
 
@@ -17,10 +17,9 @@ static void init()
 namespace audioviz::fx::Polar
 {
 
-void setParameters(sf::Vector2f center, sf::Vector2f size, float base_radius, float max_radius)
+void setParameters(sf::Vector2f size, float base_radius, float max_radius)
 {
 	init();
-	shader.setUniform("center", center);
 	shader.setUniform("size", size);
 	shader.setUniform("base_radius", base_radius);
 	shader.setUniform("max_radius", max_radius);
