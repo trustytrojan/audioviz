@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AudioAnalyzer_new.hpp"
+#include "AudioAnalyzer.hpp"
 #include <array>
 #include <span>
 #include <vector>
@@ -15,7 +15,7 @@ namespace audioviz
 class MultiChannelAudioAnalyzer
 {
 	int num_channels{};
-	std::vector<AudioAnalyzer_new> analyzers;
+	std::vector<AudioAnalyzer> analyzers;
 
 public:
 	/**
@@ -38,8 +38,8 @@ public:
 	 * Get analyzer for specific channel.
 	 * @param channel Channel index (0-based)
 	 */
-	AudioAnalyzer_new &operator[](int channel);
-	const AudioAnalyzer_new &operator[](int channel) const;
+	AudioAnalyzer &operator[](int channel);
+	const AudioAnalyzer &operator[](int channel) const;
 
 	/**
 	 * Get number of channels.
@@ -49,12 +49,12 @@ public:
 	/**
 	 * Average peak frequency across all channels (useful for stereo->mono reduction).
 	 */
-	AudioAnalyzer_new::FrequencyAmplitudePair compute_averaged_peak_frequency(int from_hz, int to_hz);
+	AudioAnalyzer::FrequencyAmplitudePair compute_averaged_peak_frequency(int from_hz, int to_hz);
 
 	/**
 	 * Average multiband shake across all channels.
 	 */
-	std::array<AudioAnalyzer_new::FrequencyAmplitudePair, 3> compute_averaged_multiband_shake(int from_hz, int to_hz);
+	std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> compute_averaged_multiband_shake(int from_hz, int to_hz);
 };
 
 } // namespace audioviz

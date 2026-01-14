@@ -2,10 +2,10 @@
 
 #include <cmath>
 #include <functional>
-#include <vector>
 #include <span>
+#include <vector>
 
-#include "fftw_allocator.hpp"
+#include "fftwf_allocator.hpp"
 #include "fftwf_dft_r2c_1d.hpp"
 
 namespace audioviz
@@ -35,13 +35,13 @@ private:
 	int fft_size;
 	float inv_fft_size;
 
-	fftwf_dft_r2c_1d fftw{fft_size};
+	fftwf_dft_r2c_1d fftw;
 
 	// window function
 	WindowFunction window_func{WF_BLACKMAN};
 	int wf_i{3}; // for imgui
 
-	std::vector<float, fftw_allocator<float>> window_values;
+	std::vector<float, fftwf_allocator<float>> window_values;
 
 public:
 	/**
@@ -80,20 +80,12 @@ public:
 	 */
 	void copy_to_input(std::span<const float> wavedata);
 
-	/**
-	 * Copies a specific channel of the audio to the FFT processor, which is of size `fft_size`.
-	 * If `num_channels` is greater than 1, then `audio` is expected to be of size `num_channels * fft_size`.
-	 * @throws `std::invalid_argument` if `channel` is not in the range `[0, num_channels)`
-	 * @throws `std::invalid_argument` if `num_channels <= 0`
-	 */
-	void copy_channel_to_input(std::span<const float> audio, int num_channels, int channel, bool interleaved);
-
 	inline void execute_fft() const { fftw.execute(); }
 	void compute_amplitude(std::span<float> output) const;
 	void compute_phase(std::span<float> output) const;
 
 private:
-	void compute_window_values();
+	void compute_window_values(bool force = {});
 };
 
 } // namespace audioviz

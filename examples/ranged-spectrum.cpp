@@ -1,6 +1,6 @@
 #include <audioviz/Base.hpp>
-#include <audioviz/SpectrumDrawable_new.hpp>
-#include <audioviz/fft/AudioAnalyzer_new.hpp>
+#include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/Interpolator.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
@@ -35,7 +35,7 @@ struct RangedSpectrum : audioviz::Base
 	audioviz::ColorSettings color;
 	audioviz::SpectrumDrawable_new spectrum;
 	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer_new aa{sample_rate_hz, fft_size};
+	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 
 	audioviz::Interpolator ip;
 

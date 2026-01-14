@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <ranges>
 #include <stdexcept>
 
 #include "imgui.h"
@@ -410,16 +409,26 @@ void spread_out(std::span<float> out, std::span<const float> in)
 {
 	assert(out.size() >= in.size());
 	const auto increment = out.size() / (float)in.size();
+
+	auto *__restrict const out_ptr = std::assume_aligned<32>(out.data());
+	const auto *__restrict const in_ptr = std::assume_aligned<32>(in.data());
+
+#pragma GCC ivdep
 	for (int i = 0; i < in.size(); ++i)
-		out[i * increment] = in[i];
+		out_ptr[(int)(i * increment)] = in_ptr[i];
 }
 
 void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel)
 {
 	assert(num_channels > 0);
 	assert(out.size() * num_channels == in.size());
+
+	auto *__restrict const out_ptr = std::assume_aligned<32>(out.data());
+	const auto *__restrict const in_ptr = std::assume_aligned<32>(in.data());
+
+#pragma GCC ivdep
 	for (int i = 0; i < out.size(); ++i)
-		out[i] = in[i * num_channels + channel];
+		out_ptr[i] = in_ptr[i * num_channels + channel];
 }
 
 } // namespace audioviz::util

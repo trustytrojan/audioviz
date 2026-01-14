@@ -1,6 +1,6 @@
 #include <audioviz/Base.hpp>
-#include <audioviz/SpectrumDrawable_new.hpp>
-#include <audioviz/fft/AudioAnalyzer_new.hpp>
+#include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/Interpolator.hpp>
 #include <audioviz/fx/Polar.hpp>
@@ -21,7 +21,7 @@
 	else                                     \
 		code;
 
-constexpr float audio_duration_sec = 0.15;
+constexpr float audio_duration_sec = 0.25;
 
 struct StereoPolarSpectrum : audioviz::Base
 {
@@ -35,7 +35,7 @@ struct StereoPolarSpectrum : audioviz::Base
 	audioviz::ColorSettings cs;
 	audioviz::SpectrumDrawable_new spectrum;
 	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer_new aa{sample_rate_hz, fft_size};
+	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
 
 	std::span<const float> audio_buffer;
@@ -88,9 +88,11 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 				a.resize(fft_size);
 				capture_time(
 					"strided_copy",
-					audioviz::util::strided_copy(a, audio_buffer.first(fft_size * num_channels), num_channels, channel));
+					audioviz::util::strided_copy(
+						a, audio_buffer.first(fft_size * num_channels), num_channels, channel));
 				capture_time("fft", aa.execute_fft(fa, a, true));
 				s.assign(spectrum.get_bar_count(), 0);
+				capture_time("compute_amps", aa.compute_amplitudes(fa));
 				capture_time(
 					"spread_out",
 					audioviz::util::spread_out(
@@ -112,16 +114,16 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 				sf::Color::Yellow,
 				sf::Color::White};
 
-			const auto delta_duration = 0.0075f;
+			const auto delta_duration = 0.02f;
 			const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
 			// left channel
 			for (int i = 0; i < colors.size(); ++i)
-				do_work(false, 0, M_PI / 2, max_duration_diff - i * delta_duration, colors[i]);
+				capture_time("do_work", do_work(false, 0, M_PI / 2, max_duration_diff - i * delta_duration, colors[i]));
 
 			// right channel
 			for (int i = 0; i < colors.size(); ++i)
-				do_work(true, 1, -M_PI / 2, max_duration_diff - i * delta_duration, colors[i]);
+				capture_time("do_work", do_work(true, 1, -M_PI / 2, max_duration_diff - i * delta_duration, colors[i]));
 
 			orig_rt.display();
 		});

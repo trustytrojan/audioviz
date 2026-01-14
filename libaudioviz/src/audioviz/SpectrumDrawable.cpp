@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <audioviz/SpectrumDrawable_new.hpp>
+#include <audioviz/SpectrumDrawable.hpp>
 #include <cassert>
 
 #ifdef AUDIOVIZ_IMGUI

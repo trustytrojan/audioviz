@@ -34,21 +34,21 @@ void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<con
 	}
 }
 
-AudioAnalyzer_new &MultiChannelAudioAnalyzer::operator[](int channel)
+AudioAnalyzer &MultiChannelAudioAnalyzer::operator[](int channel)
 {
 	if (channel < 0 || channel >= num_channels)
 		throw std::out_of_range("Invalid channel index");
 	return analyzers[channel];
 }
 
-const AudioAnalyzer_new &MultiChannelAudioAnalyzer::operator[](int channel) const
+const AudioAnalyzer &MultiChannelAudioAnalyzer::operator[](int channel) const
 {
 	if (channel < 0 || channel >= num_channels)
 		throw std::out_of_range("Invalid channel index");
 	return analyzers[channel];
 }
 
-AudioAnalyzer_new::FrequencyAmplitudePair
+AudioAnalyzer::FrequencyAmplitudePair
 MultiChannelAudioAnalyzer::compute_averaged_peak_frequency(int from_hz, int to_hz)
 {
 	float total_freq = 0.f;
@@ -64,10 +64,10 @@ MultiChannelAudioAnalyzer::compute_averaged_peak_frequency(int from_hz, int to_h
 	return {static_cast<int>(total_freq / num_channels), total_amp / num_channels};
 }
 
-std::array<AudioAnalyzer_new::FrequencyAmplitudePair, 3>
+std::array<AudioAnalyzer::FrequencyAmplitudePair, 3>
 MultiChannelAudioAnalyzer::compute_averaged_multiband_shake(int from_hz, int to_hz)
 {
-	std::array<AudioAnalyzer_new::FrequencyAmplitudePair, 3> result{};
+	std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> result{};
 
 	for (auto &analyzer : analyzers)
 	{

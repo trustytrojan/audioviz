@@ -2,7 +2,7 @@
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <cassert>
 #include <cmath>
-#include <print>
+#include <memory>
 
 #include "imgui.h"
 
@@ -20,64 +20,46 @@ void FrequencyAnalyzer::set_fft_size(const int fft_size)
 	this->fft_size = fft_size;
 	inv_fft_size = 1.0f / fft_size;
 	fftw.set_n(fft_size);
-	std::println("fftw output size: {}", fftw.output_size());
 	compute_window_values();
 }
 
 void FrequencyAnalyzer::set_window_func(const WindowFunction wf)
 {
 	this->window_func = wf;
-	compute_window_values();
+	compute_window_values(true);
 }
 
 void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
 {
 	assert(wavedata.size() == fft_size);
 
-	// this can be optimized by SIMD if we use a planar format...
-	const auto fftw_input = fftw.input();
+	auto *__restrict const out_ptr = std::assume_aligned<32>(fftw.input().data());
+	const auto *__restrict const in_ptr = std::assume_aligned<32>(wavedata.data());
+	const auto *__restrict const win_ptr = std::assume_aligned<32>(window_values.data());
+
 	if (window_func)
+#pragma GCC ivdep
 		for (int i = 0; i < fft_size; ++i)
-			fftw_input[i] = wavedata[i] * window_values[i];
+			out_ptr[i] = in_ptr[i] * win_ptr[i];
 	else
-		std::ranges::copy(wavedata, fftw_input);
-}
-
-void FrequencyAnalyzer::copy_channel_to_input(
-	std::span<const float> audio, const int num_channels, const int channel, const bool interleaved)
-{
-	assert(num_channels > 0);
-	assert(audio.size() >= fft_size * num_channels);
-	assert(channel >= 0);
-	assert(channel < num_channels);
-
-	if (!interleaved)
-	{
-		copy_to_input(audio.subspan(channel * fft_size));
-		return;
-	}
-
-	// this can be optimized by SIMD if we use a planar format...
-	const auto fftw_input = fftw.input();
-	if (window_func)
-		for (int i = 0; i < fft_size; ++i)
-			fftw_input[i] = audio[i * num_channels + channel] * window_values[i];
-	else
-		for (int i = 0; i < fft_size; ++i)
-			fftw_input[i] = audio[i * num_channels + channel];
+		std::ranges::copy(wavedata, out_ptr);
 }
 
 void FrequencyAnalyzer::compute_amplitude(std::span<float> output) const
 {
 	const int size = output.size();
 	assert(size == fftw.output_size());
+
+	auto *__restrict const out_ptr = std::assume_aligned<32>(output.data());
+	auto *__restrict const in_ptr = std::assume_aligned<32>(fftw.output().data());
+
+#pragma GCC ivdep
 	for (int i = 0; i < size; ++i)
 	{
-		const float re = fftw.output()[i][0];
-		const float im = fftw.output()[i][1];
+		const auto [re, im] = in_ptr[i];
 		// must divide by fft_size here to counteract the correlation
 		// between fft_size and the average amplitude across the spectrum vector.
-		output[i] = sqrtf((re * re) + (im * im)) * inv_fft_size;
+		out_ptr[i] = sqrtf((re * re) + (im * im)) * inv_fft_size;
 	}
 }
 
@@ -87,19 +69,32 @@ void FrequencyAnalyzer::compute_phase(std::span<float> output) const
 	assert(size == fftw.output_size());
 	for (int i = 0; i < size; ++i)
 	{
-		const float re = fftw.output()[i][0];
-		const float im = fftw.output()[i][1];
+		const auto [re, im] = fftw.output()[i];
 		output[i] = atan2f(im, re);
 	}
 }
 
-void FrequencyAnalyzer::compute_window_values()
+void FrequencyAnalyzer::compute_window_values(bool force)
 {
 	if (!window_func)
 		return;
 
+	if (force)
+	{
+		// window function changed, must recompute entire array
+		window_values.resize(fft_size);
+		for (int i = 0; i < fft_size; ++i)
+			window_values[i] = window_func(i, fft_size);
+	}
+
+	// no need to recompute if new fft_size is smaller
+	if (fft_size <= window_values.size())
+		return;
+
+	// if new fft_size is larger, just compute the new values
+	const auto old_size = window_values.size();
 	window_values.resize(fft_size);
-	for (int i = 0; i < fft_size; ++i)
+	for (int i = old_size; i < fft_size; ++i)
 		window_values[i] = window_func(i, fft_size);
 }
 
