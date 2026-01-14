@@ -34,7 +34,7 @@ struct PolarSpectrum : audioviz::Base
 	std::vector<float> s, a;
 
 	audioviz::ColorSettings color;
-	audioviz::SpectrumDrawable_new spectrumL;
+	audioviz::SpectrumDrawable_new spectrumL, spectrumR;
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer_new aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
@@ -46,6 +46,7 @@ struct PolarSpectrum : audioviz::Base
 PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
 	  spectrumL{{{}, (sf::Vector2i)size}, color},
+	  spectrumR{{{}, (sf::Vector2i)size}, color},
 	  fa{fft_size},
 	  media{media_url, 10}
 {
@@ -58,12 +59,15 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 
 	spectrumL.set_bar_width(2);
 	spectrumL.set_bar_spacing(0);
+	spectrumR.set_bar_width(2);
+	spectrumR.set_bar_spacing(0);
+	spectrumR.set_backwards(true);
 
 	set_audio_frames_needed(fft_size);
 
 	// Calculate frequency range (0-250 Hz)
 	min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
-	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
+	max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrumL.get_bar_count());
 
 	// Setup Polar Shader
@@ -71,10 +75,25 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	audioviz::fx::Polar::setParameters(
 		(sf::Vector2f)size, // Dimensions of linear space
 		size.y * 0.25f,		// Base radius inner hole: 25% screen height
-		size.y * 0.5f		// Max radius: 50% screen height
+		size.y * 0.5f,		// Max radius: 50% screen height
+		M_PI / 2,			// Start angle: shift a quarter circle
+		M_PI				// Angle span: half a cicle
 	);
 
-	add_layer("spectrum").add_draw({spectrumL, &audioviz::fx::Polar::getShader()});
+	// add_layer("spectrum").add_draw({spectrumL, &audioviz::fx::Polar::getShader()});
+	sf::RenderStates polar_rs{&audioviz::fx::Polar::getShader()};
+
+	auto &spectrum_layer = add_layer("spectrum");
+	spectrum_layer.set_orig_cb(
+		[&](auto &orig_rt)
+		{
+			orig_rt.clear();
+			audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, M_PI / 2, M_PI);
+			orig_rt.draw(spectrumL, polar_rs);
+			audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, -M_PI / 2, M_PI);
+			orig_rt.draw(spectrumR, polar_rs);
+			orig_rt.display();
+		});
 
 	start_in_window(media, "polar-spectrum");
 }
@@ -91,6 +110,17 @@ void PolarSpectrum::update(const std::span<const float> audio_buffer)
 			s, {aa.compute_amplitudes(fa).data() + min_fft_index, max_fft_index - min_fft_index + 1}));
 	capture_time("interpolate", ip.interpolate(s));
 	capture_time("spectrum_update", spectrumL.update(s));
+
+	a.resize(fft_size);
+	capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, 1));
+	capture_time("fft", aa.execute_fft(fa, a, true));
+	s.assign(spectrumR.get_bar_count(), 0);
+	capture_time(
+		"spread_out",
+		audioviz::util::spread_out(
+			s, {aa.compute_amplitudes(fa).data() + min_fft_index, max_fft_index - min_fft_index + 1}));
+	capture_time("interpolate", ip.interpolate(s));
+	capture_time("spectrum_update", spectrumR.update(s));
 }
 
 int main(const int argc, const char *const *const argv)

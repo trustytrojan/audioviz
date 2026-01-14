@@ -7,6 +7,7 @@ endfunction()
 add_example(stereo-scope)
 add_example(ranged-spectrum)
 add_example(polar-spectrum)
+add_example(stereo-polar-spectrum)
 add_example(shake-bass)
 
 if(AUDIOVIZ_USE_IMGUI)

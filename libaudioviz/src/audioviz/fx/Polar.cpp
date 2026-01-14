@@ -17,12 +17,14 @@ static void init()
 namespace audioviz::fx::Polar
 {
 
-void setParameters(sf::Vector2f size, float base_radius, float max_radius)
+void setParameters(sf::Vector2f size, float base_radius, float max_radius, float angle_start, float angle_span)
 {
 	init();
 	shader.setUniform("size", size);
 	shader.setUniform("base_radius", base_radius);
 	shader.setUniform("max_radius", max_radius);
+	shader.setUniform("angle_start", angle_start);
+	shader.setUniform("angle_span", angle_span);
 }
 
 const sf::Shader &getShader()

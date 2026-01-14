@@ -3,6 +3,8 @@
 uniform vec2 size;          // 1280, 720
 uniform float base_radius;  // e.g., 100.0 (pixels)
 uniform float max_radius;   // e.g., 360.0 (pixels) - half of size.y
+uniform float angle_start;  // Starting angle in radians (default: PI/2 for top)
+uniform float angle_span;   // Angular span in radians (default: 2*PI for full circle)
 
 const float PI = 3.14159265359;
 
@@ -11,8 +13,8 @@ void main()
     // 1. Get position from ModelView
     vec4 worldPos = gl_ModelViewMatrix * gl_Vertex;
 
-    // 2. Map the scene X to the angle
-    float angle = (worldPos.x / size.x) * 2.0 * PI + (PI / 2);
+    // 2. Map the scene X to the angle range
+    float angle = angle_start + (worldPos.x / size.x) * angle_span;
 
     // 3. NORMALIZE THE BAR HEIGHT (0.0 to 1.0)
     // We calculate how far "up" the bar the current vertex is.
