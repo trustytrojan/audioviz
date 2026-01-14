@@ -26,6 +26,8 @@ public:
 	 */
 	MultiChannelAudioAnalyzer(int num_channels, int sample_rate_hz, int window_size_samples);
 
+	void set_fft_size(int fft_size);
+
 	/**
 	 * Execute FFT on interleaved multi-channel audio buffer.
 	 * Automatically distributes audio to per-channel analyzers.

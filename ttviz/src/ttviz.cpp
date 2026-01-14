@@ -1,8 +1,7 @@
 #include "ttviz.hpp"
 #include <audioviz/fx/Blur.hpp>
 #include <audioviz/fx/Mult.hpp>
-#include <audioviz/media/FfmpegPopenMedia.hpp>
-#include <iostream>
+#include <audioviz/util.hpp>
 
 #define capture_time(label, code)            \
 	if (timing_text_enabled())               \
@@ -14,106 +13,99 @@
 	else                                     \
 		code;
 
-ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color, SS &ss, PS &ps, const int antialiasing)
+ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, const int fft_size, const int antialiasing)
 	: Base{size},
 	  media{media},
-	  fa{fa},
-	  color{color},
-	  ss{ss},
-	  ps{ps},
-	  video_bg{size},
-	  sa{media.audio_sample_rate(), fa.get_fft_size()}
+	  sample_rate_hz{media.audio_sample_rate()},
+	  fa{fft_size},
+	  sa{sample_rate_hz, fft_size},
+	  ss{{{}, {size.x, size.y - 10}}, color},
+	  ps{{{}, (sf::Vector2i)size}, 50, get_framerate()}
 {
-	// create stereo "mirror" effect
+	set_audio_frames_needed(fft_size);
+
+	// Configure spectrum
 	ss.set_left_backwards(true);
-	ss.set_rect({{}, {size.x, size.y - 10}});
 
-	metadata_init();
-	layers_init(antialiasing);
+	// Setup metadata
+	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
+	title_text.setCharacterSize(24);
+	title_text.setFillColor({255, 255, 255, 150});
 
-	// VERY IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	// now that two things are dependent on different amounts of audio, take the max of their dependencies
-	set_audio_frames_needed(std::max(fa.get_fft_size(), afpvf));
-}
+	artist_text.setStyle(sf::Text::Italic);
+	artist_text.setCharacterSize(24);
+	artist_text.setFillColor({255, 255, 255, 150});
 
-void ttviz::update(std::span<const float> audio_buffer)
-{
-	// imgui calls go here
-#ifdef AUDIOVIZ_IMGUI
-	// ps.draw_imgui();
-#endif
+	metadata.use_metadata(media);
 
-	capture_time("fft", sa.execute_fft(fa, audio_buffer));
-	color.increment_wheel_time();
-}
+	if (media.attached_pic())
+		metadata.set_album_cover(*media.attached_pic(), {150, 150});
 
-void ttviz::layers_init(const int antialiasing)
-{
-	// bg layer
+	metadata.set_position({30, 30});
+	add_final_drawable(metadata);
+
+	// Setup layers
+	// Background layer (for album art or video)
 	if (media.attached_pic() || media.has_video_stream())
 	{
 		auto &bg = add_layer("bg", antialiasing);
 
-		if (media.has_video_stream()) // set_orig_cb() to draw video frames on the layer
+		if (media.has_video_stream())
 		{
+			video_bg = sf::Texture{size};
 			bg.set_orig_cb(
-				[this, frames_to_wait{get_framerate() / media.video_framerate()}](auto &orig_rt)
+				[this, &media](auto &orig_rt)
 				{
+					const int frames_to_wait = get_framerate() / media.video_framerate();
 					if (vfcount < frames_to_wait)
 						++vfcount;
 					else
 					{
 						if (media.read_video_frame(video_bg))
 							orig_rt.draw(sf::Sprite{video_bg});
-						else
-							std::cerr << "media->read_video_frame returned false????????\n";
-						vfcount = 1; // ALWAYS RESET TO 1 OTHERWISE THE IF CHECK ABOVE DOESN'T MAKE SENSE
+						vfcount = 1;
 					}
 					orig_rt.display();
 				});
 		}
 		else if (media.attached_pic())
 		{
-			// we only have one image; don't run effects in Layer::full_lifecycle
-			// which means we need to prepopulate the `fx_rt` of this layer with something...
-			// set_background() handles this
 			bg.set_auto_fx(false);
 			set_background(*media.attached_pic());
 		}
 	}
 
+	// Particles layer
 	auto &particles = add_layer("particles", antialiasing);
 	particles.add_draw({ps});
 	particles.set_orig_cb(
-		[&](auto &orig_rt)
+		[this](auto &)
 		{
-			// lock the tickrate of the particles at 60hz for non-60fps output
 			const auto framerate = get_framerate();
 
 			if (framerate < 60)
-				ps.update(sa, media.audio_sample_rate(), fa.get_fft_size(), {.multiplier = 60.f / framerate});
+				ps.update(sa, {.multiplier = 60.f / framerate});
 			else if (framerate == 60)
-				ps.update(sa, media.audio_sample_rate(), fa.get_fft_size());
+				ps.update(sa);
 			else if (framerate > 60 && frame_count >= (framerate / 60.))
 			{
-				ps.update(sa, media.audio_sample_rate(), fa.get_fft_size());
+				ps.update(sa);
 				frame_count = 0;
 			}
-
 			++frame_count;
 		});
 	particles.set_fx_cb(
-		[&](auto &orig_rt, auto &fx_rt, auto &target)
+		[](auto &orig_rt, auto &fx_rt, auto &target)
 		{
 			target.draw(fx_rt.sprite(), sf::BlendAdd);
 			target.draw(orig_rt.sprite(), sf::BlendAdd);
 		});
 
+	// Spectrum layer
 	auto &spectrum = add_layer("spectrum", antialiasing);
 	spectrum.add_draw({ss});
-	spectrum.set_orig_cb([&](auto &) { ss.update(fa, sa); });
 	spectrum.set_fx_cb(
-		[&](auto &orig_rt, auto &fx_rt, auto &target)
+		[this](auto &orig_rt, auto &fx_rt, auto &target)
 		{
 			if (spectrum_bm)
 			{
@@ -123,29 +115,34 @@ void ttviz::layers_init(const int antialiasing)
 			else
 			{
 				target.draw(fx_rt.sprite(), audioviz::util::GreatAmazingBlendMode);
-				if constexpr (std::is_same_v<BarType, sf::CircleShape>)
-					// redraw the entire ss because antialiased edges have dark pixels with 1 alpha...
-					target.draw(ss);
-				else
-					target.draw(orig_rt.sprite());
+				target.draw(orig_rt.sprite());
 			}
 		});
+}
+
+void ttviz::update(std::span<const float> audio_buffer)
+{
+	// Execute FFT for both channels
+	capture_time("fft", sa.execute_fft(fa, audio_buffer));
+
+	// Update spectrum for both channels
+	capture_time("spectrum_update", ss.update(fa, sa, bp, ip));
+
+	// Update color wheel
+	color.increment_wheel_time();
 }
 
 void ttviz::add_default_effects()
 {
 	if (const auto bg = get_layer("bg"))
 	{
-		// clang-format off
 		bg->add_effect(
-			media.has_video_stream()
-				? new audioviz::fx::Blur{2.5, 2.5, 5}
-				: new audioviz::fx::Blur{7.5, 7.5, 15});
-		// clang-format on
+			media.has_video_stream() ? new audioviz::fx::Blur{2.5, 2.5, 5} : new audioviz::fx::Blur{7.5, 7.5, 15});
+
 		if (!media.has_video_stream())
 			bg->add_effect(new audioviz::fx::Mult{0.75});
+
 		if (media.attached_pic())
-			// this will set the background WITH the blur affect we just added
 			set_background(*media.attached_pic());
 	}
 
@@ -161,42 +158,16 @@ void ttviz::set_album_cover(const std::string &image_path, const sf::Vector2f si
 	metadata.set_album_cover(sf::Texture{image_path}, size);
 }
 
-void ttviz::metadata_init()
-{
-	// set style, fontsize, and color
-	title_text.setStyle(sf::Text::Bold | sf::Text::Italic);
-	title_text.setCharacterSize(24);
-	title_text.setFillColor({255, 255, 255, 150});
-
-	artist_text.setStyle(sf::Text::Italic);
-	artist_text.setCharacterSize(24);
-	artist_text.setFillColor({255, 255, 255, 150});
-
-	// set text using stream/format metadata
-	metadata.use_metadata(media);
-
-	if (media.attached_pic())
-		metadata.set_album_cover(*media.attached_pic(), {150, 150});
-
-	// default metadata position
-	// needs to be called AFTER album cover is set because the text position depends on album cover size
-	metadata.set_position({30, 30});
-
-	// metadata should be drawn on top of the final canvas for blending purposes
-	add_final_drawable(metadata);
-}
-
 void ttviz::set_background(const sf::Texture &txr)
 {
 	const auto bg = get_layer("bg");
 	if (!bg)
 		throw std::runtime_error{"no background layer present!"};
+
 	audioviz::Sprite spr{txr};
-
-	// i do this because of *widescreen* youtube thumbnails containing *square* album covers
 	spr.capture_centered_square_view();
-
 	spr.fill_screen(size);
+
 	bg->orig_draw(spr);
 	bg->orig_display();
 	bg->apply_fx();
@@ -205,4 +176,11 @@ void ttviz::set_background(const sf::Texture &txr)
 void ttviz::set_spectrum_blendmode(const sf::BlendMode &bm)
 {
 	spectrum_bm = bm;
+}
+
+void ttviz::set_fft_size(int fft_size)
+{
+	fa.set_fft_size(fft_size);
+	sa.set_fft_size(fft_size);
+	set_audio_frames_needed(fft_size);
 }

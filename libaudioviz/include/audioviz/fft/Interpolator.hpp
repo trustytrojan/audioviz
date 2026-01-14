@@ -12,10 +12,6 @@ namespace audioviz
  */
 class Interpolator
 {
-	tk::spline spline;
-	std::vector<double> m_spline_x, m_spline_y;
-	std::vector<size_t> zero_indices;
-
 public:
 	enum class InterpolationType
 	{
@@ -24,13 +20,30 @@ public:
 		CSPLINE_HERMITE = tk::spline::cspline_hermite
 	};
 
+private:
+	tk::spline spline;
+	std::vector<double> m_spline_x, m_spline_y;
+	std::vector<size_t> zero_indices;
+	InterpolationType type{InterpolationType::CSPLINE};
+
+public:
+	/**
+	 * Set the interpolation type to use.
+	 * @param type interpolation type
+	 */
+	void set_interp_type(InterpolationType type) { this->type = type; }
+
+	/**
+	 * Get the current interpolation type.
+	 */
+	InterpolationType get_interp_type() const { return type; }
+
 	/**
 	 * Interpolate spectrum data to fill gaps between non-zero values.
-	 * Only applies interpolation if type is not NONE and scale is not LINEAR.
+	 * Uses the interpolation type set via set_interp_type().
 	 * @param spectrum spectrum data to interpolate in-place
-	 * @param scale_is_linear whether the scale is linear (disables interpolation)
 	 */
-	void interpolate(std::span<float> spectrum, InterpolationType type = InterpolationType::CSPLINE);
+	void interpolate(std::span<float> spectrum);
 };
 
 } // namespace audioviz

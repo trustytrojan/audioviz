@@ -3,7 +3,7 @@
 namespace audioviz
 {
 
-void Interpolator::interpolate(std::span<float> range, InterpolationType type)
+void Interpolator::interpolate(std::span<float> range)
 {
 	const auto size = range.size();
 

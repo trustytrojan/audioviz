@@ -6,7 +6,6 @@
 namespace audioviz
 {
 
-template <typename BarType>
 class StereoSpectrum : public sf::Drawable
 {
 	SpectrumDrawable _left, _right;

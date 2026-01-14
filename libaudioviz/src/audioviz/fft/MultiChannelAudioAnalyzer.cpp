@@ -18,6 +18,12 @@ MultiChannelAudioAnalyzer::MultiChannelAudioAnalyzer(int num_channels, int sampl
 		analyzers.emplace_back(sample_rate_hz, window_size_samples);
 }
 
+void MultiChannelAudioAnalyzer::set_fft_size(int fft_size)
+{
+	for (auto &aa : analyzers)
+		aa.set_fft_size(fft_size);
+}
+
 void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<const float> interleaved_audio)
 {
 	const int window_size = fa.get_fft_size();
