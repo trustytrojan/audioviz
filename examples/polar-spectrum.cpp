@@ -35,7 +35,7 @@ struct PolarSpectrum : audioviz::Base
 	std::vector<float, aligned_allocator<float, 32>> s, a;
 
 	audioviz::ColorSettings color;
-	audioviz::SpectrumDrawable_new spectrum;
+	audioviz::SpectrumDrawable spectrum;
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
@@ -59,6 +59,7 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 
 	spectrum.set_bar_width(2);
 	spectrum.set_bar_spacing(0);
+	spectrum.set_multiplier(6);
 
 	set_audio_frames_needed(fft_size);
 

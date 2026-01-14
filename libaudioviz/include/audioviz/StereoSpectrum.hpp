@@ -9,7 +9,7 @@ namespace audioviz
 template <typename BarType>
 class StereoSpectrum : public sf::Drawable
 {
-	SpectrumDrawable<BarType> _left, _right;
+	SpectrumDrawable _left, _right;
 	sf::IntRect rect;
 
 public:
@@ -78,11 +78,11 @@ public:
 		return _left.get_bar_count();
 	}
 
-	void update(FrequencyAnalyzer &fa, StereoAnalyzer &sa)
+	void update(FrequencyAnalyzer &fa, StereoAnalyzer &sa, BinPacker &bp, Interpolator &ip)
 	{
 		assert(_left.get_bar_count() == _right.get_bar_count());
-		_left.update(fa, sa, 0);
-		_right.update(fa, sa, 1);
+		_left.update(fa, sa.left(), bp, ip);
+		_right.update(fa, sa.right(), bp, ip);
 	}
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override

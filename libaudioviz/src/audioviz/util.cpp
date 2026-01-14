@@ -415,8 +415,7 @@ void spread_out(std::span<float> out, std::span<const float> in)
 
 #pragma GCC ivdep
 	for (int i = 0; i < in.size(); ++i)
-		out_ptr[(int)(i * increment)] =
-		in_ptr[i];
+		out_ptr[(int)(i * increment)] = in_ptr[i];
 }
 
 void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel)
@@ -424,8 +423,8 @@ void strided_copy(std::span<float> out, std::span<const float> in, int num_chann
 	assert(num_channels > 0);
 	assert(out.size() * num_channels == in.size());
 
-	auto *__restrict const out_ptr = std::assume_aligned<32>(out.data());
-	const auto *__restrict const in_ptr = std::assume_aligned<32>(in.data());
+	auto *__restrict const out_ptr = out.data();
+	const auto *__restrict const in_ptr = in.data();
 
 #pragma GCC ivdep
 	for (int i = 0; i < out.size(); ++i)

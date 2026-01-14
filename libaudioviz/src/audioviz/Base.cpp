@@ -3,6 +3,11 @@
 #include <format>
 #include <iostream>
 
+#ifdef __linux__
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 #ifdef AUDIOVIZ_IMGUI
 #include <imgui-SFML.h>
 #include <imgui.h>
@@ -153,7 +158,6 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		sf::State::Windowed,
 		{.antiAliasingLevel = 4},
 	};
-	window.setVerticalSyncEnabled(true);
 
 #ifdef AUDIOVIZ_IMGUI
 	// Initialize ImGui-SFML
@@ -167,9 +171,29 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 	const auto num_channels = media.audio_channels();
 
 #ifdef AUDIOVIZ_PORTAUDIO
+#ifdef __linux__
+	// Suppress ALSA warnings during PortAudio initialization
+	int stderr_backup = dup(STDERR_FILENO);
+	int devnull = open("/dev/null", O_WRONLY);
+	dup2(devnull, STDERR_FILENO);
+	close(devnull);
+#endif
+
+	// this looks like a bad idea, but letting portaudio handle timing
+	// with it's blocking write function is better than constantly getting
+	// "output underflowed" errors
+	window.setVerticalSyncEnabled(false);
+	window.setFramerateLimit(0);
+
 	pa::Init pa_init;
 	pa::Stream pa_stream{0, num_channels, paFloat32, media.audio_sample_rate(), afpvf};
 	pa_stream.start();
+
+#ifdef __linux__
+	// Restore stderr
+	dup2(stderr_backup, STDERR_FILENO);
+	close(stderr_backup);
+#endif
 #endif
 
 	sf::Clock deltaClock;

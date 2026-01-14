@@ -23,8 +23,11 @@ endif()
 target_compile_options(audioviz PUBLIC
 	-Wno-narrowing
 	-ffast-math
-	# -fopt-info-vec-optimized
 )
+
+if(CMAKE_BUILD_TYPE MATCHES Rel)
+	target_compile_options(audioviz PUBLIC -fopt-info-vec-optimized)
+endif()
 
 target_include_directories(audioviz PUBLIC
 	include # our headers

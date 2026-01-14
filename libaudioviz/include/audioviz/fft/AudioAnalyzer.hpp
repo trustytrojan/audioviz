@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FrequencyAnalyzer.hpp"
-#include "fftwf_allocator.hpp"
+#include "audioviz/aligned_allocator.hpp"
 #include <cassert>
 #include <optional>
 #include <span>
@@ -23,7 +23,7 @@ private:
 	int sample_rate_hz{};
 	int fft_size{};
 	int fft_output_size{}; // computed in ctor from fft_size
-	std::vector<float, fftwf_allocator<float>> fft_amplitudes, fft_phase;
+	std::vector<float, aligned_allocator<float>> fft_amplitudes, fft_phase;
 	std::optional<FrequencyAmplitudePair> peak_freq_amp; // {frequency_hz, amplitude}
 	std::optional<std::array<FrequencyAmplitudePair, 3>> multiband_shake;
 

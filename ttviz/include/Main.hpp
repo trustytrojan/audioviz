@@ -20,7 +20,7 @@ class Main
 
 	using FA = audioviz::FrequencyAnalyzer;
 	using SC = audioviz::ScopeDrawable<ShapeType>;
-	using SD = audioviz::SpectrumDrawable<BarType>;
+	using SD = audioviz::SpectrumDrawable;
 	using SS = audioviz::StereoSpectrum<BarType>;
 	using PS = audioviz::ParticleSystem<ParticleShapeType>;
 	using CS = audioviz::ColorSettings;

@@ -34,7 +34,7 @@ struct RangedSpectrum : audioviz::Base
 	std::vector<float, aligned_allocator<float, 32>> a, s;
 
 	audioviz::ColorSettings color;
-	audioviz::SpectrumDrawable_new spectrum;
+	audioviz::SpectrumDrawable spectrum;
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 

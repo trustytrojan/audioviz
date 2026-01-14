@@ -30,9 +30,9 @@ public:
 	 * Execute FFT on interleaved multi-channel audio buffer.
 	 * Automatically distributes audio to per-channel analyzers.
 	 * @param fa FrequencyAnalyzer (shared across channels)
-	 * @param audio Interleaved audio buffer (size = window_size * num_channels)
+	 * @param interleaved_audio Interleaved audio buffer (size = window_size * num_channels)
 	 */
-	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio);
+	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> interleaved_audio);
 
 	/**
 	 * Get analyzer for specific channel.

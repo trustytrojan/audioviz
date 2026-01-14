@@ -35,7 +35,7 @@ struct StereoPolarSpectrum : audioviz::Base
 	std::vector<float, aligned_allocator<float, 32>> s, a;
 
 	audioviz::ColorSettings cs;
-	audioviz::SpectrumDrawable_new spectrum;
+	audioviz::SpectrumDrawable spectrum;
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;

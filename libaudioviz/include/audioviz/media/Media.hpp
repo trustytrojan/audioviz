@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <audioviz/fft/fftwf_allocator.hpp>
+#include <audioviz/aligned_allocator.hpp>
 
 namespace audioviz
 {
@@ -13,7 +13,7 @@ namespace audioviz
  */
 class Media
 {
-	std::vector<float, fftwf_allocator<float>> _audio_buffer;
+	std::vector<float, aligned_allocator<float>> _audio_buffer;
 
 public:
 	const std::string url;

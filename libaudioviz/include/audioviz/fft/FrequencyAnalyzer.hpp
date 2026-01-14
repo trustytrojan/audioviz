@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-#include "fftwf_allocator.hpp"
+#include "audioviz/aligned_allocator.hpp"
 #include "fftwf_dft_r2c_1d.hpp"
 
 namespace audioviz
@@ -41,7 +41,7 @@ private:
 	WindowFunction window_func{WF_BLACKMAN};
 	int wf_i{3}; // for imgui
 
-	std::vector<float, fftwf_allocator<float>> window_values;
+	std::vector<float, aligned_allocator<float>> window_values;
 
 public:
 	/**

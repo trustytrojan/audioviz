@@ -1,5 +1,6 @@
-#include <audioviz/fft/MultiChannelAudioAnalyzer.hpp>
+#include "audioviz/util.hpp"
 #include <audioviz/aligned_allocator.hpp>
+#include <audioviz/fft/MultiChannelAudioAnalyzer.hpp>
 
 #include <stdexcept>
 
@@ -17,20 +18,19 @@ MultiChannelAudioAnalyzer::MultiChannelAudioAnalyzer(int num_channels, int sampl
 		analyzers.emplace_back(sample_rate_hz, window_size_samples);
 }
 
-void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio)
+void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<const float> interleaved_audio)
 {
 	const int window_size = fa.get_fft_size();
-	if (audio.size() < window_size * num_channels)
+	if (interleaved_audio.size() < window_size * num_channels)
 		throw std::invalid_argument("Audio buffer too small for interleaved data");
 
 	// Extract each channel and run FFT
 	for (int ch = 0; ch < num_channels; ++ch)
 	{
 		// Copy channel data (deinterleave)
-		std::vector<float, aligned_allocator<float, 32>> channel_audio(window_size);
-		for (int i = 0; i < window_size; ++i)
-			channel_audio[i] = audio[i * num_channels + ch];
-
+		float buf[window_size];
+		std::span channel_audio{buf, window_size};
+		util::strided_copy(channel_audio, interleaved_audio, num_channels, ch);
 		analyzers[ch].execute_fft(fa, channel_audio, false);
 	}
 }
@@ -49,8 +49,7 @@ const AudioAnalyzer &MultiChannelAudioAnalyzer::operator[](int channel) const
 	return analyzers[channel];
 }
 
-AudioAnalyzer::FrequencyAmplitudePair
-MultiChannelAudioAnalyzer::compute_averaged_peak_frequency(int from_hz, int to_hz)
+AudioAnalyzer::FrequencyAmplitudePair MultiChannelAudioAnalyzer::compute_averaged_peak_frequency(int from_hz, int to_hz)
 {
 	float total_freq = 0.f;
 	float total_amp = 0.f;

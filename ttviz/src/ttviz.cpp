@@ -21,7 +21,8 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, FA &fa, CS &color,
 	  color{color},
 	  ss{ss},
 	  ps{ps},
-	  video_bg{size}
+	  video_bg{size},
+	  sa{media.audio_sample_rate(), fa.get_fft_size()}
 {
 	// create stereo "mirror" effect
 	ss.set_left_backwards(true);
@@ -42,7 +43,7 @@ void ttviz::update(std::span<const float> audio_buffer)
 	// ps.draw_imgui();
 #endif
 
-	capture_time("fft", sa.execute_fft(fa, audio_buffer, true));
+	capture_time("fft", sa.execute_fft(fa, audio_buffer));
 	color.increment_wheel_time();
 }
 

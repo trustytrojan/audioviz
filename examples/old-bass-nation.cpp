@@ -21,7 +21,7 @@
 	else                                     \
 		code;
 
-constexpr float audio_duration_sec = 0.25;
+constexpr float audio_duration_sec = 0.35;
 
 struct StereoPolarSpectrum : audioviz::Base
 {
@@ -30,10 +30,10 @@ struct StereoPolarSpectrum : audioviz::Base
 	int num_channels{media.audio_channels()};
 	const int fft_size = audio_duration_sec * sample_rate_hz;
 
-	std::vector<float, fftwf_allocator<float>> s, a;
+	std::vector<float, aligned_allocator<float>> s, a;
 
 	audioviz::ColorSettings cs;
-	audioviz::SpectrumDrawable_new spectrum;
+	audioviz::SpectrumDrawable spectrum;
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
@@ -61,6 +61,7 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 	spectrum.set_bar_spacing(0);
 	spectrum.set_multiplier(6);
 	cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
+	// fa.set_window_func({});
 
 	set_audio_frames_needed(fft_size);
 
@@ -107,10 +108,10 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 				sf::Color::Green,
 				sf::Color::Cyan,
 				sf::Color::Blue,
-				sf::Color{128, 0, 128},
+				sf::Color{146, 29, 255}, // purple
 				sf::Color::Magenta,
 				sf::Color::Red,
-				sf::Color{255, 165, 0},
+				sf::Color{255, 165, 0}, // orange
 				sf::Color::Yellow,
 				sf::Color::White};
 
