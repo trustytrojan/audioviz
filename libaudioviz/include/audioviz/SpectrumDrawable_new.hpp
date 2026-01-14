@@ -48,13 +48,6 @@ public:
 	void set_bar_spacing(const int spacing);
 	void set_backwards(const bool b);
 
-	/**
-	 * Set the number of bars to display by calculating appropriate bar width and spacing.
-	 * Keeps spacing fixed and calculates the bar width needed to fit the desired count.
-	 * @param desired_count Number of bars to display
-	 */
-	void set_bar_count(int desired_count);
-
 	void update(std::span<const float> spectrum);
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states) const override;

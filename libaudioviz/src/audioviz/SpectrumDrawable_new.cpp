@@ -57,23 +57,6 @@ void SpectrumDrawable_new::set_backwards(const bool b)
 	update_bars();
 }
 
-void SpectrumDrawable_new::set_bar_count(int desired_count)
-{
-	if (desired_count <= 0 || rect.size.x <= 0)
-		return;
-
-	// Calculate available width for bars: total_width - (count - 1) * spacing
-	const int total_spacing = (desired_count - 1) * bar.spacing;
-	const int available_width = rect.size.x - total_spacing;
-
-	if (available_width <= 0)
-		return;
-
-	const int new_width = available_width / desired_count;
-	if (new_width > 0)
-		set_bar_width(new_width);
-}
-
 void SpectrumDrawable_new::update(std::span<const float> spectrum)
 {
 	assert(spectrum.size() >= bar_count);
