@@ -30,7 +30,7 @@ struct StereoPolarSpectrum : audioviz::Base
 	int num_channels{media.audio_channels()};
 	const int fft_size = audio_duration_sec * sample_rate_hz;
 
-	std::vector<float> s, a;
+	std::vector<float, fftwf_allocator<float>> s, a;
 
 	audioviz::ColorSettings cs;
 	audioviz::SpectrumDrawable_new spectrum;

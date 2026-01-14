@@ -50,8 +50,7 @@ ScopeTest::ScopeTest(sf::Vector2u size, const std::string &media_url)
 
 void ScopeTest::update(const std::span<const float> audio_buffer)
 {
-	float left_channel[afpvf];
-	float right_channel[afpvf];
+	float left_channel[afpvf], right_channel[afpvf];
 	capture_time(
 		"audio_split", for (int i = 0; i < afpvf; ++i) {
 			const auto frame_idx = i * 2; // assuming stereo

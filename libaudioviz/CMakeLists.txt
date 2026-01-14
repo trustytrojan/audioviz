@@ -23,6 +23,7 @@ endif()
 target_compile_options(audioviz PUBLIC
 	-Wno-narrowing
 	-ffast-math
+	# -fopt-info-vec-optimized
 )
 
 target_include_directories(audioviz PUBLIC

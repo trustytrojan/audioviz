@@ -1,5 +1,6 @@
 #include <audioviz/Base.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/aligned_allocator.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/Interpolator.hpp>
@@ -31,7 +32,7 @@ struct StereoPolarSpectrum : audioviz::Base
 	const int fft_size = audio_duration_sec * sample_rate_hz;
 	int min_fft_index, max_fft_index;
 
-	std::vector<float> s, a;
+	std::vector<float, aligned_allocator<float, 32>> s, a;
 
 	audioviz::ColorSettings cs;
 	audioviz::SpectrumDrawable_new spectrum;

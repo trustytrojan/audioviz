@@ -4,6 +4,7 @@
 #include <audioviz/ColorSettings.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/util.hpp>
+#include <audioviz/aligned_allocator.hpp>
 #include <vector>
 #include <span>
 
@@ -22,7 +23,7 @@ class SpectrumDrawable_new : public sf::Drawable
 	float multiplier{4};
 
 	// internal data
-	std::vector<float> m_spectrum;
+	std::vector<float, aligned_allocator<float, 32>> m_spectrum;
 	mutable sf::VertexArray vertex_array;
 	
 	sf::IntRect rect;

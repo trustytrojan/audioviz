@@ -1,4 +1,5 @@
 #include <audioviz/fft/MultiChannelAudioAnalyzer.hpp>
+#include <audioviz/aligned_allocator.hpp>
 
 #include <stdexcept>
 
@@ -26,7 +27,7 @@ void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<con
 	for (int ch = 0; ch < num_channels; ++ch)
 	{
 		// Copy channel data (deinterleave)
-		std::vector<float> channel_audio(window_size);
+		std::vector<float, aligned_allocator<float, 32>> channel_audio(window_size);
 		for (int i = 0; i < window_size; ++i)
 			channel_audio[i] = audio[i * num_channels + ch];
 

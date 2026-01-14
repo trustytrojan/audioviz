@@ -1,5 +1,6 @@
 #include <audioviz/Base.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/aligned_allocator.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/Interpolator.hpp>
@@ -30,7 +31,7 @@ struct RangedSpectrum : audioviz::Base
 	const int fft_size = audio_duration_sec * sample_rate_hz;
 	int max_fft_index;
 
-	std::vector<float> a, s;
+	std::vector<float, aligned_allocator<float, 32>> a, s;
 
 	audioviz::ColorSettings color;
 	audioviz::SpectrumDrawable_new spectrum;
