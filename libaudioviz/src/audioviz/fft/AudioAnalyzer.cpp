@@ -69,8 +69,7 @@ AudioAnalyzer::FrequencyAmplitudePair AudioAnalyzer::compute_peak_frequency(int 
 	return *(peak_freq_amp = {frequency_hz, amplitude});
 }
 
-std::array<AudioAnalyzer::FrequencyAmplitudePair, 3>
-AudioAnalyzer::compute_multiband_shake(int from_hz, int to_hz)
+std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> AudioAnalyzer::compute_multiband_shake(int from_hz, int to_hz)
 {
 	if (multiband_shake)
 		return *multiband_shake;

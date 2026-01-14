@@ -6,10 +6,10 @@ Main::Main(const int argc, const char *const *const argv)
 	const auto &size_args = args.get<std::vector<uint>>("--size");
 	const sf::Vector2u size{size_args[0], size_args[1]};
 	const float start_time = args.get<float>("--start-time");
-	
+
 	audioviz::FfmpegPopenMedia media{args.get("media_url"), size, start_time};
 	ttviz viz{size, media, args.get<uint>("-n")};
-	
+
 	configure_from_args(viz);
 
 	// --encode: render to video file

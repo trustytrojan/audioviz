@@ -2,6 +2,7 @@
 #include <audioviz/fx/Blur.hpp>
 #include <audioviz/fx/Mult.hpp>
 #include <audioviz/util.hpp>
+#include <stdexcept>
 
 #define capture_time(label, code)            \
 	if (timing_text_enabled())               \
@@ -22,6 +23,11 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, const int fft_size
 	  ss{{{}, {size.x, size.y - 10}}, color},
 	  ps{{{}, (sf::Vector2i)size}, 50, get_framerate()}
 {
+	// Check for stereo audio
+	if (media.audio_channels() != 2)
+		throw std::runtime_error{
+			"ttviz requires stereo (2-channel) audio; got " + std::to_string(media.audio_channels()) + " channel(s)"};
+
 	set_audio_frames_needed(fft_size);
 
 	// Configure spectrum

@@ -23,7 +23,7 @@ class ttviz : public audioviz::Base
 	// Media reference
 	audioviz::Media &media;
 	int sample_rate_hz;
-	
+
 	// FFT processors
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::StereoAnalyzer sa;
@@ -59,7 +59,7 @@ public:
 	void set_spectrum_blendmode(const sf::BlendMode &bm);
 	void set_album_cover(const std::string &image_path, sf::Vector2f size = {150, 150});
 	void set_fft_size(int fft_size);
-	
+
 	// Getters for configuration
 	inline audioviz::FrequencyAnalyzer &get_fa() { return fa; }
 	inline audioviz::BinPacker &get_bp() { return bp; }

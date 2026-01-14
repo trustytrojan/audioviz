@@ -1,5 +1,5 @@
-#include <audioviz/fft/BinPacker.hpp>
 #include <algorithm>
+#include <audioviz/fft/BinPacker.hpp>
 #include <cmath>
 #include <stdexcept>
 
