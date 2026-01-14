@@ -48,7 +48,7 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	  spectrumL{{{}, (sf::Vector2i)size}, color},
 	  spectrumR{{{}, (sf::Vector2i)size}, color},
 	  fa{fft_size},
-	  media{media_url, 10}
+	  media{media_url}
 {
 #ifdef __linux__
 	set_timing_text_enabled(true);
@@ -57,11 +57,14 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 
 	std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
 
-	spectrumL.set_bar_width(2);
+	spectrumL.set_bar_width(1);
 	spectrumL.set_bar_spacing(0);
-	spectrumR.set_bar_width(2);
+	spectrumR.set_bar_width(1);
 	spectrumR.set_bar_spacing(0);
 	spectrumR.set_backwards(true);
+
+	spectrumL.set_multiplier(6);
+	spectrumR.set_multiplier(6);
 
 	set_audio_frames_needed(fft_size);
 
