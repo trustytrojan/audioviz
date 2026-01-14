@@ -9,6 +9,7 @@ add_example(ranged-spectrum)
 add_example(polar-spectrum)
 add_example(stereo-polar-spectrum)
 add_example(shake-bass)
+add_example(old-bass-nation)
 
 if(AUDIOVIZ_USE_IMGUI)
 	add_example(spectrum-imgui)

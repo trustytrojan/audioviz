@@ -34,7 +34,7 @@ struct PolarSpectrum : audioviz::Base
 	std::vector<float> s, a;
 
 	audioviz::ColorSettings color;
-	audioviz::SpectrumDrawable_new spectrumL;
+	audioviz::SpectrumDrawable_new spectrum;
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer_new aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
@@ -45,7 +45,7 @@ struct PolarSpectrum : audioviz::Base
 
 PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
-	  spectrumL{{{}, (sf::Vector2i)size}, color},
+	  spectrum{{{}, (sf::Vector2i)size}, color},
 	  fa{fft_size},
 	  media{media_url, 10}
 {
@@ -56,15 +56,15 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 
 	std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
 
-	spectrumL.set_bar_width(2);
-	spectrumL.set_bar_spacing(0);
+	spectrum.set_bar_width(2);
+	spectrum.set_bar_spacing(0);
 
 	set_audio_frames_needed(fft_size);
 
 	// Calculate frequency range (0-250 Hz)
 	min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
 	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
-	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrumL.get_bar_count());
+	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 
 	// Setup Polar Shader
 	// We map the linear spectrum width (size.x) to a full circle
@@ -74,7 +74,7 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 		size.y * 0.5f		// Max radius: 50% screen height
 	);
 
-	add_layer("spectrum").add_draw({spectrumL, &audioviz::fx::Polar::getShader()});
+	add_layer("spectrum").add_draw({spectrum, &audioviz::fx::Polar::getShader()});
 
 	start_in_window(media, "polar-spectrum");
 }
@@ -84,13 +84,13 @@ void PolarSpectrum::update(const std::span<const float> audio_buffer)
 	a.resize(fft_size);
 	capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, 0));
 	capture_time("fft", aa.execute_fft(fa, a, true));
-	s.assign(spectrumL.get_bar_count(), 0);
+	s.assign(spectrum.get_bar_count(), 0);
 	capture_time(
 		"spread_out",
 		audioviz::util::spread_out(
 			s, {aa.compute_amplitudes(fa).data() + min_fft_index, max_fft_index - min_fft_index + 1}));
 	capture_time("interpolate", ip.interpolate(s));
-	capture_time("spectrum_update", spectrumL.update(s));
+	capture_time("spectrum_update", spectrum.update(s));
 }
 
 int main(const int argc, const char *const *const argv)

@@ -29,7 +29,6 @@ struct StereoPolarSpectrum : audioviz::Base
 	int sample_rate_hz = media.audio_sample_rate();
 	int num_channels{media.audio_channels()};
 	const int fft_size = audio_duration_sec * sample_rate_hz;
-	int min_fft_index, max_fft_index;
 
 	std::vector<float> s, a;
 
@@ -49,7 +48,7 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 	: Base{size},
 	  spectrum{{{}, (sf::Vector2i)size}, cs},
 	  fa{fft_size},
-	  media{media_url}
+	  media{media_url, 10}
 {
 #ifdef __linux__
 	set_timing_text_enabled(true);
@@ -61,13 +60,9 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 	spectrum.set_bar_width(1);
 	spectrum.set_bar_spacing(0);
 	spectrum.set_multiplier(6);
+	cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
 
 	set_audio_frames_needed(fft_size);
-
-	// Calculate frequency range (0-250 Hz)
-	min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
-	max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
-	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 
 	sf::RenderStates polar_rs{&audioviz::fx::Polar::getShader()};
 
@@ -77,11 +72,23 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 		{
 			orig_rt.clear();
 
-			auto process_channel = [&](bool backwards, int channel, float angle)
+			auto do_work = [&](bool backwards, int channel, float angle, float duration_diff, sf::Color color)
 			{
+				const auto new_duration_sec = audio_duration_sec - duration_diff;
+				const auto fft_size = new_duration_sec * sample_rate_hz;
+				capture_time("fa.set_fft_size", fa.set_fft_size(fft_size));
+				aa.set_fft_size(fft_size);
+				const auto min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
+				const auto max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
+
 				spectrum.set_backwards(backwards);
+				cs.set_solid_color(color);
+				spectrum.update_bar_colors();
+
 				a.resize(fft_size);
-				capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, channel));
+				capture_time(
+					"strided_copy",
+					audioviz::util::strided_copy(a, audio_buffer.first(fft_size * num_channels), num_channels, channel));
 				capture_time("fft", aa.execute_fft(fa, a, true));
 				s.assign(spectrum.get_bar_count(), 0);
 				capture_time(
@@ -94,8 +101,27 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 				orig_rt.draw(spectrum, polar_rs);
 			};
 
-			process_channel(false, 0, M_PI / 2);
-			process_channel(true, 1, -M_PI / 2);
+			const std::array<sf::Color, 9> colors{
+				sf::Color::Green,
+				sf::Color::Cyan,
+				sf::Color::Blue,
+				sf::Color{128, 0, 128},
+				sf::Color::Magenta,
+				sf::Color::Red,
+				sf::Color{255, 165, 0},
+				sf::Color::Yellow,
+				sf::Color::White};
+
+			const auto delta_duration = 0.0075f;
+			const auto max_duration_diff = (colors.size() - 1) * delta_duration;
+
+			// left channel
+			for (int i = 0; i < colors.size(); ++i)
+				do_work(false, 0, M_PI / 2, max_duration_diff - i * delta_duration, colors[i]);
+
+			// right channel
+			for (int i = 0; i < colors.size(); ++i)
+				do_work(true, 1, -M_PI / 2, max_duration_diff - i * delta_duration, colors[i]);
 
 			orig_rt.display();
 		});

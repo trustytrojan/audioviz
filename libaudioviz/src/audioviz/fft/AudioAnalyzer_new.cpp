@@ -6,11 +6,10 @@
 namespace audioviz
 {
 
-AudioAnalyzer_new::AudioAnalyzer_new(int sample_rate_hz, int window_size_samples)
-	: sample_rate_hz{sample_rate_hz},
-	  fft_size{window_size_samples},
-	  fft_output_size{window_size_samples / 2 + 1}
+AudioAnalyzer_new::AudioAnalyzer_new(int sample_rate_hz, int fft_size)
+	: sample_rate_hz{sample_rate_hz}
 {
+	set_fft_size(fft_size);
 }
 
 void AudioAnalyzer_new::execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio, bool interleaved)

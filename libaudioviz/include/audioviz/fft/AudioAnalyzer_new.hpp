@@ -27,7 +27,13 @@ private:
 	std::optional<std::array<FrequencyAmplitudePair, 3>> multiband_shake;
 
 public:
-	AudioAnalyzer_new(int sample_rate_hz, int window_size_samples);
+	AudioAnalyzer_new(int sample_rate_hz, int fft_size);
+
+	inline void set_fft_size(int fft_size)
+	{
+		this->fft_size = fft_size;
+		fft_output_size = fft_size / 2 + 1;
+	}
 
 	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio, bool interleaved);
 	std::span<const float> compute_amplitudes(const FrequencyAnalyzer &fa);
