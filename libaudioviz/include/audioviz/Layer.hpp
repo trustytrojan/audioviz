@@ -26,10 +26,8 @@ public:
 	 *
 	 * FYI if `auto_fx` is `false` then the contents of `fx_rt` passed to this callback are undefined.
 	 * Use `orig_rt` in this case since you did not want to apply effects on this layer.
-	 *
-	 * EDIT: had to make the first two params non-const refs due to sol2 copying const-ref objects by default
 	 */
-	using FxCb = std::function<void(RenderTexture &, RenderTexture &, sf::RenderTarget &)>;
+	using FxCb = std::function<void(const RenderTexture &, const RenderTexture &, sf::RenderTarget &)>;
 
 	static inline const FxCb DRAW_FX_RT = [](auto &, auto &fx_rt, auto &target)
 	{
@@ -61,7 +59,7 @@ private:
 	std::vector<DrawCall> draws;
 
 public:
-	Layer(const std::string &name, sf::Vector2u size, int antialiasing);
+	Layer(const std::string &name, sf::Vector2u size, unsigned antialiasing);
 
 	/**
 	 * Add a draw call to perform on this layer. If more control over rendering is needed,

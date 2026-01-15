@@ -1,6 +1,6 @@
 #pragma once
 
-#include "audioviz/StereoSpectrum.hpp"
+#include "StereoSpectrum.hpp"
 #include <SFML/Graphics.hpp>
 #include <optional>
 #include <string>
@@ -34,8 +34,7 @@ class ttviz : public audioviz::Base
 	audioviz::ColorSettings color;
 
 	// Spectrum visualization
-	// audioviz::SpectrumDrawable spectrum_left, spectrum_right;
-	audioviz::StereoSpectrum ss;
+	StereoSpectrum ss;
 	std::optional<sf::BlendMode> spectrum_bm;
 
 	// Particle system
@@ -66,7 +65,7 @@ public:
 	inline audioviz::Interpolator &get_ip() { return ip; }
 	inline audioviz::ColorSettings &get_color() { return color; }
 	inline audioviz::ParticleSystem<ParticleShapeType> &get_ps() { return ps; }
-	inline audioviz::StereoSpectrum &get_ss() { return ss; }
+	inline StereoSpectrum &get_ss() { return ss; }
 
 private:
 	void update(std::span<const float> audio_buffer) override;

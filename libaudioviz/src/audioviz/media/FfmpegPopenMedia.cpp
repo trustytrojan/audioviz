@@ -1,5 +1,6 @@
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/util.hpp>
+#include <cstring>
 #include <iostream>
 
 namespace audioviz

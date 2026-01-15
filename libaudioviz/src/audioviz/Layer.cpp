@@ -3,7 +3,7 @@
 namespace audioviz
 {
 
-Layer::Layer(const std::string &name, const sf::Vector2u size, const int antialiasing)
+Layer::Layer(const std::string &name, const sf::Vector2u size, const unsigned antialiasing)
 	: name{name},
 	  _orig_rt{size, antialiasing},
 	  _fx_rt{size}
