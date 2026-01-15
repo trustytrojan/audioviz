@@ -48,7 +48,7 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
 	  spectrum{{{}, (sf::Vector2i)size}, cs},
 	  fa{fft_size},
-	  media{media_url, 10}
+	  media{media_url, 15}
 {
 #ifdef __linux__
 	set_timing_text_enabled(true);
@@ -81,9 +81,9 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 				capture_time("set_fft_size", fa.set_fft_size(new_fft_size));
 				aa.set_fft_size(new_fft_size);
 
-				spectrum.set_backwards(backwards);
+				capture_time("set_backwards", spectrum.set_backwards(backwards));
 				cs.set_solid_color(color);
-				spectrum.update_bar_colors();
+				capture_time("update_colors", spectrum.update_bar_colors());
 
 				a.resize(new_fft_size);
 				capture_time(
@@ -98,7 +98,7 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 				s.resize(spectrum.get_bar_count());
 				capture_time(
 					"resample_spectrum",
-					audioviz::util::resample_spectrum(s, amps, sample_rate_hz, new_fft_size, 20.0f, 125.0f, &ip));
+					audioviz::util::resample_spectrum(s, amps, sample_rate_hz, new_fft_size, 20.0f, 135.0f, &ip));
 
 				capture_time("spectrum_update", spectrum.update(s));
 				audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, angle, M_PI);
