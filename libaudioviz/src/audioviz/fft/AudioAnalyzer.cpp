@@ -50,6 +50,8 @@ AudioAnalyzer::FrequencyAmplitudePair AudioAnalyzer::compute_peak_frequency(int 
 	if (fft_amplitudes.empty())
 		throw std::logic_error("compute_peak_frequency requires computed amplitudes");
 
+	assert(from_hz < to_hz);
+
 	const auto to_bin = [&](int hz)
 	{
 		return std::clamp(hz * fft_size / sample_rate_hz, 0, static_cast<int>(fft_amplitudes.size()) - 1);
@@ -76,6 +78,8 @@ std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> AudioAnalyzer::compute_mult
 
 	if (fft_amplitudes.empty())
 		throw std::logic_error("compute_multiband_shake requires computed amplitudes");
+
+	assert(from_hz < to_hz);
 
 	const auto to_bin = [&](int hz)
 	{

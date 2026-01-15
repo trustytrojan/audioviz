@@ -2,7 +2,6 @@
 #include <SFML/System/Clock.hpp>
 #include <audioviz/fx/Shake.hpp>
 #include <audioviz/util.hpp>
-#include <cmath>
 
 static sf::Shader shader;
 static sf::Clock _clock;
@@ -17,9 +16,9 @@ static void init()
 namespace audioviz::fx::Shake
 {
 
-void setParameters(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, float multiplier)
+void setParameters(AudioAnalyzer &aa, int from_hz, int to_hz, float multiplier)
 {
-	auto bands = aa.compute_multiband_shake(sample_rate_hz, fft_size);
+	auto bands = aa.compute_multiband_shake(from_hz, to_hz);
 
 	// Apply multiplier to amplitudes and convert frequencies to radians
 	sf::Vector3f frequencies, amplitudes;
