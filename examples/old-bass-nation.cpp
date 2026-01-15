@@ -21,9 +21,9 @@
 	else                                     \
 		code;
 
-constexpr float audio_duration_sec = 0.35;
+constexpr float audio_duration_sec = 0.25;
 
-struct StereoPolarSpectrum : audioviz::Base
+struct OldBassNation : audioviz::Base
 {
 	audioviz::FfmpegPopenMedia media;
 	int sample_rate_hz = media.audio_sample_rate();
@@ -40,11 +40,11 @@ struct StereoPolarSpectrum : audioviz::Base
 
 	std::span<const float> audio_buffer;
 
-	StereoPolarSpectrum(sf::Vector2u size, const std::string &media_url);
+	OldBassNation(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
 };
 
-StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &media_url)
+OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
 	  spectrum{{{}, (sf::Vector2i)size}, cs},
 	  fa{fft_size},
@@ -76,8 +76,8 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 			auto do_work = [&](bool backwards, int channel, float angle, float duration_diff, sf::Color color)
 			{
 				const auto new_duration_sec = audio_duration_sec - duration_diff;
-				const auto fft_size = new_duration_sec * sample_rate_hz;
-				capture_time("fa.set_fft_size", fa.set_fft_size(fft_size));
+				const int fft_size = new_duration_sec * sample_rate_hz;
+				capture_time("set_fft_size", fa.set_fft_size(fft_size));
 				aa.set_fft_size(fft_size);
 				const auto min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
 				const auto max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
@@ -132,7 +132,7 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 	start_in_window(media, "polar-spectrum");
 }
 
-void StereoPolarSpectrum::update(const std::span<const float> audio_buffer)
+void OldBassNation::update(const std::span<const float> audio_buffer)
 {
 	this->audio_buffer = audio_buffer;
 }
@@ -146,5 +146,5 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
-	StereoPolarSpectrum viz{size, argv[3]};
+	OldBassNation viz{size, argv[3]};
 }

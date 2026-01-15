@@ -26,7 +26,7 @@ void FrequencyAnalyzer::set_fft_size(const int fft_size)
 void FrequencyAnalyzer::set_window_func(const WindowFunction wf)
 {
 	this->window_func = wf;
-	compute_window_values(true);
+	compute_window_values();
 }
 
 void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
@@ -74,27 +74,12 @@ void FrequencyAnalyzer::compute_phase(std::span<float> output) const
 	}
 }
 
-void FrequencyAnalyzer::compute_window_values(bool force)
+void FrequencyAnalyzer::compute_window_values()
 {
 	if (!window_func)
 		return;
-
-	if (force)
-	{
-		// window function changed, must recompute entire array
-		window_values.resize(fft_size);
-		for (int i = 0; i < fft_size; ++i)
-			window_values[i] = window_func(i, fft_size);
-	}
-
-	// no need to recompute if new fft_size is smaller
-	if (fft_size <= window_values.size())
-		return;
-
-	// if new fft_size is larger, just compute the new values
-	const auto old_size = window_values.size();
 	window_values.resize(fft_size);
-	for (int i = old_size; i < fft_size; ++i)
+	for (int i = 0; i < fft_size; ++i)
 		window_values[i] = window_func(i, fft_size);
 }
 

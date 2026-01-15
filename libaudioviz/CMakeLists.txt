@@ -26,7 +26,7 @@ target_compile_options(audioviz PUBLIC
 )
 
 if(CMAKE_BUILD_TYPE MATCHES Rel)
-	target_compile_options(audioviz PUBLIC -fopt-info-vec-optimized)
+	# target_compile_options(audioviz PUBLIC -fopt-info-vec-optimized)
 endif()
 
 target_include_directories(audioviz PUBLIC

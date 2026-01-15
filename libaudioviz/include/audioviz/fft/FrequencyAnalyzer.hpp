@@ -85,7 +85,7 @@ public:
 	void compute_phase(std::span<float> output) const;
 
 private:
-	void compute_window_values(bool force = {});
+	void compute_window_values();
 };
 
 } // namespace audioviz
