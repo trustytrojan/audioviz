@@ -27,8 +27,7 @@ void MultiChannelAudioAnalyzer::set_fft_size(int fft_size)
 void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<const float> interleaved_audio)
 {
 	const int window_size = fa.get_fft_size();
-	if (interleaved_audio.size() < window_size * num_channels)
-		throw std::invalid_argument("Audio buffer too small for interleaved data");
+	assert(interleaved_audio.size() == window_size * num_channels);
 
 	// Extract each channel and run FFT
 	for (int ch = 0; ch < num_channels; ++ch)
