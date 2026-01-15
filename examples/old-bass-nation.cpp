@@ -32,22 +32,21 @@ struct LayerData
 	audioviz::Interpolator ip;
 
 	std::vector<float, aligned_allocator<float>> s, a;
-	audioviz::SpectrumDrawable spectrum_left;
-	audioviz::SpectrumDrawable spectrum_right;
+	audioviz::SpectrumDrawable spectrum;
+	bool is_left;
 
-	LayerData(int fft_size, int sample_rate, sf::Vector2u size, const audioviz::ColorSettings &cs)
+	LayerData(int fft_size, int sample_rate, sf::Vector2u size, const audioviz::ColorSettings &cs, bool left)
 		: fa{fft_size},
 		  aa{sample_rate, fft_size},
-		  spectrum_left{{{}, (sf::Vector2i)size}, cs},
-		  spectrum_right{{{}, (sf::Vector2i)size}, cs}
+		  spectrum{{{}, (sf::Vector2i)size}, cs},
+		  is_left(left)
 	{
 		a.resize(fft_size);
 	}
 
-	void compute(std::span<const float> audio_buffer, int num_channels, int max_fft_size, int sample_rate_hz, bool left)
+	void compute(std::span<const float> audio_buffer, int num_channels, int max_fft_size, int sample_rate_hz)
 	{
-		const int channel = left ? 0 : 1;
-		auto &spectrum = left ? spectrum_left : spectrum_right;
+		const int channel = is_left ? 0 : 1;
 
 		audioviz::util::strided_copy(a, audio_buffer.first(max_fft_size * num_channels), num_channels, channel);
 		aa.execute_fft(fa, a);
@@ -109,32 +108,35 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	const auto delta_duration = 0.015f;
 	const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
-	layers.reserve(colors.size());
+	auto setup = [&](audioviz::SpectrumDrawable &s, bool prev)
+	{
+		s.set_bar_width(1);
+		s.set_bar_spacing(0);
+		s.set_multiplier(6);
+		s.set_backwards(prev);
+		s.update_bar_colors();
+	};
+
+	layers.reserve(colors.size() * 2);
 	for (int i = 0; i < colors.size(); ++i)
 	{
 		float duration_diff = max_duration_diff - i * delta_duration;
 		const auto new_duration_sec = audio_duration_sec - duration_diff;
 		const int new_fft_size = new_duration_sec * sample_rate_hz;
 
-		layers.emplace_back(new_fft_size, sample_rate_hz, size, cs);
-		auto &l = layers.back();
-
-		l.fa.set_window_func(audioviz::FrequencyAnalyzer::WindowFunction::Blackman);
-
-		auto setup = [&](audioviz::SpectrumDrawable &s, bool prev)
-		{
-			s.set_bar_width(1);
-			s.set_bar_spacing(0);
-			s.set_multiplier(6);
-			s.set_backwards(prev);
-			s.update_bar_colors();
-		};
-
 		cs.set_solid_color(colors[i]);
-		setup(l.spectrum_left, false);
-		setup(l.spectrum_right, true);
 
-		l.s.resize(l.spectrum_left.get_bar_count());
+		layers.emplace_back(new_fft_size, sample_rate_hz, size, cs, true);
+		auto &left_layer = layers.back();
+		left_layer.fa.set_window_func(audioviz::FrequencyAnalyzer::WindowFunction::Blackman);
+		setup(left_layer.spectrum, false);
+		left_layer.s.resize(left_layer.spectrum.get_bar_count());
+
+		layers.emplace_back(new_fft_size, sample_rate_hz, size, cs, false);
+		auto &right_layer = layers.back();
+		right_layer.fa.set_window_func(audioviz::FrequencyAnalyzer::WindowFunction::Blackman);
+		setup(right_layer.spectrum, true);
+		right_layer.s.resize(right_layer.spectrum.get_bar_count());
 	}
 
 	auto &spectrum_layer = add_layer("spectrum");
@@ -143,16 +145,16 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 		{
 			orig_rt.clear();
 
-			const auto do_draw = [&](LayerData &l, bool left)
+			const auto do_draw = [&](LayerData &l)
 			{
-				float angle = left ? M_PI / 2 : -M_PI / 2;
-				auto &spectrum = left ? l.spectrum_left : l.spectrum_right;
+				float angle = l.is_left ? M_PI / 2 : -M_PI / 2;
+				auto &spectrum = l.spectrum;
 				audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, angle, M_PI);
 				orig_rt.draw(spectrum, polar_rs);
 			};
 
 			std::vector<std::future<void>> futures;
-			futures.reserve(layers.size() * 2);
+			futures.reserve(layers.size());
 
 			for (auto &l : layers)
 			{
@@ -164,26 +166,7 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 						audio_buffer,
 						num_channels,
 						max_fft_size,
-						sample_rate_hz,
-						true));
-			}
-
-			// wait for all compute tasks
-			for (auto &f : futures)
-				f.wait();
-
-			for (auto &l : layers)
-			{
-				futures.push_back(
-					std::async(
-						std::launch::async,
-						&LayerData::compute,
-						&l,
-						audio_buffer,
-						num_channels,
-						max_fft_size,
-						sample_rate_hz,
-						false));
+						sample_rate_hz));
 			}
 
 			// wait for all compute tasks
@@ -191,10 +174,10 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 				f.wait();
 
 			// left channel
-			std::ranges::for_each(layers, [&](auto &l) { do_draw(l, true); });
+			std::ranges::for_each(layers, [&](auto &l) { if (l.is_left) do_draw(l); });
 
 			// right channel
-			std::ranges::for_each(layers, [&](auto &l) { do_draw(l, false); });
+			std::ranges::for_each(layers, [&](auto &l) { if (!l.is_left) do_draw(l); });
 
 			orig_rt.display();
 		});
