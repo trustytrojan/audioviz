@@ -17,7 +17,7 @@ include(deps.cmake)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	# caused by spline; safe to ignore
-	target_compile_options(audioviz PRIVATE -Wno-subobject-linkage)
+	target_compile_options(audioviz PUBLIC -Wno-subobject-linkage)
 endif()
 
 target_compile_options(audioviz PUBLIC

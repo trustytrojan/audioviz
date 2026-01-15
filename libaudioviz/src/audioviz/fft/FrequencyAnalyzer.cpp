@@ -1,10 +1,11 @@
-#include <algorithm>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <cassert>
 #include <cmath>
 #include <memory>
 
+#ifdef AUDIOVIZ_IMGUI
 #include "imgui.h"
+#endif
 
 namespace audioviz
 {
@@ -119,6 +120,7 @@ void FrequencyAnalyzer::apply_blackman_window()
 			0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
 }
 
+#ifdef AUDIOVIZ_IMGUI
 void FrequencyAnalyzer::draw_imgui()
 {
 	// FFT size (must be even). Keep user's intent when stepping: if they
@@ -136,5 +138,6 @@ void FrequencyAnalyzer::draw_imgui()
 		set_window_func(wf);
 	}
 }
+#endif
 
 } // namespace audioviz
