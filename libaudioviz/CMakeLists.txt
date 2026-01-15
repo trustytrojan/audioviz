@@ -17,7 +17,7 @@ include(deps.cmake)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	# caused by spline; safe to ignore
-	target_compile_options(audioviz PUBLIC -Wno-subobject-linkage)
+	target_compile_options(audioviz PRIVATE -Wno-subobject-linkage)
 endif()
 
 target_compile_options(audioviz PUBLIC
@@ -29,8 +29,8 @@ if(CMAKE_BUILD_TYPE MATCHES Rel)
 	# target_compile_options(audioviz PUBLIC -fopt-info-vec-optimized)
 endif()
 
-target_include_directories(audioviz PUBLIC
-	include # our headers
+target_include_directories(audioviz PUBLIC include)
+target_include_directories(audioviz PRIVATE
 	${CMAKE_CURRENT_BINARY_DIR} # single-header libs
 	${portaudio-pp_SOURCE_DIR}/include
 )
@@ -38,12 +38,12 @@ target_include_directories(audioviz PUBLIC
 # popen() on MinGW expects a 'b' to differentiate text/binary,
 # but on Linux it errors if a 'b' is there, so we have to do this...
 if(WIN32)
-	target_compile_definitions(audioviz PUBLIC
+	target_compile_definitions(audioviz PRIVATE
 		POPEN_R_MODE="rb"
 		POPEN_W_MODE="wb"
 	)
 else() # be specific if you discover more differences
-	target_compile_definitions(audioviz PUBLIC
+	target_compile_definitions(audioviz PRIVATE
 		POPEN_R_MODE="r"
 		POPEN_W_MODE="w"
 	)
@@ -57,15 +57,15 @@ file(GLOB SHADER_SOURCES
 set(SHADER_HEADERS)
 set(SHADER_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader_headers")
 foreach(SHADER_SOURCE IN LISTS SHADER_SOURCES)
-    get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
-    set(SHADER_HEADER "${SHADER_HEADER_DIR}/${SHADER_NAME}.h")
-    list(APPEND SHADER_HEADERS ${SHADER_HEADER})
-    add_custom_command(
-        OUTPUT ${SHADER_HEADER}
-        COMMAND ${CMAKE_COMMAND} -DSHADER_SOURCE=${SHADER_SOURCE} -DSHADER_HEADER_DIR=${SHADER_HEADER_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shader_header.cmake
-        DEPENDS ${SHADER_SOURCE}
-        COMMENT "Generating shader header ${SHADER_NAME}.h"
-    )
+	get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
+	set(SHADER_HEADER "${SHADER_HEADER_DIR}/${SHADER_NAME}.h")
+	list(APPEND SHADER_HEADERS ${SHADER_HEADER})
+	add_custom_command(
+		OUTPUT ${SHADER_HEADER}
+		COMMAND ${CMAKE_COMMAND} -DSHADER_SOURCE=${SHADER_SOURCE} -DSHADER_HEADER_DIR=${SHADER_HEADER_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shader_header.cmake
+		DEPENDS ${SHADER_SOURCE}
+		COMMENT "Generating shader header ${SHADER_NAME}.h"
+	)
 endforeach()
 add_custom_target(generate_shader_headers DEPENDS ${SHADER_HEADERS})
 add_dependencies(audioviz generate_shader_headers)
