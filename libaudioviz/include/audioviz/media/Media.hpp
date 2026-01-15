@@ -1,6 +1,8 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <audioviz/aligned_allocator.hpp>
+#include <span>
 
 namespace audioviz
 {
@@ -12,7 +14,7 @@ namespace audioviz
  */
 class Media
 {
-	std::vector<float> _audio_buffer;
+	std::vector<float, aligned_allocator<float>> _audio_buffer;
 
 public:
 	const std::string url;
@@ -49,7 +51,7 @@ public:
 	/**
 	 * Access the audio buffer.
 	 */
-	inline const std::vector<float> &audio_buffer() const { return _audio_buffer; }
+	inline std::span<const float> audio_buffer() const { return _audio_buffer; }
 
 	/**
 	 * Erase `frames` audio frames from the buffer.

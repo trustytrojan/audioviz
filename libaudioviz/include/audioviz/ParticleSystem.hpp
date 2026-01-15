@@ -1,5 +1,6 @@
 #pragma once
 
+#include "audioviz/fft/MultiChannelAudioAnalyzer.hpp"
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <random>
@@ -98,22 +99,16 @@ public:
 		}
 	}
 
-	void update(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, const UpdateOptions &options = {})
+	void update(MultiChannelAudioAnalyzer &ma, const UpdateOptions &options = {})
 	{
-		aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 250);
-		float avg{}; // didn't initialize this for the longest time... yikes.
-		for (int ch = 0; ch < aa.num_channels(); ++ch)
-			avg += aa.get_channel_data(ch).peak_amplitude;
-		avg /= aa.num_channels();
-		const auto scaled_avg = rect.size.y * avg;
+		const auto scaled_avg = rect.size.y * ma.compute_averaged_peak_frequency(0, 250).amplitude;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
 		update(additional_displacement * options.multiplier);
 	}
 
-	void update(AudioAnalyzer &aa, int sample_rate_hz, int fft_size, int channel, const UpdateOptions &options = {})
+	void update(AudioAnalyzer &aa, const UpdateOptions &options = {})
 	{
-		aa.compute_peak_freq_amp(sample_rate_hz, fft_size, 250);
-		const auto scaled_avg = rect.size.y * aa.get_channel_data(channel).peak_amplitude;
+		const auto scaled_avg = rect.size.y * aa.compute_peak_frequency(0, 250).amplitude;
 		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
 		update(additional_displacement * options.multiplier);
 	}

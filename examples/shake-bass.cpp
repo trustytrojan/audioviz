@@ -1,6 +1,6 @@
 #include <audioviz/Base.hpp>
-#include <audioviz/fft/StereoAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
+#include <audioviz/fft/StereoAnalyzer.hpp>
 #include <audioviz/fx/Shake.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/util.hpp>

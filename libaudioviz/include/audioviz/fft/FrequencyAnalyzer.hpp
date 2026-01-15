@@ -1,92 +1,37 @@
 #pragma once
 
-#include <cmath>
-#include <functional>
-#include <tk-spline.hpp>
-#include <vector>
 #include <span>
+#include <vector>
 
-#include "fftw_allocator.hpp"
+#include "audioviz/aligned_allocator.hpp"
 #include "fftwf_dft_r2c_1d.hpp"
 
 namespace audioviz
 {
 
 /**
- * Analyzes wave data to produce a frequency spectrum. Allows further processing
- * of the resulting spectrum, such as scaling and interpolation.
+ * Analyzes wave data to produce a frequency spectrum using FFT.
+ * Focuses solely on FFT operations and amplitude computation.
+ * Use BinPacker and Interpolator classes for further spectrum processing.
  */
 class FrequencyAnalyzer
 {
 public:
-	enum class Scale
+	enum class WindowFunction
 	{
-		LINEAR,
-		LOG,
-		NTH_ROOT
-	};
-
-	enum class InterpolationType
-	{
-		NONE,
-		LINEAR,
-		CSPLINE,
-		CSPLINE_HERMITE
-	};
-
-	enum class AccumulationMethod
-	{
-		SUM,
-		MAX
-	};
-
-	using WindowFunction = std::function<float(int, int)>;
-
-	static const inline WindowFunction WF_HANNING = [](int i, int fft_size)
-	{ return 0.5f * (1 - cos(2 * M_PI * i / (fft_size - 1))); },
-									   WF_HAMMING = [](int i, int fft_size)
-	{ return 0.54f - 0.46f * cos(2 * M_PI * i / (fft_size - 1)); },
-									   WF_BLACKMAN = [](int i, int fft_size)
-	{
-		return 0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
+		None,
+		Hanning,
+		Hamming,
+		Blackman,
 	};
 
 private:
-	// fft size
 	int fft_size;
 	float inv_fft_size;
-
-	// nth root
-	int nth_root{2};
-	float nthroot_inv{1.f / nth_root};
-
-	fftwf_dft_r2c_1d fftw{fft_size};
-
-	// interpolation
-	tk::spline spline;
-	InterpolationType interp{InterpolationType::CSPLINE};
-
-	// output spectrum scale
-	Scale scale{Scale::LOG};
-
-	// method for accumulating amplitudes in frequency bins
-	AccumulationMethod am{AccumulationMethod::MAX};
-
-	// window function
-	WindowFunction window_func{WF_BLACKMAN};
-	int wf_i{3}; // for imgui
-
-	// struct to hold the "max"s used in `calc_index_ratio`
-	struct _scale_max
-	{
-		float linear, log, sqrt, cbrt, nthroot;
-		void calc(const FrequencyAnalyzer &fa);
-	} scale_max;
-
-	int known_spectrum_size{};
-	std::vector<std::pair<int, int>> spectrum_to_fftw_indices;
-	std::vector<float, fftw_allocator<float>> window_values;
-	std::vector<double> m_spline_x, m_spline_y;
+	fftwf_dft_r2c_1d fftw;
+	WindowFunction window_func{WindowFunction::Hanning};
+	int wf_i{2}; // for imgui
+	std::vector<float, aligned_allocator<float>> window_values;
 
 public:
 	/**
@@ -103,42 +48,13 @@ public:
 	 */
 	void set_fft_size(int fft_size);
 	inline int get_fft_size() const { return fft_size; }
-
-	/**
-	 * Set interpolation type.
-	 * @param interp new interpolation type to use
-	 * @returns reference to self
-	 */
-	void set_interp_type(InterpolationType interp);
+	inline int get_fft_output_size() const { return fftw.output_size(); }
 
 	/**
 	 * Set window function.
-	 * @param interp new window function to use
-	 * @returns reference to self
+	 * @param wf new window function to use
 	 */
 	void set_window_func(WindowFunction wf);
-
-	/**
-	 * Set frequency bin accumulation method.
-	 * @param interp new accumulation method to use
-	 * @returns reference to self
-	 */
-	void set_accum_method(AccumulationMethod am);
-
-	/**
-	 * Set the spectrum's frequency scale.
-	 * @param scale new scale to use
-	 * @returns reference to self
-	 */
-	void set_scale(Scale scale);
-
-	/**
-	 * Set the nth-root to use when using the `NTH_ROOT` scale.
-	 * @param nth_root new nth_root to use
-	 * @returns reference to self
-	 * @throws `std::invalid_argument` if `nth_root` is zero
-	 */
-	void set_nth_root(int nth_root);
 
 #ifdef AUDIOVIZ_IMGUI
 	/**
@@ -154,22 +70,15 @@ public:
 	 */
 	void copy_to_input(std::span<const float> wavedata);
 
-	/**
-	 * Copies a specific channel of the audio to the FFT processor, which is of size `fft_size`.
-	 * If `num_channels` is greater than 1, then `audio` is expected to be of size `num_channels * fft_size`.
-	 * @throws `std::invalid_argument` if `channel` is not in the range `[0, num_channels)`
-	 * @throws `std::invalid_argument` if `num_channels <= 0`
-	 */
-	void copy_channel_to_input(std::span<const float> audio, int num_channels, int channel, bool interleaved);
-
-	void execute_fft(std::span<float> output);
-	void bin_pack(std::span<float> out, std::span<const float> in);
-	void interpolate(std::span<float> spectrum);
+	inline void execute_fft() const { fftw.execute(); }
+	void compute_amplitude(std::span<float> output) const;
+	void compute_phase(std::span<float> output) const;
 
 private:
-	float calc_index_ratio(float i) const;
-	void compute_index_mappings();
 	void compute_window_values();
+	void apply_hanning_window();
+	void apply_hamming_window();
+	void apply_blackman_window();
 };
 
 } // namespace audioviz

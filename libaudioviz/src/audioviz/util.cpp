@@ -1,11 +1,15 @@
+#include <algorithm>
 #include <audioviz/util.hpp>
+#include <audioviz/fft/Interpolator.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
 
+#ifdef AUDIOVIZ_IMGUI
 #include "imgui.h"
+#endif
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -265,6 +269,7 @@ std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPat
 }
 */
 
+#ifdef AUDIOVIZ_IMGUI
 DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 {
 	DragResizeResult out{false, false, rect};
@@ -402,6 +407,59 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 	out.rect.size.y = std::max(out.rect.size.y, 1);
 
 	return out;
+}
+#endif
+
+void spread_out(std::span<float> out, std::span<const float> in)
+{
+	assert(out.size() >= in.size());
+	const auto increment = out.size() / in.size();
+
+	auto *__restrict const out_ptr = out.data();
+	const auto *__restrict const in_ptr = in.data();
+
+#pragma GCC ivdep
+	for (size_t i = 0; i < in.size(); ++i)
+		out_ptr[i * increment] = in_ptr[i];
+}
+
+void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel)
+{
+	assert(num_channels > 0);
+	assert(out.size() * num_channels == in.size());
+
+	auto *__restrict const out_ptr = out.data();
+	const auto *__restrict const in_ptr = in.data();
+
+#pragma GCC ivdep
+	for (size_t i = 0; i < out.size(); ++i)
+		out_ptr[i] = in_ptr[i * num_channels + channel];
+}
+
+void resample_spectrum(
+	std::span<float> out,
+	std::span<const float> in_amps,
+	int sample_rate_hz,
+	int fft_size,
+	float start_freq,
+	float end_freq,
+	Interpolator &interpolator)
+{
+	const float bin_size = (float)sample_rate_hz / fft_size;
+	interpolator.set_values(in_amps);
+
+	const float bin_pos_start = (start_freq / bin_size);
+	const float bin_pos_end = (end_freq / bin_size);
+	const float bin_pos_step = (bin_pos_end - bin_pos_start) / std::max(1.0f, (float)out.size() - 1.0f);
+
+	float current_bin_pos = bin_pos_start;
+	const auto out_size = out.size();
+
+	for (size_t i = 0; i < out_size; ++i)
+	{
+		out[i] = interpolator.sample(current_bin_pos);
+		current_bin_pos += bin_pos_step;
+	}
 }
 
 } // namespace audioviz::util

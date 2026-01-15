@@ -1,31 +1,47 @@
 #pragma once
 
+#include "fftwf_allocator.hpp"
 #include <fftw3.h>
+#include <span>
+#include <vector>
 
 namespace audioviz
 {
 
 class fftwf_dft_r2c_1d
 {
-	int N, outN;
-	float *in;
-	fftwf_complex *out;
-	fftwf_plan p;
+public:
+	struct ComplexNumber
+	{
+		float re, im;
+	};
 
-	void init(const int N);
-	void cleanup();
+private:
+	template <typename T>
+	using Vector = std::vector<T, fftwf_allocator<T>>;
+
+	Vector<float> in;
+	Vector<ComplexNumber> out;
+	fftwf_plan plan{};
 
 public:
-	inline fftwf_dft_r2c_1d(const int N) { init(N); }
-	inline ~fftwf_dft_r2c_1d() { cleanup(); }
+	inline ~fftwf_dft_r2c_1d()
+	{
+		if (plan)
+			fftwf_destroy_plan(plan);
+	}
 
-	void set_n(const int N);
-	inline void execute() { fftwf_execute(p); }
+	inline void set_n(const int n)
+	{
+		in.resize(n);
+		out.resize(n / 2 + 1);
+		plan = fftwf_plan_dft_r2c_1d(n, in.data(), (fftwf_complex *)out.data(), FFTW_ESTIMATE);
+	}
 
-	inline float *input() { return in; }
-	inline const fftwf_complex *output() const { return out; }
-	inline int input_size() const { return N; }
-	inline int output_size() const { return outN; }
+	inline void execute() const { fftwf_execute(plan); }
+	inline std::span<float> input() { return in; }
+	inline std::span<const ComplexNumber> output() const { return out; }
+	inline int output_size() const { return out.size(); }
 };
 
 } // namespace audioviz

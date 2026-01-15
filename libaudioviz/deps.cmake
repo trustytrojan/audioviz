@@ -39,7 +39,7 @@ if(WIN32 AND NOT FFTW3_FOUND)
 
 		# this is so that we only need to append the build dir to the PATH before running,
 		# making that process a bit less error-prone
-		file(COPY ${fftw_SOURCE_DIR}/libfftw3f-3.dll DESTINATION ${CMAKE_BINARY_DIR})
+		file(COPY ${fftw_SOURCE_DIR}/libfftw3f-3.dll DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 	else()
 		message("other architecture detected, fetching fftw source...")
 		set(BUILD_TESTS OFF)
@@ -66,8 +66,8 @@ endif()
 target_link_libraries(audioviz PUBLIC SFML::Graphics)
 
 ## spline
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/tk-spline.hpp)
-	file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h ${CMAKE_BINARY_DIR}/tk-spline.hpp)
+if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/tk-spline.hpp)
+	file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h ${CMAKE_CURRENT_BINARY_DIR}/tk-spline.hpp)
 endif()
 
 ## nlohmann_json

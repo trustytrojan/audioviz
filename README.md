@@ -2,9 +2,9 @@
 *my own audio visualizer (library), because after effects sucks*
 
 ## features
-- **low-level** visualizer building
-- **layer-and-effect-based** graphics API for **C++ & Lua**
-- **super fast** video rendering with ffmpeg
+- **low-level** construction of visuals from audio
+- **layer-and-effect** composition
+- **super fast** video encoding with ffmpeg
 - **faster than adobe after effects!!!!!!!!!**
 
 [here are some songs rendered with audioviz!](https://youtube.com/playlist?list=PLq63g2iq0LVvxNjjoYOL4GMTOdXEdHsBf)
@@ -23,7 +23,6 @@ below is a great video explaining some of the fundamentals of programming with a
 
 ### windows
 1. install any required dependencies below using `winget`:
-   - lua can be installed with `winget install devcom.lua`
    - ffmpeg can be installed with `winget install gyan.ffmpeg.shared`
 2. run `cmake -S. -Bbuild && cmake --build build` or use your IDE of choice with CMake support
 3. run build executables from the project root (as explained above)
@@ -44,20 +43,14 @@ thanks to CI, i discovered that the build process is the same as with linux. jus
 - **ttviz**
   - [argparse](https://github.com/p-ranav/argparse)
   - [ImGui-SFML](https://github.com/SFML/imgui-sfml)
-- **luaviz**
-  - [sol2](https://github.com/ThePhD/sol2) - requires [Lua](https://lua.org/) 5.x
 
 ## project structure
 ```
 audioviz
 ├── libaudioviz - core library
-├── ttviz - first visualizer
-├── luaviz - lua binding
-├── lua - lua scripts calling the luaviz binding
-│ ├── newviz.lua - newer style visualizer using luaviz
-│ └── ttviz.lua - recreation of ttviz using luaviz
-├── shaders - GLSL shaders used by audioviz::fx classes
-└── tests - small test programs for various classes in libaudioviz
+│ └── shaders - GLSL shaders used by audioviz::fx classes
+├── ttviz - the first, reference implementation of a libaudioviz visualizer
+└── examples - smaller visualizers doing their own thing
 ```
 
 ## developer environment setup
@@ -72,4 +65,6 @@ i recommend using vscode as it integrates well with git with no effort. get the 
 - 🔄 interactive gui (long term)
   - ✅️ integrate imgui-sfml into project
   - 🔄 develop imgui window for each customizable object
-- rhythm-based effects, with(out) spectral analysis
+- might take imgui out... it belongs in a separate repo as an effort to make some kind of editor based on libaudioviz. ui should not be conflated with the library itself.
+- rhythm-based effects
+  - use [aubio](https://aubio.org) for this

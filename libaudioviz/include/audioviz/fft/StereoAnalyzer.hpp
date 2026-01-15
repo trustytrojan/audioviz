@@ -1,23 +1,38 @@
 #pragma once
 
-#include <audioviz/fft/AudioAnalyzer.hpp>
+#include "MultiChannelAudioAnalyzer.hpp"
 
 namespace audioviz
 {
 
 /**
- * An `AudioAnalyzer(2)` that provides getter methods `left_data()` and `right_data()`.
+ * Stereo audio analyzer - a convenience wrapper around MultiChannelAudioAnalyzer with 2 channels.
+ * Useful for stereo audio analysis.
  */
-class StereoAnalyzer : public AudioAnalyzer
+class StereoAnalyzer : public MultiChannelAudioAnalyzer
 {
 public:
-	StereoAnalyzer()
-		: AudioAnalyzer(2)
+	/**
+	 * Construct stereo analyzer.
+	 * @param sample_rate_hz Audio sample rate in Hz
+	 * @param window_size_samples FFT window size in samples
+	 */
+	StereoAnalyzer(int sample_rate_hz, int window_size_samples)
+		: MultiChannelAudioAnalyzer(2, sample_rate_hz, window_size_samples)
 	{
 	}
 
-	inline std::span<const float> left_data() const { return get_channel_data(0).fft_output; }
-	inline std::span<const float> right_data() const { return get_channel_data(1).fft_output; }
+	/**
+	 * Get left channel analyzer.
+	 */
+	AudioAnalyzer &left() { return (*this)[0]; }
+	const AudioAnalyzer &left() const { return (*this)[0]; }
+
+	/**
+	 * Get right channel analyzer.
+	 */
+	AudioAnalyzer &right() { return (*this)[1]; }
+	const AudioAnalyzer &right() const { return (*this)[1]; }
 };
 
 } // namespace audioviz

@@ -139,6 +139,12 @@ Args::Args(const int argc, const char *const *const argv)
 		.help("show timing info for different stages of the render pipeline")
 		.flag();
 
+	add_argument("--start-time")
+		.help("start playback/encoding at specified time in seconds")
+		.default_value(0.f)
+		.scan<'f', float>()
+		.validate();
+
 #ifdef AUDIOVIZ_PORTAUDIO
 	add_argument("--no-audio")
 		.help("disable live audio output")

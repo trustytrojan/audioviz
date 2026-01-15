@@ -7,9 +7,8 @@ endif()
 
 option(AUDIOVIZ_USE_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
 option(AUDIOVIZ_USE_IMGUI "Build with ImGui for controllable objects" ON)
-option(AUDIOVIZ_BUILD_EXAMPLES "Build the example programs" ON)
-option(AUDIOVIZ_BUILD_LUAVIZ "Build the Lua binding" ON)
-option(AUDIOVIZ_BUILD_TTVIZ "Build the reference audioviz implementation" ON)
+option(AUDIOVIZ_BUILD_EXAMPLES "Build the example programs" OFF)
+option(AUDIOVIZ_BUILD_TTVIZ "Build the reference audioviz implementation" OFF)
 
 set(BUILD_SHARED_LIBS OFF) # static preferred
 set(CMAKE_CXX_STANDARD 23)
@@ -22,7 +21,6 @@ if(APPLE)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Rel)
-	message(STATUS "------------HERE--------------")
 	add_compile_options(-march=native)
 endif()
 
@@ -34,8 +32,4 @@ endif()
 
 if(AUDIOVIZ_BUILD_EXAMPLES)
 	add_subdirectory(examples)
-endif()
-
-if(AUDIOVIZ_BUILD_LUAVIZ)
-	add_subdirectory(luaviz)
 endif()
