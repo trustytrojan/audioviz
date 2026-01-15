@@ -8,6 +8,7 @@
 #include <audioviz/util.hpp>
 
 #include <SFML/Graphics.hpp>
+#include <future>
 #include <iostream>
 #include <print>
 
@@ -27,6 +28,9 @@ struct LayerData
 {
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa;
+	// use one interpolator per layer to avoid sharing state across threads
+	audioviz::Interpolator ip;
+
 	std::vector<float, aligned_allocator<float>> s, a;
 	audioviz::SpectrumDrawable spectrum_left;
 	audioviz::SpectrumDrawable spectrum_right;
@@ -38,6 +42,21 @@ struct LayerData
 		  spectrum_right{{{}, (sf::Vector2i)size}, cs}
 	{
 		a.resize(fft_size);
+	}
+
+	void compute(std::span<const float> audio_buffer, int num_channels, int max_fft_size, int sample_rate_hz, bool left)
+	{
+		const int channel = left ? 0 : 1;
+		auto &spectrum = left ? spectrum_left : spectrum_right;
+
+		audioviz::util::strided_copy(a, audio_buffer.first(max_fft_size * num_channels), num_channels, channel);
+		aa.execute_fft(fa, a);
+
+		const auto amps = aa.compute_amplitudes(fa);
+
+		audioviz::util::resample_spectrum(s, amps, sample_rate_hz, fa.get_fft_size(), 20.0f, 135.0f, ip);
+
+		spectrum.update(s);
 	}
 };
 
@@ -51,7 +70,6 @@ struct OldBassNation : audioviz::Base
 	std::vector<LayerData> layers;
 
 	audioviz::ColorSettings cs;
-	audioviz::Interpolator ip;
 
 	std::span<const float> audio_buffer;
 
@@ -125,38 +143,58 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 		{
 			orig_rt.clear();
 
-			auto do_layer = [&](LayerData &l, bool left)
+			const auto do_draw = [&](LayerData &l, bool left)
 			{
 				float angle = left ? M_PI / 2 : -M_PI / 2;
-				int channel = left ? 0 : 1;
 				auto &spectrum = left ? l.spectrum_left : l.spectrum_right;
-
-				capture_time(
-					"strided_copy",
-					audioviz::util::strided_copy(
-						l.a, audio_buffer.first(max_fft_size * num_channels), num_channels, channel));
-				capture_time("fft", l.aa.execute_fft(l.fa, l.a));
-
-				std::span<const float> amps;
-				capture_time("compute_amps", amps = l.aa.compute_amplitudes(l.fa));
-
-				capture_time(
-					"resample_spectrum",
-					audioviz::util::resample_spectrum(
-						l.s, amps, sample_rate_hz, l.fa.get_fft_size(), 20.0f, 135.0f, ip));
-
-				capture_time("spectrum_update", spectrum.update(l.s));
 				audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, angle, M_PI);
-				capture_time("draw", orig_rt.draw(spectrum, polar_rs));
+				orig_rt.draw(spectrum, polar_rs);
 			};
 
-			// left channel
+			std::vector<std::future<void>> futures;
+			futures.reserve(layers.size() * 2);
+
 			for (auto &l : layers)
-				capture_time("do_work", do_layer(l, true));
+			{
+				futures.push_back(
+					std::async(
+						std::launch::async,
+						&LayerData::compute,
+						&l,
+						audio_buffer,
+						num_channels,
+						max_fft_size,
+						sample_rate_hz,
+						true));
+			}
+
+			// wait for all compute tasks
+			for (auto &f : futures)
+				f.wait();
+
+			for (auto &l : layers)
+			{
+				futures.push_back(
+					std::async(
+						std::launch::async,
+						&LayerData::compute,
+						&l,
+						audio_buffer,
+						num_channels,
+						max_fft_size,
+						sample_rate_hz,
+						false));
+			}
+
+			// wait for all compute tasks
+			for (auto &f : futures)
+				f.wait();
+
+			// left channel
+			std::ranges::for_each(layers, [&](auto &l) { do_draw(l, true); });
 
 			// right channel
-			for (auto &l : layers)
-				capture_time("do_work", do_layer(l, false));
+			std::ranges::for_each(layers, [&](auto &l) { do_draw(l, false); });
 
 			orig_rt.display();
 		});
