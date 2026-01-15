@@ -4,6 +4,11 @@
 #include <new>
 #include <type_traits>
 
+// _aligned_malloc/_aligned_free on MSVC
+#if defined(_MSC_VER) || defined(_WIN32)
+#include <malloc.h>
+#endif
+
 template <typename T, size_t Alignment = 32>
 struct aligned_allocator
 {
@@ -30,14 +35,37 @@ struct aligned_allocator
 	{
 		if (n == 0)
 			return nullptr;
-
 		void *ptr = nullptr;
-		if (posix_memalign(&ptr, Alignment, n * sizeof(T)) != 0)
+		size_t size = n * sizeof(T);
+		// std::aligned_alloc requires size to be a multiple of alignment
+		if (size % Alignment != 0)
+			size += Alignment - (size % Alignment);
+
+#if defined(_MSC_VER) || defined(_WIN32)
+		ptr = _aligned_malloc(size, Alignment);
+		if (!ptr)
 			throw std::bad_alloc();
+#elif defined(__APPLE__)
+		// macOS doesn't provide aligned_alloc in libc; use posix_memalign
+		if (posix_memalign(&ptr, Alignment, size) != 0)
+			throw std::bad_alloc();
+#else
+		ptr = std::aligned_alloc(Alignment, size);
+		if (!ptr)
+			throw std::bad_alloc();
+#endif
+
 		return static_cast<T *>(ptr);
 	}
 
-	void deallocate(T *p, size_t) { free(p); }
+	void deallocate(T *p, size_t)
+	{
+#if defined(_MSC_VER) || defined(_WIN32)
+		_aligned_free(p);
+#else
+		free(p);
+#endif
+	}
 
 	template <typename U, size_t OtherAlignment>
 	bool operator==(const aligned_allocator<U, OtherAlignment> &) const noexcept

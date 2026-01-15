@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <audioviz/aligned_allocator.hpp>
+#include <span>
 
 namespace audioviz
 {

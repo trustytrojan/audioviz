@@ -2,6 +2,7 @@
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
 #include <format>
 #include <iostream>
+#include <algorithm>
 
 #ifdef __linux__
 #include <fcntl.h>

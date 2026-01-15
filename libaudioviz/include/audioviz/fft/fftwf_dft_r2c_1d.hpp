@@ -22,10 +22,14 @@ private:
 
 	Vector<float> in;
 	Vector<ComplexNumber> out;
-	fftwf_plan plan;
+	fftwf_plan plan{};
 
 public:
-	inline ~fftwf_dft_r2c_1d() { fftwf_destroy_plan(plan); }
+	inline ~fftwf_dft_r2c_1d()
+	{
+		if (plan)
+			fftwf_destroy_plan(plan);
+	}
 
 	inline void set_n(const int n)
 	{

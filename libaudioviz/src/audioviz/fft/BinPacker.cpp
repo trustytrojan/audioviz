@@ -101,7 +101,7 @@ void BinPacker::compute_bin_pack_index_mappings(const size_t out_size, const siz
 
 	for (size_t i = 0; i < in_size; ++i)
 	{
-		const int out_index = std::clamp((size_t)(calc_index_ratio(i) * out_size), (size_t)0, out_size - 1);
+		const auto out_index = std::clamp((size_t)(calc_index_ratio(i) * out_size), (size_t)0, out_size - 1);
 		if (bin_pack_index_mapping[out_index].first == -1)
 			bin_pack_index_mapping[out_index].first = i;
 		bin_pack_index_mapping[out_index].second = i + 1;

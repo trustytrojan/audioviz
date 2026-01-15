@@ -105,7 +105,6 @@ void Main::configure_from_args(ttviz &viz)
 	// Interpolation type
 	{
 		static const std::unordered_map<std::string, audioviz::Interpolator::InterpolationType> it_map{
-			{"none", audioviz::Interpolator::InterpolationType::LINEAR}, // No "NONE" - use LINEAR as fallback
 			{"linear", audioviz::Interpolator::InterpolationType::LINEAR},
 			{"cspline", audioviz::Interpolator::InterpolationType::CSPLINE},
 			{"cspline_hermite", audioviz::Interpolator::InterpolationType::CSPLINE_HERMITE}};
