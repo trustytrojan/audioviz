@@ -58,6 +58,6 @@ void resample_spectrum(
 	int fft_size,
 	float start_freq,
 	float end_freq,
-	Interpolator *interpolator = {});
+	audioviz::Interpolator &interpolator);
 
 } // namespace audioviz::util

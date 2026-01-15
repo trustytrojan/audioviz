@@ -23,19 +23,34 @@
 
 constexpr float audio_duration_sec = 0.25;
 
+struct LayerData
+{
+	audioviz::FrequencyAnalyzer fa;
+	audioviz::AudioAnalyzer aa;
+	std::vector<float, aligned_allocator<float>> s, a;
+	audioviz::SpectrumDrawable spectrum_left;
+	audioviz::SpectrumDrawable spectrum_right;
+
+	LayerData(int fft_size, int sample_rate, sf::Vector2u size, const audioviz::ColorSettings &cs)
+		: fa{fft_size},
+		  aa{sample_rate, fft_size},
+		  spectrum_left{{{}, (sf::Vector2i)size}, cs},
+		  spectrum_right{{{}, (sf::Vector2i)size}, cs}
+	{
+		a.resize(fft_size);
+	}
+};
+
 struct OldBassNation : audioviz::Base
 {
 	audioviz::FfmpegPopenMedia media;
 	int sample_rate_hz = media.audio_sample_rate();
 	int num_channels{media.audio_channels()};
-	const int fft_size = audio_duration_sec * sample_rate_hz;
+	const int max_fft_size = audio_duration_sec * sample_rate_hz;
 
-	std::vector<float, aligned_allocator<float>> s, a;
+	std::vector<LayerData> layers;
 
 	audioviz::ColorSettings cs;
-	audioviz::SpectrumDrawable spectrum;
-	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
 
 	std::span<const float> audio_buffer;
@@ -46,8 +61,6 @@ struct OldBassNation : audioviz::Base
 
 OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
-	  spectrum{{{}, (sf::Vector2i)size}, cs},
-	  fa{fft_size},
 	  media{media_url, 15}
 {
 #ifdef __linux__
@@ -55,78 +68,95 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
-	std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
+	std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);
 
-	spectrum.set_bar_width(1);
-	spectrum.set_bar_spacing(0);
-	spectrum.set_multiplier(6);
 	cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
-	fa.set_window_func(audioviz::FrequencyAnalyzer::WindowFunction::Blackman);
 
-	set_audio_frames_needed(fft_size);
+	set_audio_frames_needed(max_fft_size);
 
 	sf::RenderStates polar_rs{&audioviz::fx::Polar::getShader()};
 
+	static const std::array<sf::Color, 9> colors{
+		sf::Color::Green,
+		sf::Color::Cyan,
+		sf::Color::Blue,
+		sf::Color{146, 29, 255}, // purple
+		sf::Color::Magenta,
+		sf::Color::Red,
+		sf::Color{255, 165, 0}, // orange
+		sf::Color::Yellow,
+		sf::Color::White //
+	};
+
+	const auto delta_duration = 0.015f;
+	const auto max_duration_diff = (colors.size() - 1) * delta_duration;
+
+	layers.reserve(colors.size());
+	for (int i = 0; i < colors.size(); ++i)
+	{
+		float duration_diff = max_duration_diff - i * delta_duration;
+		const auto new_duration_sec = audio_duration_sec - duration_diff;
+		const int new_fft_size = new_duration_sec * sample_rate_hz;
+
+		layers.emplace_back(new_fft_size, sample_rate_hz, size, cs);
+		auto &l = layers.back();
+
+		l.fa.set_window_func(audioviz::FrequencyAnalyzer::WindowFunction::Blackman);
+
+		auto setup = [&](audioviz::SpectrumDrawable &s, bool prev)
+		{
+			s.set_bar_width(1);
+			s.set_bar_spacing(0);
+			s.set_multiplier(6);
+			s.set_backwards(prev);
+			s.update_bar_colors();
+		};
+
+		cs.set_solid_color(colors[i]);
+		setup(l.spectrum_left, false);
+		setup(l.spectrum_right, true);
+
+		l.s.resize(l.spectrum_left.get_bar_count());
+	}
+
 	auto &spectrum_layer = add_layer("spectrum");
 	spectrum_layer.set_orig_cb(
-		[&](auto &orig_rt)
+		[&, polar_rs](auto &orig_rt) mutable
 		{
 			orig_rt.clear();
 
-			auto do_work = [&](bool backwards, int channel, float angle, float duration_diff, sf::Color color)
+			auto do_layer = [&](LayerData &l, bool left)
 			{
-				const auto new_duration_sec = audio_duration_sec - duration_diff;
-				const int new_fft_size = new_duration_sec * sample_rate_hz;
+				float angle = left ? M_PI / 2 : -M_PI / 2;
+				int channel = left ? 0 : 1;
+				auto &spectrum = left ? l.spectrum_left : l.spectrum_right;
 
-				capture_time("set_fft_size", fa.set_fft_size(new_fft_size));
-				aa.set_fft_size(new_fft_size);
-
-				capture_time("set_backwards", spectrum.set_backwards(backwards));
-				cs.set_solid_color(color);
-				capture_time("update_colors", spectrum.update_bar_colors());
-
-				a.resize(new_fft_size);
 				capture_time(
 					"strided_copy",
 					audioviz::util::strided_copy(
-						a, audio_buffer.first(fft_size * num_channels), num_channels, channel));
-				capture_time("fft", aa.execute_fft(fa, a));
+						l.a, audio_buffer.first(max_fft_size * num_channels), num_channels, channel));
+				capture_time("fft", l.aa.execute_fft(l.fa, l.a));
 
 				std::span<const float> amps;
-				capture_time("compute_amps", amps = aa.compute_amplitudes(fa));
+				capture_time("compute_amps", amps = l.aa.compute_amplitudes(l.fa));
 
-				s.resize(spectrum.get_bar_count());
 				capture_time(
 					"resample_spectrum",
-					audioviz::util::resample_spectrum(s, amps, sample_rate_hz, new_fft_size, 20.0f, 135.0f, &ip));
+					audioviz::util::resample_spectrum(
+						l.s, amps, sample_rate_hz, l.fa.get_fft_size(), 20.0f, 135.0f, ip));
 
-				capture_time("spectrum_update", spectrum.update(s));
+				capture_time("spectrum_update", spectrum.update(l.s));
 				audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, angle, M_PI);
-				orig_rt.draw(spectrum, polar_rs);
+				capture_time("draw", orig_rt.draw(spectrum, polar_rs));
 			};
-
-			static const std::array<sf::Color, 9> colors{
-				sf::Color::Green,
-				sf::Color::Cyan,
-				sf::Color::Blue,
-				sf::Color{146, 29, 255}, // purple
-				sf::Color::Magenta,
-				sf::Color::Red,
-				sf::Color{255, 165, 0}, // orange
-				sf::Color::Yellow,
-				sf::Color::White //
-			};
-
-			const auto delta_duration = 0.015f;
-			const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
 			// left channel
-			for (int i = 0; i < colors.size(); ++i)
-				capture_time("do_work", do_work(false, 0, M_PI / 2, max_duration_diff - i * delta_duration, colors[i]));
+			for (auto &l : layers)
+				capture_time("do_work", do_layer(l, true));
 
 			// right channel
-			for (int i = 0; i < colors.size(); ++i)
-				capture_time("do_work", do_work(true, 1, -M_PI / 2, max_duration_diff - i * delta_duration, colors[i]));
+			for (auto &l : layers)
+				capture_time("do_work", do_layer(l, false));
 
 			orig_rt.display();
 		});

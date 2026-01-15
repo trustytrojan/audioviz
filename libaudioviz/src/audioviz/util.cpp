@@ -439,47 +439,22 @@ void resample_spectrum(
 	int fft_size,
 	float start_freq,
 	float end_freq,
-	Interpolator *interpolator)
+	Interpolator &interpolator)
 {
 	const float bin_size = (float)sample_rate_hz / fft_size;
+	interpolator.set_values(in_amps);
 
-	// Prepare interpolator if provided
-	if (interpolator)
-		interpolator->set_values(in_amps);
+	const float bin_pos_start = (start_freq / bin_size);
+	const float bin_pos_end = (end_freq / bin_size);
+	const float bin_pos_step = (bin_pos_end - bin_pos_start) / std::max(1.0f, (float)out.size() - 1.0f);
 
-	for (size_t i = 0; i < out.size(); ++i)
+	float current_bin_pos = bin_pos_start;
+	const auto out_size = out.size();
+
+	for (size_t i = 0; i < out_size; ++i)
 	{
-		const float t = (float)i / (out.size() - 1);
-		const float target_freq = std::lerp(start_freq, end_freq, t);
-		const float bin_pos = target_freq / bin_size;
-
-		if (interpolator)
-		{
-			out[i] = interpolator->sample(bin_pos);
-		}
-		else
-		{
-			/*
-			// Linear frequency interpolation reference implementation
-			const int idx0 = std::floor(bin_pos);
-			const int idx1 = idx0 + 1;
-			const float frac = bin_pos - idx0;
-
-			const float val0 = (idx0 >= 0 && idx0 < in_amps.size()) ? in_amps[idx0] : 0.0f;
-			const float val1 = (idx1 >= 0 && idx1 < in_amps.size()) ? in_amps[idx1] : 0.0f;
-			
-			out[i] = std::lerp(val0, val1, frac);
-			*/
-			// Just use the logic directly here if no interpolator provided
-			const int idx0 = std::floor(bin_pos);
-			const int idx1 = idx0 + 1;
-			const float frac = bin_pos - idx0;
-
-			const float val0 = (idx0 >= 0 && idx0 < in_amps.size()) ? in_amps[idx0] : 0.0f;
-			const float val1 = (idx1 >= 0 && idx1 < in_amps.size()) ? in_amps[idx1] : 0.0f;
-			
-			out[i] = std::lerp(val0, val1, frac);
-		}
+		out[i] = interpolator.sample(current_bin_pos);
+		current_bin_pos += bin_pos_step;
 	}
 }
 

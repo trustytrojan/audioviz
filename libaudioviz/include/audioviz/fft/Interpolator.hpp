@@ -57,7 +57,7 @@ public:
 	 * @param x X coordinate (index)
 	 * @return interpolated value
 	 */
-	float sample(float x) const;
+	inline float sample(float x) const { return spline(x); }
 };
 
 } // namespace audioviz
