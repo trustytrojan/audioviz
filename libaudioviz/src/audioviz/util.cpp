@@ -7,7 +7,9 @@
 #include <iostream>
 #include <stdexcept>
 
+#ifdef AUDIOVIZ_IMGUI
 #include "imgui.h"
+#endif
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -267,6 +269,7 @@ std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPat
 }
 */
 
+#ifdef AUDIOVIZ_IMGUI
 DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 {
 	DragResizeResult out{false, false, rect};
@@ -405,6 +408,7 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 
 	return out;
 }
+#endif
 
 void spread_out(std::span<float> out, std::span<const float> in)
 {
