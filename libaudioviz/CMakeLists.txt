@@ -31,7 +31,7 @@ endif()
 
 target_include_directories(audioviz PUBLIC
 	include # our headers
-	${CMAKE_BINARY_DIR} # single-header libs
+	${CMAKE_CURRENT_BINARY_DIR} # single-header libs
 	${portaudio-pp_SOURCE_DIR}/include
 )
 
@@ -51,11 +51,11 @@ endif()
 
 # Generate header files with embedded shader source code
 file(GLOB SHADER_SOURCES
-	"${CMAKE_SOURCE_DIR}/shaders/*.frag"
-	"${CMAKE_SOURCE_DIR}/shaders/*.vert"
+	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
+	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
 )
 set(SHADER_HEADERS)
-set(SHADER_HEADER_DIR "${CMAKE_BINARY_DIR}/shader_headers")
+set(SHADER_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader_headers")
 foreach(SHADER_SOURCE IN LISTS SHADER_SOURCES)
     get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
     set(SHADER_HEADER "${SHADER_HEADER_DIR}/${SHADER_NAME}.h")
@@ -70,4 +70,4 @@ endforeach()
 add_custom_target(generate_shader_headers DEPENDS ${SHADER_HEADERS})
 add_dependencies(audioviz generate_shader_headers)
 
-target_include_directories(audioviz PRIVATE ${CMAKE_BINARY_DIR}/shader_headers)
+target_include_directories(audioviz PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shader_headers)
