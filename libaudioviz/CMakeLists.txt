@@ -29,9 +29,14 @@ if(CMAKE_BUILD_TYPE MATCHES Rel)
 	# target_compile_options(audioviz PUBLIC -fopt-info-vec-optimized)
 endif()
 
-target_include_directories(audioviz PUBLIC include)
-target_include_directories(audioviz PRIVATE
+target_include_directories(audioviz PUBLIC
+	include
 	${CMAKE_CURRENT_BINARY_DIR} # single-header libs
+)
+
+# hide implementation details with PRIVATE
+# (portaudio has gotta go anyway)
+target_include_directories(audioviz PRIVATE
 	${portaudio-pp_SOURCE_DIR}/include
 )
 
