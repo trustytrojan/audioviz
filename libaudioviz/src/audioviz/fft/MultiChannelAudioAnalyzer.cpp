@@ -37,7 +37,7 @@ void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<con
 		float buf[window_size];
 		std::span channel_audio{buf, window_size};
 		util::strided_copy(channel_audio, interleaved_audio, num_channels, ch);
-		analyzers[ch].execute_fft(fa, channel_audio, false);
+		analyzers[ch].execute_fft(fa, channel_audio);
 	}
 }
 

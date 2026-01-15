@@ -2,6 +2,7 @@
 #include <SFML/System/Clock.hpp>
 #include <audioviz/fx/Shake.hpp>
 #include <audioviz/util.hpp>
+#include <cmath>
 
 static sf::Shader shader;
 static sf::Clock _clock;

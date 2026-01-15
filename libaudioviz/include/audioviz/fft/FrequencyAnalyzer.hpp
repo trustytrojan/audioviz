@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-#include <functional>
 #include <span>
 #include <vector>
 
@@ -19,28 +17,20 @@ namespace audioviz
 class FrequencyAnalyzer
 {
 public:
-	using WindowFunction = std::function<float(int, int)>;
-
-	static const inline WindowFunction WF_HANNING = [](int i, int fft_size)
-	{ return 0.5f * (1 - cos(2 * M_PI * i / (fft_size - 1))); },
-									   WF_HAMMING = [](int i, int fft_size)
-	{ return 0.54f - 0.46f * cos(2 * M_PI * i / (fft_size - 1)); },
-									   WF_BLACKMAN = [](int i, int fft_size)
+	enum class WindowFunction
 	{
-		return 0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
+		None,
+		Hanning,
+		Hamming,
+		Blackman,
 	};
 
 private:
-	// fft size
 	int fft_size;
 	float inv_fft_size;
-
 	fftwf_dft_r2c_1d fftw;
-
-	// window function
-	WindowFunction window_func{WF_BLACKMAN};
-	int wf_i{3}; // for imgui
-
+	WindowFunction window_func{WindowFunction::Hanning};
+	int wf_i{2}; // for imgui
 	std::vector<float, aligned_allocator<float>> window_values;
 
 public:
@@ -86,6 +76,9 @@ public:
 
 private:
 	void compute_window_values();
+	void apply_hanning_window();
+	void apply_hamming_window();
+	void apply_blackman_window();
 };
 
 } // namespace audioviz

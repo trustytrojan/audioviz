@@ -12,7 +12,7 @@ AudioAnalyzer::AudioAnalyzer(int sample_rate_hz, int fft_size)
 	set_fft_size(fft_size);
 }
 
-void AudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio, bool interleaved)
+void AudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio)
 {
 	fa.copy_to_input(audio);
 	fa.execute_fft();

@@ -25,7 +25,8 @@ void FrequencyAnalyzer::set_fft_size(const int fft_size)
 
 void FrequencyAnalyzer::set_window_func(const WindowFunction wf)
 {
-	this->window_func = wf;
+	window_func = wf;
+	wf_i = static_cast<int>(wf);
 	compute_window_values();
 }
 
@@ -37,12 +38,14 @@ void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
 	const auto *__restrict const in_ptr = std::assume_aligned<32>(wavedata.data());
 	const auto *__restrict const win_ptr = std::assume_aligned<32>(window_values.data());
 
-	if (window_func)
+	if (window_func != WindowFunction::None)
 #pragma GCC ivdep
 		for (int i = 0; i < fft_size; ++i)
 			out_ptr[i] = in_ptr[i] * win_ptr[i];
 	else
-		std::ranges::copy(wavedata, out_ptr);
+#pragma GCC ivdep
+		for (int i = 0; i < fft_size; ++i)
+			out_ptr[i] = in_ptr[i];
 }
 
 void FrequencyAnalyzer::compute_amplitude(std::span<float> output) const
@@ -67,20 +70,53 @@ void FrequencyAnalyzer::compute_phase(std::span<float> output) const
 {
 	const int size = output.size();
 	assert(size == fftw.output_size());
+
+	auto *__restrict const out_ptr = std::assume_aligned<32>(output.data());
+	auto *__restrict const in_ptr = std::assume_aligned<32>(fftw.output().data());
+
+#pragma GCC ivdep
 	for (int i = 0; i < size; ++i)
 	{
-		const auto [re, im] = fftw.output()[i];
-		output[i] = atan2f(im, re);
+		const auto [re, im] = in_ptr[i];
+		out_ptr[i] = atan2f(im, re);
 	}
 }
 
 void FrequencyAnalyzer::compute_window_values()
 {
-	if (!window_func)
+	if (window_func == WindowFunction::None)
 		return;
+
 	window_values.resize(fft_size);
+
+	if (window_func == WindowFunction::Hanning)
+		apply_hanning_window();
+	else if (window_func == WindowFunction::Blackman)
+		apply_blackman_window();
+	else if (window_func == WindowFunction::Hamming)
+		apply_hamming_window();
+}
+
+void FrequencyAnalyzer::apply_hanning_window()
+{
+#pragma GCC ivdep
 	for (int i = 0; i < fft_size; ++i)
-		window_values[i] = window_func(i, fft_size);
+		window_values[i] = 0.5f * (1 - cos(2 * M_PI * i / (fft_size - 1)));
+}
+
+void FrequencyAnalyzer::apply_hamming_window()
+{
+#pragma GCC ivdep
+	for (int i = 0; i < fft_size; ++i)
+		window_values[i] = 0.54f - 0.46f * cos(2 * M_PI * i / (fft_size - 1));
+}
+
+void FrequencyAnalyzer::apply_blackman_window()
+{
+#pragma GCC ivdep
+	for (int i = 0; i < fft_size; ++i)
+		window_values[i] =
+			0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
 }
 
 void FrequencyAnalyzer::draw_imgui()
@@ -92,11 +128,12 @@ void FrequencyAnalyzer::draw_imgui()
 		set_fft_size(fft_tmp);
 
 	// Window function selection
-	static const WindowFunction *const wf_table[] = {{}, &WF_HANNING, &WF_HAMMING, &WF_BLACKMAN};
+	static const WindowFunction wf_table[] = {
+		WindowFunction::None, WindowFunction::Hanning, WindowFunction::Hamming, WindowFunction::Blackman};
 	if (ImGui::Combo("Window", &wf_i, "None\0Hanning\0Hamming\0Blackman\0"))
 	{
 		const auto wf = wf_table[wf_i];
-		set_window_func(wf ? *wf : WindowFunction{});
+		set_window_func(wf);
 	}
 }
 

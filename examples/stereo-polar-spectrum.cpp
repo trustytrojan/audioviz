@@ -83,7 +83,7 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 				spectrum.set_backwards(backwards);
 				a.resize(fft_size);
 				capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, channel));
-				capture_time("fft", aa.execute_fft(fa, a, true));
+				capture_time("fft", aa.execute_fft(fa, a));
 				s.assign(spectrum.get_bar_count(), 0);
 				capture_time(
 					"spread_out",

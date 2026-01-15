@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <audioviz/util.hpp>
+#include <audioviz/fft/Interpolator.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -408,14 +409,14 @@ DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size)
 void spread_out(std::span<float> out, std::span<const float> in)
 {
 	assert(out.size() >= in.size());
-	const auto increment = out.size() / (float)in.size();
+	const auto increment = out.size() / in.size();
 
 	auto *__restrict const out_ptr = out.data();
 	const auto *__restrict const in_ptr = in.data();
 
 #pragma GCC ivdep
 	for (int i = 0; i < in.size(); ++i)
-		out_ptr[(int)(i * increment)] = in_ptr[i];
+		out_ptr[i * increment] = in_ptr[i];
 }
 
 void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel)
@@ -429,6 +430,57 @@ void strided_copy(std::span<float> out, std::span<const float> in, int num_chann
 #pragma GCC ivdep
 	for (int i = 0; i < out.size(); ++i)
 		out_ptr[i] = in_ptr[i * num_channels + channel];
+}
+
+void resample_spectrum(
+	std::span<float> out,
+	std::span<const float> in_amps,
+	int sample_rate_hz,
+	int fft_size,
+	float start_freq,
+	float end_freq,
+	Interpolator *interpolator)
+{
+	const float bin_size = (float)sample_rate_hz / fft_size;
+
+	// Prepare interpolator if provided
+	if (interpolator)
+		interpolator->set_values(in_amps);
+
+	for (size_t i = 0; i < out.size(); ++i)
+	{
+		const float t = (float)i / (out.size() - 1);
+		const float target_freq = std::lerp(start_freq, end_freq, t);
+		const float bin_pos = target_freq / bin_size;
+
+		if (interpolator)
+		{
+			out[i] = interpolator->sample(bin_pos);
+		}
+		else
+		{
+			/*
+			// Linear frequency interpolation reference implementation
+			const int idx0 = std::floor(bin_pos);
+			const int idx1 = idx0 + 1;
+			const float frac = bin_pos - idx0;
+
+			const float val0 = (idx0 >= 0 && idx0 < in_amps.size()) ? in_amps[idx0] : 0.0f;
+			const float val1 = (idx1 >= 0 && idx1 < in_amps.size()) ? in_amps[idx1] : 0.0f;
+			
+			out[i] = std::lerp(val0, val1, frac);
+			*/
+			// Just use the logic directly here if no interpolator provided
+			const int idx0 = std::floor(bin_pos);
+			const int idx1 = idx0 + 1;
+			const float frac = bin_pos - idx0;
+
+			const float val0 = (idx0 >= 0 && idx0 < in_amps.size()) ? in_amps[idx0] : 0.0f;
+			const float val1 = (idx1 >= 0 && idx1 < in_amps.size()) ? in_amps[idx1] : 0.0f;
+			
+			out[i] = std::lerp(val0, val1, frac);
+		}
+	}
 }
 
 } // namespace audioviz::util

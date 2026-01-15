@@ -33,4 +33,28 @@ void Interpolator::interpolate(std::span<float> range)
 		range[zero_index] = spline(zero_index);
 }
 
+void Interpolator::set_values(std::span<const float> values)
+{
+	m_spline_x.clear();
+	m_spline_y.clear();
+	m_spline_x.reserve(values.size());
+	m_spline_y.reserve(values.size());
+
+	for (size_t i = 0; i < values.size(); ++i)
+	{
+		m_spline_x.emplace_back(i);
+		m_spline_y.emplace_back(values[i]);
+	}
+
+	if (m_spline_x.size() >= 3)
+		spline.set_points(m_spline_x, m_spline_y, (tk::spline::spline_type)type);
+}
+
+float Interpolator::sample(float x) const
+{
+	if (m_spline_x.size() < 3)
+		return 0.0f;
+	return std::max(0.0, spline(x));
+}
+
 } // namespace audioviz

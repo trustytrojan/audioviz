@@ -44,6 +44,20 @@ public:
 	 * @param spectrum spectrum data to interpolate in-place
 	 */
 	void interpolate(std::span<float> spectrum);
+
+	/**
+	 * Set the values for the spline interpolation.
+	 * The X values are assumed to be 0, 1, 2, ...
+	 * @param values Y values
+	 */
+	void set_values(std::span<const float> values);
+
+	/**
+	 * Sample the spline at a given X coordinate.
+	 * @param x X coordinate (index)
+	 * @return interpolated value
+	 */
+	float sample(float x) const;
 };
 
 } // namespace audioviz

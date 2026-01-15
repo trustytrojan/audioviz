@@ -61,7 +61,7 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	spectrum.set_bar_spacing(0);
 	spectrum.set_multiplier(6);
 	cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
-	// fa.set_window_func({});
+	fa.set_window_func(audioviz::FrequencyAnalyzer::WindowFunction::Blackman);
 
 	set_audio_frames_needed(fft_size);
 
@@ -76,35 +76,36 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 			auto do_work = [&](bool backwards, int channel, float angle, float duration_diff, sf::Color color)
 			{
 				const auto new_duration_sec = audio_duration_sec - duration_diff;
-				const int fft_size = new_duration_sec * sample_rate_hz;
-				capture_time("set_fft_size", fa.set_fft_size(fft_size));
-				aa.set_fft_size(fft_size);
-				const auto min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
-				const auto max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
+				const int new_fft_size = new_duration_sec * sample_rate_hz;
+
+				capture_time("set_fft_size", fa.set_fft_size(new_fft_size));
+				aa.set_fft_size(new_fft_size);
 
 				spectrum.set_backwards(backwards);
 				cs.set_solid_color(color);
 				spectrum.update_bar_colors();
 
-				a.resize(fft_size);
+				a.resize(new_fft_size);
 				capture_time(
 					"strided_copy",
 					audioviz::util::strided_copy(
 						a, audio_buffer.first(fft_size * num_channels), num_channels, channel));
-				capture_time("fft", aa.execute_fft(fa, a, true));
-				s.assign(spectrum.get_bar_count(), 0);
-				capture_time("compute_amps", aa.compute_amplitudes(fa));
+				capture_time("fft", aa.execute_fft(fa, a));
+
+				std::span<const float> amps;
+				capture_time("compute_amps", amps = aa.compute_amplitudes(fa));
+
+				s.resize(spectrum.get_bar_count());
 				capture_time(
-					"spread_out",
-					audioviz::util::spread_out(
-						s, {aa.compute_amplitudes(fa).data() + min_fft_index, max_fft_index - min_fft_index + 1}));
-				capture_time("interpolate", ip.interpolate(s));
+					"resample_spectrum",
+					audioviz::util::resample_spectrum(s, amps, sample_rate_hz, new_fft_size, 20.0f, 125.0f, &ip));
+
 				capture_time("spectrum_update", spectrum.update(s));
 				audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, angle, M_PI);
 				orig_rt.draw(spectrum, polar_rs);
 			};
 
-			const std::array<sf::Color, 9> colors{
+			static const std::array<sf::Color, 9> colors{
 				sf::Color::Green,
 				sf::Color::Cyan,
 				sf::Color::Blue,
@@ -113,9 +114,10 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 				sf::Color::Red,
 				sf::Color{255, 165, 0}, // orange
 				sf::Color::Yellow,
-				sf::Color::White};
+				sf::Color::White //
+			};
 
-			const auto delta_duration = 0.02f;
+			const auto delta_duration = 0.015f;
 			const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
 			// left channel

@@ -36,7 +36,7 @@ public:
 		fft_output_size = fft_size / 2 + 1;
 	}
 
-	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio, bool interleaved);
+	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio);
 	std::span<const float> compute_amplitudes(const FrequencyAnalyzer &fa);
 	std::span<const float> compute_amplitudes(const FrequencyAnalyzer &fa, int from_hz, int to_hz);
 	std::span<const float> compute_phase(const FrequencyAnalyzer &fa);

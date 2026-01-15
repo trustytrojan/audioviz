@@ -85,10 +85,10 @@ void Main::configure_from_args(ttviz &viz)
 	// Window function
 	{
 		static const std::unordered_map<std::string, audioviz::FrequencyAnalyzer::WindowFunction> wf_map{
-			{"none", nullptr},
-			{"hanning", audioviz::FrequencyAnalyzer::WF_HANNING},
-			{"hamming", audioviz::FrequencyAnalyzer::WF_HAMMING},
-			{"blackman", audioviz::FrequencyAnalyzer::WF_BLACKMAN},
+			{"none", audioviz::FrequencyAnalyzer::WindowFunction::None},
+			{"hanning", audioviz::FrequencyAnalyzer::WindowFunction::Hanning},
+			{"hamming", audioviz::FrequencyAnalyzer::WindowFunction::Hamming},
+			{"blackman", audioviz::FrequencyAnalyzer::WindowFunction::Blackman},
 		};
 
 		const auto &wf_str = args.get("-w");

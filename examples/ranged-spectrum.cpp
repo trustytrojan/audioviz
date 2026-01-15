@@ -74,7 +74,7 @@ void RangedSpectrum::update(const std::span<const float> audio_buffer)
 {
 	a.resize(fft_size);
 	capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, 0));
-	capture_time("fft", aa.execute_fft(fa, a, true));
+	capture_time("fft", aa.execute_fft(fa, a));
 	s.assign(spectrum.get_bar_count(), 0);
 	// spread out into s only our desired frequency range
 	capture_time("spread_out", audioviz::util::spread_out(s, {aa.compute_amplitudes(fa).data(), max_fft_index}));
