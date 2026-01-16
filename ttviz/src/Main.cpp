@@ -62,7 +62,7 @@ void Main::configure_from_args(ttviz &viz)
 		viz.set_album_cover(*album_art_path);
 
 	if (const auto font_path = args.present("--font"))
-		viz.set_text_font(*font_path);
+		viz.set_profiler_font(*font_path);
 
 	// Accumulation method
 	{

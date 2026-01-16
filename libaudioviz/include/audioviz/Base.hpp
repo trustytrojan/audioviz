@@ -1,14 +1,24 @@
 #pragma once
 
+#include "audioviz/Profiler.hpp"
 #include <SFML/Graphics.hpp>
 
 #include <audioviz/Layer.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/media/Media.hpp>
-#include <limits>
 #include <span>
 #include <string>
 #include <vector>
+
+#define capture_time(label, code)     \
+	if (profiler_enabled)             \
+	{                                 \
+		profiler.startSection(label); \
+		code;                         \
+		profiler.endSection();        \
+	}                                 \
+	else                              \
+		code;
 
 namespace audioviz
 {
@@ -24,6 +34,11 @@ public:
 	const sf::Vector2u size;
 
 protected:
+	// audio frames per video frame
+	int afpvf{};
+	int audio_frames_needed{};
+	bool profiler_enabled{};
+	Profiler profiler;
 	sf::Font font;
 
 private:
@@ -32,28 +47,8 @@ private:
 	std::vector<Layer::DrawCall> final_drawables2;
 	int audio_sample_rate{};
 	int framerate{60};
-
-protected:
-	// audio frames per video frame
-	int afpvf{};
-	int audio_frames_needed{};
-
-private:
 	RenderTexture final_rt;
-
-	sf::Text timing_text{font};
-	struct TimingStat
-	{
-		std::string name;
-		float min{std::numeric_limits<float>::max()};
-		float max{0.0f};
-		float total{0.0f};
-		size_t count{0};
-		float current{0.0f};
-		float avg() const { return (count == 0) ? 0.0f : total / count; }
-	};
-	std::vector<TimingStat> timing_stats;
-	bool tt_enabled{};
+	sf::Text profiler_text{font};
 
 public:
 	/**
@@ -79,16 +74,13 @@ public:
 
 	void draw(sf::RenderTarget &, sf::RenderStates) const override;
 
-	inline void set_timing_text_enabled(const bool enabled) { tt_enabled = enabled; }
-	inline bool timing_text_enabled() { return tt_enabled; }
-
 	// important if you are capturing frames for video encoding!
 	void set_framerate(int framerate);
 	void set_samplerate(int samplerate);
 	inline int get_framerate() const { return framerate; }
 
-	// must be called for timing text to display
-	inline void set_text_font(const std::string &path) { font = sf::Font{path}; }
+	inline void set_font(const std::string &path) { font = sf::Font{path}; }
+	inline void enable_profiler() { profiler_enabled = true; }
 
 	// users MUST call this to specify how much audio they need for their visualizers
 	// this is an overreach, only used in the terminal methods, make this a parameter of those instead
@@ -105,8 +97,6 @@ public:
 		const std::string &acodec = "copy");
 
 protected:
-	TimingStat &get_or_create_timing_stat(const std::string &label);
-	void capture_elapsed_time(const std::string &label, const sf::Clock &);
 	virtual void update(std::span<const float> audio_buffer) {}
 };
 

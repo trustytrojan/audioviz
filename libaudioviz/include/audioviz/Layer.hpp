@@ -59,7 +59,7 @@ private:
 	std::vector<DrawCall> draws;
 
 public:
-	Layer(const std::string &name, sf::Vector2u size, unsigned antialiasing);
+	Layer(const std::string &name, sf::Vector2u size, unsigned antialiasing = 0);
 
 	/**
 	 * Add a draw call to perform on this layer. If more control over rendering is needed,

@@ -23,7 +23,7 @@ ScopeImGuiTest::ScopeImGuiTest(sf::Vector2u size, const std::string &media_url)
 	scope.set_shape_spacing(2);
 
 #ifdef __linux__
-	set_timing_text_enabled(true);
+	enable_profiler();
 	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 

@@ -1,6 +1,6 @@
 #include <algorithm>
-#include <audioviz/util.hpp>
 #include <audioviz/fft/Interpolator.hpp>
+#include <audioviz/util.hpp>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -423,7 +423,7 @@ void spread_out(std::span<float> out, std::span<const float> in)
 		out_ptr[i * increment] = in_ptr[i];
 }
 
-void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel)
+void extract_channel(std::span<float> out, std::span<const float> in, int num_channels, int channel)
 {
 	assert(num_channels > 0);
 	assert(out.size() * num_channels == in.size());

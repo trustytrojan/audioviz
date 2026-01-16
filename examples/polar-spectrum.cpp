@@ -12,16 +12,6 @@
 #include <iostream>
 #include <print>
 
-#define capture_time(label, code)            \
-	if (timing_text_enabled())               \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
-
 constexpr float audio_duration_sec = 0.15;
 
 struct PolarSpectrum : audioviz::Base
@@ -51,8 +41,8 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	  media{media_url, 10}
 {
 #ifdef __linux__
-	set_timing_text_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	enable_profiler();
+	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
 	std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
@@ -84,7 +74,7 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 void PolarSpectrum::update(const std::span<const float> audio_buffer)
 {
 	a.resize(fft_size);
-	capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, 0));
+	capture_time("strided_copy", audioviz::util::extract_channel(a, audio_buffer, num_channels, 0));
 	capture_time("fft", aa.execute_fft(fa, a));
 	s.assign(spectrum.get_bar_count(), 0);
 	capture_time(

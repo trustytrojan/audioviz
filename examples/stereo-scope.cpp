@@ -5,16 +5,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
-#define capture_time(label, code)            \
-	if (timing_text_enabled())               \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
-
 struct ScopeTest : audioviz::Base
 {
 	audioviz::ColorSettings colorL, colorR;
@@ -37,8 +27,8 @@ ScopeTest::ScopeTest(sf::Vector2u size, const std::string &media_url)
 	// stereo_scope.set_fill_in(true);
 
 #ifdef __linux__
-	set_timing_text_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	enable_profiler();
+	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
 	// if we make this a layer, we can capture the full draw time

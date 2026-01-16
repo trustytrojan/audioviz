@@ -4,16 +4,6 @@
 #include <audioviz/util.hpp>
 #include <stdexcept>
 
-#define capture_time(label, code)            \
-	if (timing_text_enabled())               \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
-
 ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, const int fft_size, const int antialiasing)
 	: Base{size},
 	  media{media},

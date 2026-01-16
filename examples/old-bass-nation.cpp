@@ -63,7 +63,7 @@ struct LayerData
 	void compute(std::span<const float> audio_buffer, int num_channels, int max_fft_size, int sample_rate_hz)
 	{
 		const int channel = is_left ? 0 : 1;
-		audioviz::util::strided_copy(a, audio_buffer.first(max_fft_size * num_channels), num_channels, channel);
+		audioviz::util::extract_channel(a, audio_buffer.first(max_fft_size * num_channels), num_channels, channel);
 		aa.execute_fft(fa, a);
 		const auto amps = aa.compute_amplitudes(fa);
 		audioviz::util::resample_spectrum(s, amps, sample_rate_hz, fa.get_fft_size(), 20.0f, 135.0f, ip);
@@ -182,8 +182,8 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	  media{media_url}
 {
 #ifdef __linux__
-	set_timing_text_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	enable_profiler();
+	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
 	std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);

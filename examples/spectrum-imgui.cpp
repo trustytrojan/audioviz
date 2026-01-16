@@ -32,8 +32,8 @@ SpectrumImGuiTest::SpectrumImGuiTest(sf::Vector2u size, const std::string &media
 	set_audio_frames_needed(fft_size);
 
 #ifdef __linux__
-	set_timing_text_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	enable_profiler();
+	set_profiler_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
 	add_final_drawable(spectrum);

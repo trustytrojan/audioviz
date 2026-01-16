@@ -50,7 +50,7 @@ public:
 	// bin-packing, interpolating overload of update
 	void update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, BinPacker &bp, Interpolator &ip);
 	void update(std::span<const float> spectrum);
-	void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
+	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override;
 
 #ifdef AUDIOVIZ_IMGUI
 	void draw_imgui();

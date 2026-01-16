@@ -8,23 +8,14 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
-#define capture_time(label, code)            \
-	if (timing_text_enabled())               \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
-
 struct ShakeBassTest : audioviz::Base
 {
 	const int fft_size = 3000;
+	audioviz::FfmpegPopenMedia media;
+	float sample_rate_hz{media.audio_sample_rate()};
 
 	audioviz::FrequencyAnalyzer fa;
-	audioviz::StereoAnalyzer sa;
-	float sample_rate_hz{};
+	audioviz::StereoAnalyzer sa{sample_rate_hz, fft_size};
 
 	sf::RectangleShape rect;
 
@@ -34,6 +25,7 @@ struct ShakeBassTest : audioviz::Base
 
 ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_url)
 	: Base{size},
+	  media{media_url},
 	  fa{fft_size},
 	  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 {
@@ -50,19 +42,18 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 	add_final_drawable2(rect, &audioviz::fx::Shake::getShader());
 
 #ifdef __linux__
-	set_timing_text_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	enable_profiler();
+	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
-	audioviz::FfmpegPopenMedia media{media_url, size};
 	sample_rate_hz = static_cast<float>(media.audio_sample_rate());
 	start_in_window(media, "shake-bass");
 }
 
 void ShakeBassTest::update(const std::span<const float> audio_buffer)
 {
-	capture_time("fft", sa.execute_fft(fa, audio_buffer, true));
-	audioviz::fx::Shake::setParameters(sa, sample_rate_hz, fft_size, 100.f);
+	capture_time("fft", sa.execute_fft(fa, audio_buffer));
+	audioviz::fx::Shake::setParameters(sa.left(), 0, 250, 100.f);
 }
 
 int main(const int argc, const char *const *const argv)

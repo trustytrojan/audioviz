@@ -18,9 +18,8 @@ class Media
 
 public:
 	const std::string url;
-
 	Media(const std::string &url);
-	virtual ~Media() = default; // fixes clangd warning
+	virtual ~Media() = default;
 
 	/**
 	 * Read `samples` audio SAMPLES (NOT FRAMES) from the underlying source
@@ -57,11 +56,14 @@ public:
 	 * Erase `frames` audio frames from the buffer.
 	 */
 	void audio_buffer_erase(const int frames);
+	void consume_audio(const int frames);
 
 	/**
 	 * Returns the number of audio FRAMES (NOT samples) in the buffer.
 	 */
 	inline int audio_buffer_frames() const { return _audio_buffer.size() / audio_channels(); }
+
+	std::optional<std::span<const float>> read_audio(int frames);
 };
 
 } // namespace audioviz

@@ -6,7 +6,6 @@
 #include <optional>
 #include <span>
 #include <string>
-
 #include <audioviz/fft/Interpolator.hpp>
 
 namespace audioviz::util
@@ -51,7 +50,7 @@ inline int bin_index_from_freq(const int freq_hz, const int sample_rate_hz, cons
 }
 
 void spread_out(std::span<float> out, std::span<const float> in);
-void strided_copy(std::span<float> out, std::span<const float> in, int num_channels, int channel);
+void extract_channel(std::span<float> out, std::span<const float> in, int num_channels, int channel);
 
 void resample_spectrum(
 	std::span<float> out,

@@ -1,8 +1,7 @@
+#include <algorithm>
 #include <audioviz/Base.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
-#include <format>
 #include <iostream>
-#include <algorithm>
 
 #ifdef __linux__
 #include <fcntl.h>
@@ -18,16 +17,6 @@
 #include <portaudio.hpp>
 #endif
 
-#define capture_time(label, code)            \
-	if (tt_enabled)                          \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
-
 namespace audioviz
 {
 
@@ -35,9 +24,9 @@ Base::Base(const sf::Vector2u size)
 	: size{size},
 	  final_rt{size}
 {
-	timing_text.setPosition({size.x - 500, 30});
-	timing_text.setCharacterSize(18);
-	timing_text.setFillColor({255, 255, 255, 150});
+	profiler_text.setPosition({size.x - 500, 30});
+	profiler_text.setCharacterSize(18);
+	profiler_text.setFillColor({255, 255, 255, 150});
 }
 
 bool Base::next_frame(const std::span<const float> audio_buffer, int num_channels)
@@ -53,19 +42,17 @@ bool Base::next_frame(const std::span<const float> audio_buffer, int num_channel
 
 	final_rt.clear();
 	for (auto &layer : layers)
-		capture_time("layer '" + layer.get_name() + "'", layer.full_lifecycle(final_rt));
+	{
+		if (profiler_enabled)
+			profiler.startSection(layer.get_name());
+		layer.full_lifecycle(final_rt);
+		if (profiler_enabled)
+			profiler.endSection();
+	}
 	final_rt.display();
 
-	if (tt_enabled)
-	{
-		auto s = std::format("{:<20}{:<7}{:<7}{:<7}{:<7}\n", "", "curr", "avg", "min", "max");
-		for (const auto &stat : timing_stats)
-		{
-			s += std::format(
-				"{:<20}{:<7.3f}{:<7.3f}{:<7.3f}{:<7.3f}\n", stat.name, stat.current, stat.avg(), stat.min, stat.max);
-		}
-		timing_text.setString(s);
-	}
+	if (profiler_enabled)
+		profiler_text.setString(profiler.getSummary());
 
 	return true;
 }
@@ -77,29 +64,8 @@ void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 		target.draw(*drawable);
 	for (const auto dc : final_drawables2)
 		target.draw(dc.drawable, dc.states);
-	if (tt_enabled)
-		target.draw(timing_text);
-}
-
-Base::TimingStat &Base::get_or_create_timing_stat(const std::string &label)
-{
-	auto it = std::ranges::find_if(timing_stats, [&label](auto &stat) { return stat.name == label; });
-	if (it != timing_stats.end())
-		return *it;
-	return timing_stats.emplace_back(label);
-}
-
-void Base::capture_elapsed_time(const std::string &label, const sf::Clock &clock)
-{
-	auto &stat = get_or_create_timing_stat(label);
-	const float time_ms = clock.getElapsedTime().asMicroseconds() / 1e3f;
-	stat.current = time_ms;
-	if (time_ms < stat.min)
-		stat.min = time_ms;
-	if (time_ms > stat.max)
-		stat.max = time_ms;
-	stat.total += time_ms;
-	stat.count++;
+	if (profiler_enabled)
+		target.draw(profiler_text);
 }
 
 void Base::set_framerate(const int framerate)
@@ -201,14 +167,12 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 	while (window.isOpen())
 	{
 		const auto frames = std::max(audio_frames_needed, afpvf);
-		const auto samples = frames * num_channels;
-		media.buffer_audio(frames);
-		if (media.audio_buffer_frames() < frames)
+		const auto audio = media.read_audio(frames);
+		if (!audio)
 		{
 			std::cerr << "[Base::start_in_window] not enough audio frames, breaking loop\n";
 			break;
 		}
-		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
 
 #ifdef AUDIOVIZ_PORTAUDIO
 		try
@@ -238,12 +202,12 @@ void Base::start_in_window(Media &media, const std::string &window_title)
 		ImGui::SFML::Update(window, deltaClock.restart());
 #endif
 
-		if (!next_frame(audio_chunk, num_channels))
+		if (!next_frame(*audio, num_channels))
 			break;
 
 		// slide audio window just enough to ensure the next video
 		// frame isn't reusing audio from this one
-		media.audio_buffer_erase(afpvf);
+		media.consume_audio(afpvf);
 
 		window.clear();
 		window.draw(*this);
@@ -271,22 +235,20 @@ void Base::encode(Media &media, const std::string &outfile, const std::string &v
 	while (running)
 	{
 		const auto frames = std::max(audio_frames_needed, afpvf);
-		const auto samples = frames * num_channels;
-		media.buffer_audio(frames);
-		if (media.audio_buffer_frames() < afpvf)
+		const auto audio = media.read_audio(frames);
+		if (!audio)
 		{
-			std::cerr << "Base::start_in_window: not enough audio frames, breaking loop\n";
+			std::cerr << "[Base::start_in_window] not enough audio frames, breaking loop\n";
 			break;
 		}
-		const auto audio_chunk = std::span{media.audio_buffer()}.first(samples);
 
-		running = next_frame(audio_chunk, num_channels);
+		running = next_frame(*audio, num_channels);
 		if (!running)
 			break;
 
 		// slide audio window just enough to ensure the next video
 		// frame isn't reusing audio from this one
-		media.audio_buffer_erase(afpvf);
+		media.consume_audio(afpvf);
 
 		rt.clear();
 		rt.draw(*this);
