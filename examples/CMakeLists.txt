@@ -1,4 +1,13 @@
-link_libraries(audioviz)
+# Fetch argparse for command-line argument parsing
+include(FetchContent)
+FetchContent_Declare(
+	argparse
+	GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+	GIT_TAG v3.2
+)
+FetchContent_MakeAvailable(argparse)
+
+link_libraries(audioviz argparse)
 
 function(add_example program_name)
 	add_executable(${program_name} "${program_name}.cpp")

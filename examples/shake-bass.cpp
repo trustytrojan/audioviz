@@ -1,66 +1,46 @@
-#include "audioviz/Player.hpp"
-#include <audioviz/Base.hpp>
+#include "ExampleFramework.hpp"
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/StereoAnalyzer.hpp>
 #include <audioviz/fx/Shake.hpp>
-#include <audioviz/media/FfmpegPopenMedia.hpp>
-#include <audioviz/util.hpp>
 
 #include <SFML/Graphics.hpp>
-#include <iostream>
 
-struct ShakeBassTest : audioviz::Base
+using namespace audioviz::examples;
+
+struct ShakeBassTest : ExampleBase<ShakeBassTest>
 {
 	const int fft_size = 3000;
-	audioviz::FfmpegPopenMedia media;
-	float sample_rate_hz{media.audio_sample_rate()};
 
 	audioviz::FrequencyAnalyzer fa{fft_size};
-	audioviz::StereoAnalyzer sa{sample_rate_hz, fft_size};
+	audioviz::StereoAnalyzer sa;
 
-	sf::RectangleShape rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}};
+	sf::RectangleShape rect;
 	audioviz::fx::Shake shake;
 
-	ShakeBassTest(sf::Vector2u size, const std::string &media_url);
-	void update(std::span<const float> audio_buffer) override;
-};
-
-ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_url)
-	: Base{size},
-	  media{media_url}
-{
-	rect.setOrigin(rect.getGeometricCenter());
-	rect.setPosition(sf::Vector2f{size} * 0.5f);
-	rect.setFillColor(sf::Color::Transparent);
-	rect.setOutlineColor(sf::Color::White);
-	rect.setOutlineThickness(1);
-
-	emplace_layer<audioviz::Layer>("shake").add_draw({rect, &shake});
-
-#ifdef __linux__
-	enable_profiler();
-	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
-#endif
-
-	sample_rate_hz = static_cast<float>(media.audio_sample_rate());
-}
-
-void ShakeBassTest::update(const std::span<const float> audio_buffer)
-{
-	capture_time("fft", sa.execute_fft(fa, audio_buffer));
-	sa.left().compute_amplitudes(fa);
-	shake.setParameters(sa.left(), 0, 250, 100.f);
-}
-
-int main(const int argc, const char *const *const argv)
-{
-	if (argc < 4)
+	ShakeBassTest(const ExampleConfig& config)
+		: ExampleBase{config},
+		  sa{static_cast<float>(sample_rate_hz), fft_size},
+		  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 	{
-		std::cerr << "usage: " << argv[0] << " <size.x> <size.y> <media file>\n";
-		return EXIT_FAILURE;
+		rect.setOrigin(rect.getGeometricCenter());
+		rect.setPosition(sf::Vector2f{size} * 0.5f);
+		rect.setFillColor(sf::Color::Transparent);
+		rect.setOutlineColor(sf::Color::White);
+		rect.setOutlineThickness(1);
+
+		emplace_layer<audioviz::Layer>("shake").add_draw({rect, &shake});
 	}
 
-	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
-	ShakeBassTest viz{size, argv[3]};
-	audioviz::Player{viz, viz.media, 60, viz.fft_size}.start_in_window(argv[0]);
-}
+	void update(std::span<const float> audio_buffer) override
+	{
+		capture_time("fft", sa.execute_fft(fa, audio_buffer));
+		sa.left().compute_amplitudes(fa);
+		shake.setParameters(sa.left(), 0, 250, 100.f);
+	}
+};
+
+AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
+	ShakeBassTest,
+	"Shake effect visualization based on bass frequencies",
+	viz.fft_size
+)

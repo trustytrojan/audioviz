@@ -1,24 +1,41 @@
-#include "audioviz/Layer.hpp"
-#include "audioviz/fx/Blur.hpp"
+#include <argparse/argparse.hpp>
+#include <audioviz/Layer.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
+#include <audioviz/fx/Blur.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/media/Media.hpp>
 #include <iostream>
 
-constexpr auto fft_size = 3000;
-constexpr auto framerate = 60;
-
-int main(const int argc, const char *const *const argv)
+int main(int argc, const char *const *argv)
 {
-	if (argc < 4)
+	argparse::ArgumentParser parser("spectrum-new-api");
+	parser.add_description("Spectrum visualization with glow effect using new API");
+
+	parser.add_argument("media").help("Path to the media file");
+	parser.add_argument("-w", "--width").default_value(1280).scan<'d', int>().help("Window width");
+	parser.add_argument("--height").default_value(720).scan<'d', int>().help("Window height");
+	parser.add_argument("-f", "--framerate").default_value(60).scan<'d', int>().help("Output framerate");
+	parser.add_argument("--fft-size").default_value(3000).scan<'d', int>().help("FFT size");
+
+	try
 	{
-		std::cerr << "usage: " << argv[0] << " <size.x> <size.y> <media file>\n";
+		parser.parse_args(argc, argv);
+	}
+	catch (const std::exception &err)
+	{
+		std::cerr << err.what() << std::endl;
+		std::cerr << parser;
 		return EXIT_FAILURE;
 	}
 
-	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
+	const sf::Vector2u size{
+		static_cast<unsigned>(parser.get<int>("--width")),
+		static_cast<unsigned>(parser.get<int>("--height"))};
+	const int fft_size = parser.get<int>("--fft-size");
+	const int framerate = parser.get<int>("--framerate");
+	const std::string media_path = parser.get<std::string>("media");
 
-	audioviz::FfmpegPopenMedia media{argv[3], 15};
+	audioviz::FfmpegPopenMedia media{media_path, 15};
 
 	// audio frames per video frame
 	const auto afpvf = media.audio_sample_rate() / framerate;
