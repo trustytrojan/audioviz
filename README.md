@@ -50,9 +50,6 @@ i recommend using vscode as it integrates well with git with no effort. get the 
 ```
 
 ## todo list / goals
-- 🔄 interactive gui (long term)
-  - ✅️ integrate imgui-sfml into project
-  - 🔄 develop imgui window for each customizable object
-- might take imgui out... it belongs in a separate repo as an effort to make some kind of editor based on libaudioviz. ui should not be conflated with the library itself.
+- gonna take imgui out... it belongs in a separate repo as an effort to make some kind of editor based on libaudioviz. ui should not be conflated with the library itself.
 - rhythm-based effects
   - use [aubio](https://aubio.org) for this
