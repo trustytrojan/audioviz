@@ -48,9 +48,11 @@ public:
 	}
 
 	ParticleSystem(const sf::IntRect &rect, const int particle_count, const int framerate)
-		: ParticleSystem{rect, particle_count},
+		: rect{rect},
+		  particles{particle_count},
 		  timestep_scale{framerate > 0 ? 60.f / framerate : 1.f}
 	{
+		init_particles();
 	}
 
 	void set_framerate(int framerate)
