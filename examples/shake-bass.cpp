@@ -1,3 +1,4 @@
+#include "audioviz/Player.hpp"
 #include <audioviz/Base.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/StereoAnalyzer.hpp>
@@ -29,7 +30,7 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 	  fa{fft_size},
 	  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 {
-	set_audio_frames_needed(fft_size);
+	// set_audio_frames_needed(fft_size);
 
 	rect.setOrigin(rect.getGeometricCenter());
 	rect.setPosition(sf::Vector2f{size} * 0.5f);
@@ -47,7 +48,7 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 #endif
 
 	sample_rate_hz = static_cast<float>(media.audio_sample_rate());
-	start_in_window(media, "shake-bass");
+	// start_in_window(media, "shake-bass");
 }
 
 void ShakeBassTest::update(const std::span<const float> audio_buffer)
@@ -66,4 +67,5 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	ShakeBassTest viz{size, argv[3]};
+	audioviz::Player{viz, viz.media, 60, viz.fft_size}.start_in_window(argv[0]);
 }

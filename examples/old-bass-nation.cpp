@@ -1,4 +1,5 @@
 #include <audioviz/Base.hpp>
+#include <audioviz/Player.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
@@ -15,16 +16,6 @@
 #include <mutex>
 #include <print>
 #include <thread>
-
-#define capture_time(label, code)            \
-	if (timing_text_enabled())               \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
 
 constexpr float audio_duration_sec = 0.25;
 
@@ -190,8 +181,6 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 
 	cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
 
-	set_audio_frames_needed(max_fft_size);
-
 	sf::RenderStates polar_rs{&audioviz::fx::Polar::getShader()};
 
 	static const std::array<sf::Color, 9> colors{
@@ -248,9 +237,6 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 
 				orig_rt.display();
 			});
-
-	start_in_window(media, "old-bass-nation");
-	// encode(media, std::string{"old-bass-nation-"} + media.title() + ".mp4", "h264_vaapi");
 }
 
 void OldBassNation::update(const std::span<const float> audio_buffer)
@@ -268,4 +254,5 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	OldBassNation viz{size, argv[3]};
+	audioviz::Player{viz, viz.media, 60, viz.max_fft_size}.start_in_window(argv[0]);
 }

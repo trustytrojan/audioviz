@@ -10,13 +10,11 @@ namespace audioviz
 
 class FfmpegPopenEncoder
 {
-	static const int NUM_PBOS{2};
+	static constexpr auto NUM_PBOS = 2;
 
 	// GLuint is just unsigned
 	unsigned pbos[NUM_PBOS]{}; // this is basically a ring buffer of pixel buffer objects (PBOs) to avoid stalls
-	unsigned fbo;
-	unsigned intermediateFBO;
-	unsigned intermediateTexture;
+	unsigned fbo, intermediateFBO, intermediateTexture;
 	int current_frame{};
 
 	const sf::Vector2u video_size;
@@ -26,7 +24,8 @@ class FfmpegPopenEncoder
 public:
 	FfmpegPopenEncoder(
 		const std::string &media_url,
-		const audioviz::Base &viz,
+		sf::Vector2u video_size,
+		int framerate,
 		const std::string &outfile,
 		const std::string &vcodec,
 		const std::string &acodec);

@@ -37,6 +37,9 @@ class ttviz : public audioviz::Base
 	StereoSpectrum ss;
 	std::optional<sf::BlendMode> spectrum_bm;
 
+	// Playback settings
+	int framerate{60};
+
 	// Particle system
 	audioviz::ParticleSystem<ParticleShapeType> ps;
 	int frame_count{};
@@ -66,6 +69,10 @@ public:
 	inline audioviz::ColorSettings &get_color() { return color; }
 	inline audioviz::ParticleSystem<ParticleShapeType> &get_ps() { return ps; }
 	inline StereoSpectrum &get_ss() { return ss; }
+
+	// Framerate management
+	inline void set_framerate(int fps) { framerate = fps; }
+	inline int get_framerate() const { return framerate; }
 
 private:
 	void update(std::span<const float> audio_buffer) override;

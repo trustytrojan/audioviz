@@ -11,14 +11,13 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, const int fft_size
 	  fa{fft_size},
 	  sa{sample_rate_hz, fft_size},
 	  ss{{{}, {size.x, size.y - 10}}, color},
-	  ps{{{}, (sf::Vector2i)size}, 50, get_framerate()}
+	  framerate{60},
+	  ps{{{}, (sf::Vector2i)size}, 50, framerate}
 {
 	// Check for stereo audio
 	if (media.audio_channels() != 2)
 		throw std::runtime_error{
 			"ttviz requires stereo (2-channel) audio; got " + std::to_string(media.audio_channels()) + " channel(s)"};
-
-	set_audio_frames_needed(fft_size);
 
 	// Configure spectrum
 	ss.set_left_backwards(true);
@@ -52,7 +51,7 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, const int fft_size
 			bg.set_orig_cb(
 				[this, &media](auto &orig_rt)
 				{
-					const int frames_to_wait = get_framerate() / media.video_framerate();
+					const int frames_to_wait = framerate / media.video_framerate();
 					if (vfcount < frames_to_wait)
 						++vfcount;
 					else
@@ -77,13 +76,13 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, const int fft_size
 	particles.set_orig_cb(
 		[this](auto &)
 		{
-			const auto framerate = get_framerate();
+			const auto fps = framerate;
 
-			if (framerate < 60)
-				ps.update(sa, {.multiplier = 60.f / framerate});
-			else if (framerate == 60)
+			if (fps < 60)
+				ps.update(sa, {.multiplier = 60.f / fps});
+			else if (fps == 60)
 				ps.update(sa);
-			else if (framerate > 60 && frame_count >= (framerate / 60.))
+			else if (fps > 60 && frame_count >= (fps / 60.))
 			{
 				ps.update(sa);
 				frame_count = 0;
@@ -178,5 +177,4 @@ void ttviz::set_fft_size(int fft_size)
 {
 	fa.set_fft_size(fft_size);
 	sa.set_fft_size(fft_size);
-	set_audio_frames_needed(fft_size);
 }

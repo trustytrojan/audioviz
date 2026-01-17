@@ -1,3 +1,4 @@
+#include "audioviz/Player.hpp"
 #include <audioviz/Base.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/aligned_allocator.hpp>
@@ -45,8 +46,6 @@ RangedSpectrum::RangedSpectrum(sf::Vector2u size, const std::string &media_url)
 	spectrum.set_bar_width(1);
 	spectrum.set_bar_spacing(0);
 
-	set_audio_frames_needed(fft_size);
-
 #ifdef __linux__
 	enable_profiler();
 	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
@@ -56,8 +55,6 @@ RangedSpectrum::RangedSpectrum(sf::Vector2u size, const std::string &media_url)
 
 	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fa.get_fft_size());
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
-
-	start_in_window(media, "spectrum-test");
 }
 
 void RangedSpectrum::update(const std::span<const float> audio_buffer)
@@ -82,4 +79,5 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	RangedSpectrum viz{size, argv[3]};
+	audioviz::Player{viz, viz.media, 60, viz.fft_size}.start_in_window(argv[0]);
 }

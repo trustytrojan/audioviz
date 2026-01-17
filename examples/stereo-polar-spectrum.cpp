@@ -1,3 +1,4 @@
+#include "audioviz/Player.hpp"
 #include <audioviz/Base.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/aligned_allocator.hpp>
@@ -53,8 +54,6 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 	spectrum.set_bar_spacing(0);
 	spectrum.set_multiplier(6);
 
-	set_audio_frames_needed(fft_size);
-
 	// Calculate frequency range (0-250 Hz)
 	min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
 	max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
@@ -90,8 +89,6 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 
 			orig_rt.display();
 		});
-
-	start_in_window(media, "polar-spectrum");
 }
 
 void StereoPolarSpectrum::update(const std::span<const float> audio_buffer)
@@ -109,4 +106,5 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	StereoPolarSpectrum viz{size, argv[3]};
+	audioviz::Player{viz, viz.media, 60, viz.fft_size}.start_in_window(argv[0]);
 }

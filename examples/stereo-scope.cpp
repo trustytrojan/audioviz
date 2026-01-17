@@ -1,3 +1,9 @@
+/*
+afpvf is gone now and this example is broken, but this actually is good as it begs the question:
+what if someone wants a scope that shows an arbitrary duration of audio?
+this will make the scope have its own requirement, instead of relying on a "global" like afpvf.
+*/
+
 #include <audioviz/Base.hpp>
 #include <audioviz/StereoScope.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
@@ -9,11 +15,11 @@ struct ScopeTest : audioviz::Base
 {
 	audioviz::ColorSettings colorL, colorR;
 	audioviz::StereoScope<sf::RectangleShape> stereo_scope;
-	ScopeTest(sf::Vector2u size, const std::string &media_url);
+	ScopeTest(sf::Vector2u size);
 	void update(std::span<const float> audio_buffer) override;
 };
 
-ScopeTest::ScopeTest(sf::Vector2u size, const std::string &media_url)
+ScopeTest::ScopeTest(sf::Vector2u size)
 	: Base{size},
 	  stereo_scope{{{}, (sf::Vector2i)size}, colorL, colorR}
 {
@@ -34,8 +40,8 @@ ScopeTest::ScopeTest(sf::Vector2u size, const std::string &media_url)
 	// if we make this a layer, we can capture the full draw time
 	add_final_drawable(stereo_scope);
 
-	audioviz::FfmpegPopenMedia media{media_url, size};
-	start_in_window(media, "scope-test");
+	// audioviz::FfmpegPopenMedia media{media_url, size};
+	// start_in_window(media, "scope-test");
 }
 
 void ScopeTest::update(const std::span<const float> audio_buffer)
@@ -59,5 +65,16 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
-	ScopeTest viz{size, argv[3]};
+	// ScopeTest viz{size};
+	audioviz::FfmpegPopenMedia media{argv[3], size};
+
+	audioviz::ColorSettings colorL, colorR;
+	colorL.set_mode(audioviz::ColorSettings::Mode::SOLID);
+	colorL.set_solid_color(sf::Color::Red);
+	colorR.set_mode(audioviz::ColorSettings::Mode::SOLID);
+	colorR.set_solid_color(sf::Color::Cyan);
+
+	audioviz::StereoScope<sf::RectangleShape> stereo_scope{{{}, (sf::Vector2i)size}, colorL, colorR};
+	stereo_scope.set_shape_width(10);
+	stereo_scope.set_shape_spacing(5);
 }

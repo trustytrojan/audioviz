@@ -1,4 +1,5 @@
 #include "Main.hpp"
+#include <audioviz/Player.hpp>
 
 Main::Main(const int argc, const char *const *const argv)
 	: args{argc, argv}
@@ -10,22 +11,26 @@ Main::Main(const int argc, const char *const *const argv)
 	audioviz::FfmpegPopenMedia media{args.get("media_url"), size, start_time};
 	ttviz viz{size, media, args.get<uint>("-n")};
 
+	const int framerate = args.get<uint>("-r");
+	viz.set_framerate(framerate);
+
 	configure_from_args(viz);
 
-	// --encode: render to video file
+	// --encode: render to video file via Player
+	audioviz::Player player{viz, media, framerate, viz.get_fa().get_fft_size()};
 	switch (const auto &encode_args = args.get<std::vector<std::string>>("--encode"); encode_args.size())
 	{
 	case 0:
-		viz.start_in_window(media, "ttviz");
+		player.start_in_window("ttviz");
 		break;
 	case 1:
-		viz.encode(media, encode_args[0]);
+		player.encode(encode_args[0], "", "");
 		break;
 	case 2:
-		viz.encode(media, encode_args[0], encode_args[1]);
+		player.encode(encode_args[0], encode_args[1], "");
 		break;
 	case 3:
-		viz.encode(media, encode_args[0], encode_args[1], encode_args[2]);
+		player.encode(encode_args[0], encode_args[1], encode_args[2]);
 		break;
 	default:
 		throw std::logic_error{"--encode requires 1-3 arguments"};
@@ -47,8 +52,9 @@ void Main::configure_from_args(ttviz &viz)
 	const float multiplier = args.get<float>("-m");
 	ss.set_multiplier(multiplier);
 
-	viz.set_framerate(args.get<uint>("-r"));
-	viz.set_timing_text_enabled(args.get<bool>("--timing-text"));
+	if (args.get<bool>("--timing-text"))
+		viz.enable_profiler();
+
 	ps.set_framerate(viz.get_framerate());
 
 	// Optional settings
@@ -62,7 +68,7 @@ void Main::configure_from_args(ttviz &viz)
 		viz.set_album_cover(*album_art_path);
 
 	if (const auto font_path = args.present("--font"))
-		viz.set_profiler_font(*font_path);
+		viz.set_font(*font_path);
 
 	// Accumulation method
 	{

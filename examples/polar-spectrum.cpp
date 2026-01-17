@@ -7,6 +7,7 @@
 #include <audioviz/fx/Polar.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/util.hpp>
+#include <audioviz/Player.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -51,7 +52,7 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	spectrum.set_bar_spacing(0);
 	spectrum.set_multiplier(6);
 
-	set_audio_frames_needed(fft_size);
+	// set_audio_frames_needed(fft_size);
 
 	// Calculate frequency range (0-250 Hz)
 	min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
@@ -67,8 +68,6 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	);
 
 	add_layer("spectrum").add_draw({spectrum, &audioviz::fx::Polar::getShader()});
-
-	start_in_window(media, "polar-spectrum");
 }
 
 void PolarSpectrum::update(const std::span<const float> audio_buffer)
@@ -95,4 +94,5 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	PolarSpectrum viz{size, argv[3]};
+	audioviz::Player{viz, viz.media, 60, viz.fft_size}.start_in_window(argv[0]);
 }
