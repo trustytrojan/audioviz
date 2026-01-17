@@ -14,16 +14,13 @@ struct Scope : audioviz::Base
 {
 	audioviz::FfmpegPopenMedia media;
 	int sample_rate_hz = media.audio_sample_rate();
-	const int afpvf = sample_rate_hz / 60; // audio frames per video frame at 60fps
 	audioviz::ColorSettings color;
-	audioviz::ScopeDrawable scope;
+	audioviz::ScopeDrawable scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, color};
 	std::vector<float> mono;
 
 	Scope(sf::Vector2u size, const std::string &media_url)
 		: Base{size},
-		  media{media_url},
-		  color{},
-		  scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, color}
+		  media{media_url}
 	{
 #ifdef __linux__
 		enable_profiler();

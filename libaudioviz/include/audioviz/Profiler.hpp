@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <limits>
+#include <format>
 
 namespace audioviz
 {
@@ -15,8 +17,8 @@ class Profiler
 		std::string name;
 		float min{std::numeric_limits<float>::max()}, max{}, total{}, current{};
 		size_t count{};
-		float avg() const { return (count == 0) ? 0.0f : total / count; }
-		operator std::string() const
+		inline float avg() const { return (count == 0) ? 0.0f : total / count; }
+		inline operator std::string() const
 		{
 			return std::format("{:<20}{:<7.3f}{:<7.3f}{:<7.3f}{:<7.3f}\n", name, current, avg(), min, max);
 		}
@@ -27,13 +29,13 @@ class Profiler
 	std::string current_section;
 
 public:
-	void startSection(std::string_view name)
+	inline void startSection(std::string_view name)
 	{
 		clock.restart();
 		current_section = name;
 	}
 
-	void endSection()
+	inline void endSection()
 	{
 		auto &stat = get_or_create_timing_stat(current_section);
 		const float time_ms = clock.getElapsedTime().asMicroseconds() / 1e3f;
@@ -46,13 +48,13 @@ public:
 		stat.count++;
 	}
 
-	void endStartSection(std::string_view name)
+	inline void endStartSection(std::string_view name)
 	{
 		endSection();
 		startSection(name);
 	}
 
-	std::string getSummary()
+	inline std::string getSummary()
 	{
 		auto s = std::format("{:<20}{:<7}{:<7}{:<7}{:<7}\n", "", "curr", "avg", "min", "max");
 		for (const auto &stat : stats)

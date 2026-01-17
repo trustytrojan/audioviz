@@ -15,10 +15,10 @@ struct ShakeBassTest : audioviz::Base
 	audioviz::FfmpegPopenMedia media;
 	float sample_rate_hz{media.audio_sample_rate()};
 
-	audioviz::FrequencyAnalyzer fa;
+	audioviz::FrequencyAnalyzer fa{fft_size};
 	audioviz::StereoAnalyzer sa{sample_rate_hz, fft_size};
 
-	sf::RectangleShape rect;
+	sf::RectangleShape rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}};
 	audioviz::fx::Shake shake;
 
 	ShakeBassTest(sf::Vector2u size, const std::string &media_url);
@@ -27,9 +27,7 @@ struct ShakeBassTest : audioviz::Base
 
 ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_url)
 	: Base{size},
-	  media{media_url},
-	  fa{fft_size},
-	  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
+	  media{media_url}
 {
 	rect.setOrigin(rect.getGeometricCenter());
 	rect.setPosition(sf::Vector2f{size} * 0.5f);

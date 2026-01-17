@@ -27,10 +27,8 @@ class ScopeDrawable : public sf::Drawable
 
 public:
 	ScopeDrawable(const ColorSettings &color, const bool backwards = false);
-
 	ScopeDrawable(const sf::IntRect &rect, const ColorSettings &color, const bool backwards = false);
 
-	// set the area in which the spectrum will be drawn to
 	void set_rect(const sf::IntRect &rect)
 	{
 		if (this->rect == rect)

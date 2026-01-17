@@ -112,6 +112,11 @@ void Player::encode(const std::string &outfile, const std::string &vcodec, const
 		if (!audio)
 			break;
 
+		viz.next_frame(*audio);
+
+		// erase the audio "played" during this frame
+		media.consume_audio(afpvf);
+
 		rt.clear();
 		rt.draw(viz);
 		rt.display();

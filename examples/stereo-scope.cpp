@@ -19,17 +19,13 @@ struct StereoScopeViz : audioviz::Base
 	int sample_rate_hz = media.audio_sample_rate();
 	int num_channels = media.audio_channels();
 	audioviz::ColorSettings colorL, colorR;
-	audioviz::ScopeDrawable left_scope;
-	audioviz::ScopeDrawable right_scope;
+	audioviz::ScopeDrawable left_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorL};
+	audioviz::ScopeDrawable right_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorR};
 	std::vector<float> left_channel, right_channel;
 
 	StereoScopeViz(sf::Vector2u size, const std::string &media_url)
 		: Base{size},
-		  media{media_url},
-		  colorL{},
-		  colorR{},
-		  left_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorL},
-		  right_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorR}
+		  media{media_url}
 	{
 #ifdef __linux__
 		enable_profiler();
@@ -89,6 +85,6 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	StereoScopeViz viz{size, argv[3]};
-	audioviz::Player{viz, viz.media, 60, (int)std::round(audio_duration_sec * viz.sample_rate_hz)}
-		.start_in_window(argv[0]);
+	audioviz::Player{viz, viz.media, 60, (int)std::round(audio_duration_sec * viz.sample_rate_hz)}.start_in_window(
+		argv[0]);
 }
