@@ -67,7 +67,7 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 
-	add_layer("spectrum").add_draw({spectrum, &polar});
+	emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum, &polar});
 }
 
 void PolarSpectrum::update(const std::span<const float> audio_buffer)

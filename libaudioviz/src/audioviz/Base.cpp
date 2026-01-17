@@ -18,8 +18,8 @@ void Base::next_frame(const std::span<const float> audio_buffer)
 	capture_time("update", update(audio_buffer));
 
 	final_rt.clear();
-	for (auto &layer : layers)
-		capture_time("layer '" + layer.get_name() + '\'', layer.full_lifecycle(final_rt));
+	for (const auto &layer : layers)
+		capture_time("layer '" + layer->get_name() + '\'', layer->render(final_rt));
 	final_rt.display();
 
 	if (profiler_enabled)
@@ -29,33 +29,14 @@ void Base::next_frame(const std::span<const float> audio_buffer)
 void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
 	target.draw(final_rt.sprite());
-	for (const auto drawable : final_drawables)
-		target.draw(*drawable);
 	if (profiler_enabled)
 		target.draw(profiler_text);
 }
 
-Layer &Base::add_layer(const std::string &name, const int antialiasing)
-{
-	return layers.emplace_back(Layer{name, size, antialiasing});
-}
-
 Layer *Base::get_layer(const std::string &name)
 {
-	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
-	return (itr == layers.end()) ? nullptr : itr.base();
-}
-
-void Base::remove_layer(const std::string &name)
-{
-	const auto &itr = std::ranges::find_if(layers, [&](const auto &l) { return l.get_name() == name; });
-	if (itr != layers.end())
-		layers.erase(itr);
-}
-
-void Base::add_final_drawable(const Drawable &d)
-{
-	final_drawables.emplace_back(&d);
+	auto itr = std::ranges::find_if(layers, [&](auto &l) { return l->get_name() == name; });
+	return (itr == layers.end()) ? nullptr : itr->get();
 }
 
 } // namespace audioviz

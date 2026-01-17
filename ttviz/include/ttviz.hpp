@@ -1,10 +1,8 @@
 #pragma once
 
+#include "Args.hpp"
 #include "StereoSpectrum.hpp"
 #include <SFML/Graphics.hpp>
-#include <optional>
-#include <string>
-
 #include <audioviz/Base.hpp>
 #include <audioviz/ParticleSystem.hpp>
 #include <audioviz/SongMetadataDrawable.hpp>
@@ -15,14 +13,19 @@
 #include <audioviz/fft/Interpolator.hpp>
 #include <audioviz/fft/StereoAnalyzer.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
+#include <optional>
+#include <string>
 
 class ttviz : public audioviz::Base
 {
 	using ParticleShapeType = sf::CircleShape;
 
+	// Playback settings
+	int framerate{60};
+
 	// Media reference
 	audioviz::Media &media;
-	int sample_rate_hz;
+	int sample_rate_hz{media.audio_sample_rate()};
 
 	// FFT processors
 	audioviz::FrequencyAnalyzer fa;
@@ -31,31 +34,21 @@ class ttviz : public audioviz::Base
 	audioviz::Interpolator ip;
 
 	// Background texture
-	// audioviz::RenderTexture bg_rt;
 	sf::Texture bg_txr;
 	audioviz::Sprite bg_spr{bg_txr};
-
-	// Color settings
-	audioviz::ColorSettings color;
+	int vfcount{1};
 
 	// Spectrum visualization
-	StereoSpectrum ss;
+	audioviz::ColorSettings color;
+	StereoSpectrum ss{{{}, {size.x, size.y - 10}}, color};
 	std::optional<sf::BlendMode> spectrum_bm;
 
-	// Playback settings
-	int framerate{60};
-
 	// Particle system
-	audioviz::ParticleSystem<ParticleShapeType> ps;
-	int frame_count{};
+	audioviz::ParticleSystem<ParticleShapeType> ps{{{}, (sf::Vector2i)size}, 50};
 
 	// Metadata
 	sf::Text title_text{font}, artist_text{font};
 	audioviz::SongMetadataDrawable metadata{title_text, artist_text};
-
-	// Background
-	sf::Texture video_bg;
-	int vfcount{1};
 
 public:
 	ttviz(sf::Vector2u size, audioviz::Media &media, int fft_size = 3000, int antialiasing = 4);
@@ -76,8 +69,13 @@ public:
 	inline StereoSpectrum &get_ss() { return ss; }
 
 	// Framerate management
-	inline void set_framerate(int fps) { framerate = fps; }
-	inline int get_framerate() const { return framerate; }
+	inline void set_framerate(int fps)
+	{
+		framerate = fps;
+		ps.set_framerate(fps);
+	}
+
+	void configure_from_args(const Args &args); // implemented in UseArgs.cpp
 
 private:
 	void update(std::span<const float> audio_buffer) override;

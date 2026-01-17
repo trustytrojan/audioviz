@@ -3,49 +3,33 @@
 namespace audioviz
 {
 
-Layer::Layer(const std::string &name, const sf::Vector2u size, const unsigned antialiasing)
-	: name{name},
+PostProcessLayer::PostProcessLayer(const std::string &name, const sf::Vector2u size, const unsigned antialiasing)
+	: Layer{name},
 	  _orig_rt{size, antialiasing},
 	  _fx_rt{size}
 {
 }
 
-void Layer::add_effect(fx::PostProcessEffect *const effect)
+void PostProcessLayer::add_effect(fx::PostProcessEffect *const effect)
 {
 	effect->setRtSize(_fx_rt.getSize());
 	effects.emplace_back(effect);
 }
 
-void Layer::add_draw(DrawCall dc)
+void PostProcessLayer::render(sf::RenderTarget &target)
 {
-	draws.emplace_back(dc);
-}
+	// reuse superclass's code to draw all the drawables onto _orig_rt
+	_orig_rt.clear(sf::Color::Transparent);
+	Layer::render(_orig_rt);
+	_orig_rt.display();
 
-void Layer::set_fx_cb(const FxCb &cb)
-{
-	fx_cb = cb;
-}
-
-void Layer::full_lifecycle(sf::RenderTarget &target)
-{
-	if (!draws.empty())
-		_orig_rt.clear(sf::Color::Transparent);
-	for (const auto dc : draws)
-	{
-		sf::RenderStates rs;
-		if (dc.transform_effect)
-		{
-			dc.transform_effect->setShaderUniforms();
-			rs.shader = &dc.transform_effect->getShader();
-		}
-		_orig_rt.draw(dc.drawable, rs);
-	}
-	if (!draws.empty())
-		_orig_rt.display();
+	// copy to fx_rt, apply effects
 	_fx_rt.clear(sf::Color::Transparent);
 	_fx_rt.copy(_orig_rt);
 	for (const auto effect : effects)
-		effect->apply(_fx_rt); // this will call display() on _fx_rt for us
+		effect->apply(_fx_rt);
+
+	// execute custom logic for compositing the textures onto the target
 	if (fx_cb)
 		fx_cb(_orig_rt, _fx_rt, target);
 }

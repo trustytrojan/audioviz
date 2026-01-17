@@ -1,3 +1,5 @@
+#pragma once
+
 #include <argparse.hpp>
 
 using argparse::ArgumentParser;

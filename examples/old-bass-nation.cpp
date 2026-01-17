@@ -186,7 +186,7 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	const auto delta_duration = 0.015f;
 	const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
-	auto &spectrum_layer = add_layer("spectrum");
+	auto &spectrum_layer = emplace_layer<audioviz::PostProcessLayer>("spectrum", size);
 
 	for (int i = 0; i < colors.size(); ++i)
 	{

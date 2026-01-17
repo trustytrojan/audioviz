@@ -1,5 +1,5 @@
+#include "audioviz/Layer.hpp"
 #include "audioviz/fx/Blur.hpp"
-#include <audioviz/Composition.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/media/Media.hpp>
@@ -34,7 +34,7 @@ int main(const int argc, const char *const *const argv)
 	spectrum.set_multiplier(4);
 
 	// create a layer that makes the spectrum drawn to it "glow"
-	audioviz::Layer spectrum_layer{"spectrum", size};
+	audioviz::PostProcessLayer spectrum_layer{"spectrum", size};
 	spectrum_layer.add_draw({spectrum});
 	spectrum_layer.add_effect(new audioviz::fx::Blur{7.5, 7.5, 15});
 	spectrum_layer.set_fx_cb(
@@ -83,7 +83,7 @@ int main(const int argc, const char *const *const argv)
 		media.consume_audio(afpvf);
 
 		window.clear();
-		spectrum_layer.full_lifecycle(window);
+		spectrum_layer.render(window);
 		window.display();
 	}
 }

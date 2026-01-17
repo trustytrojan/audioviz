@@ -37,7 +37,7 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 	rect.setOutlineColor(sf::Color::White);
 	rect.setOutlineThickness(1);
 
-	add_layer("shake").add_draw({rect, &shake});
+	emplace_layer<audioviz::Layer>("shake").add_draw({rect, &shake});
 
 #ifdef __linux__
 	enable_profiler();

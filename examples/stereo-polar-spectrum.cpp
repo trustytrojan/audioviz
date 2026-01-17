@@ -66,42 +66,11 @@ StereoPolarSpectrum::StereoPolarSpectrum(sf::Vector2u size, const std::string &m
 	max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum_left.get_bar_count());
 
-	// sf::RenderStates polar_rs{&audioviz::fx::Polar::getShader()};
-
-	auto &spectrum_layer = add_layer("spectrum");
-
 	polar_right.angle_start = -M_PI / 2;
 
+	auto &spectrum_layer = emplace_layer<audioviz::Layer>("spectrum");
 	spectrum_layer.add_draw({spectrum_left, &polar_left});
 	spectrum_layer.add_draw({spectrum_right, &polar_right});
-
-	// spectrum_layer.set_orig_cb(
-	// 	[&](auto &orig_rt)
-	// 	{
-	// 		orig_rt.clear();
-
-	// 		auto process_channel = [&](bool backwards, int channel, float angle)
-	// 		{
-	// 			spectrum.set_backwards(backwards);
-	// 			a.resize(fft_size);
-	// 			capture_time("strided_copy", audioviz::util::extract_channel(a, audio_buffer, num_channels, channel));
-	// 			capture_time("fft", aa.execute_fft(fa, a));
-	// 			s.assign(spectrum.get_bar_count(), 0);
-	// 			capture_time(
-	// 				"spread_out",
-	// 				audioviz::util::spread_out(
-	// 					s, {aa.compute_amplitudes(fa).data() + min_fft_index, max_fft_index - min_fft_index + 1}));
-	// 			capture_time("interpolate", ip.interpolate(s));
-	// 			capture_time("spectrum_update", spectrum.update(s));
-	// 			audioviz::fx::Polar::setParameters((sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, angle, M_PI);
-	// 			orig_rt.draw(spectrum, polar_rs);
-	// 		};
-
-	// 		process_channel(false, 0, M_PI / 2);
-	// 		process_channel(true, 1, -M_PI / 2);
-
-	// 		orig_rt.display();
-	// 	});
 }
 
 void StereoPolarSpectrum::update(const std::span<const float> audio_buffer)

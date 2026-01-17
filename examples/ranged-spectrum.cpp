@@ -52,7 +52,7 @@ RangedSpectrum::RangedSpectrum(sf::Vector2u size, const std::string &media_url)
 	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
-	add_layer("spectrum").add_draw({spectrum});
+	emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum});
 
 	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fa.get_fft_size());
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());

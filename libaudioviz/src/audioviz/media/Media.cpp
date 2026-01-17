@@ -29,11 +29,4 @@ void Media::consume_audio(const int frames)
 	_audio_buffer.erase(begin, begin + samples);
 }
 
-void Media::audio_buffer_erase(const int frames)
-{
-	const auto begin{_audio_buffer.begin()};
-	const auto samples{frames * audio_channels()};
-	_audio_buffer.erase(begin, begin + samples);
-}
-
 } // namespace audioviz
