@@ -1,4 +1,5 @@
 #include <audioviz/Base.hpp>
+#include <audioviz/Player.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/aligned_allocator.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
@@ -7,7 +8,6 @@
 #include <audioviz/fx/Polar.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/util.hpp>
-#include <audioviz/Player.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -30,6 +30,14 @@ struct PolarSpectrum : audioviz::Base
 	audioviz::FrequencyAnalyzer fa;
 	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
+
+	audioviz::fx::Polar polar{
+		(sf::Vector2f)size, // Dimensions of linear space
+		size.y * 0.25f,		// Base radius inner hole: 25% screen height
+		size.y * 0.5f,		// Max radius: 50% screen height
+		0,					// Angle start
+		2 * M_PI			// Angle span
+	};
 
 	PolarSpectrum(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
@@ -59,15 +67,7 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 
-	// Setup Polar Shader
-	// We map the linear spectrum width (size.x) to a full circle
-	audioviz::fx::Polar::setParameters(
-		(sf::Vector2f)size, // Dimensions of linear space
-		size.y * 0.25f,		// Base radius inner hole: 25% screen height
-		size.y * 0.5f		// Max radius: 50% screen height
-	);
-
-	add_layer("spectrum").add_draw({spectrum, &audioviz::fx::Polar::getShader()});
+	add_layer("spectrum").add_draw({spectrum, &polar});
 }
 
 void PolarSpectrum::update(const std::span<const float> audio_buffer)

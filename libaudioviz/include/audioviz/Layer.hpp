@@ -1,10 +1,20 @@
 #pragma once
 
+#include "audioviz/fx/TransformEffect.hpp"
 #include <SFML/Graphics.hpp>
 #include <audioviz/RenderTexture.hpp>
 #include <audioviz/fx/PostProcessEffect.hpp>
 #include <functional>
 #include <vector>
+
+/*
+TODO: make a "Layer" interface, which the class below implements as a "PostProcessLayer".
+this allows you to make an "OverlayLayer" which just draws its drawables to the target,
+finally getting rid of the "add_final_drawable" crap in Base.
+
+OR: don't make an interface, but have THIS class behave differently upon certain conditions.
+    though this is less clear to the user at first glance.
+*/
 
 namespace audioviz
 {
@@ -37,14 +47,14 @@ public:
 	struct DrawCall
 	{
 		const sf::Drawable &drawable;
-		const sf::RenderStates states;
+		const fx::TransformEffect *const transform_effect{};
+		// const sf::RenderStates states; // this isn't needed anymore, but maybe it will be in the future
 	};
 
 private:
 	std::string name;
 	RenderTexture _orig_rt, _fx_rt;
 	bool auto_fx{true};
-	OrigCb orig_cb;
 	FxCb fx_cb{DRAW_FX_RT};
 
 	/**
@@ -79,29 +89,6 @@ public:
 	inline const std::string &get_name() const { return name; }
 
 	/**
-	 * Calls `draw(...)` on the "original" render-texture. Useful if you want to prepopulate
-	 * a layer with a static image without re-rendering it every frame.
-	 */
-	void orig_draw(const sf::Drawable &);
-
-	/**
-	 * Calls `display()` on the "original" render-texture. Useful if you want to prepopulate
-	 * a layer with a static image without re-rendering it every frame.
-	 */
-	void orig_display();
-
-	/**
-	 * Set the "original" callback. This is the callback that allows you to customize
-	 * what is drawn to the "original" render-texture, aka before effects are applied.
-	 */
-	void set_orig_cb(const OrigCb &);
-
-	/**
-	 * Set whether effects are run when `full_lifecycle` is called.
-	 */
-	void set_auto_fx(bool);
-
-	/**
 	 * Set the "effects" callback. This is the callback that allows you to customize,
 	 * using the "original" and "effects" render-textures, how to draw to the `target`
 	 * passed to `full_lifecycle`.
@@ -123,16 +110,6 @@ public:
 	 * - calls the "effects" callback if given via `set_fx_cb`
 	 */
 	void full_lifecycle(sf::RenderTarget &target);
-
-	/**
-	 * Copies the "original" render-texture to the "effects" render-texture and applies all `effects` on it.
-	 *
-	 * This is called by `full_lifecycle` unless `set_auto_fx(false)` is called.
-	 *
-	 * Calling this method manually can be useful if you want to prepopulate a layer with a static image
-	 * without re-rendering it every frame.
-	 */
-	void apply_fx();
 };
 
 } // namespace audioviz

@@ -4,6 +4,7 @@
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <audioviz/fft/Interpolator.hpp>
+#include <audioviz/fx/Mirror.hpp>
 #include <audioviz/fx/Polar.hpp>
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/util.hpp>
@@ -26,14 +27,12 @@ struct SpectrumLayer
 	audioviz::Interpolator ip;
 	std::vector<float, aligned_allocator<float>> s, a;
 	audioviz::SpectrumDrawable spectrum;
-	bool is_left;
 	int sample_rate;
 
-	SpectrumLayer(int fft_size, int sample_rate, sf::Vector2u size, const audioviz::ColorSettings &cs, bool left)
+	SpectrumLayer(int fft_size, int sample_rate, sf::Vector2u size, const audioviz::ColorSettings &cs)
 		: fa{fft_size},
 		  aa{sample_rate, fft_size},
 		  spectrum{{{}, (sf::Vector2i)size}, cs},
-		  is_left(left),
 		  sample_rate(sample_rate)
 	{
 		a.resize(fft_size);
@@ -55,9 +54,8 @@ struct SpectrumLayer
 
 	void compute(std::span<const float> audio_buffer)
 	{
-		// a.resize(fa.get_fft_size());
-		const int channel = is_left ? 0 : 1;
-		audioviz::util::extract_channel(a, audio_buffer.first(fa.get_fft_size() * 2), 2, channel);
+		// Extract first channel (or mono if only one channel)
+		audioviz::util::extract_channel(a, audio_buffer.first(fa.get_fft_size() * 2), 2, 0);
 		aa.execute_fft(fa, a);
 		const auto amps = aa.compute_amplitudes(fa);
 		audioviz::util::resample_spectrum(s, amps, sample_rate, fa.get_fft_size(), 20.0f, 135.0f, ip);
@@ -138,7 +136,7 @@ private:
 	std::promise<void> work_promise;
 };
 
-struct OldBassNation : audioviz::Base
+struct MirroredBassNation : audioviz::Base
 {
 	audioviz::FfmpegPopenMedia media;
 	int sample_rate_hz = media.audio_sample_rate();
@@ -149,14 +147,15 @@ struct OldBassNation : audioviz::Base
 	audioviz::ColorSettings cs;
 	std::vector<std::future<void>> futures;
 
-	audioviz::fx::Polar polar_left{(sf::Vector2f)size, size.y * 0.25, size.y * 0.5, M_PI / 2, M_PI},
-		polar_right{polar_left};
+	// Only one polar left, no polar_right needed - we'll mirror it instead
+	audioviz::fx::Polar polar_left{(sf::Vector2f)size, size.y * 0.25, size.y * 0.5, M_PI / 2, M_PI};
+	audioviz::fx::Mirror mirror_effect{0}; // mirror_side = 0 (mirror right onto left)
 
-	OldBassNation(sf::Vector2u size, const std::string &media_url);
+	MirroredBassNation(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
 };
 
-OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
+MirroredBassNation::MirroredBassNation(sf::Vector2u size, const std::string &media_url)
 	: Base{size},
 	  media{media_url}
 {
@@ -168,8 +167,6 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 	std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);
 
 	cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
-
-	polar_right.angle_start = -M_PI / 2;
 
 	static const std::array<sf::Color, 9> colors{
 		sf::Color::Green,
@@ -196,22 +193,20 @@ OldBassNation::OldBassNation(sf::Vector2u size, const std::string &media_url)
 
 		cs.set_solid_color(colors[i]);
 
-		auto &left_layer =
-			*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, true));
-		left_layer.configure_spectrum(false, size);
+		auto &spectrum =
+			*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs));
+		spectrum.configure_spectrum(false, size);
 
-		auto &right_layer =
-			*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, false));
-		right_layer.configure_spectrum(true, size);
-
-		spectrum_layer.add_draw({left_layer.spectrum, &polar_left});
-		spectrum_layer.add_draw({right_layer.spectrum, &polar_right});
+		spectrum_layer.add_draw({spectrum.spectrum, &polar_left});
 	}
+
+	// Add mirror effect to create mirrored versions on the right side
+	spectrum_layer.add_effect(&mirror_effect);
 
 	futures.resize(spectrums.size());
 }
 
-void OldBassNation::update(const std::span<const float> audio_buffer)
+void MirroredBassNation::update(const std::span<const float> audio_buffer)
 {
 	std::ranges::transform(spectrums, futures.begin(), std::bind_back(&SpectrumLayer::trigger_work, audio_buffer));
 
@@ -228,6 +223,6 @@ int main(const int argc, const char *const *const argv)
 	}
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
-	OldBassNation viz{size, argv[3]};
+	MirroredBassNation viz{size, argv[3]};
 	audioviz::Player{viz, viz.media, 60, viz.max_fft_size}.start_in_window(argv[0]);
 }

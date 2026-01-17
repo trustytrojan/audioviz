@@ -15,7 +15,7 @@ Base::Base(const sf::Vector2u size)
 
 void Base::next_frame(const std::span<const float> audio_buffer)
 {
-	update(audio_buffer);
+	capture_time("update", update(audio_buffer));
 
 	final_rt.clear();
 	for (auto &layer : layers)
@@ -31,8 +31,6 @@ void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 	target.draw(final_rt.sprite());
 	for (const auto drawable : final_drawables)
 		target.draw(*drawable);
-	for (const auto dc : final_drawables2)
-		target.draw(dc.drawable, dc.states);
 	if (profiler_enabled)
 		target.draw(profiler_text);
 }
@@ -58,11 +56,6 @@ void Base::remove_layer(const std::string &name)
 void Base::add_final_drawable(const Drawable &d)
 {
 	final_drawables.emplace_back(&d);
-}
-
-void Base::add_final_drawable2(const Drawable &d, sf::RenderStates rs)
-{
-	final_drawables2.emplace_back(d, rs);
 }
 
 } // namespace audioviz

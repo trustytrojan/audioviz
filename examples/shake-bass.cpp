@@ -19,6 +19,7 @@ struct ShakeBassTest : audioviz::Base
 	audioviz::StereoAnalyzer sa{sample_rate_hz, fft_size};
 
 	sf::RectangleShape rect;
+	audioviz::fx::Shake shake;
 
 	ShakeBassTest(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
@@ -30,17 +31,13 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 	  fa{fft_size},
 	  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 {
-	// set_audio_frames_needed(fft_size);
-
 	rect.setOrigin(rect.getGeometricCenter());
 	rect.setPosition(sf::Vector2f{size} * 0.5f);
 	rect.setFillColor(sf::Color::Transparent);
 	rect.setOutlineColor(sf::Color::White);
 	rect.setOutlineThickness(1);
 
-	// auto &layer = add_layer("shake");
-	// layer.add_draw({rect, &audioviz::fx::Shake::getShader()});
-	add_final_drawable2(rect, &audioviz::fx::Shake::getShader());
+	add_layer("shake").add_draw({rect, &shake});
 
 #ifdef __linux__
 	enable_profiler();
@@ -48,13 +45,13 @@ ShakeBassTest::ShakeBassTest(const sf::Vector2u size, const std::string &media_u
 #endif
 
 	sample_rate_hz = static_cast<float>(media.audio_sample_rate());
-	// start_in_window(media, "shake-bass");
 }
 
 void ShakeBassTest::update(const std::span<const float> audio_buffer)
 {
 	capture_time("fft", sa.execute_fft(fa, audio_buffer));
-	audioviz::fx::Shake::setParameters(sa.left(), 0, 250, 100.f);
+	sa.left().compute_amplitudes(fa);
+	shake.setParameters(sa.left(), 0, 250, 100.f);
 }
 
 int main(const int argc, const char *const *const argv)

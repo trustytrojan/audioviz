@@ -30,6 +30,11 @@ class ttviz : public audioviz::Base
 	audioviz::BinPacker bp;
 	audioviz::Interpolator ip;
 
+	// Background texture
+	// audioviz::RenderTexture bg_rt;
+	sf::Texture bg_txr;
+	audioviz::Sprite bg_spr{bg_txr};
+
 	// Color settings
 	audioviz::ColorSettings color;
 

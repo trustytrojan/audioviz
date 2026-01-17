@@ -45,6 +45,7 @@ RangedSpectrum::RangedSpectrum(sf::Vector2u size, const std::string &media_url)
 
 	spectrum.set_bar_width(1);
 	spectrum.set_bar_spacing(0);
+	spectrum.set_multiplier(4);
 
 #ifdef __linux__
 	enable_profiler();

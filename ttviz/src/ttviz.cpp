@@ -48,47 +48,49 @@ ttviz::ttviz(const sf::Vector2u size, audioviz::Media &media, const int fft_size
 		if (media.has_video_stream())
 		{
 			video_bg = sf::Texture{size};
-			bg.set_orig_cb(
-				[this, &media](auto &orig_rt)
-				{
-					const int frames_to_wait = framerate / media.video_framerate();
-					if (vfcount < frames_to_wait)
-						++vfcount;
-					else
-					{
-						if (media.read_video_frame(video_bg))
-							orig_rt.draw(sf::Sprite{video_bg});
-						vfcount = 1;
-					}
-					orig_rt.display();
-				});
+			bg.add_draw({bg_spr});
+			// bg.set_orig_cb(
+			// 	[this, &media](auto &orig_rt)
+			// 	{
+			// 		const int frames_to_wait = framerate / media.video_framerate();
+			// 		if (vfcount < frames_to_wait)
+			// 			++vfcount;
+			// 		else
+			// 		{
+			// 			if (media.read_video_frame(video_bg))
+			// 				orig_rt.draw(sf::Sprite{video_bg});
+			// 			vfcount = 1;
+			// 		}
+			// 		orig_rt.display();
+			// 	});
 		}
 		else if (media.attached_pic())
 		{
-			bg.set_auto_fx(false);
+			// bg.set_auto_fx(false);
 			set_background(*media.attached_pic());
+			bg.add_draw({bg_spr});
 		}
 	}
 
 	// Particles layer
 	auto &particles = add_layer("particles", antialiasing);
 	particles.add_draw({ps});
-	particles.set_orig_cb(
-		[this](auto &)
-		{
-			const auto fps = framerate;
+	// particles.set_orig_cb(
+	// 	[this](auto &)
+	// 	{
+	// 		const auto fps = framerate;
 
-			if (fps < 60)
-				ps.update(sa, {.multiplier = 60.f / fps});
-			else if (fps == 60)
-				ps.update(sa);
-			else if (fps > 60 && frame_count >= (fps / 60.))
-			{
-				ps.update(sa);
-				frame_count = 0;
-			}
-			++frame_count;
-		});
+	// 		if (fps < 60)
+	// 			ps.update(sa, {.multiplier = 60.f / fps});
+	// 		else if (fps == 60)
+	// 			ps.update(sa);
+	// 		else if (fps > 60 && frame_count >= (fps / 60.))
+	// 		{
+	// 			ps.update(sa);
+	// 			frame_count = 0;
+	// 		}
+	// 		++frame_count;
+	// 	});
 	particles.set_fx_cb(
 		[](auto &orig_rt, auto &fx_rt, auto &target)
 		{
@@ -125,6 +127,34 @@ void ttviz::update(std::span<const float> audio_buffer)
 
 	// Update color wheel
 	color.increment_wheel_time();
+
+	if (media.has_video_stream())
+	{
+		const int frames_to_wait = framerate / media.video_framerate();
+		if (vfcount < frames_to_wait)
+			++vfcount;
+		else
+		{
+			if (media.read_video_frame(video_bg))
+				bg_spr = video_bg;
+			vfcount = 1;
+		}
+	}
+
+	{ // particle update
+		const auto fps = framerate;
+
+		if (fps < 60)
+			ps.update(sa, {.multiplier = 60.f / fps});
+		else if (fps == 60)
+			ps.update(sa);
+		else if (fps > 60 && frame_count >= (fps / 60.))
+		{
+			ps.update(sa);
+			frame_count = 0;
+		}
+		++frame_count;
+	}
 }
 
 void ttviz::add_default_effects()
@@ -155,17 +185,17 @@ void ttviz::set_album_cover(const std::string &image_path, const sf::Vector2f si
 
 void ttviz::set_background(const sf::Texture &txr)
 {
-	const auto bg = get_layer("bg");
-	if (!bg)
-		throw std::runtime_error{"no background layer present!"};
+	// const auto bg = get_layer("bg");
+	// if (!bg)
+	// 	throw std::runtime_error{"no background layer present!"};
 
-	audioviz::Sprite spr{txr};
-	spr.capture_centered_square_view();
-	spr.fill_screen(size);
+	bg_spr = bg_txr = txr;
+	bg_spr.capture_centered_square_view();
+	bg_spr.fill_screen(size);
 
-	bg->orig_draw(spr);
-	bg->orig_display();
-	bg->apply_fx();
+	// bg->orig_draw(spr);
+	// bg->orig_display();
+	// bg->apply_fx();
 }
 
 void ttviz::set_spectrum_blendmode(const sf::BlendMode &bm)
