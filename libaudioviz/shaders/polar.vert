@@ -6,8 +6,6 @@ uniform float max_radius;   // e.g., 360.0 (pixels) - half of size.y
 uniform float angle_start;  // Starting angle in radians (default: PI/2 for top)
 uniform float angle_span;   // Angular span in radians (default: 2*PI for full circle)
 
-const float PI = 3.14159265359;
-
 void main()
 {
     // 1. Get position from ModelView
@@ -34,7 +32,7 @@ void main()
 
     // 6. Aspect Ratio & NDC Conversion
     float aspect = size.x / size.y;
-    
+
     // Convert to NDC (-1 to 1). 
     // We use (size.y * 0.5) as our "1.0" unit.
     vec2 ndc_pos = polar_pos / (size.y * 0.5);
@@ -43,7 +41,7 @@ void main()
     ndc_pos.x /= aspect;
 
     gl_Position = vec4(ndc_pos, 0.0, 1.0);
-    
+
     gl_FrontColor = gl_Color;
     gl_TexCoord[0] = gl_MultiTexCoord0;
 }

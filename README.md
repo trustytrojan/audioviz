@@ -38,21 +38,9 @@ thanks to CI, i discovered that the build process is the same as with linux. jus
 - **libaudioviz**
   - [FFTW3](https://fftw.org)
   - `ffmpeg`, the standalone CLI program, part of the [FFmpeg](https://ffmpeg.org) project
-  - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp) - requires [PortAudio](https://www.portaudio.com) (the C library, NOT the C++ binding)
-  - [SFML 3.0.1](https://github.com/SFML/SFML/tree/3.0.1) - only supports X11 windows
+  - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp)
+  - [SFML](https://github.com/SFML/SFML)
   - [tk-spline](https://github.com/ttk592/spline)
-- **ttviz**
-  - [argparse](https://github.com/p-ranav/argparse)
-  - [ImGui-SFML](https://github.com/SFML/imgui-sfml)
-
-## project structure
-```
-audioviz
-├── libaudioviz - core library
-│ └── shaders - GLSL shaders used by audioviz::fx classes
-├── ttviz - the first, reference implementation of a libaudioviz visualizer
-└── examples - smaller visualizers doing their own thing
-```
 
 ## developer environment setup
 i recommend using vscode as it integrates well with git with no effort. get the [cmake tools extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) and [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) to make development easier.
@@ -63,9 +51,6 @@ i recommend using vscode as it integrates well with git with no effort. get the 
 ```
 
 ## todo list / goals
-- 🔄 interactive gui (long term)
-  - ✅️ integrate imgui-sfml into project
-  - 🔄 develop imgui window for each customizable object
-- might take imgui out... it belongs in a separate repo as an effort to make some kind of editor based on libaudioviz. ui should not be conflated with the library itself.
+- gonna take imgui out... it belongs in a separate repo as an effort to make some kind of editor based on libaudioviz. ui should not be conflated with the library itself.
 - rhythm-based effects
   - use [aubio](https://aubio.org) for this

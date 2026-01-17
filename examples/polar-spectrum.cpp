@@ -1,4 +1,5 @@
 #include <audioviz/Base.hpp>
+#include <audioviz/Player.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/aligned_allocator.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
@@ -11,16 +12,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <print>
-
-#define capture_time(label, code)            \
-	if (timing_text_enabled())               \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
 
 constexpr float audio_duration_sec = 0.15;
 
@@ -40,6 +31,14 @@ struct PolarSpectrum : audioviz::Base
 	audioviz::AudioAnalyzer aa{sample_rate_hz, fft_size};
 	audioviz::Interpolator ip;
 
+	audioviz::fx::Polar polar{
+		(sf::Vector2f)size, // Dimensions of linear space
+		size.y * 0.25f,		// Base radius inner hole: 25% screen height
+		size.y * 0.5f,		// Max radius: 50% screen height
+		0,					// Angle start
+		2 * M_PI			// Angle span
+	};
+
 	PolarSpectrum(sf::Vector2u size, const std::string &media_url);
 	void update(std::span<const float> audio_buffer) override;
 };
@@ -51,8 +50,8 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	  media{media_url, 10}
 {
 #ifdef __linux__
-	set_timing_text_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	enable_profiler();
+	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
 	std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
@@ -61,30 +60,20 @@ PolarSpectrum::PolarSpectrum(sf::Vector2u size, const std::string &media_url)
 	spectrum.set_bar_spacing(0);
 	spectrum.set_multiplier(6);
 
-	set_audio_frames_needed(fft_size);
+	// set_audio_frames_needed(fft_size);
 
 	// Calculate frequency range (0-250 Hz)
 	min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
 	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 
-	// Setup Polar Shader
-	// We map the linear spectrum width (size.x) to a full circle
-	audioviz::fx::Polar::setParameters(
-		(sf::Vector2f)size, // Dimensions of linear space
-		size.y * 0.25f,		// Base radius inner hole: 25% screen height
-		size.y * 0.5f		// Max radius: 50% screen height
-	);
-
-	add_layer("spectrum").add_draw({spectrum, &audioviz::fx::Polar::getShader()});
-
-	start_in_window(media, "polar-spectrum");
+	emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum, &polar});
 }
 
 void PolarSpectrum::update(const std::span<const float> audio_buffer)
 {
 	a.resize(fft_size);
-	capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, 0));
+	capture_time("strided_copy", audioviz::util::extract_channel(a, audio_buffer, num_channels, 0));
 	capture_time("fft", aa.execute_fft(fa, a));
 	s.assign(spectrum.get_bar_count(), 0);
 	capture_time(
@@ -105,4 +94,5 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	PolarSpectrum viz{size, argv[3]};
+	audioviz::Player{viz, viz.media, 60, viz.fft_size}.start_in_window(argv[0]);
 }

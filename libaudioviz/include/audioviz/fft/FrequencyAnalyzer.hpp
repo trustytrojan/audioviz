@@ -30,7 +30,6 @@ private:
 	float inv_fft_size;
 	fftwf_dft_r2c_1d fftw;
 	WindowFunction window_func{WindowFunction::Hanning};
-	int wf_i{2}; // for imgui
 	std::vector<float, aligned_allocator<float>> window_values;
 
 public:
@@ -55,14 +54,6 @@ public:
 	 * @param wf new window function to use
 	 */
 	void set_window_func(WindowFunction wf);
-
-#ifdef AUDIOVIZ_IMGUI
-	/**
-	 * Draw ImGui controls for tuning analyzer parameters at runtime.
-	 * This calls the public setters so changes take effect immediately.
-	 */
-	void draw_imgui();
-#endif
 
 	/**
 	 * Copies the `wavedata` to the FFT processor for rendering.

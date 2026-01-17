@@ -3,7 +3,7 @@
 namespace audioviz
 {
 
-RenderTexture::RenderTexture(const sf::Vector2u size, int antialiasing)
+RenderTexture::RenderTexture(const sf::Vector2u size, unsigned antialiasing)
 	: sf::RenderTexture{size, {.antiAliasingLevel = antialiasing}}
 {
 }

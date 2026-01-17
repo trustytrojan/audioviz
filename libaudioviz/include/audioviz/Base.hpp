@@ -1,14 +1,25 @@
 #pragma once
 
+#include "audioviz/Profiler.hpp"
 #include <SFML/Graphics.hpp>
 
 #include <audioviz/Layer.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/media/Media.hpp>
-#include <limits>
 #include <span>
 #include <string>
 #include <vector>
+#include <memory>
+
+#define capture_time(label, code)     \
+	if (profiler_enabled)             \
+	{                                 \
+		profiler.startSection(label); \
+		code;                         \
+		profiler.endSection();        \
+	}                                 \
+	else                              \
+		code;
 
 namespace audioviz
 {
@@ -24,89 +35,60 @@ public:
 	const sf::Vector2u size;
 
 protected:
+	bool profiler_enabled{};
+	Profiler profiler;
 	sf::Font font;
 
 private:
-	std::vector<Layer> layers;
-	std::vector<const sf::Drawable *> final_drawables;
-	std::vector<Layer::DrawCall> final_drawables2;
-	int audio_sample_rate{};
-	int framerate{60};
-
-protected:
-	// audio frames per video frame
-	int afpvf{};
-	int audio_frames_needed{};
-
-private:
+	std::vector<std::unique_ptr<Layer>> layers;
 	RenderTexture final_rt;
-
-	sf::Text timing_text{font};
-	struct TimingStat
-	{
-		std::string name;
-		float min{std::numeric_limits<float>::max()};
-		float max{0.0f};
-		float total{0.0f};
-		size_t count{0};
-		float current{0.0f};
-		float avg() const { return (count == 0) ? 0.0f : total / count; }
-	};
-	std::vector<TimingStat> timing_stats;
-	bool tt_enabled{};
+	sf::Text profiler_text{font};
 
 public:
-	/**
-	 * @param size Size of the output; recommended to match your `sf::RenderTarget`'s size
-	 */
 	Base(sf::Vector2u size);
 
-	/// layer api
+	// Emplace a derived Layer type in-place and return a pointer to it.
+	template <typename T, typename... Args>
+	T &emplace_layer(Args &&...args)
+	{
+		static_assert(std::is_base_of_v<Layer, T>, "T must derive from Layer");
+		auto up = std::make_unique<T>(std::forward<Args>(args)...);
+		T *ptr = up.get();
+		layers.emplace_back(std::move(up));
+		return *ptr;
+	}
 
-	Layer &add_layer(const std::string &name, int antialiasing = 0);
+	// Find a layer by name (non-owning raw pointer). Returns nullptr if not found.
 	Layer *get_layer(const std::string &name);
-	void remove_layer(const std::string &name);
 
-	void add_final_drawable(const sf::Drawable &);
-	void add_final_drawable2(const sf::Drawable &, sf::RenderStates);
+	/**
+	 * Get a layer by name with automatic type casting.
+	 * @tparam T The derived Layer type to cast to
+	 * @param name The name of the layer
+	 * @returns A shared_ptr<T> if the layer exists and is of type T, nullptr otherwise
+	 * 
+	 * Usage:
+	 * auto my_layer = get_layer_as<MyLayerType>("my_layer");
+	 */
+	template <typename T>
+	T *get_layer_as(const std::string &name)
+	{
+		return dynamic_cast<T *>(get_layer(name));
+	}
 
 	/**
 	 * Prepare the next frame to be drawn with `draw()`. Runs all layers.
 	 * @param audio_buffer A span of the audio data for this frame.
 	 * @returns Whether another frame can be prepared
 	 */
-	bool next_frame(std::span<const float> audio_buffer, int num_channels);
+	void next_frame(std::span<const float> audio_buffer);
 
 	void draw(sf::RenderTarget &, sf::RenderStates) const override;
 
-	inline void set_timing_text_enabled(const bool enabled) { tt_enabled = enabled; }
-	inline bool timing_text_enabled() { return tt_enabled; }
-
-	// important if you are capturing frames for video encoding!
-	void set_framerate(int framerate);
-	void set_samplerate(int samplerate);
-	inline int get_framerate() const { return framerate; }
-
-	// must be called for timing text to display
-	inline void set_text_font(const std::string &path) { font = sf::Font{path}; }
-
-	// users MUST call this to specify how much audio they need for their visualizers
-	// this is an overreach, only used in the terminal methods, make this a parameter of those instead
-	inline void set_audio_frames_needed(int needed) { audio_frames_needed = needed; }
-
-	// quick way to start your viz in a window!!!!!!!!
-	void start_in_window(Media &media, const std::string &window_title);
-
-	// render this viz to a video file!!!!!!!!
-	void encode(
-		Media &media,
-		const std::string &outfile,
-		const std::string &vcodec = "h264",
-		const std::string &acodec = "copy");
+	inline void set_font(const std::string &path) { font = sf::Font{path}; }
+	inline void enable_profiler() { profiler_enabled = true; }
 
 protected:
-	TimingStat &get_or_create_timing_stat(const std::string &label);
-	void capture_elapsed_time(const std::string &label, const sf::Clock &);
 	virtual void update(std::span<const float> audio_buffer) {}
 };
 

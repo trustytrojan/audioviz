@@ -10,11 +10,12 @@ namespace audioviz
 
 FfmpegPopenEncoder::FfmpegPopenEncoder(
 	const std::string &media_url,
-	const audioviz::Base &viz,
+	const sf::Vector2u video_size,
+	const int framerate,
 	const std::string &outfile,
 	const std::string &vcodec,
 	const std::string &acodec)
-	: video_size{viz.size}
+	: video_size{video_size}
 {
 	glewInit();
 	glGenBuffers(NUM_PBOS, pbos);
@@ -34,8 +35,8 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 
 	// input 0: raw video stream from audioviz
 	cmd_stream << "-f rawvideo -pix_fmt rgba "
-			   << "-s " << viz.size.x << "x" << viz.size.y << " "
-			   << "-r " << viz.get_framerate() << " "
+			   << "-s " << video_size.x << "x" << video_size.y << " "
+			   << "-r " << framerate << " "
 			   << "-i - ";
 
 	// input 1: media used in audioviz

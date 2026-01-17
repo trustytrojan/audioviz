@@ -1,12 +1,20 @@
 #pragma once
 
+#include "TransformEffect.hpp"
 #include <SFML/Graphics.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 
-namespace audioviz::fx::Shake
+namespace audioviz::fx
 {
 
-void setParameters(AudioAnalyzer &aa, int from_hz, int to_hz, float multiplier);
-const sf::Shader &getShader();
+struct Shake : TransformEffect
+{
+	sf::Vector3f frequencies, amplitudes;
 
-} // namespace audioviz::fx::Shake
+	virtual const sf::Shader &getShader() const override;
+	virtual void setShaderUniforms() const override;
+
+	void setParameters(AudioAnalyzer &aa, int from_hz, int to_hz, float multiplier);
+};
+
+} // namespace audioviz::fx

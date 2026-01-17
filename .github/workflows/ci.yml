@@ -52,17 +52,6 @@ jobs:
       - name: Build project
         run: cmake --build build -j $(nproc)
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: audioviz-linux
-          path: |
-            build/libaudioviz/libaudioviz.*
-            build/ttviz/ttviz
-            build/luaviz/luaviz*
-            build/examples/*
-            shaders/
-
   macos:
     runs-on: macos-latest
 
@@ -79,17 +68,6 @@ jobs:
       - name: Build project
         run: cmake --build build -j $(sysctl -n hw.ncpu)
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: audioviz-macos
-          path: |
-            build/libaudioviz/libaudioviz.*
-            build/ttviz/ttviz
-            build/luaviz/luaviz*
-            build/examples/*
-            shaders/
-
   windows-mingw:
     runs-on: windows-latest
 
@@ -105,14 +83,3 @@ jobs:
 
       - name: Build project
         run: cmake --build build -j $env:NUMBER_OF_PROCESSORS
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: audioviz-windows-mingw
-          path: |
-            build/libaudioviz/libaudioviz.*
-            build/ttviz/ttviz.exe
-            build/luaviz/luaviz.exe
-            build/examples/*.exe
-            shaders/

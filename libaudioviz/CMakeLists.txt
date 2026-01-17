@@ -5,53 +5,39 @@ file(GLOB AUDIOVIZ_SOURCES
 	src/audioviz/*.cpp
 )
 
-if(LINUX AND AUDIOVIZ_BUILD_LUAVIZ AND NOT LUAVIZ_EXECUTABLE)
-	# relocation issues arise when luaviz links to a static libaudioviz
-	set(BUILD_SHARED_LIBS ON)
-endif()
-
 add_library(audioviz ${AUDIOVIZ_SOURCES})
-
-# after the add_library so that deps.cmake can use target_XXXX commands
 include(deps.cmake)
 
+target_compile_options(audioviz PUBLIC -Wno-narrowing -ffast-math)
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	# caused by spline; safe to ignore
+	# caused by tk-spline, safe to ignore
 	target_compile_options(audioviz PUBLIC -Wno-subobject-linkage)
 endif()
 
-target_compile_options(audioviz PUBLIC
-	-Wno-narrowing
-	-ffast-math
-)
-
-if(CMAKE_BUILD_TYPE MATCHES Rel)
-	# target_compile_options(audioviz PUBLIC -fopt-info-vec-optimized)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	# caused by nlohmann/json, safe to ignore
+	target_compile_options(audioviz PUBLIC -Wno-nan-infinity-disabled)
 endif()
 
 target_include_directories(audioviz PUBLIC
-	include
-	${CMAKE_CURRENT_BINARY_DIR} # single-header libs
+	include # our public headers
+
+	# spline & json need to be exposed since our public headers include them.
+	# if at a later time we decide that encapsulation is important, this must be changed.
+	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-# hide implementation details with PRIVATE
-# (portaudio has gotta go anyway)
 target_include_directories(audioviz PRIVATE
-	${portaudio-pp_SOURCE_DIR}/include
+	${portaudio-pp_SOURCE_DIR}/include # for Base::start_in_window
 )
 
 # popen() on MinGW expects a 'b' to differentiate text/binary,
 # but on Linux it errors if a 'b' is there, so we have to do this...
 if(WIN32)
-	target_compile_definitions(audioviz PRIVATE
-		POPEN_R_MODE="rb"
-		POPEN_W_MODE="wb"
-	)
-else() # be specific if you discover more differences
-	target_compile_definitions(audioviz PRIVATE
-		POPEN_R_MODE="r"
-		POPEN_W_MODE="w"
-	)
+	target_compile_definitions(audioviz PRIVATE POPEN_R_MODE="rb" POPEN_W_MODE="wb")
+else()
+	target_compile_definitions(audioviz PRIVATE POPEN_R_MODE="r" POPEN_W_MODE="w")
 endif()
 
 # Generate header files with embedded shader source code

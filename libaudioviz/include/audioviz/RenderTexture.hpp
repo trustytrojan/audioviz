@@ -14,7 +14,7 @@ namespace audioviz
 class RenderTexture : public sf::RenderTexture
 {
 public:
-	RenderTexture(const sf::Vector2u size, int antialiasing = 0);
+	RenderTexture(const sf::Vector2u size, unsigned antialiasing = 0);
 
 	// Copy the contents of `other` to this render-texture.
 	void copy(const RenderTexture &other);

@@ -9,10 +9,6 @@
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/util.hpp>
 
-#ifdef AUDIOVIZ_IMGUI
-#include "imgui.h"
-#endif
-
 namespace audioviz
 {
 
@@ -40,6 +36,13 @@ private:
 	bool debug_rect{};
 
 public:
+	ParticleSystem(const sf::IntRect &rect, const int particle_count)
+		: rect{rect},
+		  particles{particle_count}
+	{
+		init_particles();
+	}
+
 	ParticleSystem(const sf::IntRect &rect, const int particle_count, const int framerate)
 		: rect{rect},
 		  particles{particle_count},
@@ -171,50 +174,6 @@ public:
 	inline size_t get_particle_count() const { return particles.size(); }
 	inline sf::IntRect get_rect() const { return rect; }
 	inline bool get_debug_rect() const { return debug_rect; }
-
-#ifdef AUDIOVIZ_IMGUI
-	void draw_imgui()
-	{
-		// Particle count
-		int temp_count = static_cast<int>(particles.size());
-		if (ImGui::SliderInt("Particle Count", &temp_count, 10, 1000))
-			set_particle_count(temp_count);
-
-		// Debug rect toggle
-		bool temp_debug = debug_rect;
-		if (ImGui::Checkbox("Debug Rect##particles", &temp_debug))
-			set_debug_rect(temp_debug);
-
-		// Rect position and size
-		ImGui::Text("Bounding Box:");
-		ImGui::Indent();
-
-		int rect_pos[2] = {rect.position.x, rect.position.y};
-		if (ImGui::InputInt2("Position##particles", rect_pos))
-		{
-			sf::IntRect new_rect = rect;
-			new_rect.position = {rect_pos[0], rect_pos[1]};
-			set_rect(new_rect);
-		}
-
-		int rect_size[2] = {rect.size.x, rect.size.y};
-		if (ImGui::InputInt2("Size##particles", rect_size))
-		{
-			if (rect_size[0] > 0 && rect_size[1] > 0)
-			{
-				sf::IntRect new_rect = rect;
-				new_rect.size = {rect_size[0], rect_size[1]};
-				set_rect(new_rect);
-			}
-		}
-
-		ImGui::Unindent();
-
-		const auto drag = util::imgui_drag_resize(rect);
-		if (drag.moved || drag.resized)
-			set_rect(drag.rect);
-	}
-#endif
 
 private:
 	void init_particle(Particle<ParticleShape> &p)

@@ -18,9 +18,8 @@ class Media
 
 public:
 	const std::string url;
-
 	Media(const std::string &url);
-	virtual ~Media() = default; // fixes clangd warning
+	virtual ~Media() = default;
 
 	/**
 	 * Read `samples` audio SAMPLES (NOT FRAMES) from the underlying source
@@ -44,24 +43,18 @@ public:
 	virtual std::string artist() const = 0;
 
 	/**
-	 * Guarantees that up to `frames` audio frames are buffered and accessible via `audio_buffer()`.
-	 */
-	void buffer_audio(const int frames);
-
-	/**
-	 * Access the audio buffer.
-	 */
-	inline std::span<const float> audio_buffer() const { return _audio_buffer; }
-
-	/**
 	 * Erase `frames` audio frames from the buffer.
+	 * This helps "slide" the audio window forward by `frames`, ensuring
+	 * consistent playback when rendering at a specific framerate.
 	 */
-	void audio_buffer_erase(const int frames);
+	void consume_audio(const int frames);
 
 	/**
-	 * Returns the number of audio FRAMES (NOT samples) in the buffer.
+	 * Attempts to buffer `frames` audio frames from the underlying source.
+	 * On success, returns a span pointing to the buffered audio.
+	 * Otherwise returns an empty optional.
 	 */
-	inline int audio_buffer_frames() const { return _audio_buffer.size() / audio_channels(); }
+	std::optional<std::span<const float>> read_audio(int frames);
 };
 
 } // namespace audioviz

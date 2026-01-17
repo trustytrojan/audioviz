@@ -3,10 +3,6 @@
 #include <cmath>
 #include <memory>
 
-#ifdef AUDIOVIZ_IMGUI
-#include "imgui.h"
-#endif
-
 namespace audioviz
 {
 
@@ -27,7 +23,6 @@ void FrequencyAnalyzer::set_fft_size(const int fft_size)
 void FrequencyAnalyzer::set_window_func(const WindowFunction wf)
 {
 	window_func = wf;
-	wf_i = static_cast<int>(wf);
 	compute_window_values();
 }
 
@@ -119,25 +114,5 @@ void FrequencyAnalyzer::apply_blackman_window()
 		window_values[i] =
 			0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
 }
-
-#ifdef AUDIOVIZ_IMGUI
-void FrequencyAnalyzer::draw_imgui()
-{
-	// FFT size (must be even). Keep user's intent when stepping: if they
-	// decreased, move down to the next even; if they increased, move up.
-	int fft_tmp = fft_size;
-	if (ImGui::InputInt("FFT Size", &fft_tmp) && fft_tmp > 0)
-		set_fft_size(fft_tmp);
-
-	// Window function selection
-	static const WindowFunction wf_table[] = {
-		WindowFunction::None, WindowFunction::Hanning, WindowFunction::Hamming, WindowFunction::Blackman};
-	if (ImGui::Combo("Window", &wf_i, "None\0Hanning\0Hamming\0Blackman\0"))
-	{
-		const auto wf = wf_table[wf_i];
-		set_window_func(wf);
-	}
-}
-#endif
 
 } // namespace audioviz

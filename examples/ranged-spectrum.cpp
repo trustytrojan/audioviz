@@ -1,3 +1,4 @@
+#include "audioviz/Player.hpp"
 #include <audioviz/Base.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/aligned_allocator.hpp>
@@ -10,16 +11,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <print>
-
-#define capture_time(label, code)            \
-	if (timing_text_enabled())               \
-	{                                        \
-		sf::Clock _clock;                    \
-		code;                                \
-		capture_elapsed_time(label, _clock); \
-	}                                        \
-	else                                     \
-		code;
 
 constexpr float audio_duration_sec = 0.1;
 
@@ -54,26 +45,23 @@ RangedSpectrum::RangedSpectrum(sf::Vector2u size, const std::string &media_url)
 
 	spectrum.set_bar_width(1);
 	spectrum.set_bar_spacing(0);
-
-	set_audio_frames_needed(fft_size);
+	spectrum.set_multiplier(4);
 
 #ifdef __linux__
-	set_timing_text_enabled(true);
-	set_text_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
+	enable_profiler();
+	set_font("/usr/share/fonts/TTF/Iosevka-Regular.ttc");
 #endif
 
-	add_layer("spectrum").add_draw({spectrum});
+	emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum});
 
 	max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fa.get_fft_size());
 	std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
-
-	start_in_window(media, "spectrum-test");
 }
 
 void RangedSpectrum::update(const std::span<const float> audio_buffer)
 {
 	a.resize(fft_size);
-	capture_time("strided_copy", audioviz::util::strided_copy(a, audio_buffer, num_channels, 0));
+	capture_time("strided_copy", audioviz::util::extract_channel(a, audio_buffer, num_channels, 0));
 	capture_time("fft", aa.execute_fft(fa, a));
 	s.assign(spectrum.get_bar_count(), 0);
 	// spread out into s only our desired frequency range
@@ -92,4 +80,5 @@ int main(const int argc, const char *const *const argv)
 
 	const sf::Vector2u size{std::stoul(argv[1]), std::stoul(argv[2])};
 	RangedSpectrum viz{size, argv[3]};
+	audioviz::Player{viz, viz.media, 60, viz.fft_size}.start_in_window(argv[0]);
 }

@@ -1,16 +1,22 @@
 #pragma once
 
+#include "TransformEffect.hpp"
 #include <SFML/Graphics.hpp>
 
-namespace audioviz::fx::Polar
+namespace audioviz::fx
 {
 
-void setParameters(
-	sf::Vector2f size,
-	float base_radius = 0.f,
-	float max_radius = 1.f,
-	float angle_start = 1.5707963f, // PI/2 - start at top
-	float angle_span = 6.2831853f); // 2*PI - full circle
-const sf::Shader &getShader();
+struct Polar : TransformEffect
+{
+	sf::Vector2f size;
+	float base_radius, max_radius;
+	float angle_start;
+	float angle_span;
 
-} // namespace audioviz::fx::Polar
+	Polar(sf::Vector2f size, float br, float mr, float angle_start, float angle_span);
+
+	virtual const sf::Shader &getShader() const override;
+	virtual void setShaderUniforms() const override;
+};
+
+} // namespace audioviz::fx

@@ -1,5 +1,6 @@
 #include <audioviz/media/FfmpegPopenMedia.hpp>
 #include <audioviz/util.hpp>
+#include <cstring>
 #include <iostream>
 
 namespace audioviz
@@ -97,7 +98,7 @@ size_t FfmpegPopenMedia::read_audio_samples(float *const buf, const int samples)
 bool FfmpegPopenMedia::read_video_frame(sf::Texture &txr)
 {
 	if (!video)
-		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] no video stream available!"};
+		throw std::logic_error{"[FfmpegPopenMedia::read_video_frame] no video stream available!"};
 	if (!txr.resize(scaled_video_size))
 		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] texture resize failed!"};
 	const auto bytes_to_read{4 * scaled_video_size.x * scaled_video_size.y};
