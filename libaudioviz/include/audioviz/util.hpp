@@ -33,17 +33,6 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath);
 FILE *popen_utf8(const std::string &command, const char *mode);
 sf::String utf8_to_sf_string(const std::string &text);
 
-#ifdef AUDIOVIZ_IMGUI
-struct DragResizeResult
-{
-	bool moved{};
-	bool resized{};
-	sf::IntRect rect{};
-};
-
-DragResizeResult imgui_drag_resize(sf::IntRect rect, const float handle_size = 8.f);
-#endif
-
 inline int bin_index_from_freq(const int freq_hz, const int sample_rate_hz, const int bin_count)
 {
 	return freq_hz * bin_count / sample_rate_hz;

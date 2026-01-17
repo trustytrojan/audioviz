@@ -2,10 +2,6 @@
 #include <audioviz/SpectrumDrawable.hpp>
 #include <cassert>
 
-#ifdef AUDIOVIZ_IMGUI
-#include "imgui.h"
-#endif
-
 namespace audioviz
 {
 
@@ -133,63 +129,6 @@ void SpectrumDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 		target.draw(c);
 	}
 }
-
-#ifdef AUDIOVIZ_IMGUI
-void SpectrumDrawable::draw_imgui()
-{
-	// Bar parameters
-	int temp_width = bar.width;
-	if (ImGui::SliderInt("Bar Width", &temp_width, 1, 50))
-		set_bar_width(temp_width);
-
-	int temp_spacing = bar.spacing;
-	if (ImGui::SliderInt("Bar Spacing", &temp_spacing, 0, 50))
-		set_bar_spacing(temp_spacing);
-
-	// Multiplier
-	ImGui::SliderFloat("Multiplier", &multiplier, 0.1f, 20.0f);
-
-	// Backwards toggle
-	bool temp_backwards = backwards;
-	if (ImGui::Checkbox("Backwards", &temp_backwards))
-		set_backwards(temp_backwards);
-
-	// Debug rect toggle
-	ImGui::Checkbox("Debug Rect", &debug_rect);
-
-	// Rect position and size
-	ImGui::Text("Bounding Box:");
-	ImGui::Indent();
-
-	int rect_pos[2] = {rect.position.x, rect.position.y};
-	if (ImGui::InputInt2("Position", rect_pos))
-	{
-		sf::IntRect new_rect = rect;
-		new_rect.position = {rect_pos[0], rect_pos[1]};
-		set_rect(new_rect);
-	}
-
-	int rect_size[2] = {rect.size.x, rect.size.y};
-	if (ImGui::InputInt2("Size", rect_size))
-	{
-		if (rect_size[0] > 0 && rect_size[1] > 0)
-		{
-			sf::IntRect new_rect = rect;
-			new_rect.size = {rect_size[0], rect_size[1]};
-			set_rect(new_rect);
-		}
-	}
-
-	ImGui::Unindent();
-
-	// Display current bar count (read-only)
-	ImGui::Text("Bar Count: %d", bar.count);
-
-	const auto drag = util::imgui_drag_resize(rect);
-	if (drag.moved || drag.resized)
-		set_rect(drag.rect);
-}
-#endif
 
 void SpectrumDrawable::update_bar_colors()
 {

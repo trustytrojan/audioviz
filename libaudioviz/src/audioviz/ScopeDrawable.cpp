@@ -4,10 +4,6 @@
 #include <cassert>
 #include <cmath>
 
-#ifdef AUDIOVIZ_IMGUI
-#include "imgui.h"
-#endif
-
 namespace audioviz
 {
 
@@ -90,71 +86,6 @@ void ScopeDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 {
 	target.draw(vertex_array, states);
 }
-
-#ifdef AUDIOVIZ_IMGUI
-void ScopeDrawable::draw_imgui()
-{
-	// Shape parameters
-	int temp_width = shape.width;
-	if (ImGui::SliderInt("Shape Width", &temp_width, 1, 50))
-		set_shape_width(temp_width);
-
-	int temp_spacing = shape.spacing;
-	if (ImGui::SliderInt("Shape Spacing", &temp_spacing, 0, 50))
-		set_shape_spacing(temp_spacing);
-
-	// Fill in toggle
-	bool temp_fill_in = fill_in;
-	if (ImGui::Checkbox("Fill In", &temp_fill_in))
-		set_fill_in(temp_fill_in);
-
-	// Backwards toggle
-	bool temp_backwards = backwards;
-	if (ImGui::Checkbox("Backwards##scope", &temp_backwards))
-		set_backwards(temp_backwards);
-
-	// Audio duration and sample rate
-	float temp_duration = audio_duration;
-	if (ImGui::SliderFloat("Audio Duration (s)", &temp_duration, 0.0f, 5.0f))
-		set_audio_duration(temp_duration);
-
-	int temp_rate = sample_rate;
-	if (ImGui::InputInt("Sample Rate", &temp_rate))
-		set_sample_rate(temp_rate);
-
-	// Rect position and size
-	ImGui::Text("Bounding Box:");
-	ImGui::Indent();
-
-	int rect_pos[2] = {rect.position.x, rect.position.y};
-	if (ImGui::InputInt2("Position##scope", rect_pos))
-	{
-		sf::IntRect new_rect = rect;
-		new_rect.position = {rect_pos[0], rect_pos[1]};
-		set_rect(new_rect);
-	}
-
-	int rect_size[2] = {rect.size.x, rect.size.y};
-	if (ImGui::InputInt2("Size##scope", rect_size))
-	{
-		if (rect_size[0] > 0 && rect_size[1] > 0)
-		{
-			sf::IntRect new_rect = rect;
-			new_rect.size = {rect_size[0], rect_size[1]};
-			set_rect(new_rect);
-		}
-	}
-
-	ImGui::Unindent();
-
-	// Display current shape count (read-only)
-	ImGui::Text("Shape Count: %d", get_shape_count());
-
-	const auto drag = util::imgui_drag_resize(rect);
-	if (drag.moved || drag.resized)
-		set_rect(drag.rect);
-}
-#endif
 
 void ScopeDrawable::update_shapes()
 {

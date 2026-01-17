@@ -52,10 +52,6 @@ public:
 	void update(std::span<const float> spectrum);
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override;
 
-#ifdef AUDIOVIZ_IMGUI
-	void draw_imgui();
-#endif
-
 private:
 	int get_bar_vertex_index(int bar_idx, int vertex_num) const;
 	void update_bars();

@@ -6,10 +6,6 @@
 #include <span>
 #include <vector>
 
-#ifdef AUDIOVIZ_IMGUI
-#include "imgui.h"
-#endif
-
 namespace audioviz
 {
 
@@ -87,10 +83,6 @@ public:
 	void update(std::span<const float> audio, int sample_rate);
 
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override;
-
-#ifdef AUDIOVIZ_IMGUI
-	void draw_imgui();
-#endif
 
 private:
 	void update_shapes();
