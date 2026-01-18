@@ -6,7 +6,7 @@
 #include <audioviz/fft/Interpolator.hpp>
 #include <audioviz/util.hpp>
 
-#include <print>
+// #include <print>
 
 using namespace audioviz::examples;
 
@@ -31,7 +31,7 @@ struct RangedSpectrum : ExampleBase<RangedSpectrum>
 		  fa{fft_size},
 		  aa{sample_rate_hz, fft_size}
 	{
-		std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
+		// std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
 
 		spectrum.set_bar_width(1);
 		spectrum.set_bar_spacing(0);
@@ -40,7 +40,7 @@ struct RangedSpectrum : ExampleBase<RangedSpectrum>
 		emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum});
 
 		max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fa.get_fft_size());
-		std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
+		// std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 	}
 
 	void update(std::span<const float> audio_buffer) override

@@ -8,7 +8,7 @@
 #include <audioviz/util.hpp>
 
 #include <SFML/Graphics.hpp>
-#include <print>
+// #include <print>
 
 using namespace audioviz::examples;
 
@@ -37,7 +37,7 @@ struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
 		  polar_left{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, M_PI / 2, M_PI},
 		  polar_right{polar_left}
 	{
-		std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
+		// std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
 
 		spectrum_left.set_bar_width(1);
 		spectrum_right.set_bar_width(1);
@@ -49,7 +49,7 @@ struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
 		// Calculate frequency range (20-125 Hz)
 		min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
 		max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
-		std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum_left.get_bar_count());
+		// std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum_left.get_bar_count());
 
 		polar_right.angle_start = -M_PI / 2;
 
