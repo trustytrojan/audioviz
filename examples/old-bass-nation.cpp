@@ -8,7 +8,7 @@
 
 #include <future>
 #include <memory>
-#include <print>
+// #include <print>
 
 #include "SpectrumLayer.hpp"
 
@@ -31,7 +31,7 @@ struct OldBassNation : ExampleBase<OldBassNation>
 		  polar_left{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, M_PI / 2, M_PI},
 		  polar_right{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, -M_PI / 2, M_PI}
 	{
-		std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);
+		// std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);
 
 		cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
 
