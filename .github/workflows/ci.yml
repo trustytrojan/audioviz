@@ -28,8 +28,7 @@ jobs:
         platform:
           - { name: Linux, os: ubuntu-latest }
           - { name: macOS ARM64, os: macos-latest }
-          # glew https download randomly stopped working? just make it work
-          - { name: Windows, os: windows-latest, cmake-env: CMAKE_TLS_VERIFY=0 }
+          - { name: Windows, os: windows-latest }
 
     steps:
       - name: Checkout code
@@ -38,12 +37,20 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
 
+      # 15 is just never gonna work, I gave up
+      - name: 'Linux: Set up GCC 14'
+        if: runner.os == 'Linux'
+        uses: egor-tensin/setup-gcc
+        with:
+          version: 14
+
       - name: 'Linux: Install dependencies'
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libfftw3-dev ffmpeg xvfb libglew-dev gdb
 
+      # remove ppa when done to not cause unnecessary package upgrades in the future
       - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed'
         if: runner.os == 'Linux'
         run: |
@@ -52,24 +59,26 @@ jobs:
           sudo apt-get install -y libsfml-dev
           sudo add-apt-repository --remove ppa:bleedingedge/noble-bleed
 
+      # don't bother with toolchains, everything on mac is built with clang
       - name: 'macOS: Install dependencies'
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install glew sfml fftw
+          brew install glew sfml fftw ffmpeg
 
+      # installs from chocolatey, latest is 15
       - name: 'Windows: Install MinGW'
         if: runner.os == 'Windows'
         uses: egor-tensin/setup-mingw@v3
 
       - name: Configure CMake
-        run: ${{ matrix.platform.cmake-env }} cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
+        run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
 
       - name: Build project
         run: cmake --build build --parallel
 
       - name: Test examples
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' || runner.os == 'macOS'
         run: ctest --test-dir build/examples --output-on-failure
 
       - name: Test examples with GDB
