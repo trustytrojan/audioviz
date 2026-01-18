@@ -1,6 +1,6 @@
 enable_testing()
 
-option(EXAMPLES_TESTING_USE_GDB "Use GDB when running examples for stacktraces on crashes" ON)
+option(EXAMPLES_TESTING_USE_GDB "Use GDB when running examples for stacktraces on crashes" OFF)
 
 # Generate test media file if it doesn't exist
 set(START_FREQUENCY 1)

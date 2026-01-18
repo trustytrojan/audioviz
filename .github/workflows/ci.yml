@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { name: Linux, os: ubuntu-24.04 }
+          - { name: Linux, os: ubuntu-24.04, gcc-ppa: ppa:daawesomep/toolchain-backports-noble }
           - { name: macOS, os: macos-15 }
           - { name: Windows, os: windows-2025 }
 
@@ -43,24 +43,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y portaudio19-dev libfftw3-dev ffmpeg xvfb
 
-      - name: 'Linux: Install GCC 15.2 from ppa:cppiber/build-depends'
+      - name: 'Linux: Install GCC 15.2 from ${{ matrix.platform.gcc-ppa }}'
         if: runner.os == 'Linux'
         run: |
-          sudo add-apt-repository ppa:cppiber/build-depends
+          sudo add-apt-repository ${{ matrix.platform.gcc-ppa }}
           sudo apt-get update
           sudo apt-get install -y gcc-15
-          sudo add-apt-repository --remove ppa:cppiber/build-depends
-
+          sudo add-apt-repository --remove ${{ matrix.platform.gcc-ppa }}
           gcc --version
           g++ --version
-
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
           sudo update-alternatives --set cc /usr/bin/gcc
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
           sudo update-alternatives --set c++ /usr/bin/g++
-
           gcc --version
           g++ --version
 
@@ -119,3 +116,9 @@ jobs:
 
       - name: Test examples
         run: ctest --test-dir build/examples --output-on-failure
+
+      - name: Test examples with GDB
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=1
+          ctest --test-dir build/examples --output-on-failure
