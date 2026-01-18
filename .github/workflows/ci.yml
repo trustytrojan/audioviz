@@ -34,7 +34,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Cpp (Magic?)
+      - name: Setup Cpp
         uses: aminya/setup-cpp@v1
         with:
           compiler: gcc
@@ -45,7 +45,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfftw3-dev ffmpeg xvfb libglew-dev
+          sudo apt-get install -y libfftw3-dev ffmpeg xvfb libglew-dev gdb
 
       - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed'
         if: runner.os == 'Linux'
