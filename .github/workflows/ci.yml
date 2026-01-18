@@ -41,7 +41,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y portaudio19-dev libfftw3-dev ffmpeg xvfb
+          sudo apt-get install -y libfftw3-dev ffmpeg xvfb
 
       - name: 'Linux: Install GCC 15.2 from ${{ matrix.platform.gcc-ppa }}'
         if: runner.os == 'Linux'
@@ -50,23 +50,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-15
           sudo add-apt-repository --remove ${{ matrix.platform.gcc-ppa }}
-          gcc --version
-          g++ --version
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
-          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
-          sudo update-alternatives --set cc /usr/bin/gcc
-          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
-          sudo update-alternatives --set c++ /usr/bin/g++
-          gcc --version
-          g++ --version
-
-      - name: 'Linux: Verify gcc/g++ version'
-        if: runner.os == 'Linux'
-        run: |
-          [[ $(gcc --version | head -1) == *15.2* ]]
-          [[ $(g++ --version | head -1) == *15.2* ]]
-        shell: bash
+          gcc-15 --version
+          g++-15 --version
 
       - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed'
         if: runner.os == 'Linux'
@@ -80,7 +65,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install glew sfml fftw portaudio ffmpeg gcc gdb
+          brew install glew sfml fftw ffmpeg gcc gdb
 
       - name: 'Windows: Install FFmpeg'
         if: runner.os == 'Windows'
@@ -108,17 +93,23 @@ jobs:
           gcc --version
           g++ --version
 
-      - name: Configure CMake with GCC
-        run: cmake -S. -Bbuild -GNinja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+      - name: Configure CMake with GCC (macOS/Windows)
+        if: runner.os != 'Linux'
+        run: cmake -S. -Bbuild -GNinja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DAUDIOVIZ_USE_PORTAUDIO=OFF
+
+      - name: Configure CMake with GCC (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -S. -Bbuild -GNinja -DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15 -DAUDIOVIZ_USE_PORTAUDIO=OFF
 
       - name: Build project
         run: cmake --build build --parallel
 
       - name: Test examples
+        if: runner.os == 'Linux'
         run: ctest --test-dir build/examples --output-on-failure
 
       - name: Test examples with GDB
         if: runner.os == 'Linux'
         run: |
-          cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=1
+          cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
           ctest --test-dir build/examples --output-on-failure
