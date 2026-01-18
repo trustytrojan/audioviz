@@ -51,14 +51,18 @@ jobs:
           sudo apt-get install -y gcc-15
           sudo add-apt-repository --remove ppa:cppiber/build-depends
 
-          sudo update-alternatives --remove-all gcc
-          sudo update-alternatives --remove-all g++
+          gcc --version
+          g++ --version
+
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
           sudo update-alternatives --set cc /usr/bin/gcc
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
           sudo update-alternatives --set c++ /usr/bin/g++
+
+          gcc --version
+          g++ --version
 
       - name: 'Linux: Verify gcc/g++ version'
         if: runner.os == 'Linux'
@@ -90,20 +94,20 @@ jobs:
         id: mingw-cache
         uses: actions/cache@v4
         with:
-          path: "C:\\Program Files\\mingw64"
+          path: ~\mingw64
           key: winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5
 
       - name: 'Windows: Install MinGW with GCC 15.2'
         if: runner.os == 'Windows' && steps.mingw-cache.outputs.cache-hit != 'true'
         run: |
           curl -Lo mingw64.7z "https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-13.0.0-ucrt-r5/winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5.7z"
-          7z x -o"C:\Program Files" mingw64.7z
+          7z x -o"~" mingw64.7z
           del mingw64.7z
 
       - name: 'Windows: Add MinGW to PATH'
         if: runner.os == 'Windows'
         run: |
-          echo "C:\Program Files\mingw64\bin" >> $GITHUB_PATH
+          echo "~\mingw64\bin" >> $GITHUB_PATH
           gcc --version
           g++ --version
 
@@ -113,6 +117,5 @@ jobs:
       - name: Build project
         run: cmake --build build --parallel
 
-      - name: 'Linux: Test examples'
-        if: runner.os == 'Linux' # for now
+      - name: Test examples
         run: ctest --test-dir build/examples --output-on-failure
