@@ -42,15 +42,18 @@ set(EXAMPLES
 	# spectrum-new-api
 )
 
-# Placeholder for media file path - user will define this later
 set(EXAMPLE_MEDIA_FILE "${CMAKE_CURRENT_BINARY_DIR}/panned-sweep-1-20000-5-1.wav")
 
 foreach(example ${EXAMPLES})
-	add_test(
-		NAME ${example}
-		COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${example}
+	set(EXAMPLE_COMMAND
+		gdb --batch --ex r --ex bt --ex q --args
+		${CMAKE_CURRENT_BINARY_DIR}/${example}
 		--size 100 100
 		${EXAMPLE_MEDIA_FILE}
+	)
+	add_test(
+		NAME ${example}
+		COMMAND ${EXAMPLE_COMMAND}
 	)
 	set_tests_properties(${example} PROPERTIES
 		FIXTURES_REQUIRED "xvfb_display;test_media"
