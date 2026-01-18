@@ -24,17 +24,25 @@ private:
 	Vector<ComplexNumber> out;
 	fftwf_plan plan{};
 
+	inline void cleanup()
+	{
+		if (!plan)
+			return;
+		fftwf_destroy_plan(plan);
+		plan = {};
+	}
+
 public:
 	inline ~fftwf_dft_r2c_1d()
 	{
-		if (plan)
-			fftwf_destroy_plan(plan);
+		cleanup();
 	}
 
 	inline void set_n(const int n)
 	{
 		in.resize(n);
 		out.resize(n / 2 + 1);
+		cleanup();
 		plan = fftwf_plan_dft_r2c_1d(n, in.data(), (fftwf_complex *)out.data(), FFTW_ESTIMATE);
 	}
 

@@ -1,7 +1,6 @@
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
 #include <cassert>
 #include <cmath>
-#include <memory>
 
 namespace audioviz
 {
@@ -30,9 +29,9 @@ void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
 {
 	assert(wavedata.size() == fft_size);
 
-	auto *__restrict const out_ptr = std::assume_aligned<32>(fftw.input().data());
-	const auto *__restrict const in_ptr = std::assume_aligned<32>(wavedata.data());
-	const auto *__restrict const win_ptr = std::assume_aligned<32>(window_values.data());
+	auto *__restrict const out_ptr = fftw.input().data();
+	const auto *__restrict const in_ptr = wavedata.data();
+	const auto *__restrict const win_ptr = window_values.data();
 
 	if (window_func != WindowFunction::None)
 #pragma GCC ivdep
@@ -49,8 +48,8 @@ void FrequencyAnalyzer::compute_amplitude(std::span<float> output) const
 	const int size = output.size();
 	assert(size == fftw.output_size());
 
-	auto *__restrict const out_ptr = std::assume_aligned<32>(output.data());
-	auto *__restrict const in_ptr = std::assume_aligned<32>(fftw.output().data());
+	auto *__restrict const out_ptr = output.data();
+	auto *__restrict const in_ptr = fftw.output().data();
 
 #pragma GCC ivdep
 	for (int i = 0; i < size; ++i)
@@ -67,8 +66,8 @@ void FrequencyAnalyzer::compute_phase(std::span<float> output) const
 	const int size = output.size();
 	assert(size == fftw.output_size());
 
-	auto *__restrict const out_ptr = std::assume_aligned<32>(output.data());
-	auto *__restrict const in_ptr = std::assume_aligned<32>(fftw.output().data());
+	auto *__restrict const out_ptr = output.data();
+	auto *__restrict const in_ptr = fftw.output().data();
 
 #pragma GCC ivdep
 	for (int i = 0; i < size; ++i)

@@ -7,7 +7,7 @@
 #include <audioviz/fx/Polar.hpp>
 #include <audioviz/util.hpp>
 
-#include <print>
+// #include <print>
 
 using namespace audioviz::examples;
 
@@ -40,7 +40,7 @@ struct PolarSpectrum : ExampleBase<PolarSpectrum>
 			  2 * M_PI			  // Angle span
 		  }
 	{
-		std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
+		// std::println("fft_size={} sample_rate_hz={}", fft_size, sample_rate_hz);
 
 		spectrum.set_bar_width(2);
 		spectrum.set_bar_spacing(0);
@@ -49,8 +49,8 @@ struct PolarSpectrum : ExampleBase<PolarSpectrum>
 		// Calculate frequency range (20-250 Hz)
 		min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
 		max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
-		std::println(
-			"min_fft_index={} max_fft_index={} bar_count={}", min_fft_index, max_fft_index, spectrum.get_bar_count());
+		// std::println(
+		// 	"min_fft_index={} max_fft_index={} bar_count={}", min_fft_index, max_fft_index, spectrum.get_bar_count());
 
 		emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum, &polar});
 	}

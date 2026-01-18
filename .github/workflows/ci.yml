@@ -37,32 +37,55 @@ jobs:
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
 
-      - name: Install Linux dependencies
+      - name: 'Linux: Install dependencies'
         if: runner.os == 'Linux'
         run: |
-          sudo add-apt-repository ppa:cppiber/build-depends # for gcc-15
-          sudo add-apt-repository ppa:bleedingedge/noble-bleed # for sfml3
           sudo apt-get update
-          sudo apt-get install -y gcc-15 libsfml-dev portaudio19-dev libfftw3-dev ffmpeg xvfb
+          sudo apt-get install -y portaudio19-dev libfftw3-dev ffmpeg xvfb
 
-      - name: Verify GCC 15.2 on Linux
+      - name: 'Linux: Install GCC 15.2 from ppa:cppiber/build-depends'
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository ppa:cppiber/build-depends
+          sudo apt-get update
+          sudo apt-get install -y gcc-15
+          sudo add-apt-repository --remove ppa:cppiber/build-depends
+
+          sudo update-alternatives --remove-all gcc
+          sudo update-alternatives --remove-all g++
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+          sudo update-alternatives --set cc /usr/bin/gcc
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+          sudo update-alternatives --set c++ /usr/bin/g++
+
+      - name: 'Linux: Verify gcc/g++ version'
         if: runner.os == 'Linux'
         run: |
           [[ $(gcc --version | head -1) == *15.2* ]]
           [[ $(g++ --version | head -1) == *15.2* ]]
         shell: bash
 
-      - name: Install macOS dependencies
+      - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed'
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository ppa:bleedingedge/noble-bleed
+          sudo apt-get update
+          sudo apt-get install -y libsfml-dev
+          sudo add-apt-repository --remove ppa:bleedingedge/noble-bleed
+
+      - name: 'macOS: Install dependencies'
         if: runner.os == 'macOS'
         run: |
           brew update
           brew install glew sfml fftw portaudio ffmpeg gcc gdb
 
-      - name: Install FFmpeg on Windows
+      - name: 'Windows: Install FFmpeg'
         if: runner.os == 'Windows'
         uses: FedericoCarboni/setup-ffmpeg@v3
 
-      - name: Cache MinGW
+      - name: 'Windows: Use cached MinGW'
         if: runner.os == 'Windows'
         id: mingw-cache
         uses: actions/cache@v4
@@ -70,14 +93,14 @@ jobs:
           path: "C:\\Program Files\\mingw64"
           key: winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5
 
-      - name: Install MinGW with GCC 15.2
+      - name: 'Windows: Install MinGW with GCC 15.2'
         if: runner.os == 'Windows' && steps.mingw-cache.outputs.cache-hit != 'true'
         run: |
           curl -Lo mingw64.7z "https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-13.0.0-ucrt-r5/winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5.7z"
           7z x -o"C:\Program Files" mingw64.7z
           del mingw64.7z
 
-      - name: Add MinGW to PATH on Windows
+      - name: 'Windows: Add MinGW to PATH'
         if: runner.os == 'Windows'
         run: |
           echo "C:\Program Files\mingw64\bin" >> $GITHUB_PATH
@@ -90,6 +113,6 @@ jobs:
       - name: Build project
         run: cmake --build build --parallel
 
-      - name: Test examples on Linux
+      - name: 'Linux: Test examples'
         if: runner.os == 'Linux' # for now
         run: ctest --test-dir build/examples --output-on-failure

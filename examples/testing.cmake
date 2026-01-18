@@ -35,14 +35,14 @@ endif()
 
 # Define example test cases
 set(EXAMPLES
-	# scope
-	# polar-spectrum
+	scope
+	polar-spectrum
 	shake-bass
-	# ranged-spectrum
-	# stereo-scope
-	# stereo-polar-spectrum
-	# old-bass-nation
-	# mirrored-bass-nation
+	ranged-spectrum
+	stereo-scope
+	stereo-polar-spectrum
+	old-bass-nation
+	mirrored-bass-nation
 	# spectrum-new-api
 )
 
