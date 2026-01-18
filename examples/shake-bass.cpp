@@ -9,7 +9,7 @@ using namespace audioviz::examples;
 
 struct ShakeBassTest : ExampleBase<ShakeBassTest>
 {
-	const int fft_size = 3000;
+	const int fft_size;
 
 	audioviz::FrequencyAnalyzer fa{fft_size};
 	audioviz::StereoAnalyzer sa;
@@ -17,8 +17,9 @@ struct ShakeBassTest : ExampleBase<ShakeBassTest>
 	sf::RectangleShape rect;
 	audioviz::fx::Shake shake;
 
-	ShakeBassTest(const ExampleConfig& config)
+	ShakeBassTest(const ExampleConfig &config)
 		: ExampleBase{config},
+		  fft_size{config.audio_duration_sec * sample_rate_hz},
 		  sa{static_cast<float>(sample_rate_hz), fft_size},
 		  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 	{
@@ -39,8 +40,4 @@ struct ShakeBassTest : ExampleBase<ShakeBassTest>
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
-	ShakeBassTest,
-	"Shake effect visualization based on bass frequencies",
-	viz.fft_size
-)
+AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(ShakeBassTest, "Shake effect visualization based on bass frequencies", viz.fft_size)

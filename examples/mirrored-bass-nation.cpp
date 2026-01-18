@@ -27,7 +27,7 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 	audioviz::fx::Polar polar_left;
 	audioviz::fx::Mirror mirror_effect{0}; // mirror_side = 0 (mirror right onto left)
 
-	MirroredBassNation(const ExampleConfig& config)
+	MirroredBassNation(const ExampleConfig &config)
 		: ExampleBase{config},
 		  max_fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
 		  polar_left{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, M_PI / 2, M_PI}
@@ -61,7 +61,7 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 
 			cs.set_solid_color(colors[i]);
 
-			auto& spectrum =
+			auto &spectrum =
 				*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, true));
 			spectrum.configure_spectrum(false, size);
 
@@ -76,7 +76,8 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 
 	void update(std::span<const float> audio_buffer) override
 	{
-		std::ranges::transform(spectrums, futures.begin(), [&](auto &l) { return l->trigger_work(audio_buffer); });
+		// std::ranges::transform(spectrums, futures.begin(), [&](auto &l) { return l->trigger_work(audio_buffer); });
+		std::ranges::transform(spectrums, futures.begin(), std::bind_back(&SpectrumLayer::trigger_work, audio_buffer));
 
 		// wait for all compute tasks
 		std::ranges::for_each(futures, &std::future<void>::wait);
@@ -84,7 +85,4 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 };
 
 AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
-	MirroredBassNation,
-	"Mirrored multi-spectrum polar visualization with bass frequencies",
-	viz.max_fft_size
-)
+	MirroredBassNation, "Mirrored multi-spectrum polar visualization with bass frequencies", viz.max_fft_size)

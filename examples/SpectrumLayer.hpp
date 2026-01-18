@@ -47,7 +47,6 @@ struct SpectrumLayer
 
 	void compute(std::span<const float> audio_buffer)
 	{
-		// a.resize(fa.get_fft_size());
 		const int channel = is_left ? 0 : 1;
 		audioviz::util::extract_channel(a, audio_buffer.first(fa.get_fft_size() * 2), 2, channel);
 		aa.execute_fft(fa, a);
@@ -82,10 +81,7 @@ struct SpectrumLayer
 	}
 
 private:
-	void start_worker()
-	{
-		worker = std::thread([this]() { worker_loop(); });
-	}
+	void start_worker() { worker = std::thread{&SpectrumLayer::worker_loop, this}; }
 
 	void worker_loop()
 	{

@@ -25,7 +25,7 @@ struct OldBassNation : ExampleBase<OldBassNation>
 	audioviz::fx::Polar polar_left;
 	audioviz::fx::Polar polar_right;
 
-	OldBassNation(const ExampleConfig& config)
+	OldBassNation(const ExampleConfig &config)
 		: ExampleBase{config},
 		  max_fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
 		  polar_left{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, M_PI / 2, M_PI},
@@ -60,11 +60,11 @@ struct OldBassNation : ExampleBase<OldBassNation>
 
 			cs.set_solid_color(colors[i]);
 
-			auto& left_layer =
+			auto &left_layer =
 				*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, true));
 			left_layer.configure_spectrum(false, size);
 
-			auto& right_layer =
+			auto &right_layer =
 				*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, false));
 			right_layer.configure_spectrum(true, size);
 
@@ -77,7 +77,8 @@ struct OldBassNation : ExampleBase<OldBassNation>
 
 	void update(std::span<const float> audio_buffer) override
 	{
-		std::ranges::transform(spectrums, futures.begin(), [&](auto &l) { return l->trigger_work(audio_buffer); });
+		// std::ranges::transform(spectrums, futures.begin(), [=](auto &l) { return l->trigger_work(audio_buffer); });
+		std::ranges::transform(spectrums, futures.begin(), std::bind_back(&SpectrumLayer::trigger_work, audio_buffer));
 
 		// wait for all compute tasks
 		std::ranges::for_each(futures, &std::future<void>::wait);
@@ -85,7 +86,4 @@ struct OldBassNation : ExampleBase<OldBassNation>
 };
 
 AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
-	OldBassNation,
-	"Multi-spectrum polar visualization with bass frequencies (old version)",
-	viz.max_fft_size
-)
+	OldBassNation, "Multi-spectrum polar visualization with bass frequencies (old version)", viz.max_fft_size)

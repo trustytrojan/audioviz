@@ -40,32 +40,17 @@ jobs:
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
+          sudo add-apt-repository ppa:cppiber/build-depends # for gcc-15
+          sudo add-apt-repository ppa:bleedingedge/noble-bleed # for sfml3
           sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            libfreetype-dev \
-            libglew-dev \
-            libgl-dev \
-            libx11-dev \
-            libxau-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libxcursor-dev \
-            zlib1g-dev \
-            portaudio19-dev \
-            libfftw3-dev \
-            libudev-dev \
-            ffmpeg \
-            xvfb
+          sudo apt-get install -y gcc-15 libsfml-dev portaudio19-dev libfftw3-dev ffmpeg xvfb
 
-      - name: Setup GCC 15.2 on Linux
+      - name: Verify GCC 15.2 on Linux
         if: runner.os == 'Linux'
         run: |
-          sudo add-apt-repository ppa:cppiber/build-depends
-          sudo apt update
-          sudo apt-get install -y gcc-15
-          gcc --version
-          g++ --version
+          [[ $(gcc --version | head -1) == *15.2* ]]
+          [[ $(g++ --version | head -1) == *15.2* ]]
+        shell: bash
 
       - name: Install macOS dependencies
         if: runner.os == 'macOS'
@@ -99,11 +84,12 @@ jobs:
           gcc --version
           g++ --version
 
-      - name: Configure CMake
+      - name: Configure CMake with GCC
         run: cmake -S. -Bbuild -GNinja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 
       - name: Build project
         run: cmake --build build --parallel
 
-      - name: Test examples
-        run: cd build/examples && ctest --output-on-failure
+      - name: Test examples on Linux
+        if: runner.os == 'Linux' # for now
+        run: ctest --test-dir build/examples --output-on-failure

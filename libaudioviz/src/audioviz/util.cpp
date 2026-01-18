@@ -292,7 +292,7 @@ void extract_channel(std::span<float> out, std::span<const float> in, int num_ch
 }
 
 void resample_spectrum(
-	std::span<float> out,
+	std::span<float> spectrum,
 	std::span<const float> in_amps,
 	int sample_rate_hz,
 	int fft_size,
@@ -300,19 +300,20 @@ void resample_spectrum(
 	float end_freq,
 	Interpolator &interpolator)
 {
-	const float bin_size = (float)sample_rate_hz / fft_size;
 	interpolator.set_values(in_amps);
 
+	const float bin_size = (float)sample_rate_hz / fft_size;
 	const float bin_pos_start = (start_freq / bin_size);
 	const float bin_pos_end = (end_freq / bin_size);
-	const float bin_pos_step = (bin_pos_end - bin_pos_start) / std::max(1.0f, (float)out.size() - 1.0f);
+	const float bin_pos_step = (bin_pos_end - bin_pos_start) / std::max(1.0f, (float)spectrum.size() - 1.0f);
 
 	float current_bin_pos = bin_pos_start;
-	const auto out_size = out.size();
+	const auto out_size = spectrum.size();
 
+#pragma GCC ivdep
 	for (size_t i = 0; i < out_size; ++i)
 	{
-		out[i] = interpolator.sample(current_bin_pos);
+		spectrum[i] = interpolator.sample(current_bin_pos);
 		current_bin_pos += bin_pos_step;
 	}
 }

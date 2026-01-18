@@ -1,5 +1,4 @@
 #include <audioviz/fft/Interpolator.hpp>
-#include <iostream>
 
 namespace audioviz
 {
@@ -23,13 +22,6 @@ void Interpolator::interpolate(std::span<float> range)
 		m_spline_y.emplace_back(range[i]);
 	}
 
-	// set_points() will throw if there are less than 3 points
-	if (m_spline_x.size() < 3)
-	{
-		std::cerr << "[Interpolator::interpolate] m_spline_x.size() < 3, returning early\n";
-		return;
-	}
-
 	spline.set_points(m_spline_x, m_spline_y, (tk::spline::spline_type)type);
 
 	// fill in the gaps
@@ -45,12 +37,6 @@ void Interpolator::set_values(std::span<const float> values)
 	{
 		m_spline_x.emplace_back(i);
 		m_spline_y.emplace_back(values[i]);
-	}
-
-	if (m_spline_x.size() < 3)
-	{
-		std::cerr << "[Interpolator::set_values] m_spline_x.size() < 3, returning early\n";
-		return;
 	}
 
 	spline.set_points(m_spline_x, m_spline_y, (tk::spline::spline_type)type);

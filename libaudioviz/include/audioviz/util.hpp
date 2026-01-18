@@ -42,7 +42,7 @@ void spread_out(std::span<float> out, std::span<const float> in);
 void extract_channel(std::span<float> out, std::span<const float> in, int num_channels, int channel);
 
 void resample_spectrum(
-	std::span<float> out,
+	std::span<float> spectrum,
 	std::span<const float> in_amps,
 	int sample_rate_hz,
 	int fft_size,
