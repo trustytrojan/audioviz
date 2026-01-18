@@ -45,7 +45,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfftw3-dev ffmpeg xvfb
+          sudo apt-get install -y libfftw3-dev ffmpeg xvfb libglew-dev
 
       - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed'
         if: runner.os == 'Linux'
@@ -66,7 +66,7 @@ jobs:
         uses: FedericoCarboni/setup-ffmpeg@v3
 
       - name: Configure CMake with GCC
-        run: cmake -S. -Bbuild -GNinja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DAUDIOVIZ_USE_PORTAUDIO=OFF
+        run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
 
       - name: Build project
         run: cmake --build build --parallel
