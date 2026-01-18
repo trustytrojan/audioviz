@@ -40,7 +40,7 @@ jobs:
       # 15 is just never gonna work, I gave up
       - name: 'Linux: Set up GCC 14'
         if: runner.os == 'Linux'
-        uses: egor-tensin/setup-gcc
+        uses: egor-tensin/setup-gcc@v2
         with:
           version: 14
 
