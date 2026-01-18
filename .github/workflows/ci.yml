@@ -27,7 +27,6 @@ jobs:
       matrix:
         platform:
           - { name: Linux, os: ubuntu-latest }
-          - { name: macOS x64, os: macos-latest-large }
           - { name: macOS ARM64, os: macos-latest }
           # glew https download randomly stopped working? just make it work
           - { name: Windows, os: windows-latest, cmake-env: CMAKE_TLS_VERIFY=0 }
@@ -64,8 +63,7 @@ jobs:
         uses: egor-tensin/setup-mingw@v3
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
-        env: ${{ matrix.platform.cmake-env }}
+        run: ${{ matrix.platform.cmake-env }} cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
 
       - name: Build project
         run: cmake --build build --parallel
