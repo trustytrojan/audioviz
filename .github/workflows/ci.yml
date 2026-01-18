@@ -23,13 +23,12 @@ jobs:
     name: ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
     strategy:
-      max-parallel: 3
       fail-fast: false
       matrix:
         platform:
           - { name: Linux, os: ubuntu-latest }
           - { name: macOS ARM64, os: macos-latest }
-          - { name: macOS x64, os: macos-latest-large }
+          - { name: macOS x64, os: macos-15-intel }
           - { name: Windows, os: windows-latest }
 
     steps:
