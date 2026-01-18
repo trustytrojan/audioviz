@@ -23,16 +23,18 @@ jobs:
     name: ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
     strategy:
+      max-parallel: 3
       fail-fast: false
       matrix:
         platform:
           - { name: Linux, os: ubuntu-latest }
           - { name: macOS ARM64, os: macos-latest }
+          - { name: macOS x64, os: macos-latest-large }
           - { name: Windows, os: windows-latest }
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Get CMake and Ninja
         uses: lukka/get-cmake@latest
@@ -78,7 +80,7 @@ jobs:
         run: cmake --build build --parallel
 
       - name: Test examples
-        if: runner.os == 'Linux' || runner.os == 'macOS'
+        if: runner.os == 'macOS'
         run: ctest --test-dir build/examples --output-on-failure
 
       - name: Test examples with GDB
