@@ -1,4 +1,4 @@
-name: Build
+name: CI
 
 on:
   push:
@@ -21,7 +21,6 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,33 +43,38 @@ jobs:
             liblua5.4-dev \
             portaudio19-dev \
             libfftw3-dev \
-            libudev-dev
+            libudev-dev \
+            ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild
 
       - name: Build project
         run: cmake --build build -j $(nproc)
 
+      - name: Test examples
+        run: cd build/examples && ctest
+
   macos:
     runs-on: macos-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: brew install glew sfml fftw lua portaudio
+        run: brew install glew sfml fftw lua portaudio ffmpeg
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild
 
       - name: Build project
         run: cmake --build build -j $(sysctl -n hw.ncpu)
 
+      - name: Test examples
+        run: cd build/examples && ctest
+
   windows-mingw:
     runs-on: windows-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -79,7 +83,13 @@ jobs:
         uses: egor-tensin/setup-mingw@v3
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DLUAVIZ_BUILD_LUA=1 -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -G "MinGW Makefiles"
 
       - name: Build project
         run: cmake --build build -j $env:NUMBER_OF_PROCESSORS
+
+      - name: Setup ffmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v3
+
+      - name: Test examples
+        run: cd build/examples && ctest

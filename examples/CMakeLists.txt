@@ -22,3 +22,5 @@ add_example(old-bass-nation)
 add_example(spectrum-new-api)
 add_example(mirrored-bass-nation)
 add_example(scope)
+
+include(testing.cmake)
