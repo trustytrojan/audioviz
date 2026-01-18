@@ -76,7 +76,7 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 
 	void update(std::span<const float> audio_buffer) override
 	{
-		std::ranges::transform(spectrums, futures.begin(), std::bind_back(&SpectrumLayer::trigger_work, audio_buffer));
+		std::ranges::transform(spectrums, futures.begin(), [&](auto &l) { return l->trigger_work(audio_buffer); });
 
 		// wait for all compute tasks
 		std::ranges::for_each(futures, &std::future<void>::wait);

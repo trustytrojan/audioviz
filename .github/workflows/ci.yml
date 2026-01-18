@@ -19,18 +19,33 @@ on:
       - '**/*.hpp'
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
+  build:
+    name: ${{ matrix.platform.name }} - GCC 15.2
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { name: Linux, os: ubuntu-24.04 }
+          - { name: macOS, os: macos-15 }
+          - { name: Windows, os: windows-2025 }
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Get CMake and Ninja
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: 3.28
+          ninjaVersion: latest
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
-            cmake \
             libfreetype-dev \
             libglew-dev \
             libgl-dev \
@@ -46,50 +61,50 @@ jobs:
             ffmpeg \
             xvfb
 
+      - name: Setup GCC 15.2 on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-15 g++-15
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
+          gcc --version
+          g++ --version
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install glew sfml fftw portaudio ffmpeg gcc gdb
+
+      - name: Cache MinGW
+        if: runner.os == 'Windows'
+        id: mingw-cache
+        uses: actions/cache@v4
+        with:
+          path: "C:\\Program Files\\mingw64"
+          key: winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5
+
+      - name: Install MinGW with GCC 15.2
+        if: runner.os == 'Windows' && steps.mingw-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -Lo mingw64.7z "https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-13.0.0-ucrt-r5/winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5.7z"
+          7z x -o"C:\Program Files" mingw64.7z
+          del mingw64.7z
+
+      - name: Add MinGW to PATH on Windows
+        if: runner.os == 'Windows'
+        run: |
+          echo "C:\Program Files\mingw64\bin" >> $GITHUB_PATH
+          gcc --version
+          g++ --version
+
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        run: cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -GNinja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 
       - name: Build project
-        run: cmake --build build -j $(nproc)
-
-      - name: Test examples
-        run: cd build/examples && ctest --output-on-failure
-
-  macos:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: brew install glew sfml fftw portaudio ffmpeg
-
-      - name: Configure CMake
-        run: cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
-      - name: Build project
-        run: cmake --build build -j $(sysctl -n hw.ncpu)
-
-      - name: Test examples
-        run: cd build/examples && ctest --output-on-failure
-
-  windows-mingw:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup MinGW
-        uses: egor-tensin/setup-mingw@v3
-
-      - name: Configure CMake
-        run: cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=RelWithDebInfo -G "MinGW Makefiles"
-
-      - name: Build project
-        run: cmake --build build -j $env:NUMBER_OF_PROCESSORS
-
-      - name: Setup ffmpeg
-        uses: FedericoCarboni/setup-ffmpeg@v3
+        run: cmake --build build --parallel
 
       - name: Test examples
         run: cd build/examples && ctest --output-on-failure
