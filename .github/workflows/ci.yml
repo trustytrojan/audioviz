@@ -20,13 +20,13 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.platform.name }} - GCC 15.2
+    name: ${{ matrix.platform.name }}
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
         platform:
-          - { name: Linux, os: ubuntu-24.04, gcc-ppa: ppa:daawesomep/toolchain-backports-noble }
+          - { name: Linux, os: ubuntu-24.04 }
           - { name: macOS, os: macos-15 }
           - { name: Windows, os: windows-2025 }
 
@@ -34,24 +34,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get CMake and Ninja
-        uses: lukka/get-cmake@latest
+      - name: Setup Cpp (Magic?)
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: gcc
+          cmake: true
+          ninja: true
 
       - name: 'Linux: Install dependencies'
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libfftw3-dev ffmpeg xvfb
-
-      - name: 'Linux: Install GCC 15.2 from ${{ matrix.platform.gcc-ppa }}'
-        if: runner.os == 'Linux'
-        run: |
-          sudo add-apt-repository ${{ matrix.platform.gcc-ppa }}
-          sudo apt-get update
-          sudo apt-get install -y gcc-15
-          sudo add-apt-repository --remove ${{ matrix.platform.gcc-ppa }}
-          gcc-15 --version
-          g++-15 --version
 
       - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed'
         if: runner.os == 'Linux'
@@ -65,41 +59,14 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install glew sfml fftw ffmpeg gcc gdb
+          brew install glew sfml fftw ffmpeg
 
       - name: 'Windows: Install FFmpeg'
         if: runner.os == 'Windows'
         uses: FedericoCarboni/setup-ffmpeg@v3
 
-      - name: 'Windows: Use cached MinGW'
-        if: runner.os == 'Windows'
-        id: mingw-cache
-        uses: actions/cache@v4
-        with:
-          path: ~\mingw64
-          key: winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5
-
-      - name: 'Windows: Install MinGW with GCC 15.2'
-        if: runner.os == 'Windows' && steps.mingw-cache.outputs.cache-hit != 'true'
-        run: |
-          curl -Lo mingw64.7z "https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-13.0.0-ucrt-r5/winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5.7z"
-          7z x -o"~" mingw64.7z
-          del mingw64.7z
-
-      - name: 'Windows: Add MinGW to PATH'
-        if: runner.os == 'Windows'
-        run: |
-          echo "~\mingw64\bin" >> $GITHUB_PATH
-          gcc --version
-          g++ --version
-
-      - name: Configure CMake with GCC (macOS/Windows)
-        if: runner.os != 'Linux'
+      - name: Configure CMake with GCC
         run: cmake -S. -Bbuild -GNinja -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DAUDIOVIZ_USE_PORTAUDIO=OFF
-
-      - name: Configure CMake with GCC (Linux)
-        if: runner.os == 'Linux'
-        run: cmake -S. -Bbuild -GNinja -DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15 -DAUDIOVIZ_USE_PORTAUDIO=OFF
 
       - name: Build project
         run: cmake --build build --parallel
