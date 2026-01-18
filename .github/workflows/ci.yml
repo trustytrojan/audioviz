@@ -26,20 +26,18 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { name: Linux, os: ubuntu-24.04 }
-          - { name: macOS, os: macos-15 }
-          - { name: Windows, os: windows-2025 }
+          - { name: Linux, os: ubuntu-latest }
+          - { name: macOS x64, os: macos-latest-large }
+          - { name: macOS ARM64, os: macos-latest }
+          # glew https download randomly stopped working? just make it work
+          - { name: Windows, os: windows-latest, cmake-env: CMAKE_TLS_VERIFY=0 }
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Cpp
-        uses: aminya/setup-cpp@v1
-        with:
-          compiler: gcc
-          cmake: true
-          ninja: true
+      - name: Get CMake and Ninja
+        uses: lukka/get-cmake@latest
 
       - name: 'Linux: Install dependencies'
         if: runner.os == 'Linux'
@@ -59,14 +57,15 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install glew sfml fftw ffmpeg
+          brew install glew sfml fftw
 
-      - name: 'Windows: Install FFmpeg'
+      - name: 'Windows: Install MinGW'
         if: runner.os == 'Windows'
-        uses: FedericoCarboni/setup-ffmpeg@v3
+        uses: egor-tensin/setup-mingw@v3
 
-      - name: Configure CMake with GCC
+      - name: Configure CMake
         run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
+        env: ${{ matrix.platform.cmake-env }}
 
       - name: Build project
         run: cmake --build build --parallel
