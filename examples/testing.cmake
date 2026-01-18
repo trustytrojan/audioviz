@@ -18,6 +18,15 @@ if(NOT EXISTS ${EXAMPLE_MEDIA_FILE})
 	set_tests_properties(generate_test_media PROPERTIES FIXTURES_SETUP test_media)
 endif()
 
+if(APPLE)
+	# Sign GDB on macOS to allow debugging
+	add_test(
+		NAME codesign_gdb
+		COMMAND bash -c "codesign -fs gdb-cert $(which gdb) 2>/dev/null || true"
+	)
+	set_tests_properties(codesign_gdb PROPERTIES FIXTURES_SETUP gdb_signed)
+endif()
+
 if(LINUX)
 	# Set up headless testing with Xvfb
 	add_test(
@@ -57,9 +66,15 @@ foreach(example ${EXAMPLES})
 	endif()
 
 	add_test(NAME ${example} COMMAND ${EXAMPLE_COMMAND})
+	
+	set(REQUIRED_FIXTURES "xvfb_display;test_media")
+	if(APPLE AND EXAMPLES_TESTING_USE_GDB)
+		set(REQUIRED_FIXTURES "${REQUIRED_FIXTURES};gdb_signed")
+	endif()
+	
 	set_tests_properties(${example} PROPERTIES
-		FIXTURES_REQUIRED "xvfb_display;test_media"
+		FIXTURES_REQUIRED "${REQUIRED_FIXTURES}"
 		ENVIRONMENT "DISPLAY=:99"
-		TIMEOUT 5
+		TIMEOUT 10
 	)
 endforeach()

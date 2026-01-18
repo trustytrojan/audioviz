@@ -1,10 +1,9 @@
 #include <audioviz/Player.hpp>
 #include <audioviz/media/FfmpegPopenEncoder.hpp>
-#include <fcntl.h>
-#include <iostream>
 
 #ifdef AUDIOVIZ_PORTAUDIO
 #include <portaudio.hpp>
+#include <fcntl.h>
 #endif
 
 namespace audioviz
