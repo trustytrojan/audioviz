@@ -48,14 +48,14 @@ set(EXAMPLES
 
 foreach(example ${EXAMPLES})
 	set(EXAMPLE_COMMAND
-		gdb --batch --return-child-result \
-			--ex "set pagination off" \
-			--ex "set backtrace limit 0" \
-			--ex "run" \
-			--ex "thread apply all bt full" \
-			--ex "quit" --args \
-		${CMAKE_CURRENT_BINARY_DIR}/${example} \
-		--size 100 100 \
+		gdb --batch --return-child-result
+			--ex "set pagination off"
+			--ex "set backtrace limit 0"
+			--ex "run"
+			--ex "thread apply all bt full"
+			--ex "quit" --args
+		${CMAKE_CURRENT_BINARY_DIR}/${example}
+		--size 100 100
 		${EXAMPLE_MEDIA_FILE}
 	)
 	add_test(
