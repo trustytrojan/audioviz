@@ -50,8 +50,11 @@ else()
 	target_link_libraries(audioviz PUBLIC fftw3f)
 endif()
 
-## sfml (static, without audio and network libs)
-set(SFML_STATIC_LIBRARIES ON CACHE BOOL "")
+## sfml
+if(WIN32)
+	# reduce dynamic linker hassle
+	set(SFML_STATIC_LIBRARIES ON CACHE BOOL "")
+endif()
 find_package(SFML COMPONENTS Graphics Window System QUIET)
 if(NOT SFML_FOUND)
 	message(STATUS "sfml: FIND_SFML_ERROR: ${FIND_SFML_ERROR}")

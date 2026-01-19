@@ -26,19 +26,20 @@ std::wstring utf8_to_wide(const std::string &str)
 
 #elifdef __APPLE__
 
-#include <unistd.h>
-#include <sys/wait.h>
-#include <spawn.h>
-#include <mutex>
-#include <unordered_map>
 #include <crt_externs.h>
+#include <mutex>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <unordered_map>
+
 
 // Track pid for each FILE* so pclose can wait on the correct process
 namespace
 {
 std::mutex popen_map_mutex;
 std::unordered_map<FILE *, pid_t> popen_pid_map;
-}
+} // namespace
 
 #endif
 
@@ -56,16 +57,16 @@ FILE *popen_utf8(const std::string &command, const char *mode)
 #elif defined(__APPLE__)
 	// On macOS, use posix_spawn instead of popen to avoid fork-after-threads issues
 	// that cause "mutex lock failed: Invalid argument" when SFML's mutexes are initialized
-	
+
 	const bool is_read = (mode && mode[0] == 'r');
 	int pipefds[2];
-	
+
 	if (pipe(pipefds) == -1)
 		return nullptr;
-	
+
 	posix_spawn_file_actions_t actions;
 	posix_spawn_file_actions_init(&actions);
-	
+
 	if (is_read)
 	{
 		// Read mode: redirect child stdout to pipe write end
@@ -81,19 +82,14 @@ FILE *popen_utf8(const std::string &command, const char *mode)
 		posix_spawn_file_actions_addclose(&actions, pipefds[0]);
 		posix_spawn_file_actions_addclose(&actions, pipefds[1]);
 	}
-	
+
 	// Build argv for "/bin/sh -c command"
-	char *argv[] = {
-		const_cast<char *>("sh"),
-		const_cast<char *>("-c"),
-		const_cast<char *>(command.c_str()),
-		nullptr
-	};
-	
+	char *argv[] = {const_cast<char *>("sh"), const_cast<char *>("-c"), const_cast<char *>(command.c_str()), nullptr};
+
 	pid_t pid;
 	int rc = posix_spawnp(&pid, "sh", &actions, nullptr, argv, *_NSGetEnviron());
 	posix_spawn_file_actions_destroy(&actions);
-	
+
 	if (rc != 0)
 	{
 		close(pipefds[0]);
@@ -101,12 +97,12 @@ FILE *popen_utf8(const std::string &command, const char *mode)
 		errno = rc;
 		return nullptr;
 	}
-	
+
 	// Close unused end in parent
 	int parent_fd = is_read ? pipefds[0] : pipefds[1];
 	int unused_fd = is_read ? pipefds[1] : pipefds[0];
 	close(unused_fd);
-	
+
 	FILE *fp = fdopen(parent_fd, mode);
 	if (!fp)
 	{
@@ -115,28 +111,28 @@ FILE *popen_utf8(const std::string &command, const char *mode)
 		waitpid(pid, nullptr, 0);
 		return nullptr;
 	}
-	
+
 	// Store pid for later retrieval by our custom pclose
 	{
 		std::lock_guard<std::mutex> lock(popen_map_mutex);
 		popen_pid_map[fp] = pid;
 	}
-	
+
 	return fp;
 #else
 	return ::popen(command.c_str(), mode);
 #endif
 }
 
-#ifdef __APPLE__
 int pclose_utf8(FILE *stream)
 {
+#ifdef __APPLE__
 	if (!stream)
 	{
 		errno = EINVAL;
 		return -1;
 	}
-	
+
 	pid_t pid;
 	{
 		std::lock_guard<std::mutex> lock(popen_map_mutex);
@@ -149,19 +145,23 @@ int pclose_utf8(FILE *stream)
 		pid = it->second;
 		popen_pid_map.erase(it);
 	}
-	
+
 	// Close the FILE* stream
 	if (fclose(stream) != 0)
 		return -1;
-	
+
 	// Wait for child process
 	int status;
 	if (waitpid(pid, &status, 0) == -1)
 		return -1;
-	
+
 	return status;
-}
+#elifdef _WIN32
+	return _pclose(stream);
+#else
+	return ::pclose(stream);
 #endif
+}
 
 sf::String utf8_to_sf_string(const std::string &text)
 {

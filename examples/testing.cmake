@@ -19,6 +19,11 @@ if(NOT EXISTS ${EXAMPLE_MEDIA_FILE})
 	set_tests_properties(generate_test_media PROPERTIES FIXTURES_SETUP test_media)
 endif()
 
+# Set up Mesa3D for Windows headless rendering
+if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
+	include(${CMAKE_CURRENT_SOURCE_DIR}/mesa3d.cmake)
+endif()
+
 if(LINUX)
 	# Set up headless testing with Xvfb
 	add_test(
@@ -56,6 +61,12 @@ foreach(example ${EXAMPLE_PROGRAMS})
 	if(LINUX)
 		list(APPEND REQUIRED_FIXTURES "xvfb_display")
 		set(TEST_ENV "DISPLAY=:99")
+	endif()
+
+	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
+		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
+		# Set Mesa environment variable for software rendering
+		set(TEST_ENV "LIBGL_ALWAYS_INDIRECT=1")
 	endif()
 
 	set_tests_properties(${example} PROPERTIES

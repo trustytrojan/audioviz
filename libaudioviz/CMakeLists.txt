@@ -15,9 +15,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(audioviz PUBLIC -Wno-subobject-linkage)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	# caused by nlohmann/json, safe to ignore
-	target_compile_options(audioviz PUBLIC -Wno-nan-infinity-disabled)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	target_compile_options(audioviz PUBLIC
+		-Wno-nan-infinity-disabled # caused by nlohmann/json, safe to ignore
+		_USE_MATH_DEFINES # because spline uses M_PI
+	)
 endif()
 
 target_include_directories(audioviz PUBLIC
