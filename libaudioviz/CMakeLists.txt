@@ -11,13 +11,16 @@ include(deps.cmake)
 target_compile_options(audioviz PUBLIC -Wno-narrowing -ffast-math)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	# caused by tk-spline, safe to ignore
-	target_compile_options(audioviz PUBLIC -Wno-subobject-linkage)
+	target_compile_options(audioviz PUBLIC
+		-Wno-subobject-linkage # caused by tk-spline, safe to ignore
+	)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 	target_compile_options(audioviz PUBLIC
 		-Wno-nan-infinity-disabled # caused by nlohmann/json, safe to ignore
+	)
+	target_compile_definitions(audioviz PUBLIC
 		_USE_MATH_DEFINES # because spline uses M_PI
 	)
 endif()

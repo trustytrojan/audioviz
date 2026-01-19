@@ -65,8 +65,7 @@ foreach(example ${EXAMPLE_PROGRAMS})
 
 	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
 		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
-		# Set Mesa environment variable for software rendering
-		set(TEST_ENV "LIBGL_ALWAYS_INDIRECT=1")
+		set(TEST_ENV "GALLIUM_DRIVER=llvmpipe")
 	endif()
 
 	set_tests_properties(${example} PROPERTIES
