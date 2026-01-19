@@ -48,20 +48,7 @@ if(LINUX)
 	set_tests_properties(xvfb_stop PROPERTIES FIXTURES_CLEANUP xvfb_display)
 endif()
 
-# Define example test cases
-set(EXAMPLES
-	scope
-	polar-spectrum
-	shake-bass
-	ranged-spectrum
-	stereo-scope
-	stereo-polar-spectrum
-	old-bass-nation
-	mirrored-bass-nation
-	spectrum-new-api
-)
-
-foreach(example ${EXAMPLES})
+foreach(example ${EXAMPLE_PROGRAMS})
 	set(EXAMPLE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${example} --size 100 100 ${EXAMPLE_MEDIA_FILE})
 
 	if(EXAMPLES_TESTING_USE_GDB)

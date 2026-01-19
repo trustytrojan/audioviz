@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(argparse)
 
 link_libraries(audioviz argparse)
 
+# this is also used by testing.cmake
 set(EXAMPLE_PROGRAMS
 	stereo-scope
 	ranged-spectrum
