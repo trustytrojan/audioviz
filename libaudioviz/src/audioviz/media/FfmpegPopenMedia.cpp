@@ -82,9 +82,9 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, float start_time_sec)
 
 FfmpegPopenMedia::~FfmpegPopenMedia()
 {
-	if (audio && pclose(audio) == -1)
+	if (audio && util::pclose_utf8(audio) == -1)
 		perror("audio: pclose");
-	if (video && pclose(video) == -1)
+	if (video && util::pclose_utf8(video) == -1)
 		perror("video: pclose");
 }
 

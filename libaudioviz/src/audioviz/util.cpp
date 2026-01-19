@@ -9,6 +9,7 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+
 std::wstring utf8_to_wide(const std::string &str)
 {
 	if (str.empty())
@@ -22,6 +23,24 @@ std::wstring utf8_to_wide(const std::string &str)
 	wide.resize(static_cast<size_t>(required - 1));
 	return wide;
 }
+
+#elifdef __APPLE__
+
+#include <unistd.h>
+#include <sys/wait.h>
+#include <spawn.h>
+#include <mutex>
+#include <unordered_map>
+
+// Track pid for each FILE* so pclose can wait on the correct process
+namespace
+{
+std::mutex popen_map_mutex;
+std::unordered_map<FILE *, pid_t> popen_pid_map;
+
+extern char **environ;
+}
+
 #endif
 
 namespace audioviz::util
@@ -35,10 +54,115 @@ FILE *popen_utf8(const std::string &command, const char *mode)
 	if (!wide_command.empty() && !wide_mode.empty())
 		return _wpopen(wide_command.c_str(), wide_mode.c_str());
 	return _popen(command.c_str(), mode ? mode : "r");
+#elif defined(__APPLE__)
+	// On macOS, use posix_spawn instead of popen to avoid fork-after-threads issues
+	// that cause "mutex lock failed: Invalid argument" when SFML's mutexes are initialized
+	
+	const bool is_read = (mode && mode[0] == 'r');
+	int pipefds[2];
+	
+	if (pipe(pipefds) == -1)
+		return nullptr;
+	
+	posix_spawn_file_actions_t actions;
+	posix_spawn_file_actions_init(&actions);
+	
+	if (is_read)
+	{
+		// Read mode: redirect child stdout to pipe write end
+		posix_spawn_file_actions_adddup2(&actions, pipefds[1], STDOUT_FILENO);
+		posix_spawn_file_actions_adddup2(&actions, pipefds[1], STDERR_FILENO);
+		posix_spawn_file_actions_addclose(&actions, pipefds[0]);
+		posix_spawn_file_actions_addclose(&actions, pipefds[1]);
+	}
+	else
+	{
+		// Write mode: redirect child stdin from pipe read end
+		posix_spawn_file_actions_adddup2(&actions, pipefds[0], STDIN_FILENO);
+		posix_spawn_file_actions_addclose(&actions, pipefds[0]);
+		posix_spawn_file_actions_addclose(&actions, pipefds[1]);
+	}
+	
+	// Build argv for "/bin/sh -c command"
+	char *argv[] = {
+		const_cast<char *>("sh"),
+		const_cast<char *>("-c"),
+		const_cast<char *>(command.c_str()),
+		nullptr
+	};
+	
+	pid_t pid;
+	int rc = posix_spawnp(&pid, "sh", &actions, nullptr, argv, environ);
+	posix_spawn_file_actions_destroy(&actions);
+	
+	if (rc != 0)
+	{
+		close(pipefds[0]);
+		close(pipefds[1]);
+		errno = rc;
+		return nullptr;
+	}
+	
+	// Close unused end in parent
+	int parent_fd = is_read ? pipefds[0] : pipefds[1];
+	int unused_fd = is_read ? pipefds[1] : pipefds[0];
+	close(unused_fd);
+	
+	FILE *fp = fdopen(parent_fd, mode);
+	if (!fp)
+	{
+		close(parent_fd);
+		// Child is still running, wait for it to avoid zombie
+		waitpid(pid, nullptr, 0);
+		return nullptr;
+	}
+	
+	// Store pid for later retrieval by our custom pclose
+	{
+		std::lock_guard<std::mutex> lock(popen_map_mutex);
+		popen_pid_map[fp] = pid;
+	}
+	
+	return fp;
 #else
 	return ::popen(command.c_str(), mode);
 #endif
 }
+
+#ifdef __APPLE__
+int pclose_utf8(FILE *stream)
+{
+	if (!stream)
+	{
+		errno = EINVAL;
+		return -1;
+	}
+	
+	pid_t pid;
+	{
+		std::lock_guard<std::mutex> lock(popen_map_mutex);
+		auto it = popen_pid_map.find(stream);
+		if (it == popen_pid_map.end())
+		{
+			// Not one of our spawned processes, try standard pclose
+			return pclose(stream);
+		}
+		pid = it->second;
+		popen_pid_map.erase(it);
+	}
+	
+	// Close the FILE* stream
+	if (fclose(stream) != 0)
+		return -1;
+	
+	// Wait for child process
+	int status;
+	if (waitpid(pid, &status, 0) == -1)
+		return -1;
+	
+	return status;
+}
+#endif
 
 sf::String utf8_to_sf_string(const std::string &text)
 {
@@ -184,7 +308,7 @@ std::string detect_vaapi_device()
 			continue;
 		}
 
-		const auto status = ::pclose(pipe);
+		const auto status = pclose(pipe);
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		{
 			std::cerr << "detect_vaapi_device: success, returning " << path << '\n';
@@ -218,7 +342,7 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 			buffer.insert(buffer.end(), buf, buf + bytesRead);
 	}
 
-	switch (const auto rc = pclose(pipe))
+	switch (const auto rc = pclose_utf8(pipe))
 	{
 	case -1:
 		std::cerr << __func__ << ": pclose: " << strerror(errno) << '\n';

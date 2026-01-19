@@ -31,6 +31,15 @@ std::string detect_vaapi_device();
 std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath);
 
 FILE *popen_utf8(const std::string &command, const char *mode);
+
+#ifdef __APPLE__
+// Custom pclose wrapper for macOS that works with posix_spawn-based popen_utf8
+int pclose_utf8(FILE *stream);
+#else
+// On other platforms, just use standard pclose
+inline int pclose_utf8(FILE *stream) { return pclose(stream); }
+#endif
+
 sf::String utf8_to_sf_string(const std::string &text);
 
 inline int bin_index_from_freq(const int freq_hz, const int sample_rate_hz, const int bin_count)

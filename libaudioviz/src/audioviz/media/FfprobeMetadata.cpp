@@ -15,7 +15,7 @@ FfprobeMetadata::FfprobeMetadata(const std::string &media_url)
 	while (fgets(buffer, sizeof(buffer), ffprobe) != nullptr)
 		oss << buffer;
 
-	switch (const auto status{pclose(ffprobe)})
+	switch (const auto status{audioviz::util::pclose_utf8(ffprobe)})
 	{
 	case -1:
 		throw std::runtime_error{std::string{"pclose: "} + strerror(errno)};

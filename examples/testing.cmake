@@ -19,25 +19,16 @@ if(NOT EXISTS ${EXAMPLE_MEDIA_FILE})
 	set_tests_properties(generate_test_media PROPERTIES FIXTURES_SETUP test_media)
 endif()
 
-if(APPLE)
-	# Sign GDB on macOS to allow debugging
-	add_test(
-		NAME codesign_gdb
-		COMMAND bash -c "codesign -fs gdb-cert $(which gdb) 2>/dev/null || true"
-	)
-	set_tests_properties(codesign_gdb PROPERTIES FIXTURES_SETUP gdb_signed)
-endif()
-
 # Set up Mesa3D for Windows headless rendering
-# if(WIN32)
-# 	include(${CMAKE_CURRENT_SOURCE_DIR}/mesa3d.cmake)
-# endif()
+if(WIN32)
+	include(${CMAKE_CURRENT_SOURCE_DIR}/mesa3d.cmake)
+endif()
 
 if(LINUX)
 	# Set up headless testing with Xvfb
 	add_test(
 		NAME xvfb_start
-		COMMAND bash -c "nohup Xvfb :99 -screen 0 100x100x24 -nolisten tcp -noreset -fbdir /dev/shm > /dev/null 2>&1 & sleep 1"
+		COMMAND bash -c "nohup Xvfb :99 -screen 0 100x100x24 -nolisten tcp -noreset -fbdir /dev/shm &>/dev/null & sleep 1"
 	)
 	set_tests_properties(xvfb_start PROPERTIES FIXTURES_SETUP xvfb_display FIXTURES_REQUIRED test_media)
 
@@ -72,15 +63,11 @@ foreach(example ${EXAMPLE_PROGRAMS})
 		set(TEST_ENV "DISPLAY=:99")
 	endif()
 
-	if(APPLE AND EXAMPLES_TESTING_USE_GDB)
-		list(APPEND REQUIRED_FIXTURES "gdb_signed")
+	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
+		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
+		# Set Mesa environment variable for software rendering
+		set(TEST_ENV "${TEST_ENV};LIBGL_ALWAYS_INDIRECT=1")
 	endif()
-
-	# if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
-	# 	list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
-	# 	# Set Mesa environment variable for software rendering
-	# 	set(TEST_ENV "${TEST_ENV};LIBGL_ALWAYS_INDIRECT=1")
-	# endif()
 
 	set_tests_properties(${example} PROPERTIES
 		FIXTURES_REQUIRED "${REQUIRED_FIXTURES}"
