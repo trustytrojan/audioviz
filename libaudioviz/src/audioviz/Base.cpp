@@ -28,7 +28,7 @@ void Base::next_frame(const std::span<const float> audio_buffer)
 
 void Base::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
-	target.draw(final_rt.sprite());
+	target.draw(final_rt);
 	if (profiler_enabled)
 		target.draw(profiler_text);
 }

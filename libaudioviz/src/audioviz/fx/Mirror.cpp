@@ -18,7 +18,11 @@ void Mirror::apply(RenderTexture &rt) const
 {
 	shader.setUniform("size", sf::Glsl::Vec2{rt.getSize()});
 	shader.setUniform("mirror_side", mirror_side);
-	rt.draw(rt.sprite(), &shader);
+	rt2.clear(sf::Color::Transparent);
+	rt2.draw(rt, &shader);
+	rt2.display();
+
+	rt.draw(rt, &shader);
 	rt.display();
 }
 

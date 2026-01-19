@@ -1,4 +1,5 @@
 #include "ExampleFramework.hpp"
+#include <audioviz/Layer.hpp>
 #include <audioviz/SpectrumDrawable.hpp>
 #include <audioviz/fft/AudioAnalyzer.hpp>
 #include <audioviz/fft/FrequencyAnalyzer.hpp>
@@ -50,7 +51,7 @@ struct OldBassNation : ExampleBase<OldBassNation>
 		const auto delta_duration = 0.015f;
 		const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
-		auto &spectrum_layer = emplace_layer<audioviz::PostProcessLayer>("spectrum", size);
+		auto &spectrum_layer = emplace_layer<audioviz::Layer>("spectrum");
 
 		for (int i = 0; i < colors.size(); ++i)
 		{

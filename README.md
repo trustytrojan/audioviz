@@ -10,7 +10,7 @@
 [here are some songs rendered with audioviz!](https://youtube.com/playlist?list=PLq63g2iq0LVvxNjjoYOL4GMTOdXEdHsBf)
 
 ## prerequisite knowledge
-below are two great videos by [Cinamark](https://www.youtube.com/@cinamark) explaining some of the fundamentals of programming with audio:
+below are two great videos by [Cinamark](https://www.youtube.com/@cinamark) explaining some of the fundamentals of programming with audio & visualization:
 
 [How do computers even render audio...?](https://youtu.be/md79DDofGVo)
 [How Do Computers Even Visualize Audio...?](https://www.youtube.com/watch?v=cZqle_ukePs)
@@ -43,9 +43,14 @@ thanks to CI, i discovered that the build process is the same as with linux. jus
   - [tk-spline](https://github.com/ttk592/spline)
 
 ## developer environment setup
+the project uses C++23 so try to use a compliant toolchain version. for GCC that would be version 14 and above.
+
 i recommend using vscode as it integrates well with git with no effort. get the [cmake tools extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) and [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) to make development easier.
 
-**on windows:** please use the [mingw toolchain](https://github.com/niXman/mingw-builds-binaries/releases) as it is the only toolchain i have compiled with, and honestly the easiest to setup and use. clangd might freak out about the standard headers being missing: to fix this, open clangd extension settings, and add the following argument:
+### windows
+please use the [mingw toolchain](https://github.com/niXman/mingw-builds-binaries/releases) as it is the only toolchain i have compiled with, and honestly the easiest to setup and use. if you have `winget` you can get the version i usually use with `winget install BrechtSanders.WinLibs.POSIX.UCRT`.
+
+clangd might freak out about the standard headers being missing: to fix this, open clangd extension settings, and add the following argument:
 ```
 --query-driver=C:\path\to\mingw\bin\g++.exe
 ```

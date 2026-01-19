@@ -24,24 +24,17 @@ void Blur::apply(RenderTexture &rt) const
 	{
 		// horizontal blur
 		shader.setUniform("direction", sf::Glsl::Vec2{hrad, 0});
-		rt2->draw(rt.sprite(), &shader);
-		rt2->display();
+		rt2.draw(rt, &shader);
+		rt2.display();
 
 		// vertical blur
 		shader.setUniform("direction", sf::Glsl::Vec2{0, vrad});
-		rt.draw(rt2->sprite(), &shader);
+		rt.draw(rt2, &shader);
 		rt.display();
 
 		// clean slate for next pass
-		rt2->clear(sf::Color::Transparent);
+		rt2.clear(sf::Color::Transparent);
 	}
-}
-
-void Blur::setRtSize(const sf::Vector2u size)
-{
-	if (!size.x || !size.y)
-		rt2 = {};
-	rt2 = std::make_unique<RenderTexture>(size);
 }
 
 } // namespace audioviz::fx

@@ -18,7 +18,7 @@ void Alpha::apply(RenderTexture &rt) const
 {
 	shader.setUniform("size", sf::Glsl::Vec2{rt.getSize()});
 	shader.setUniform("alpha", alpha);
-	rt.draw(rt.sprite(), &shader);
+	rt.draw(rt, &shader);
 	rt.display();
 }
 

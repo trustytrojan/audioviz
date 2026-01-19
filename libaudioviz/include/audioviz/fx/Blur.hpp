@@ -12,14 +12,18 @@ namespace audioviz::fx
  * `hrad` and `vrad` are the horizontal and vertical blur radii, respectively.
  * It is recommended to use a zero-alpha background if this is being used to create a glow.
  */
-struct Blur : PostProcessEffect
+class Blur : PostProcessEffect
 {
+	mutable RenderTexture rt2;
+
+public:
 	float hrad, vrad;
 	int n_passes;
-	std::unique_ptr<RenderTexture> rt2;
+
 	Blur(float hrad, float vrad, int n_passes);
+
 	void apply(RenderTexture &rt) const override;
-	void setRtSize(sf::Vector2u) override;
+	inline void setRtSize(sf::Vector2u size) override { rt2 = {size}; }
 };
 
 } // namespace audioviz::fx

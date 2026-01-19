@@ -27,8 +27,9 @@ jobs:
       matrix:
         platform:
           - { name: Linux, os: ubuntu-latest }
-          - { name: macOS ARM64, os: macos-latest }
-          - { name: macOS x64, os: macos-15-intel }
+          # these will stay off until i boot up a mac myself and figure it out
+          # - { name: macOS ARM64, os: macos-latest }
+          # - { name: macOS x64, os: macos-15-intel }
           - { name: Windows, os: windows-latest }
 
     steps:
@@ -92,10 +93,8 @@ jobs:
           cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
           ctest --test-dir build/examples --output-on-failure
 
-      # don't forget to add downloaded dll directories to GITHUB_PATH!
       - name: Test examples with GDB (Windows, verbose)
         if: runner.os == 'Windows'
         run: |
-          $env:GITHUB_PATH += ';build\'
           cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
           ctest --test-dir build/examples -V

@@ -12,6 +12,7 @@
 // #include <print>
 
 #include "SpectrumLayer.hpp"
+#include "audioviz/PostProcessLayer.hpp"
 
 using namespace audioviz::examples;
 
@@ -23,9 +24,8 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 	audioviz::ColorSettings cs;
 	std::vector<std::future<void>> futures;
 
-	// Only one polar left, no polar_right needed - we'll mirror it instead
 	audioviz::fx::Polar polar_left;
-	audioviz::fx::Mirror mirror_effect{0}; // mirror_side = 0 (mirror right onto left)
+	audioviz::fx::Mirror mirror_effect{0};
 
 	MirroredBassNation(const ExampleConfig &config)
 		: ExampleBase{config},

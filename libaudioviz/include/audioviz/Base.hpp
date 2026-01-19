@@ -1,15 +1,14 @@
 #pragma once
 
-#include "audioviz/Profiler.hpp"
-#include <SFML/Graphics.hpp>
+#include "Layer.hpp"
+#include "Profiler.hpp"
+#include "RenderTexture.hpp"
 
-#include <audioviz/Layer.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
-#include <audioviz/media/Media.hpp>
+#include <SFML/Graphics.hpp>
+#include <memory>
 #include <span>
 #include <string>
 #include <vector>
-#include <memory>
 
 #define capture_time(label, code)     \
 	if (profiler_enabled)             \
@@ -66,7 +65,7 @@ public:
 	 * @tparam T The derived Layer type to cast to
 	 * @param name The name of the layer
 	 * @returns A shared_ptr<T> if the layer exists and is of type T, nullptr otherwise
-	 * 
+	 *
 	 * Usage:
 	 * auto my_layer = get_layer_as<MyLayerType>("my_layer");
 	 */

@@ -9,7 +9,7 @@ FetchContent_MakeAvailable(argparse)
 
 link_libraries(audioviz argparse)
 
-# this is also used by testing.cmake
+# this is also used by testing.cmake!
 set(EXAMPLE_PROGRAMS
 	stereo-scope
 	ranged-spectrum
@@ -24,5 +24,17 @@ set(EXAMPLE_PROGRAMS
 foreach(example ${EXAMPLE_PROGRAMS})
 	add_executable(${example} "${example}.cpp")
 endforeach()
+
+if(WIN32)
+	# fftw & portaudio are DLLs, copy them to our binary dir so that we don't have to modify PATH
+	file(COPY_FILE
+		${CMAKE_BINARY_DIR}/_deps/fftw-src/libfftw3f-3.dll
+		${CMAKE_CURRENT_BINARY_DIR}/libfftw3f-3.dll
+		ONLY_IF_DIFFERENT)
+	file(COPY_FILE
+		${portaudio-pp_BINARY_DIR}/portaudio_x64.dll
+		${CMAKE_CURRENT_BINARY_DIR}/portaudio_x64.dll
+		ONLY_IF_DIFFERENT)
+endif()
 
 include(testing.cmake)
