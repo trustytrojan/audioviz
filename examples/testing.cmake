@@ -65,12 +65,14 @@ foreach(example ${EXAMPLE_PROGRAMS})
 
 	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
 		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
-		set(TEST_ENV "GALLIUM_DRIVER=softpipe") # THIS WORKS!!!!!!!!! (on the github actions windows runner!!!)
+		# unfortunately llvmpipe gave the same JIT errors
+		# softpipe works! but it is quite slow
+		set(TEST_ENV "GALLIUM_DRIVER=softpipe")
 	endif()
 
 	set_tests_properties(${example} PROPERTIES
 		FIXTURES_REQUIRED "${REQUIRED_FIXTURES}"
 		ENVIRONMENT "${TEST_ENV}"
-		TIMEOUT 20
+		TIMEOUT 60 # old-bass-nation is SLOW with softpipe, give it a minute
 	)
 endforeach()

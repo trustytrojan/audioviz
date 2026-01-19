@@ -50,7 +50,7 @@ i recommend using vscode as it integrates well with git with no effort. get the 
 ### windows
 please use the [mingw toolchain](https://github.com/niXman/mingw-builds-binaries/releases) as it is the only toolchain i have compiled with, and honestly the easiest to setup and use. if you have `winget` you can get the version i usually use with `winget install BrechtSanders.WinLibs.POSIX.UCRT`.
 
-clangd might freak out about the standard headers being missing: to fix this, open clangd extension settings, and add the following argument:
+clangd might freak out about the standard headers being missing: to fix this, open clangd extension settings, and add the following argument (**without** quotes around the path):
 ```
 --query-driver=C:\path\to\mingw\bin\g++.exe
 ```
