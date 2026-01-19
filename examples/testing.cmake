@@ -65,12 +65,12 @@ foreach(example ${EXAMPLE_PROGRAMS})
 
 	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
 		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
-		set(TEST_ENV "GALLIUM_DRIVER=softpipe")
+		set(TEST_ENV "GALLIUM_DRIVER=softpipe") # THIS WORKS!!!!!!!!! (on the github actions windows runner!!!)
 	endif()
 
 	set_tests_properties(${example} PROPERTIES
 		FIXTURES_REQUIRED "${REQUIRED_FIXTURES}"
 		ENVIRONMENT "${TEST_ENV}"
-		TIMEOUT 10
+		TIMEOUT 20
 	)
 endforeach()

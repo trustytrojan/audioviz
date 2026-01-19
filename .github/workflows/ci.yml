@@ -26,13 +26,17 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { name: Linux GCC, os: ubuntu-latest, flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ }
+          - {
+              name: Linux GCC,
+              os: ubuntu-latest,
+              flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_GDB=ON,
+            }
           - { name: macOS ARM64, os: macos-latest }
           - { name: macOS x64, os: macos-15-intel }
           - {
               name: Windows MinGW,
               os: windows-latest,
-              flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_MESA3D=ON,
+              flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_GDB=ON -DEXAMPLES_TESTING_USE_MESA3D=ON,
             }
 
     steps:
@@ -79,19 +83,7 @@ jobs:
       - name: Build project
         run: cmake --build build --parallel
 
-      # this will stay off until i boot up a mac myself and figure it out
-      # - name: Test examples
-      #   if: runner.os == 'macOS'
-      #   run: ctest --test-dir build/examples --output-on-failure
-
-      - name: Test examples with GDB
-        if: runner.os == 'Linux'
-        run: |
-          cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
-          ctest --test-dir build/examples --output-on-failure
-
-      - name: Test examples with GDB (Windows, verbose)
-        if: runner.os == 'Windows'
-        run: |
-          cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
-          ctest --test-dir build/examples -V
+      # macOS testing will stay off until i boot up a mac myself and figure it out
+      - name: Test examples
+        if: runner.os != 'macOS'
+        run: ctest --test-dir build/examples --output-on-failure
