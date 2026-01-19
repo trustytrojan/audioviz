@@ -9,6 +9,9 @@ FetchContent_MakeAvailable(argparse)
 
 link_libraries(audioviz argparse)
 
+add_library(example-framework ExampleFramework.cpp)
+link_libraries(example-framework)
+
 # this is also used by testing.cmake!
 set(EXAMPLE_PROGRAMS
 	stereo-scope
@@ -31,10 +34,12 @@ if(WIN32)
 		${CMAKE_BINARY_DIR}/_deps/fftw-src/libfftw3f-3.dll
 		${CMAKE_CURRENT_BINARY_DIR}/libfftw3f-3.dll
 		ONLY_IF_DIFFERENT)
-	file(COPY_FILE
-		${portaudio-pp_BINARY_DIR}/portaudio_x64.dll
-		${CMAKE_CURRENT_BINARY_DIR}/portaudio_x64.dll
-		ONLY_IF_DIFFERENT)
+	if(AUDIOVIZ_USE_PORTAUDIO)
+		file(COPY_FILE
+			${portaudio-pp_BINARY_DIR}/portaudio_x64.dll
+			${CMAKE_CURRENT_BINARY_DIR}/portaudio_x64.dll
+			ONLY_IF_DIFFERENT)
+	endif()
 endif()
 
 include(testing.cmake)

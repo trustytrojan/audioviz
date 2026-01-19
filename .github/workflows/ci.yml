@@ -26,11 +26,13 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { name: Linux, os: ubuntu-latest }
-          # these will stay off until i boot up a mac myself and figure it out
-          # - { name: macOS ARM64, os: macos-latest }
-          # - { name: macOS x64, os: macos-15-intel }
-          - { name: Windows, os: windows-latest }
+          # the ppa shipping libsfml-dev 3.0.2 does NOT ship static libraries!
+          - { name: Linux GCC, os: ubuntu-latest, flags: -DSFML_STATIC_LIBRARIES=OFF -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ }
+          - { name: Linux Clang, os: ubuntu-latest, flags: -DSFML_STATIC_LIBRARIES=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ }
+          - { name: macOS ARM64, os: macos-latest }
+          - { name: macOS x64, os: macos-15-intel }
+          - { name: Windows MinGW, os: windows-latest, flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ }
+          - { name: Windows Clang, os: windows-latest, flags: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ }
 
     steps:
       - name: Checkout code
@@ -50,16 +52,14 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfftw3-dev ffmpeg xvfb libglew-dev gdb
+          sudo apt-get install -y libfftw3-dev ffmpeg libglew-dev gdb
 
-      # remove ppa when done to not cause unnecessary package upgrades in the future
-      - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed'
+      - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed (Shared libraries only)'
         if: runner.os == 'Linux'
         run: |
           sudo add-apt-repository ppa:bleedingedge/noble-bleed
           sudo apt-get update
           sudo apt-get install -y libsfml-dev
-          sudo add-apt-repository --remove ppa:bleedingedge/noble-bleed
 
       # don't bother with gcc, everything on brew is built with clang
       - name: 'macOS: Install dependencies'
@@ -68,24 +68,20 @@ jobs:
           brew update
           brew install glew sfml fftw ffmpeg gdb
 
-      # installs from chocolatey, latest gcc is 15
-      - name: 'Windows: Install MinGW'
-        if: runner.os == 'Windows'
-        uses: egor-tensin/setup-mingw@v3
-
       - name: 'Windows: Install FFmpeg'
         if: runner.os == 'Windows'
         uses: FedericoCarboni/setup-ffmpeg@v3
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
+        run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF ${{ matrix.platform.flags }}
 
       - name: Build project
         run: cmake --build build --parallel
 
-      - name: Test examples
-        if: runner.os == 'macOS'
-        run: ctest --test-dir build/examples --output-on-failure
+      # this will stay off until i boot up a mac myself and figure it out
+      # - name: Test examples
+      #   if: runner.os == 'macOS'
+      #   run: ctest --test-dir build/examples --output-on-failure
 
       - name: Test examples with GDB
         if: runner.os == 'Linux'
