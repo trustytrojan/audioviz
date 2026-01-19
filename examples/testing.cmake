@@ -65,12 +65,7 @@ foreach(example ${EXAMPLE_PROGRAMS})
 
 	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
 		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
-		set(TEST_ENV "GALLIUM_DRIVER=llvmpipe")
-		list(APPEND TEST_ENV "LP_NATIVE_VECTOR_WIDTH=128")
-		# Disable the perf listener which often triggers symbol lookups
-		list(APPEND TEST_ENV "LLVM_PERF_JIT_LISTENER=0")
-		# Sometimes simply suppressing the Mesa debug output helps if it's just log spam
-		list(APPEND TEST_ENV "MESA_DEBUG=silent")
+		set(TEST_ENV "GALLIUM_DRIVER=softpipe")
 	endif()
 
 	set_tests_properties(${example} PROPERTIES
