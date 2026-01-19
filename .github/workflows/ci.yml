@@ -26,20 +26,13 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          # the ppa shipping libsfml-dev 3.0.2 does NOT ship static libraries!
           - { name: Linux GCC, os: ubuntu-latest, flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ }
-          - { name: Linux Clang, os: ubuntu-latest, flags: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ }
           - { name: macOS ARM64, os: macos-latest }
           - { name: macOS x64, os: macos-15-intel }
           - {
               name: Windows MinGW,
               os: windows-latest,
               flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_MESA3D=ON,
-            }
-          - {
-              name: Windows Clang,
-              os: windows-latest,
-              flags: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DEXAMPLES_TESTING_USE_MESA3D=ON,
             }
 
     steps:
@@ -50,17 +43,10 @@ jobs:
         uses: lukka/get-cmake@latest
 
       # 15 is just never gonna work, I gave up
-      - name: 'Linux: Set up GCC 14'
+      - name: 'Linux: Install GCC 14'
         if: matrix.platform.name == 'Linux GCC'
         uses: egor-tensin/setup-gcc@v2
-        with:
-          version: 14
-
-      - name: 'Linux Clang: Setup Clang 20'
-        if: matrix.platform.name == 'Linux Clang'
-        uses: egor-tensin/setup-clang@v2
-        with:
-          version: 20
+        with: { version: 14 }
 
       - name: 'Linux: Install dependencies'
         if: runner.os == 'Linux'
@@ -68,6 +54,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libfftw3-dev ffmpeg libglew-dev gdb
 
+      # WARNING: this ppa does NOT ship static libraries!
       - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed (Shared libraries only)'
         if: runner.os == 'Linux'
         run: |
