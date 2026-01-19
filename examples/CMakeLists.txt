@@ -16,7 +16,6 @@ set(EXAMPLE_PROGRAMS
 	stereo-polar-spectrum
 	shake-bass
 	old-bass-nation
-	spectrum-new-api
 	mirrored-bass-nation
 	scope
 )
