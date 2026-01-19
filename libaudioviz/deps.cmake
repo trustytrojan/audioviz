@@ -84,4 +84,3 @@ if(AUDIOVIZ_USE_PORTAUDIO)
     target_compile_definitions(audioviz PUBLIC AUDIOVIZ_PORTAUDIO)
     target_link_libraries(audioviz PUBLIC portaudio-pp::portaudio-pp)
 endif()
-

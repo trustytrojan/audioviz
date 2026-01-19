@@ -31,14 +31,13 @@ std::wstring utf8_to_wide(const std::string &str)
 #include <spawn.h>
 #include <mutex>
 #include <unordered_map>
+#include <crt_externs.h>
 
 // Track pid for each FILE* so pclose can wait on the correct process
 namespace
 {
 std::mutex popen_map_mutex;
 std::unordered_map<FILE *, pid_t> popen_pid_map;
-
-extern char **environ;
 }
 
 #endif
@@ -92,7 +91,7 @@ FILE *popen_utf8(const std::string &command, const char *mode)
 	};
 	
 	pid_t pid;
-	int rc = posix_spawnp(&pid, "sh", &actions, nullptr, argv, environ);
+	int rc = posix_spawnp(&pid, "sh", &actions, nullptr, argv, *_NSGetEnviron());
 	posix_spawn_file_actions_destroy(&actions);
 	
 	if (rc != 0)

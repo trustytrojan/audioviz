@@ -28,10 +28,6 @@ target_include_directories(audioviz PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_include_directories(audioviz PRIVATE
-	${portaudio-pp_SOURCE_DIR}/include # for Base::start_in_window
-)
-
 # popen() on MinGW expects a 'b' to differentiate text/binary,
 # but on Linux it errors if a 'b' is there, so we have to do this...
 if(WIN32)

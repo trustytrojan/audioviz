@@ -25,7 +25,7 @@ struct ExampleConfig
 	float audio_duration_sec = 0.25f;
 	float media_start_time_sec = 0.0f;
 	bool profiler_enabled = false;
-	std::string font_path = "/usr/share/fonts/TTF/Iosevka-Regular.ttc";
+	std::string font_path;
 	std::string window_title;
 };
 
@@ -82,7 +82,7 @@ inline ExampleConfig parse_arguments(
 
 	parser.add_argument("--font")
 		.help("Path to font file for profiler")
-		.default_value(std::string("/usr/share/fonts/TTF/Iosevka-Regular.ttc"));
+		.default_value("");
 
 	try
 	{
@@ -159,19 +159,14 @@ public:
 		  sample_rate_hz{media.audio_sample_rate()},
 		  num_channels{media.audio_channels()}
 	{
-		// Enable profiler if requested (Linux only)
-#ifdef __linux__
 		if (config.profiler_enabled)
 		{
 			enable_profiler();
-			set_font(config.font_path);
+			if (config.font_path.size())
+				set_font(config.font_path);
+			else
+			 	std::cerr << "profiler enabled but no font file provided, profiler text will not be visible\n";
 		}
-#else
-		if (config.profiler_enabled)
-		{
-			std::cerr << "Warning: Profiler is only available on Linux\n";
-		}
-#endif
 	}
 
 	virtual ~ExampleBase() = default;
