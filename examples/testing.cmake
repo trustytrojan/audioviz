@@ -1,6 +1,7 @@
 enable_testing()
 
 option(EXAMPLES_TESTING_USE_GDB "Use GDB when running examples for stacktraces on crashes" OFF)
+option(EXAMPLES_TESTING_USE_MESA3D "On Windows, use Mesa3D software rendering for headless testing" OFF)
 
 # Generate test media file if it doesn't exist
 set(START_FREQUENCY 1)
@@ -25,6 +26,11 @@ if(APPLE)
 		COMMAND bash -c "codesign -fs gdb-cert $(which gdb) 2>/dev/null || true"
 	)
 	set_tests_properties(codesign_gdb PROPERTIES FIXTURES_SETUP gdb_signed)
+endif()
+
+# Set up Mesa3D for Windows headless rendering
+if(WIN32)
+	include(${CMAKE_CURRENT_SOURCE_DIR}/mesa3d.cmake)
 endif()
 
 if(LINUX)
@@ -52,7 +58,7 @@ set(EXAMPLES
 	stereo-polar-spectrum
 	old-bass-nation
 	mirrored-bass-nation
-	# spectrum-new-api
+	spectrum-new-api
 )
 
 foreach(example ${EXAMPLES})
@@ -66,15 +72,27 @@ foreach(example ${EXAMPLES})
 	endif()
 
 	add_test(NAME ${example} COMMAND ${EXAMPLE_COMMAND})
-	
-	set(REQUIRED_FIXTURES "xvfb_display;test_media")
-	if(APPLE AND EXAMPLES_TESTING_USE_GDB)
-		set(REQUIRED_FIXTURES "${REQUIRED_FIXTURES};gdb_signed")
+
+	set(REQUIRED_FIXTURES "test_media")
+	set(TEST_ENV "DISPLAY=:99")
+
+	if(LINUX)
+		list(APPEND REQUIRED_FIXTURES "xvfb_display")
 	endif()
-	
+
+	if(APPLE AND EXAMPLES_TESTING_USE_GDB)
+		list(APPEND REQUIRED_FIXTURES "gdb_signed")
+	endif()
+
+	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
+		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
+		# Set Mesa environment variable for software rendering
+		set(TEST_ENV "${TEST_ENV};LIBGL_ALWAYS_INDIRECT=1")
+	endif()
+
 	set_tests_properties(${example} PROPERTIES
 		FIXTURES_REQUIRED "${REQUIRED_FIXTURES}"
-		ENVIRONMENT "DISPLAY=:99"
+		ENVIRONMENT "${TEST_ENV}"
 		TIMEOUT 10
 	)
 endforeach()

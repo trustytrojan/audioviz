@@ -79,11 +79,11 @@ jobs:
         run: cmake --build build --parallel
 
       - name: Test examples
-        if: runner.os == 'macOS'
+        # if: runner.os == 'macOS'
         run: ctest --test-dir build/examples --output-on-failure
 
       - name: Test examples with GDB
-        if: runner.os == 'Linux'
+        # if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
           cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
           ctest --test-dir build/examples --output-on-failure
