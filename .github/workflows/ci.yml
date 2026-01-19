@@ -65,7 +65,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew update
-          brew install glew sfml fftw ffmpeg
+          brew install glew sfml fftw ffmpeg gdb
 
       # installs from chocolatey, latest gcc is 15
       - name: 'Windows: Install MinGW'
@@ -83,10 +83,23 @@ jobs:
         run: cmake --build build --parallel
 
       - name: Test examples
+        if: runner.os != 'Windows'
         run: ctest --test-dir build/examples --output-on-failure
         continue-on-error: true
 
+      - name: Test examples (Windows)
+        if: runner.os == 'Windows'
+        run: ctest --test-dir build/examples -V
+        continue-on-error: true
+
       - name: Test examples with GDB
+        if: runner.os != 'Windows'
         run: |
           cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
           ctest --test-dir build/examples --output-on-failure
+
+      - name: Test examples with GDB (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
+          ctest --test-dir build/examples -V

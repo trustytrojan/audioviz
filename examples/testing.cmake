@@ -29,9 +29,9 @@ if(APPLE)
 endif()
 
 # Set up Mesa3D for Windows headless rendering
-if(WIN32)
-	include(${CMAKE_CURRENT_SOURCE_DIR}/mesa3d.cmake)
-endif()
+# if(WIN32)
+# 	include(${CMAKE_CURRENT_SOURCE_DIR}/mesa3d.cmake)
+# endif()
 
 if(LINUX)
 	# Set up headless testing with Xvfb
@@ -49,7 +49,12 @@ if(LINUX)
 endif()
 
 foreach(example ${EXAMPLE_PROGRAMS})
-	set(EXAMPLE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${example} --size 100 100 ${EXAMPLE_MEDIA_FILE})
+	set(EXAMPLE_COMMAND
+		${CMAKE_CURRENT_BINARY_DIR}/${example}
+		--size 100 100
+		--framerate 30
+		${EXAMPLE_MEDIA_FILE}
+	)
 
 	if(EXAMPLES_TESTING_USE_GDB)
 		set(EXAMPLE_COMMAND
@@ -61,21 +66,21 @@ foreach(example ${EXAMPLE_PROGRAMS})
 	add_test(NAME ${example} COMMAND ${EXAMPLE_COMMAND})
 
 	set(REQUIRED_FIXTURES "test_media")
-	set(TEST_ENV "DISPLAY=:99")
 
 	if(LINUX)
 		list(APPEND REQUIRED_FIXTURES "xvfb_display")
+		set(TEST_ENV "DISPLAY=:99")
 	endif()
 
 	if(APPLE AND EXAMPLES_TESTING_USE_GDB)
 		list(APPEND REQUIRED_FIXTURES "gdb_signed")
 	endif()
 
-	if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
-		list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
-		# Set Mesa environment variable for software rendering
-		set(TEST_ENV "${TEST_ENV};LIBGL_ALWAYS_INDIRECT=1")
-	endif()
+	# if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
+	# 	list(APPEND REQUIRED_FIXTURES "setup-mesa3d")
+	# 	# Set Mesa environment variable for software rendering
+	# 	set(TEST_ENV "${TEST_ENV};LIBGL_ALWAYS_INDIRECT=1")
+	# endif()
 
 	set_tests_properties(${example} PROPERTIES
 		FIXTURES_REQUIRED "${REQUIRED_FIXTURES}"
