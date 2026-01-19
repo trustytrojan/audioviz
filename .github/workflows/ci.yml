@@ -60,17 +60,21 @@ jobs:
           sudo apt-get install -y libsfml-dev
           sudo add-apt-repository --remove ppa:bleedingedge/noble-bleed
 
-      # don't bother with toolchains, everything on mac is built with clang
+      # don't bother with gcc, everything on brew is built with clang
       - name: 'macOS: Install dependencies'
         if: runner.os == 'macOS'
         run: |
           brew update
           brew install glew sfml fftw ffmpeg
 
-      # installs from chocolatey, latest is 15
+      # installs from chocolatey, latest gcc is 15
       - name: 'Windows: Install MinGW'
         if: runner.os == 'Windows'
         uses: egor-tensin/setup-mingw@v3
+
+      - name: 'Windows: Install FFmpeg'
+        if: runner.os == 'Windows'
+        uses: FedericoCarboni/setup-ffmpeg@v3
 
       - name: Configure CMake
         run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF
@@ -79,11 +83,10 @@ jobs:
         run: cmake --build build --parallel
 
       - name: Test examples
-        # if: runner.os == 'macOS'
         run: ctest --test-dir build/examples --output-on-failure
+        continue-on-error: true
 
       - name: Test examples with GDB
-        # if: runner.os == 'Linux' || runner.os == 'macOS'
         run: |
           cmake -S. -Bbuild -DEXAMPLES_TESTING_USE_GDB=ON
           ctest --test-dir build/examples --output-on-failure
