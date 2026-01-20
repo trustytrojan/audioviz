@@ -22,7 +22,7 @@ void FfmpegPopenMedia::init_audio(float start_time_sec)
 	const auto command = ss.str();
 	if (!(audio = util::popen_utf8(command, POPEN_R_MODE)))
 		// fatal error: audio visualizers need audio...
-		throw std::runtime_error{std::string{"audio: popen: "} + strerror(errno)};
+		throw std::runtime_error{std::string{"[FfmpegPopenMedia::init_audio] popen: "} + strerror(errno)};
 }
 
 void FfmpegPopenMedia::init_video()
@@ -58,7 +58,7 @@ void FfmpegPopenMedia::init_video()
 	const auto command = ss.str();
 	if (!(video = util::popen_utf8(command, POPEN_R_MODE)))
 		// non-fatal error, we can continue without video
-		perror("video: popen");
+		perror("[FfmpegPopenMedia::init_video] popen");
 }
 
 FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u desired_video_size, float start_time_sec)
@@ -83,15 +83,15 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, float start_time_sec)
 FfmpegPopenMedia::~FfmpegPopenMedia()
 {
 	if (audio && util::pclose_utf8(audio) == -1)
-		perror("audio: pclose");
+		perror("[FfmpegPopenMedia::~FfmpegPopenMedia] audio: pclose");
 	if (video && util::pclose_utf8(video) == -1)
-		perror("video: pclose");
+		perror("[FfmpegPopenMedia::~FfmpegPopenMedia] video: pclose");
 }
 
 size_t FfmpegPopenMedia::read_audio_samples(float *const buf, const int samples)
 {
 	if (!audio)
-		throw std::logic_error{"no audio stream"};
+		throw std::logic_error{"[FfmpegPopenMedia::read_audio_samples] no audio stream"};
 	return fread(buf, sizeof(float), samples, audio);
 }
 
