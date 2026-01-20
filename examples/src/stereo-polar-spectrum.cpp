@@ -12,7 +12,7 @@
 
 using namespace avz::examples;
 
-struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
+struct StereoPolarSpectrum : ExampleBase
 {
 	const int fft_size;
 	int min_fft_index, max_fft_index;
@@ -81,4 +81,4 @@ struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
 };
 
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
-	StereoPolarSpectrum, "Stereo polar spectrum visualization with left and right channels", viz.fft_size)
+	StereoPolarSpectrum, "Stereo polar spectrum visualization with left and right channels", 0.25f, viz.fft_size)

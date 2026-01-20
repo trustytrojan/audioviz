@@ -7,7 +7,7 @@
 
 using namespace avz::examples;
 
-struct ShakeBassTest : ExampleBase<ShakeBassTest>
+struct ShakeBassTest : ExampleBase
 {
 	const int fft_size;
 
@@ -52,4 +52,4 @@ struct ShakeBassTest : ExampleBase<ShakeBassTest>
 	}
 };
 
-LIBAVZ_EXAMPLE_MAIN_CUSTOM(ShakeBassTest, "Shake effect visualization based on bass frequencies", viz.fft_size)
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(ShakeBassTest, "Shake effect visualization based on bass frequencies", 0.25f, viz.fft_size)

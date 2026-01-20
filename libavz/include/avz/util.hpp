@@ -8,7 +8,6 @@
 #include <span>
 #include <string>
 
-
 namespace avz::util
 {
 

@@ -11,7 +11,7 @@
 
 using namespace avz::examples;
 
-struct PolarSpectrum : ExampleBase<PolarSpectrum>
+struct PolarSpectrum : ExampleBase
 {
 	const int fft_size;
 	int min_fft_index, max_fft_index;
@@ -73,4 +73,4 @@ struct PolarSpectrum : ExampleBase<PolarSpectrum>
 	}
 };
 
-LIBAVZ_EXAMPLE_MAIN_CUSTOM(PolarSpectrum, "Polar spectrum visualization with bass frequencies", viz.fft_size)
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(PolarSpectrum, "Polar spectrum visualization with bass frequencies", 0.25f, viz.fft_size)

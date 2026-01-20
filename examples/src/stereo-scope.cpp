@@ -9,7 +9,7 @@
 
 using namespace avz::examples;
 
-struct StereoScopeViz : ExampleBase<StereoScopeViz>
+struct StereoScopeViz : ExampleBase
 {
 	avz::ColorSettings colorL, colorR;
 	avz::ScopeDrawable left_scope;
@@ -68,4 +68,5 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	StereoScopeViz,
 	"Stereo oscilloscope visualization with left (red) and right (cyan) channels",
+	0.02f,
 	std::max(1, (int)std::round(config.audio_duration_sec *viz.sample_rate_hz)))

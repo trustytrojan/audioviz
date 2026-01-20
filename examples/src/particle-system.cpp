@@ -5,13 +5,9 @@
 #include <avz/fft/FrequencyAnalyzer.hpp>
 #include <avz/util.hpp>
 
-/*
-TODO: fix the ExampleFramework to accept default fft sizes from programs
-*/
-
 using namespace avz::examples;
 
-struct ParticleSystemExample : ExampleBase<ParticleSystemExample>
+struct ParticleSystemExample : ExampleBase
 {
 	const int fft_size;
 
@@ -53,4 +49,4 @@ struct ParticleSystemExample : ExampleBase<ParticleSystemExample>
 };
 
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
-	ParticleSystemExample, "Particle system with bass frequencies boosting particles", viz.fft_size)
+	ParticleSystemExample, "Particle system with bass frequencies boosting particles", 0.25f, viz.fft_size)

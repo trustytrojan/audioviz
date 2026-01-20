@@ -11,15 +11,15 @@
 #include <memory>
 // #include <print>
 
-#include "SpectrumLayer.hpp"
+#include "BassNationSpectrumLayer.hpp"
 
 using namespace avz::examples;
 
-struct OldBassNation : ExampleBase<OldBassNation>
+struct OldBassNation : ExampleBase
 {
 	const int max_fft_size;
 
-	std::vector<std::unique_ptr<SpectrumLayer>> spectrums;
+	std::vector<std::unique_ptr<BassNationSpectrumLayer>> spectrums;
 	avz::ColorSettings cs;
 	std::vector<std::future<void>> futures;
 
@@ -61,12 +61,12 @@ struct OldBassNation : ExampleBase<OldBassNation>
 
 			cs.set_solid_color(colors[i]);
 
-			auto &left_layer =
-				*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, true));
+			auto &left_layer = *spectrums.emplace_back(
+				std::make_unique<BassNationSpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, true));
 			left_layer.configure_spectrum(false, size);
 
-			auto &right_layer =
-				*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, false));
+			auto &right_layer = *spectrums.emplace_back(
+				std::make_unique<BassNationSpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, false));
 			right_layer.configure_spectrum(true, size);
 
 			spectrum_layer.add_draw({left_layer.spectrum, &polar_left});
@@ -79,7 +79,8 @@ struct OldBassNation : ExampleBase<OldBassNation>
 	void update(std::span<const float> audio_buffer) override
 	{
 		// std::ranges::transform(spectrums, futures.begin(), [=](auto &l) { return l->trigger_work(audio_buffer); });
-		std::ranges::transform(spectrums, futures.begin(), std::bind_back(&SpectrumLayer::trigger_work, audio_buffer));
+		std::ranges::transform(
+			spectrums, futures.begin(), std::bind_back(&BassNationSpectrumLayer::trigger_work, audio_buffer));
 
 		// wait for all compute tasks
 		std::ranges::for_each(futures, &std::future<void>::wait);
@@ -87,4 +88,4 @@ struct OldBassNation : ExampleBase<OldBassNation>
 };
 
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
-	OldBassNation, "Multi-spectrum polar visualization with bass frequencies (old version)", viz.max_fft_size)
+	OldBassNation, "Multi-spectrum polar visualization with bass frequencies (old version)", 0.25f, viz.max_fft_size)

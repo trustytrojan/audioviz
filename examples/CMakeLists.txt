@@ -9,7 +9,10 @@ FetchContent_MakeAvailable(argparse)
 
 link_libraries(avz argparse)
 
-add_library(example-framework src/ExampleFramework.cpp)
+add_library(example-framework
+	src/ExampleFramework.cpp
+	src/BassNationSpectrumLayer.cpp
+)
 link_libraries(example-framework)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

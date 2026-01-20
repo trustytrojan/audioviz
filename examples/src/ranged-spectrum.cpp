@@ -10,7 +10,7 @@
 
 using namespace avz::examples;
 
-struct RangedSpectrum : ExampleBase<RangedSpectrum>
+struct RangedSpectrum : ExampleBase
 {
 	const int fft_size;
 	int max_fft_index;
@@ -57,4 +57,4 @@ struct RangedSpectrum : ExampleBase<RangedSpectrum>
 };
 
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
-	RangedSpectrum, "Spectrum visualization with frequency range filtering (20-250 Hz)", viz.fft_size)
+	RangedSpectrum, "Spectrum visualization with frequency range filtering (20-250 Hz)", 0.25f, viz.fft_size)

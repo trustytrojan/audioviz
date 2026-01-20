@@ -7,13 +7,12 @@
 #include <avz/util.hpp>
 
 /*
-TODO: fix the ExampleFramework to accept default fft sizes from programs
 TODO: make new polar shader without coordinate warping
 */
 
 using namespace avz::examples;
 
-struct PolarParticleSysten : ExampleBase<PolarParticleSysten>
+struct PolarParticleSysten : ExampleBase
 {
 	const int fft_size;
 
@@ -63,4 +62,7 @@ struct PolarParticleSysten : ExampleBase<PolarParticleSysten>
 };
 
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
-	PolarParticleSysten, "Particle system with bass frequencies boosting particles in polar coordinates", viz.fft_size)
+	PolarParticleSysten,
+	"Particle system with bass frequencies boosting particles in polar coordinates",
+	0.25f,
+	viz.fft_size)

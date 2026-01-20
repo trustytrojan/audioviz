@@ -34,40 +34,29 @@ struct ExampleConfig
  * @param argv Argument values
  * @param program_name Name of the program for help messages
  * @param description Optional program description
+ * @param default_audio_duration Default FFT window duration in seconds (0.25s for FFT, smaller for oscilloscope)
  * @return Parsed configuration or exits on error
  */
 ExampleConfig parse_arguments(
-	int argc, const char *const *argv, const std::string &program_name, const std::string &description = "");
+	int argc,
+	const char *const *argv,
+	const std::string &program_name,
+	const std::string &description = "",
+	float default_audio_duration = 0.25f);
 
 /**
- * @brief Base class template for example programs
+ * @brief Base class for example programs
  *
  * Provides common initialization and reduces boilerplate code
- *
- * @tparam Derived The derived example class (CRTP pattern)
  */
-template <typename Derived>
 class ExampleBase : public avz::Base
 {
 public:
 	avz::FfmpegPopenMedia media;
 	int sample_rate_hz;
 	int num_channels;
-	ExampleBase(const ExampleConfig &config)
-		: Base{config.size},
-		  media{config.media_path, config.media_start_time_sec},
-		  sample_rate_hz{media.audio_sample_rate()},
-		  num_channels{media.audio_channels()}
-	{
-		if (config.profiler_enabled)
-		{
-			enable_profiler();
-			if (config.font_path.size())
-				set_font(config.font_path);
-			else
-				std::cerr << "profiler enabled but no font file provided, profiler text will not be visible\n";
-		}
-	}
+
+	ExampleBase(const ExampleConfig &config);
 	virtual ~ExampleBase() = default;
 };
 
@@ -91,30 +80,16 @@ int run_example(const ExampleConfig &config, int audio_frames_needed)
 }
 
 /**
- * @brief Convenience macro for main function boilerplate
- *
- * Usage:
- * LIBAVZ_EXAMPLE_MAIN(MyVisualization, "Description of my visualization")
- */
-#define LIBAVZ_EXAMPLE_MAIN(VizClass, description)                                             \
-	int main(int argc, const char *const *argv)                                                  \
-	{                                                                                            \
-		auto config = avz::examples::parse_arguments(argc, argv, #VizClass, description);   \
-		VizClass viz{config};                                                                    \
-		return avz::examples::run_example<VizClass>(config, viz.get_audio_frames_needed()); \
-	}
-
-/**
  * @brief Alternative main function helper that allows custom audio frame calculation
  */
-#define LIBAVZ_EXAMPLE_MAIN_CUSTOM(VizClass, description, audio_frames_expr)                                 \
-	int main(int argc, const char *const *argv)                                                                \
-	{                                                                                                          \
-		auto config = avz::examples::parse_arguments(argc, argv, #VizClass, description);                 \
-		VizClass viz{config};                                                                                  \
-		int audio_frames = (audio_frames_expr);                                                                \
-		avz::Player{viz, viz.media, config.framerate, audio_frames}.start_in_window(config.window_title); \
-		return EXIT_SUCCESS;                                                                                   \
+#define LIBAVZ_EXAMPLE_MAIN_CUSTOM(VizClass, description, default_audio_duration, audio_frames_expr)              \
+	int main(int argc, const char *const *argv)                                                                   \
+	{                                                                                                             \
+		auto config = avz::examples::parse_arguments(argc, argv, #VizClass, description, default_audio_duration); \
+		VizClass viz{config};                                                                                     \
+		int audio_frames = (audio_frames_expr);                                                                   \
+		avz::Player{viz, viz.media, config.framerate, audio_frames}.start_in_window(config.window_title);         \
+		return EXIT_SUCCESS;                                                                                      \
 	}
 
 } // namespace avz::examples
