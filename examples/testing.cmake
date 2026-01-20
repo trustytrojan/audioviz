@@ -57,7 +57,7 @@ foreach(example ${EXAMPLE_PROGRAMS})
 
 	add_test(NAME ${example} COMMAND ${EXAMPLE_COMMAND})
 
-	list(APPEND REQUIRED_FIXTURES "test_media")
+	set(REQUIRED_FIXTURES "test_media")
 
 	if(LINUX AND EXAMPLES_TESTING_USE_XVFB)
 		list(APPEND REQUIRED_FIXTURES "xvfb_display")
