@@ -3,7 +3,6 @@
 #include <audioviz/RenderTexture.hpp>
 #include <audioviz/fx/PostProcessEffect.hpp>
 
-
 namespace audioviz::fx
 {
 

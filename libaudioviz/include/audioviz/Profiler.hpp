@@ -2,10 +2,11 @@
 
 #include <SFML/System.hpp>
 #include <algorithm>
+#include <format>
+#include <limits>
 #include <string>
 #include <vector>
-#include <limits>
-#include <format>
+
 
 namespace audioviz
 {

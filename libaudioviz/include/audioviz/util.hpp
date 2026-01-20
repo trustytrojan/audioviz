@@ -1,12 +1,13 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <audioviz/fft/Interpolator.hpp>
 #include <cstdio>
 #include <functional>
 #include <optional>
 #include <span>
 #include <string>
-#include <audioviz/fft/Interpolator.hpp>
+
 
 namespace audioviz::util
 {

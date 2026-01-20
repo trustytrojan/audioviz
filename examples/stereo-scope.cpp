@@ -17,7 +17,7 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 	std::vector<float> left_channel, right_channel;
 	const int required_frames;
 
-	StereoScopeViz(const ExampleConfig& config)
+	StereoScopeViz(const ExampleConfig &config)
 		: ExampleBase{config},
 		  left_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorL},
 		  right_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorR},
@@ -42,7 +42,7 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 		left_channel.resize(required_frames);
 		right_channel.resize(required_frames);
 
-		auto& layer = emplace_layer<audioviz::Layer>("stereo-scope");
+		auto &layer = emplace_layer<audioviz::Layer>("stereo-scope");
 		layer.add_draw({left_scope});
 		layer.add_draw({right_scope});
 	}
@@ -68,5 +68,4 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
 	StereoScopeViz,
 	"Stereo oscilloscope visualization with left (red) and right (cyan) channels",
-	std::max(1, (int)std::round(config.audio_duration_sec * viz.sample_rate_hz))
-)
+	std::max(1, (int)std::round(config.audio_duration_sec *viz.sample_rate_hz)))

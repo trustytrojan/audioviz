@@ -33,7 +33,6 @@ std::wstring utf8_to_wide(const std::string &str)
 #include <unistd.h>
 #include <unordered_map>
 
-
 // Track pid for each FILE* so pclose can wait on the correct process
 namespace
 {

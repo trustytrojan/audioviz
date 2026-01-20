@@ -36,7 +36,7 @@ void PostProcessLayer::render(sf::RenderTarget &target)
 	if (fx_cb)
 		fx_cb(_orig_rt, _fx_rt, target);
 	else
-	 	target.draw(_fx_rt);
+		target.draw(_fx_rt);
 }
 
 } // namespace audioviz

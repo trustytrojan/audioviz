@@ -33,10 +33,7 @@ private:
 	}
 
 public:
-	inline ~fftwf_dft_r2c_1d()
-	{
-		cleanup();
-	}
+	inline ~fftwf_dft_r2c_1d() { cleanup(); }
 
 	inline void set_n(const int n)
 	{

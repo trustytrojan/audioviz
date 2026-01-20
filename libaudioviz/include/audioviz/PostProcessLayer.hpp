@@ -2,8 +2,9 @@
 
 #include "Layer.hpp"
 #include "RenderTexture.hpp"
-#include <functional>
 #include "fx/PostProcessEffect.hpp"
+#include <functional>
+
 
 namespace audioviz
 {

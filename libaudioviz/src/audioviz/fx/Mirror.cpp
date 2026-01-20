@@ -22,7 +22,7 @@ void Mirror::apply(RenderTexture &rt) const
 	rt2.draw(rt, &shader);
 	rt2.display();
 
-	rt.draw(rt, &shader);
+	rt.draw(rt2, &shader);
 	rt.display();
 }
 

@@ -13,7 +13,7 @@ struct Scope : ExampleBase<Scope>
 	std::vector<float> mono;
 	const int required_frames;
 
-	Scope(const ExampleConfig& config)
+	Scope(const ExampleConfig &config)
 		: ExampleBase{config},
 		  scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, color},
 		  required_frames{std::max(1, (int)std::round(config.audio_duration_sec * sample_rate_hz))}
@@ -28,7 +28,7 @@ struct Scope : ExampleBase<Scope>
 
 		mono.resize(required_frames);
 
-		auto& layer = emplace_layer<audioviz::Layer>("scope");
+		auto &layer = emplace_layer<audioviz::Layer>("scope");
 		layer.add_draw({scope});
 	}
 
@@ -50,5 +50,4 @@ struct Scope : ExampleBase<Scope>
 AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
 	Scope,
 	"Audio oscilloscope visualization",
-	std::max(1, (int)std::round(config.audio_duration_sec * viz.sample_rate_hz))
-)
+	std::max(1, (int)std::round(config.audio_duration_sec *viz.sample_rate_hz)))

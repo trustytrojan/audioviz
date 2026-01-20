@@ -27,9 +27,6 @@ endif()
 
 target_include_directories(audioviz PUBLIC
 	include # our public headers
-
-	# spline & json need to be exposed since our public headers include them.
-	# if at a later time we decide that encapsulation is important, this must be changed.
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 

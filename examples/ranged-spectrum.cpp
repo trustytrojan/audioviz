@@ -24,7 +24,7 @@ struct RangedSpectrum : ExampleBase<RangedSpectrum>
 
 	audioviz::Interpolator ip;
 
-	RangedSpectrum(const ExampleConfig& config)
+	RangedSpectrum(const ExampleConfig &config)
 		: ExampleBase{config},
 		  fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
 		  spectrum{{{}, (sf::Vector2i)size}, color},
@@ -57,7 +57,4 @@ struct RangedSpectrum : ExampleBase<RangedSpectrum>
 };
 
 AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
-	RangedSpectrum,
-	"Spectrum visualization with frequency range filtering (20-250 Hz)",
-	viz.fft_size
-)
+	RangedSpectrum, "Spectrum visualization with frequency range filtering (20-250 Hz)", viz.fft_size)
