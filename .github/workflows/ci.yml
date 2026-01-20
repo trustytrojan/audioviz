@@ -29,7 +29,7 @@ jobs:
           - {
               name: Linux GCC,
               os: ubuntu-latest,
-              flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_GDB=ON,
+              flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_GDB=ON -DEXAMPLES_TESTING_USE_XVFB=ON,
             }
           - { name: macOS ARM64, os: macos-latest }
           - { name: macOS x64, os: macos-15-intel }

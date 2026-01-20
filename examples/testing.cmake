@@ -2,6 +2,7 @@ enable_testing()
 
 option(EXAMPLES_TESTING_USE_GDB "Use GDB when running examples for stacktraces on crashes" OFF)
 option(EXAMPLES_TESTING_USE_MESA3D "On Windows, use Mesa3D software rendering for headless testing" OFF)
+option(EXAMPLES_TESTING_USE_XVFB "On Linux, use Xvfb for headless rendering" OFF)
 
 # Generate test media file if it doesn't exist
 set(START_FREQUENCY 1)
@@ -24,7 +25,7 @@ if(WIN32 AND EXAMPLES_TESTING_USE_MESA3D)
 	include(${CMAKE_CURRENT_SOURCE_DIR}/mesa3d.cmake)
 endif()
 
-if(LINUX)
+if(LINUX AND EXAMPLES_TESTING_USE_XVFB)
 	# Set up headless testing with Xvfb
 	add_test(
 		NAME xvfb_start
@@ -56,9 +57,9 @@ foreach(example ${EXAMPLE_PROGRAMS})
 
 	add_test(NAME ${example} COMMAND ${EXAMPLE_COMMAND})
 
-	set(REQUIRED_FIXTURES "test_media")
+	list(APPEND REQUIRED_FIXTURES "test_media")
 
-	if(LINUX)
+	if(LINUX AND EXAMPLES_TESTING_USE_XVFB)
 		list(APPEND REQUIRED_FIXTURES "xvfb_display")
 		set(TEST_ENV "DISPLAY=:99")
 	endif()
@@ -73,6 +74,6 @@ foreach(example ${EXAMPLE_PROGRAMS})
 	set_tests_properties(${example} PROPERTIES
 		FIXTURES_REQUIRED "${REQUIRED_FIXTURES}"
 		ENVIRONMENT "${TEST_ENV}"
-		TIMEOUT 60 # old-bass-nation is SLOW with softpipe, give it a minute
+		TIMEOUT 60
 	)
 endforeach()
