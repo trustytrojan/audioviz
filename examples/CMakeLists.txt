@@ -24,6 +24,9 @@ set(EXAMPLE_PROGRAMS
 	old-bass-nation
 	mirrored-bass-nation
 	scope
+	log-spectrum
+	particle-system
+	polar-particle-system
 )
 
 foreach(example ${EXAMPLE_PROGRAMS})

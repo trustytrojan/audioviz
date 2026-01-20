@@ -15,7 +15,7 @@ public:
 	struct UpdateOptions
 	{
 		float calm_factor{5}, multiplier{1};
-		std::function<float(float)> weight_func{sqrtf}, displacement_func{sqrtf};
+		std::function<float(float)> displacement_func{sqrtf};
 	};
 
 private:
@@ -54,12 +54,14 @@ public:
 			update_particle_velocity(p);
 	}
 
-	void update(float additional_displacement = 0.f, const UpdateOptions &uo = {})
+	void update(const float additional_displacement = 0.f, const UpdateOptions &uo = {})
 	{
-		additional_displacement = uo.multiplier * uo.displacement_func(additional_displacement / uo.calm_factor);
+		// do it in this order so that the Y scale is also dampened by the UpdateOptions
+		const auto d1 = rect.size.y * additional_displacement;
+		const auto d2 = uo.displacement_func(d1 / uo.calm_factor);
+		const auto d3 = d2 * uo.multiplier * timestep_scale;
 
-		const float scaled_displacement = additional_displacement * timestep_scale;
-		const sf::Vector2f displacement{0.f, -scaled_displacement};
+		const sf::Vector2f displacement{0.f, -d3};
 
 		for (auto &p : particles)
 		{
