@@ -73,7 +73,7 @@ explaining some of the fundamentals of programming with audio & visualization:
 the project requires C++23 with GNU extensions, so try to use a compliant
 toolchain. i primarily use GCC 15.2 on linux and windows. thanks to github
 actions, there is success building with AppleClang on macOS (see
-[actions workflow runs](https://github.com/trustytrojan/audioviz/actions) for
+[actions workflow runs](https://github.com/trustytrojan/libavz/actions) for
 more details). i **do not** guarantee fully working builds with Clang/LLVM or
 MSVC. if you want to see them work, contribute!
 
