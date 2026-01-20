@@ -41,7 +41,6 @@ public:
 	std::span<const float> compute_amplitudes(const FrequencyAnalyzer &fa, int from_hz, int to_hz);
 	std::span<const float> compute_phase(const FrequencyAnalyzer &fa);
 	FrequencyAmplitudePair compute_peak_frequency(int from_hz, int to_hz);
-	std::array<FrequencyAmplitudePair, 3> compute_multiband_shake(int from_hz, int to_hz);
 };
 
 } // namespace avz

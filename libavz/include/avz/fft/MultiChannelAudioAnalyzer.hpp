@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AudioAnalyzer.hpp"
-#include <array>
 #include <span>
 #include <vector>
 
@@ -36,6 +35,8 @@ public:
 	 */
 	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> interleaved_audio);
 
+	void compute_amplitudes(FrequencyAnalyzer &fa);
+
 	/**
 	 * Get analyzer for specific channel.
 	 * @param channel Channel index (0-based)
@@ -46,17 +47,12 @@ public:
 	/**
 	 * Get number of channels.
 	 */
-	int get_num_channels() const { return num_channels; }
+	inline int get_num_channels() const { return num_channels; }
 
 	/**
 	 * Average peak frequency across all channels (useful for stereo->mono reduction).
 	 */
 	AudioAnalyzer::FrequencyAmplitudePair compute_averaged_peak_frequency(int from_hz, int to_hz);
-
-	/**
-	 * Average multiband shake across all channels.
-	 */
-	std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> compute_averaged_multiband_shake(int from_hz, int to_hz);
 };
 
 } // namespace avz

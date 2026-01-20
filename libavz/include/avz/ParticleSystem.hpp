@@ -1,13 +1,9 @@
 #pragma once
 
-#include "avz/fft/MultiChannelAudioAnalyzer.hpp"
+#include "Particle.hpp"
 #include <SFML/Graphics.hpp>
 #include <functional>
 #include <random>
-
-#include <avz/Particle.hpp>
-#include <avz/fft/AudioAnalyzer.hpp>
-#include <avz/util.hpp>
 
 namespace avz
 {
@@ -58,8 +54,10 @@ public:
 			update_particle_velocity(p);
 	}
 
-	void update(float additional_displacement = 0.f)
+	void update(float additional_displacement = 0.f, const UpdateOptions &uo = {})
 	{
+		additional_displacement = uo.multiplier * uo.displacement_func(additional_displacement / uo.calm_factor);
+
 		const float scaled_displacement = additional_displacement * timestep_scale;
 		const sf::Vector2f displacement{0.f, -scaled_displacement};
 
@@ -100,20 +98,6 @@ public:
 				p.setPosition(
 					{random<float>(rect.position.x, rect.position.x + rect.size.x), rect.position.y + rect.size.y});
 		}
-	}
-
-	void update(MultiChannelAudioAnalyzer &ma, const UpdateOptions &options = {})
-	{
-		const auto scaled_avg = rect.size.y * ma.compute_averaged_peak_frequency(0, 250).amplitude;
-		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
-		update(additional_displacement * options.multiplier);
-	}
-
-	void update(AudioAnalyzer &aa, const UpdateOptions &options = {})
-	{
-		const auto scaled_avg = rect.size.y * aa.compute_peak_frequency(0, 250).amplitude;
-		const auto additional_displacement = options.displacement_func(scaled_avg / options.calm_factor);
-		update(additional_displacement * options.multiplier);
 	}
 
 	inline void set_debug_rect(bool b) { debug_rect = b; }

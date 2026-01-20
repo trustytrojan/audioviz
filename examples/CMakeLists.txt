@@ -9,8 +9,10 @@ FetchContent_MakeAvailable(argparse)
 
 link_libraries(avz argparse)
 
-add_library(example-framework ExampleFramework.cpp)
+add_library(example-framework src/ExampleFramework.cpp)
 link_libraries(example-framework)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # this is also used by testing.cmake!
 set(EXAMPLE_PROGRAMS
@@ -25,7 +27,7 @@ set(EXAMPLE_PROGRAMS
 )
 
 foreach(example ${EXAMPLE_PROGRAMS})
-	add_executable(${example} "${example}.cpp")
+	add_executable(${example} "src/${example}.cpp")
 endforeach()
 
 if(WIN32)
