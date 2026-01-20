@@ -257,32 +257,6 @@ sf::Vector3f interpolate_and_reverse(float t, sf::Vector3f start_hsv, sf::Vector
 	return {h, s, v};
 }
 
-size_t weighted_max_index(std::span<const float> values, const std::function<float(float)> &weight_func)
-{
-	if (values.empty())
-		throw std::invalid_argument{"weighted_max_index: empty span"};
-	if (values.size() == 1)
-		return 0;
-
-	const auto size = values.size();
-	size_t max_index{};
-	float max_value{values[0]};
-
-	for (size_t i = 1; i < size; ++i)
-	{
-		const float distance_to_end = static_cast<float>((size - 1) - i) / static_cast<float>(size - 1); // 1..0
-		const float weight = weight_func ? weight_func(distance_to_end) : distance_to_end;
-		const float value = values[i] * weight;
-		if (value > max_value)
-		{
-			max_value = value;
-			max_index = i;
-		}
-	}
-
-	return max_index;
-}
-
 #ifdef __linux__
 std::string detect_vaapi_device()
 {

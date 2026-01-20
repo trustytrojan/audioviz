@@ -3,7 +3,6 @@
 #include <SFML/Graphics.hpp>
 #include <avz/fft/Interpolator.hpp>
 #include <cstdio>
-#include <functional>
 #include <optional>
 #include <span>
 #include <string>
@@ -14,13 +13,6 @@ namespace avz::util
 sf::Color hsv2rgb(float h, const float s, const float v);
 sf::Vector3f interpolate(float t, sf::Vector3f start_hsv, sf::Vector3f end_hsv);
 sf::Vector3f interpolate_and_reverse(float t, sf::Vector3f start_hsv, sf::Vector3f end_hsv);
-
-/**
- * Returns the index of the maximum after applying a weight to each value.
- * Every index is weighted based on its normalized distance to the end of the span:
- * If `weight_func` is empty, the distance value itself is used as the weight (linear).
- */
-size_t weighted_max_index(std::span<const float> values, const std::function<float(float)> &weight_func = {});
 
 inline const sf::BlendMode GreatAmazingBlendMode{sf::BlendMode::Factor::OneMinusDstColor, sf::BlendMode::Factor::One};
 

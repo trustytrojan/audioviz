@@ -19,7 +19,7 @@ struct PolarParticleSysten : ExampleBase
 	// audio, spectrum
 	std::vector<float, aligned_allocator<float>> a, s;
 
-	avz::ParticleSystem<sf::CircleShape> ps;
+	avz::ParticleSystem ps;
 	avz::FrequencyAnalyzer fa;
 	avz::AudioAnalyzer aa;
 
@@ -34,7 +34,7 @@ struct PolarParticleSysten : ExampleBase
 	PolarParticleSysten(const ExampleConfig &config)
 		: ExampleBase{config},
 		  fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
-		  ps{{{}, (sf::Vector2i)size}, 100},
+		  ps{{{}, (sf::Vector2i)size}, 100, config.framerate},
 		  fa{fft_size},
 		  aa{sample_rate_hz, fft_size}
 	{
@@ -57,7 +57,7 @@ struct PolarParticleSysten : ExampleBase
 		// lower bass has more power than higher bass
 		const auto a1 = aa.compute_peak_frequency(0, 125).amplitude;
 		const auto a2 = aa.compute_peak_frequency(126, 250).amplitude / 2;
-		ps.update((a1 + a2) / 2);
+		ps.update(std::max(a1, a2));
 	}
 };
 

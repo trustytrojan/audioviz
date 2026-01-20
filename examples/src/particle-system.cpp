@@ -11,17 +11,20 @@ struct ParticleSystemExample : ExampleBase
 {
 	const int fft_size;
 
-	// audio, spectrum
-	std::vector<float, aligned_allocator<float>> a, s;
+	// calculate the FFT amplitudes array indices of min/max frequencies in Hz
+	const int min_fft_index = avz::util::bin_index_from_freq(0, sample_rate_hz, fft_size);
+	const int max_fft_index = avz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
 
-	avz::ParticleSystem<sf::CircleShape> ps;
+	std::vector<float, aligned_allocator<float>> a, p;
+
+	avz::ParticleSystem ps;
 	avz::FrequencyAnalyzer fa;
 	avz::AudioAnalyzer aa;
 
 	ParticleSystemExample(const ExampleConfig &config)
 		: ExampleBase{config},
 		  fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
-		  ps{{{}, (sf::Vector2i)size}, 50},
+		  ps{{{}, (sf::Vector2i)size}, 50, config.framerate},
 		  fa{fft_size},
 		  aa{sample_rate_hz, fft_size}
 	{
@@ -34,17 +37,28 @@ struct ParticleSystemExample : ExampleBase
 		a.resize(fft_size);
 
 		// extract first channel of audio and perform FFT (needed in case media file has stereo audio)
-		capture_time("strided_copy", avz::util::extract_channel(a, audio_buffer, num_channels, 0));
+		capture_time("extract_channel", avz::util::extract_channel(a, audio_buffer, num_channels, 0));
 		capture_time("fft", aa.execute_fft(fa, a));
 
-		// compute_peak_frequency() requires already computed FFT amplitudes in the analyzer
-		aa.compute_amplitudes(fa);
+		// compute FFT amplitudes, take only the bass frequencies
+		const auto amps = aa.compute_amplitudes(fa).subspan(min_fft_index, max_fft_index);
+		p.resize(amps.size());
 
-		// let the bass boost the particles' velocities
-		// lower bass has more power than higher bass
-		const auto a1 = aa.compute_peak_frequency(0, 125).amplitude;
-		const auto a2 = aa.compute_peak_frequency(126, 250).amplitude / 2;
-		ps.update((a1 + a2) / 2);
+		// weight each element by it's normalized position through a Gompertz function
+		// this makes lower bass frequencies boost the particles more than higher bass frequencies
+		for (size_t i = 0; i < amps.size(); ++i)
+		{
+			const auto normalized_pos = (float)i / amps.size();
+			p[i] = amps[i] * expf(-expf(4.5 * normalized_pos - 4)) / 5;
+		}
+
+		float max;
+		capture_time("max", max = std::ranges::max(p));
+
+		// pass the max as `additional_displacement` to ParticleSystem::update.
+		// the displacement is then scaled to the window's height, and dampened
+		// with sqrt (otherwise the particles just go crazy).
+		capture_time("ps_update", ps.update(max));
 	}
 };
 
