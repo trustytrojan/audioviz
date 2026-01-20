@@ -1,12 +1,13 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <audioviz/fft/Interpolator.hpp>
 #include <cstdio>
 #include <functional>
 #include <optional>
 #include <span>
 #include <string>
-#include <audioviz/fft/Interpolator.hpp>
+
 
 namespace audioviz::util
 {
@@ -31,6 +32,9 @@ std::string detect_vaapi_device();
 std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath);
 
 FILE *popen_utf8(const std::string &command, const char *mode);
+
+int pclose_utf8(FILE *stream);
+
 sf::String utf8_to_sf_string(const std::string &text);
 
 inline int bin_index_from_freq(const int freq_hz, const int sample_rate_hz, const int bin_count)
@@ -42,7 +46,7 @@ void spread_out(std::span<float> out, std::span<const float> in);
 void extract_channel(std::span<float> out, std::span<const float> in, int num_channels, int channel);
 
 void resample_spectrum(
-	std::span<float> out,
+	std::span<float> spectrum,
 	std::span<const float> in_amps,
 	int sample_rate_hz,
 	int fft_size,

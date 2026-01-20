@@ -7,19 +7,22 @@ namespace audioviz
 {
 
 /**
- * Extension of `sf::RenderTexture` that:
- * - Has a `sprite()` method to make the render-texture easily drawable.
- * - Adds a `copy` method to quickly `draw()` and `display()` another `RenderTexture` 's sprite.
+ * Convenience extension of `sf::RenderTexture`
  */
 class RenderTexture : public sf::RenderTexture
 {
 public:
-	RenderTexture(const sf::Vector2u size, unsigned antialiasing = 0);
+	inline RenderTexture()
+		: sf::RenderTexture{}
+	{
+	}
 
-	// Copy the contents of `other` to this render-texture.
-	void copy(const RenderTexture &other);
+	inline RenderTexture(const sf::Vector2u size, unsigned antialiasing = 0)
+		: sf::RenderTexture{size, {.antiAliasingLevel = antialiasing}}
+	{
+	}
 
-	inline Sprite sprite() const { return getTexture(); }
+	inline operator Sprite() const { return getTexture(); }
 };
 
 } // namespace audioviz

@@ -164,9 +164,7 @@ void ScopeDrawable::update_vertices(std::span<const float> samples)
 	{
 		const float audio_val = samples[i];
 		const float target = std::clamp(
-			center - (half_height * audio_val),
-			(float)rect.position.y,
-			(float)(rect.position.y + rect.size.y));
+			center - (half_height * audio_val), (float)rect.position.y, (float)(rect.position.y + rect.size.y));
 
 		float top = target;
 		float bottom = target + shape.width;
@@ -184,9 +182,8 @@ void ScopeDrawable::update_vertices(std::span<const float> samples)
 		const float left = x;
 		const float right = x + shape.width;
 
-		const sf::Color shape_color =
-			update_colors ? color.calculate_color((float)i / shape.count)
-						  : vertex_array[get_shape_vertex_index(i, 0)].color;
+		const sf::Color shape_color = update_colors ? color.calculate_color((float)i / shape.count)
+													: vertex_array[get_shape_vertex_index(i, 0)].color;
 
 		if (i == 0)
 		{

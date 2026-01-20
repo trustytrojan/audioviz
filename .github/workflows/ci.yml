@@ -1,4 +1,4 @@
-name: Build
+name: CI
 
 on:
   push:
@@ -19,67 +19,71 @@ on:
       - '**/*.hpp'
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
+  build:
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - {
+              name: Linux GCC,
+              os: ubuntu-latest,
+              flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_GDB=ON,
+            }
+          - { name: macOS ARM64, os: macos-latest }
+          - { name: macOS x64, os: macos-15-intel }
+          - {
+              name: Windows MinGW,
+              os: windows-latest,
+              flags: -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DEXAMPLES_TESTING_USE_GDB=ON -DEXAMPLES_TESTING_USE_MESA3D=ON,
+            }
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Install system dependencies
+      - name: Get CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      # 15 is just never gonna work, I gave up
+      - name: 'Linux: Install GCC 14'
+        if: matrix.platform.name == 'Linux GCC'
+        uses: egor-tensin/setup-gcc@v2
+        with: { version: 14 }
+
+      - name: 'Linux: Install dependencies'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            libfreetype-dev \
-            libglew-dev \
-            libgl-dev \
-            libx11-dev \
-            libxau-dev \
-            libxrandr-dev \
-            libxi-dev \
-            libxcursor-dev \
-            zlib1g-dev \
-            liblua5.4-dev \
-            portaudio19-dev \
-            libfftw3-dev \
-            libudev-dev
+          sudo apt-get install -y libfftw3-dev ffmpeg libglew-dev gdb
+
+      # WARNING: this ppa does NOT ship static libraries!
+      - name: 'Linux: Install SFML 3 from ppa:bleedingedge/noble-bleed (Shared libraries only)'
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository ppa:bleedingedge/noble-bleed
+          sudo apt-get update
+          sudo apt-get install -y libsfml-dev
+
+      # don't bother with gcc, everything on brew is built with clang
+      - name: 'macOS: Install dependencies'
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install glew sfml fftw ffmpeg gdb
+
+      - name: 'Windows: Install FFmpeg'
+        if: runner.os == 'Windows'
+        uses: FedericoCarboni/setup-ffmpeg@v3
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -DLUAVIZ_EXECUTABLE=1
+        run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF ${{ matrix.platform.flags }}
 
       - name: Build project
-        run: cmake --build build -j $(nproc)
+        run: cmake --build build --parallel
 
-  macos:
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: brew install glew sfml fftw lua portaudio
-
-      - name: Configure CMake
-        run: cmake -S. -Bbuild -DLUAVIZ_EXECUTABLE=1
-
-      - name: Build project
-        run: cmake --build build -j $(sysctl -n hw.ncpu)
-
-  windows-mingw:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup MinGW
-        uses: egor-tensin/setup-mingw@v3
-
-      - name: Configure CMake
-        run: cmake -S. -Bbuild -G "MinGW Makefiles" -DLUAVIZ_BUILD_LUA=1 -DLUAVIZ_EXECUTABLE=1
-
-      - name: Build project
-        run: cmake --build build -j $env:NUMBER_OF_PROCESSORS
+      # macOS testing will stay off until i boot up a mac myself and figure it out
+      - name: Test examples
+        if: runner.os != 'macOS'
+        run: ctest --test-dir build/examples --output-on-failure

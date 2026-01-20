@@ -18,7 +18,7 @@ void Mult::apply(RenderTexture &rt) const
 {
 	shader.setUniform("size", sf::Glsl::Vec2{rt.getSize()});
 	shader.setUniform("factor", factor);
-	rt.draw(rt.sprite(), &shader);
+	rt.draw(rt, &shader);
 	rt.display();
 }
 

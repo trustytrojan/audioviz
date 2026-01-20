@@ -79,7 +79,7 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 	if (ffmpeg)
 	{
 		fflush(ffmpeg);
-		if (pclose(ffmpeg) == -1)
+		if (audioviz::util::pclose_utf8(ffmpeg) == -1)
 			perror("FfmpegPopenEncoder: pclose");
 	}
 }
