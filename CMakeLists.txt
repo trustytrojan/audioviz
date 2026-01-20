@@ -23,7 +23,7 @@ if(CMAKE_BUILD_TYPE MATCHES Rel)
 	add_compile_options(-march=native)
 endif()
 
-add_subdirectory(libaudioviz)
+add_subdirectory(libavz)
 
 if(AUDIOVIZ_BUILD_EXAMPLES)
 	add_subdirectory(examples)

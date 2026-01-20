@@ -1,11 +1,11 @@
 #include "ExampleFramework.hpp"
-#include <audioviz/SpectrumDrawable.hpp>
-#include <audioviz/aligned_allocator.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/fft/Interpolator.hpp>
-#include <audioviz/fx/Polar.hpp>
-#include <audioviz/util.hpp>
+#include <avz/SpectrumDrawable.hpp>
+#include <avz/aligned_allocator.hpp>
+#include <avz/fft/AudioAnalyzer.hpp>
+#include <avz/fft/FrequencyAnalyzer.hpp>
+#include <avz/fft/Interpolator.hpp>
+#include <avz/fx/Polar.hpp>
+#include <avz/util.hpp>
 
 // #include <print>
 

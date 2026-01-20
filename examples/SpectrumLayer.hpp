@@ -1,10 +1,10 @@
 #pragma once
 
-#include <audioviz/SpectrumDrawable.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/fft/Interpolator.hpp>
-#include <audioviz/util.hpp>
+#include <avz/SpectrumDrawable.hpp>
+#include <avz/fft/AudioAnalyzer.hpp>
+#include <avz/fft/FrequencyAnalyzer.hpp>
+#include <avz/fft/Interpolator.hpp>
+#include <avz/util.hpp>
 
 #include <condition_variable>
 #include <future>

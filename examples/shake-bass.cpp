@@ -1,7 +1,7 @@
 #include "ExampleFramework.hpp"
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/fft/StereoAnalyzer.hpp>
-#include <audioviz/fx/Shake.hpp>
+#include <avz/fft/FrequencyAnalyzer.hpp>
+#include <avz/fft/StereoAnalyzer.hpp>
+#include <avz/fx/Shake.hpp>
 
 #include <SFML/Graphics.hpp>
 

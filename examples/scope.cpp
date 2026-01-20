@@ -1,6 +1,6 @@
 #include "ExampleFramework.hpp"
-#include <audioviz/ScopeDrawable.hpp>
-#include <audioviz/util.hpp>
+#include <avz/ScopeDrawable.hpp>
+#include <avz/util.hpp>
 
 #include <vector>
 
