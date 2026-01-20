@@ -1,10 +1,10 @@
 #pragma once
 
-#include <audioviz/SpectrumDrawable.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/fft/Interpolator.hpp>
-#include <audioviz/util.hpp>
+#include <avz/SpectrumDrawable.hpp>
+#include <avz/fft/AudioAnalyzer.hpp>
+#include <avz/fft/FrequencyAnalyzer.hpp>
+#include <avz/fft/Interpolator.hpp>
+#include <avz/util.hpp>
 
 #include <condition_variable>
 #include <future>
@@ -13,15 +13,15 @@
 
 struct SpectrumLayer
 {
-	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer aa;
-	audioviz::Interpolator ip;
+	avz::FrequencyAnalyzer fa;
+	avz::AudioAnalyzer aa;
+	avz::Interpolator ip;
 	std::vector<float, aligned_allocator<float>> s, a;
-	audioviz::SpectrumDrawable spectrum;
+	avz::SpectrumDrawable spectrum;
 	bool is_left;
 	int sample_rate;
 
-	SpectrumLayer(int fft_size, int sample_rate, sf::Vector2u size, const audioviz::ColorSettings &cs, bool left)
+	SpectrumLayer(int fft_size, int sample_rate, sf::Vector2u size, const avz::ColorSettings &cs, bool left)
 		: fa{fft_size},
 		  aa{sample_rate, fft_size},
 		  spectrum{{{}, (sf::Vector2i)size}, cs},
@@ -29,7 +29,7 @@ struct SpectrumLayer
 		  sample_rate(sample_rate)
 	{
 		a.resize(fft_size);
-		fa.set_window_func(audioviz::FrequencyAnalyzer::WindowFunction::Blackman);
+		fa.set_window_func(avz::FrequencyAnalyzer::WindowFunction::Blackman);
 		start_worker();
 	}
 
@@ -48,10 +48,10 @@ struct SpectrumLayer
 	void compute(std::span<const float> audio_buffer)
 	{
 		const int channel = is_left ? 0 : 1;
-		audioviz::util::extract_channel(a, audio_buffer.first(fa.get_fft_size() * 2), 2, channel);
+		avz::util::extract_channel(a, audio_buffer.first(fa.get_fft_size() * 2), 2, channel);
 		aa.execute_fft(fa, a);
 		const auto amps = aa.compute_amplitudes(fa);
-		audioviz::util::resample_spectrum(s, amps, sample_rate, fa.get_fft_size(), 20.0f, 135.0f, ip);
+		avz::util::resample_spectrum(s, amps, sample_rate, fa.get_fft_size(), 20.0f, 135.0f, ip);
 		spectrum.update(s);
 	}
 

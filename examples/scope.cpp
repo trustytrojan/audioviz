@@ -1,15 +1,15 @@
 #include "ExampleFramework.hpp"
-#include <audioviz/ScopeDrawable.hpp>
-#include <audioviz/util.hpp>
+#include <avz/ScopeDrawable.hpp>
+#include <avz/util.hpp>
 
 #include <vector>
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct Scope : ExampleBase<Scope>
 {
-	audioviz::ColorSettings color;
-	audioviz::ScopeDrawable scope;
+	avz::ColorSettings color;
+	avz::ScopeDrawable scope;
 	std::vector<float> mono;
 	const int required_frames;
 
@@ -18,7 +18,7 @@ struct Scope : ExampleBase<Scope>
 		  scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, color},
 		  required_frames{std::max(1, (int)std::round(config.audio_duration_sec * sample_rate_hz))}
 	{
-		color.set_mode(audioviz::ColorSettings::Mode::SOLID);
+		color.set_mode(avz::ColorSettings::Mode::SOLID);
 		color.set_solid_color(sf::Color::Green);
 
 		scope.set_audio_duration(config.audio_duration_sec);
@@ -28,7 +28,7 @@ struct Scope : ExampleBase<Scope>
 
 		mono.resize(required_frames);
 
-		auto &layer = emplace_layer<audioviz::Layer>("scope");
+		auto &layer = emplace_layer<avz::Layer>("scope");
 		layer.add_draw({scope});
 	}
 
@@ -36,7 +36,7 @@ struct Scope : ExampleBase<Scope>
 	{
 		if (num_channels > 1)
 		{
-			audioviz::util::extract_channel(mono, audio_buffer, num_channels, 0);
+			avz::util::extract_channel(mono, audio_buffer, num_channels, 0);
 			scope.update(mono);
 		}
 		else
@@ -47,7 +47,7 @@ struct Scope : ExampleBase<Scope>
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	Scope,
 	"Audio oscilloscope visualization",
 	std::max(1, (int)std::round(config.audio_duration_sec *viz.sample_rate_hz)))

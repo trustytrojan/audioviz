@@ -1,31 +1,31 @@
 #include "ExampleFramework.hpp"
-#include <audioviz/SpectrumDrawable.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/fft/Interpolator.hpp>
-#include <audioviz/fx/Mirror.hpp>
-#include <audioviz/fx/Polar.hpp>
-#include <audioviz/util.hpp>
+#include <avz/SpectrumDrawable.hpp>
+#include <avz/fft/AudioAnalyzer.hpp>
+#include <avz/fft/FrequencyAnalyzer.hpp>
+#include <avz/fft/Interpolator.hpp>
+#include <avz/fx/Mirror.hpp>
+#include <avz/fx/Polar.hpp>
+#include <avz/util.hpp>
 
 #include <future>
 #include <memory>
 // #include <print>
 
 #include "SpectrumLayer.hpp"
-#include "audioviz/PostProcessLayer.hpp"
+#include "avz/PostProcessLayer.hpp"
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct MirroredBassNation : ExampleBase<MirroredBassNation>
 {
 	const int max_fft_size;
 
 	std::vector<std::unique_ptr<SpectrumLayer>> spectrums;
-	audioviz::ColorSettings cs;
+	avz::ColorSettings cs;
 	std::vector<std::future<void>> futures;
 
-	audioviz::fx::Polar polar_left;
-	audioviz::fx::Mirror mirror_effect{0};
+	avz::fx::Polar polar_left;
+	avz::fx::Mirror mirror_effect{0};
 
 	MirroredBassNation(const ExampleConfig &config)
 		: ExampleBase{config},
@@ -34,7 +34,7 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 	{
 		// std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);
 
-		cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
+		cs.set_mode(avz::ColorSettings::Mode::SOLID);
 
 		static const std::array<sf::Color, 9> colors{
 			sf::Color::Green,
@@ -51,7 +51,7 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 		const auto delta_duration = 0.015f;
 		const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
-		auto &spectrum_layer = emplace_layer<audioviz::PostProcessLayer>("spectrum", size);
+		auto &spectrum_layer = emplace_layer<avz::PostProcessLayer>("spectrum", size);
 
 		for (int i = 0; i < colors.size(); ++i)
 		{
@@ -84,5 +84,5 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	MirroredBassNation, "Mirrored multi-spectrum polar visualization with bass frequencies", viz.max_fft_size)

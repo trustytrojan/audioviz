@@ -1,8 +1,0 @@
-get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
-set(SHADER_VARIABLE "audioviz_shader_${SHADER_NAME}")
-string(REPLACE "." "_" SHADER_VARIABLE ${SHADER_VARIABLE})
-string(REPLACE "-" "_" SHADER_VARIABLE ${SHADER_VARIABLE})
-file(MAKE_DIRECTORY ${SHADER_HEADER_DIR})
-file(READ ${SHADER_SOURCE} FILE_CONTENT)
-set(HEADER_CONTENT "#include <string_view>\ninline const std::string_view ${SHADER_VARIABLE}{R\"glsl(${FILE_CONTENT})glsl\"};")
-file(WRITE ${SHADER_HEADER_DIR}/${SHADER_NAME}.h "${HEADER_CONTENT}")

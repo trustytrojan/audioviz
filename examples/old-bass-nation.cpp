@@ -1,11 +1,11 @@
 #include "ExampleFramework.hpp"
-#include <audioviz/Layer.hpp>
-#include <audioviz/SpectrumDrawable.hpp>
-#include <audioviz/fft/AudioAnalyzer.hpp>
-#include <audioviz/fft/FrequencyAnalyzer.hpp>
-#include <audioviz/fft/Interpolator.hpp>
-#include <audioviz/fx/Polar.hpp>
-#include <audioviz/util.hpp>
+#include <avz/Layer.hpp>
+#include <avz/SpectrumDrawable.hpp>
+#include <avz/fft/AudioAnalyzer.hpp>
+#include <avz/fft/FrequencyAnalyzer.hpp>
+#include <avz/fft/Interpolator.hpp>
+#include <avz/fx/Polar.hpp>
+#include <avz/util.hpp>
 
 #include <future>
 #include <memory>
@@ -13,18 +13,18 @@
 
 #include "SpectrumLayer.hpp"
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct OldBassNation : ExampleBase<OldBassNation>
 {
 	const int max_fft_size;
 
 	std::vector<std::unique_ptr<SpectrumLayer>> spectrums;
-	audioviz::ColorSettings cs;
+	avz::ColorSettings cs;
 	std::vector<std::future<void>> futures;
 
-	audioviz::fx::Polar polar_left;
-	audioviz::fx::Polar polar_right;
+	avz::fx::Polar polar_left;
+	avz::fx::Polar polar_right;
 
 	OldBassNation(const ExampleConfig &config)
 		: ExampleBase{config},
@@ -34,7 +34,7 @@ struct OldBassNation : ExampleBase<OldBassNation>
 	{
 		// std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);
 
-		cs.set_mode(audioviz::ColorSettings::Mode::SOLID);
+		cs.set_mode(avz::ColorSettings::Mode::SOLID);
 
 		static const std::array<sf::Color, 9> colors{
 			sf::Color::Green,
@@ -51,7 +51,7 @@ struct OldBassNation : ExampleBase<OldBassNation>
 		const auto delta_duration = 0.015f;
 		const auto max_duration_diff = (colors.size() - 1) * delta_duration;
 
-		auto &spectrum_layer = emplace_layer<audioviz::Layer>("spectrum");
+		auto &spectrum_layer = emplace_layer<avz::Layer>("spectrum");
 
 		for (int i = 0; i < colors.size(); ++i)
 		{
@@ -86,5 +86,5 @@ struct OldBassNation : ExampleBase<OldBassNation>
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	OldBassNation, "Multi-spectrum polar visualization with bass frequencies (old version)", viz.max_fft_size)
