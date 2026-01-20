@@ -3,7 +3,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace audioviz
+namespace avz
 {
 
 void BinPacker::_scale_max::calc(const int max, float nthroot_inv)
@@ -108,4 +108,4 @@ void BinPacker::compute_bin_pack_index_mappings(const size_t out_size, const siz
 	}
 }
 
-} // namespace audioviz
+} // namespace avz

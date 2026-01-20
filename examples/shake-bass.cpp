@@ -5,17 +5,17 @@
 
 #include <SFML/Graphics.hpp>
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct ShakeBassTest : ExampleBase<ShakeBassTest>
 {
 	const int fft_size;
 
-	audioviz::FrequencyAnalyzer fa{fft_size};
-	audioviz::StereoAnalyzer sa;
+	avz::FrequencyAnalyzer fa{fft_size};
+	avz::StereoAnalyzer sa;
 
 	sf::RectangleShape rect;
-	audioviz::fx::Shake shake;
+	avz::fx::Shake shake;
 
 	ShakeBassTest(const ExampleConfig &config)
 		: ExampleBase{config},
@@ -29,7 +29,7 @@ struct ShakeBassTest : ExampleBase<ShakeBassTest>
 		rect.setOutlineColor(sf::Color::White);
 		rect.setOutlineThickness(1);
 
-		emplace_layer<audioviz::Layer>("shake").add_draw({rect, &shake});
+		emplace_layer<avz::Layer>("shake").add_draw({rect, &shake});
 	}
 
 	void update(std::span<const float> audio_buffer) override
@@ -40,4 +40,4 @@ struct ShakeBassTest : ExampleBase<ShakeBassTest>
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(ShakeBassTest, "Shake effect visualization based on bass frequencies", viz.fft_size)
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(ShakeBassTest, "Shake effect visualization based on bass frequencies", viz.fft_size)

@@ -3,7 +3,7 @@
 #include "FfprobeMetadata.hpp"
 #include "Media.hpp"
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -42,4 +42,4 @@ public:
 	inline const std::optional<sf::Texture> &attached_pic() const override { return _attached_pic; }
 };
 
-} // namespace audioviz
+} // namespace avz

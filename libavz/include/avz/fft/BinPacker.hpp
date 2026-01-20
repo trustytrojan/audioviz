@@ -3,7 +3,7 @@
 #include <span>
 #include <vector>
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -97,4 +97,4 @@ private:
 	void compute_bin_pack_index_mappings(size_t out_size, size_t in_size);
 };
 
-} // namespace audioviz
+} // namespace avz

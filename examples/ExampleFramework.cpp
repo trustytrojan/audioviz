@@ -1,6 +1,6 @@
 #include "ExampleFramework.hpp"
 
-namespace audioviz::examples
+namespace avz::examples
 {
 
 ExampleConfig
@@ -98,4 +98,4 @@ parse_arguments(int argc, const char *const *argv, const std::string &program_na
 	return config;
 }
 
-} // namespace audioviz::examples
+} // namespace avz::examples

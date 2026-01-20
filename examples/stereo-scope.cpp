@@ -7,13 +7,13 @@
 #include <cmath>
 #include <vector>
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct StereoScopeViz : ExampleBase<StereoScopeViz>
 {
-	audioviz::ColorSettings colorL, colorR;
-	audioviz::ScopeDrawable left_scope;
-	audioviz::ScopeDrawable right_scope;
+	avz::ColorSettings colorL, colorR;
+	avz::ScopeDrawable left_scope;
+	avz::ScopeDrawable right_scope;
 	std::vector<float> left_channel, right_channel;
 	const int required_frames;
 
@@ -23,9 +23,9 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 		  right_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorR},
 		  required_frames{std::max(1, (int)std::round(config.audio_duration_sec * sample_rate_hz))}
 	{
-		colorL.set_mode(audioviz::ColorSettings::Mode::SOLID);
+		colorL.set_mode(avz::ColorSettings::Mode::SOLID);
 		colorL.set_solid_color(sf::Color::Red);
-		colorR.set_mode(audioviz::ColorSettings::Mode::SOLID);
+		colorR.set_mode(avz::ColorSettings::Mode::SOLID);
 		colorR.set_solid_color(sf::Color::Cyan);
 
 		left_scope.set_audio_duration(config.audio_duration_sec);
@@ -42,7 +42,7 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 		left_channel.resize(required_frames);
 		right_channel.resize(required_frames);
 
-		auto &layer = emplace_layer<audioviz::Layer>("stereo-scope");
+		auto &layer = emplace_layer<avz::Layer>("stereo-scope");
 		layer.add_draw({left_scope});
 		layer.add_draw({right_scope});
 	}
@@ -51,8 +51,8 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 	{
 		if (num_channels > 1)
 		{
-			audioviz::util::extract_channel(left_channel, audio_buffer, num_channels, 0);
-			audioviz::util::extract_channel(right_channel, audio_buffer, num_channels, 1);
+			avz::util::extract_channel(left_channel, audio_buffer, num_channels, 0);
+			avz::util::extract_channel(right_channel, audio_buffer, num_channels, 1);
 			left_scope.update(left_channel);
 			right_scope.update(right_channel);
 		}
@@ -65,7 +65,7 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	StereoScopeViz,
 	"Stereo oscilloscope visualization with left (red) and right (cyan) channels",
 	std::max(1, (int)std::round(config.audio_duration_sec *viz.sample_rate_hz)))

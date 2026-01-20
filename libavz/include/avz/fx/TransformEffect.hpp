@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 class TransformEffect
@@ -17,4 +17,4 @@ public:
 	virtual void setShaderUniforms() const = 0;
 };
 
-} // namespace audioviz::fx
+} // namespace avz::fx

@@ -1,26 +1,26 @@
-file(GLOB_RECURSE AUDIOVIZ_SOURCES src/avz/*.cpp)
+file(GLOB_RECURSE LIBAVZ_SOURCES src/avz/*.cpp)
 
-add_library(audioviz ${AUDIOVIZ_SOURCES})
+add_library(avz ${LIBAVZ_SOURCES})
 include(deps.cmake)
 
-target_compile_options(audioviz PUBLIC -Wno-narrowing -ffast-math)
+target_compile_options(avz PUBLIC -Wno-narrowing -ffast-math)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	target_compile_options(audioviz PUBLIC
+	target_compile_options(avz PUBLIC
 		-Wno-subobject-linkage # caused by tk-spline, safe to ignore
 	)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	target_compile_options(audioviz PUBLIC
+	target_compile_options(avz PUBLIC
 		-Wno-nan-infinity-disabled # caused by nlohmann/json, safe to ignore
 	)
-	target_compile_definitions(audioviz PUBLIC
+	target_compile_definitions(avz PUBLIC
 		_USE_MATH_DEFINES # because spline uses M_PI
 	)
 endif()
 
-target_include_directories(audioviz PUBLIC
+target_include_directories(avz PUBLIC
 	include # our public headers
 	${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -28,9 +28,9 @@ target_include_directories(audioviz PUBLIC
 # popen() on MinGW expects a 'b' to differentiate text/binary,
 # but on Linux it errors if a 'b' is there, so we have to do this...
 if(WIN32)
-	target_compile_definitions(audioviz PRIVATE POPEN_R_MODE="rb" POPEN_W_MODE="wb")
+	target_compile_definitions(avz PRIVATE POPEN_R_MODE="rb" POPEN_W_MODE="wb")
 else()
-	target_compile_definitions(audioviz PRIVATE POPEN_R_MODE="r" POPEN_W_MODE="w")
+	target_compile_definitions(avz PRIVATE POPEN_R_MODE="r" POPEN_W_MODE="w")
 endif()
 
 # Generate header files with embedded shader source code
@@ -52,6 +52,6 @@ foreach(SHADER_SOURCE IN LISTS SHADER_SOURCES)
 	)
 endforeach()
 add_custom_target(generate_shader_headers DEPENDS ${SHADER_HEADERS})
-add_dependencies(audioviz generate_shader_headers)
+add_dependencies(avz generate_shader_headers)
 
-target_include_directories(audioviz PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shader_headers)
+target_include_directories(avz PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shader_headers)

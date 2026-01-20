@@ -1,6 +1,6 @@
 #include <avz/fft/Interpolator.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 void Interpolator::interpolate(std::span<float> range)
@@ -42,4 +42,4 @@ void Interpolator::set_values(std::span<const float> values)
 	spline.set_points(m_spline_x, m_spline_y, (tk::spline::spline_type)type);
 }
 
-} // namespace audioviz
+} // namespace avz

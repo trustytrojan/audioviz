@@ -6,7 +6,7 @@
 FfprobeMetadata::FfprobeMetadata(const std::string &media_url)
 {
 	const auto command{"ffprobe -v warning -show_format -show_streams -print_format json \"" + media_url + '"'};
-	const auto ffprobe{audioviz::util::popen_utf8(command, POPEN_R_MODE)};
+	const auto ffprobe{avz::util::popen_utf8(command, POPEN_R_MODE)};
 	if (!ffprobe)
 		throw std::runtime_error{std::string{"popen: "} + strerror(errno)};
 
@@ -15,7 +15,7 @@ FfprobeMetadata::FfprobeMetadata(const std::string &media_url)
 	while (fgets(buffer, sizeof(buffer), ffprobe) != nullptr)
 		oss << buffer;
 
-	switch (const auto status{audioviz::util::pclose_utf8(ffprobe)})
+	switch (const auto status{avz::util::pclose_utf8(ffprobe)})
 	{
 	case -1:
 		throw std::runtime_error{std::string{"pclose: "} + strerror(errno)};

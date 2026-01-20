@@ -1,13 +1,13 @@
 #include <avz/Player.hpp>
 #include <avz/media/FfmpegPopenEncoder.hpp>
 
-#ifdef AUDIOVIZ_PORTAUDIO
+#ifdef LIBAVZ_PORTAUDIO
 #include <fcntl.h>
 #include <portaudio.hpp>
 
 #endif
 
-namespace audioviz
+namespace avz
 {
 
 Player::Player(Base &viz, Media &media, int framerate, int audio_frames_needed)
@@ -19,8 +19,8 @@ Player::Player(Base &viz, Media &media, int framerate, int audio_frames_needed)
 }
 
 /*
-TODO: You want to make libaudioviz more usage-agnostic by removing portaudio/imgui dependencies.
-Libaudioviz by itself should be a machine that produces user-defined video from ambiguous audio.
+TODO: You want to make libavz more usage-agnostic by removing portaudio/imgui dependencies.
+libavz by itself should be a machine that produces user-defined video from ambiguous audio.
 Let client programs/callers/end-users handle the gathering of audio and whether drawables are editable.
 */
 
@@ -33,7 +33,7 @@ void Player::start_in_window(const std::string &title)
 		sf::State::Windowed,
 	};
 
-#ifdef AUDIOVIZ_PORTAUDIO
+#ifdef LIBAVZ_PORTAUDIO
 #ifdef __linux__
 	// Suppress ALSA warnings during PortAudio initialization
 	int stderr_backup = dup(STDERR_FILENO);
@@ -74,7 +74,7 @@ void Player::start_in_window(const std::string &title)
 			continue;
 		}
 
-#ifdef AUDIOVIZ_PORTAUDIO
+#ifdef LIBAVZ_PORTAUDIO
 		try
 		{
 			pa_stream.write(audio->data(), afpvf);
@@ -124,4 +124,4 @@ void Player::encode(const std::string &outfile, const std::string &vcodec, const
 	}
 }
 
-} // namespace audioviz
+} // namespace avz

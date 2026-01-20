@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 class ColorSettings
@@ -43,4 +43,4 @@ public:
 	sf::Color calculate_color(float index_ratio) const;
 };
 
-} // namespace audioviz
+} // namespace avz

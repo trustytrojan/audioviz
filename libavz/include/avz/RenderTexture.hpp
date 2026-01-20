@@ -3,7 +3,7 @@
 #include "avz/Sprite.hpp"
 #include <SFML/Graphics.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -25,4 +25,4 @@ public:
 	inline operator Sprite() const { return getTexture(); }
 };
 
-} // namespace audioviz
+} // namespace avz

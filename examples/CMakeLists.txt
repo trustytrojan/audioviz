@@ -7,7 +7,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(argparse)
 
-link_libraries(audioviz argparse)
+link_libraries(avz argparse)
 
 add_library(example-framework ExampleFramework.cpp)
 link_libraries(example-framework)
@@ -34,7 +34,7 @@ if(WIN32)
 		${CMAKE_BINARY_DIR}/_deps/fftw-src/libfftw3f-3.dll
 		${CMAKE_CURRENT_BINARY_DIR}/libfftw3f-3.dll
 		ONLY_IF_DIFFERENT)
-	if(AUDIOVIZ_USE_PORTAUDIO)
+	if(LIBAVZ_USE_PORTAUDIO)
 		file(COPY_FILE
 			${portaudio-pp_BINARY_DIR}/portaudio_x64.dll
 			${CMAKE_CURRENT_BINARY_DIR}/portaudio_x64.dll

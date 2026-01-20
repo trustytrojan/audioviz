@@ -1,6 +1,6 @@
 #include <avz/Sprite.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 Sprite::Sprite(const sf::Texture &txr)
@@ -32,4 +32,4 @@ void Sprite::fill_screen(const sf::Vector2u size)
 	scale_to({max_dim, max_dim});
 }
 
-} // namespace audioviz
+} // namespace avz

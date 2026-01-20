@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <avz/Base.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 Base::Base(const sf::Vector2u size)
@@ -39,4 +39,4 @@ Layer *Base::get_layer(const std::string &name)
 	return (itr == layers.end()) ? nullptr : itr->get();
 }
 
-} // namespace audioviz
+} // namespace avz

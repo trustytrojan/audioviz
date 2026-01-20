@@ -1,6 +1,6 @@
 #include <avz/media/Media.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 Media::Media(const std::string &url)
@@ -29,4 +29,4 @@ void Media::consume_audio(const int frames)
 	_audio_buffer.erase(begin, begin + samples);
 }
 
-} // namespace audioviz
+} // namespace avz

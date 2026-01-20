@@ -6,7 +6,7 @@
 #include <span>
 #include <vector>
 
-namespace audioviz
+namespace avz
 {
 
 class ScopeDrawable : public sf::Drawable
@@ -90,4 +90,4 @@ private:
 	void update_vertices(std::span<const float> samples);
 };
 
-} // namespace audioviz
+} // namespace avz

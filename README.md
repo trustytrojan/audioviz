@@ -1,61 +1,116 @@
-# audioviz
-*my own audio visualizer (library), because after effects sucks*
+# libavz
+
+_my own audio visualizer library, because after effects sucks_
+
+[here](https://youtube.com/playlist?list=PLq63g2iq0LVvxNjjoYOL4GMTOdXEdHsBf) are
+some songs rendered with libavz!
 
 ## features
+
 - **low-level** construction of visuals from audio
 - **layer-and-effect** composition
 - **super fast** video encoding with ffmpeg
 - **faster than adobe after effects!!!!!!!!!**
 
-[here are some songs rendered with audioviz!](https://youtube.com/playlist?list=PLq63g2iq0LVvxNjjoYOL4GMTOdXEdHsBf)
-
 ## prerequisite knowledge
-below are two great videos by [Cinamark](https://www.youtube.com/@cinamark) explaining some of the fundamentals of programming with audio & visualization:
 
-[How do computers even render audio...?](https://youtu.be/md79DDofGVo)
+below are two great videos by [Cinamark](https://www.youtube.com/@cinamark)
+explaining some of the fundamentals of programming with audio & visualization:
+
+[How do computers even render audio...?](https://youtu.be/md79DDofGVo)\
 [How Do Computers Even Visualize Audio...?](https://www.youtube.com/watch?v=cZqle_ukePs)
 
-## building & running
+## building
 
-### linux
-1. install any required dependencies below
-2. run `cmake -S. -Bbuild && cmake --build build -j$(nproc)` or use your IDE of choice with CMake support
-3. run build executables from the project root (as explained above)
+1. install dependencies, per platform:
+   ### ubuntu noble (24.04 LTS)
+   ```sh
+   # ppa required to install SFML 3
+   sudo add-apt-repository ppa:bleedingedge/noble-bleed
+   sudo apt-get update
+   sudo apt-get install -y libfftw3-dev ffmpeg libglew-dev libsfml-dev portaudio19-dev
+   ```
 
-### windows
-1. install any required dependencies below using `winget`:
-   - ffmpeg can be installed with `winget install gyan.ffmpeg.shared`
-2. run `cmake -S. -Bbuild && cmake --build build` or use your IDE of choice with CMake support
-3. run build executables from the project root (as explained above)
+   ### arch linux
+   ```sh
+   sudo pacman -S fftw ffmpeg glew sfml portaudio
+   ```
 
-#### dll problem
-on 64-bit systems, built executables dynamically link to FFTW and PortAudio, which are downloaded by the CMake build system at configure time into the `build` directory (or whatever you passed to `-B` when configuring). so **if nothing happens when you run an audioviz executable from the terminal**, and it returned a non-zero exit code, you need to append `;build` to your `PATH` environment variable so that the libraries can be found. you can do this by running `$env:PATH += ';build'` in PowerShell, or `set PATH=%PATH%;build` in CMD. if you want this to persist for every PowerShell/CMD you open, add the *absolute* path to your `build` directory to your user environment variables.
+   ### windows
+   ```sh
+   winget install gyan.ffmpeg
+   ```
 
-### macOS
-thanks to CI, i discovered that the build process is the same as with linux. just use brew for package management. however i don't own a functional mac at the moment and have **not** tested the CI builds.
+   ### macOS
+   ```sh
+   brew install glew sfml fftw ffmpeg
+   ```
+
+2. on all platforms: clone repo, configure cmake, and build
+   ```sh
+   git clone https://github.com/trustytrojan/libavz && cd libavz
+   cmake -S. -Bbuild && cmake --build build -j
+   ```
+
+3. by default, example programs are built, so you can run them like so:
+   ```sh
+   build/examples/scope 'my-song.mp3'
+   ```
 
 ## libraries/software used
-- **libaudioviz**
-  - [FFTW3](https://fftw.org)
-  - `ffmpeg`, the standalone CLI program, part of the [FFmpeg](https://ffmpeg.org) project
-  - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp)
-  - [SFML](https://github.com/SFML/SFML)
-  - [tk-spline](https://github.com/ttk592/spline)
+
+- [FFTW3](https://fftw.org): FFT
+- [FFmpeg](https://ffmpeg.org): media container transcoding
+- [portaudio-pp](https://github.com/trustytrojan/portaudio-pp): C++ header-only
+  wrapper for [PortAudio](https://github.com/PortAudio/portaudio), optional
+  dependency
+- [SFML](https://github.com/SFML/SFML): graphics/windowing
+- [tk-spline](https://github.com/ttk592/spline): cubic spline interpolation
+- [GLEW](https://github.com/nigels-com/glew): for OpenGL extension loading
 
 ## developer environment setup
-the project uses C++23 so try to use a compliant toolchain version. for GCC that would be version 14 and above.
 
-i recommend using vscode as it integrates well with git with no effort. get the [cmake tools extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) and [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) to make development easier.
+the project requires C++23 with GNU extensions, so try to use a compliant
+toolchain. i primarily use GCC 15.2 on linux and windows. thanks to github
+actions, there is success building with AppleClang on macOS (see
+[actions workflow runs](https://github.com/trustytrojan/audioviz/actions) for
+more details). i **do not** guarantee fully working builds with Clang/LLVM or
+MSVC. if you want to see them work, contribute!
+
+my choice of editor is [Visual Studio Code](https://code.visualstudio.com/) with
+the
+[CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+and
+[clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
+extensions. optionally install
+[WebGL GLSL Editor](https://marketplace.visualstudio.com/items?itemName=raczzalan.webgl-glsl-editor)
+for shaders.
 
 ### windows
-please use the [mingw toolchain](https://github.com/niXman/mingw-builds-binaries/releases) as it is the only toolchain i have compiled with, and honestly the easiest to setup and use. if you have `winget` you can get the version i usually use with `winget install BrechtSanders.WinLibs.POSIX.UCRT`.
 
-clangd might freak out about the standard headers being missing: to fix this, open clangd extension settings, and add the following argument (**without** quotes around the path):
+please use the [MinGW-w64 toolchain](https://www.mingw-w64.org/) as it is the
+only toolchain i have compiled with, and honestly the easiest to setup and use.
+
+with `winget` you can get the version i usually use with the command below. make
+sure to restart your terminal if it doesn't pick up on the updated `PATH`
+environment variable.
+
+```sh
+winget install BrechtSanders.WinLibs.POSIX.UCRT
+```
+
+clangd might freak out about the standard headers being missing. to fix this,
+open clangd extension settings, and add the following argument **without
+quotes**:
+
 ```
 --query-driver=C:\path\to\mingw\bin\g++.exe
 ```
 
 ## todo list / goals
-- gonna take imgui out... it belongs in a separate repo as an effort to make some kind of editor based on libaudioviz. ui should not be conflated with the library itself.
+
+- gonna take imgui out... it belongs in a separate repo as an effort to make
+  some kind of editor using libavz. ui should not be conflated with the library
+  itself.
 - rhythm-based effects
   - use [aubio](https://aubio.org) for this

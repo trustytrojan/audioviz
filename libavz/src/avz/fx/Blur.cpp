@@ -4,7 +4,7 @@
 
 static sf::Shader shader;
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 Blur::Blur(float hrad, float vrad, int n_passes)
@@ -12,7 +12,7 @@ Blur::Blur(float hrad, float vrad, int n_passes)
 	  vrad{vrad},
 	  n_passes{n_passes}
 {
-	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_blur_frag, sf::Shader::Type::Fragment))
+	if (!shader.getNativeHandle() && !shader.loadFromMemory(libavz_shader_blur_frag, sf::Shader::Type::Fragment))
 		throw std::runtime_error{"failed to load blur shader!"};
 }
 
@@ -37,4 +37,4 @@ void Blur::apply(RenderTexture &rt) const
 	}
 }
 
-} // namespace audioviz::fx
+} // namespace avz::fx

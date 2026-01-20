@@ -1,7 +1,7 @@
 #include <avz/SongMetadataDrawable.hpp>
 #include <avz/util.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 SongMetadataDrawable::SongMetadataDrawable(sf::Text &title_text, sf::Text &artist_text)
@@ -65,4 +65,4 @@ void SongMetadataDrawable::update_text_positions()
 	}
 }
 
-} // namespace audioviz
+} // namespace avz

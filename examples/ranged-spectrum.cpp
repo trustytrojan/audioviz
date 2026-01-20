@@ -8,7 +8,7 @@
 
 // #include <print>
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct RangedSpectrum : ExampleBase<RangedSpectrum>
 {
@@ -17,12 +17,12 @@ struct RangedSpectrum : ExampleBase<RangedSpectrum>
 
 	std::vector<float, aligned_allocator<float, 32>> a, s;
 
-	audioviz::ColorSettings color;
-	audioviz::SpectrumDrawable spectrum;
-	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer aa;
+	avz::ColorSettings color;
+	avz::SpectrumDrawable spectrum;
+	avz::FrequencyAnalyzer fa;
+	avz::AudioAnalyzer aa;
 
-	audioviz::Interpolator ip;
+	avz::Interpolator ip;
 
 	RangedSpectrum(const ExampleConfig &config)
 		: ExampleBase{config},
@@ -37,24 +37,24 @@ struct RangedSpectrum : ExampleBase<RangedSpectrum>
 		spectrum.set_bar_spacing(0);
 		spectrum.set_multiplier(4);
 
-		emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum});
+		emplace_layer<avz::Layer>("spectrum").add_draw({spectrum});
 
-		max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fa.get_fft_size());
+		max_fft_index = avz::util::bin_index_from_freq(250, sample_rate_hz, fa.get_fft_size());
 		// std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum.get_bar_count());
 	}
 
 	void update(std::span<const float> audio_buffer) override
 	{
 		a.resize(fft_size);
-		capture_time("strided_copy", audioviz::util::extract_channel(a, audio_buffer, num_channels, 0));
+		capture_time("strided_copy", avz::util::extract_channel(a, audio_buffer, num_channels, 0));
 		capture_time("fft", aa.execute_fft(fa, a));
 		s.assign(spectrum.get_bar_count(), 0);
 		// spread out into s only our desired frequency range
-		capture_time("spread_out", audioviz::util::spread_out(s, {aa.compute_amplitudes(fa).data(), max_fft_index}));
+		capture_time("spread_out", avz::util::spread_out(s, {aa.compute_amplitudes(fa).data(), max_fft_index}));
 		capture_time("interpolate", ip.interpolate(s));
 		capture_time("spectrum_update", spectrum.update(s));
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	RangedSpectrum, "Spectrum visualization with frequency range filtering (20-250 Hz)", viz.fft_size)

@@ -9,11 +9,11 @@ static void init()
 {
 	if (shader.getNativeHandle())
 		return;
-	if (!shader.loadFromMemory(std::string{audioviz_shader_polar_vert}, sf::Shader::Type::Vertex))
+	if (!shader.loadFromMemory(std::string{libavz_shader_polar_vert}, sf::Shader::Type::Vertex))
 		throw std::runtime_error{"failed to load polar shader!"};
 }
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 Polar::Polar(sf::Vector2f size, float br, float mr, float angle_start, float angle_span)
@@ -41,4 +41,4 @@ void Polar::setShaderUniforms() const
 	shader.setUniform("angle_span", angle_span);
 }
 
-} // namespace audioviz::fx
+} // namespace avz::fx

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace audioviz
+namespace avz
 {
 
 FfmpegPopenEncoder::FfmpegPopenEncoder(
@@ -33,13 +33,13 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	std::ostringstream cmd_stream;
 	cmd_stream << "ffmpeg -hide_banner -hwaccel auto -y ";
 
-	// input 0: raw video stream from audioviz
+	// input 0: raw video stream from avz
 	cmd_stream << "-f rawvideo -pix_fmt rgba "
 			   << "-s " << video_size.x << "x" << video_size.y << " "
 			   << "-r " << framerate << " "
 			   << "-i - ";
 
-	// input 1: media used in audioviz
+	// input 1: media used in avz
 	cmd_stream << "-ss -0.1 ";
 	if (media_url.find("http") != std::string::npos)
 		cmd_stream << "-reconnect 1 ";
@@ -79,7 +79,7 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 	if (ffmpeg)
 	{
 		fflush(ffmpeg);
-		if (audioviz::util::pclose_utf8(ffmpeg) == -1)
+		if (avz::util::pclose_utf8(ffmpeg) == -1)
 			perror("FfmpegPopenEncoder: pclose");
 	}
 }
@@ -124,4 +124,4 @@ void FfmpegPopenEncoder::send_frame(const sf::Image &img)
 		throw std::runtime_error{"FfmpegPopenEncoder: fwrite returned < size!"};
 }
 
-} // namespace audioviz
+} // namespace avz

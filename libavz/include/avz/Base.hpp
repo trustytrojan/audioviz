@@ -20,17 +20,17 @@
 	else                              \
 		code;
 
-namespace audioviz
+namespace avz
 {
 
 /**
- * Base class containing the boilerplate for an audioviz visualizer.
+ * Base class containing the boilerplate for an avz visualizer.
  * Extend this class to start building your own visualizer!
  */
 class Base : public sf::Drawable
 {
 public:
-	// audioviz output size. cannot be changed, so make sure your window is not resizable.
+	// avz output size. cannot be changed, so make sure your window is not resizable.
 	const sf::Vector2u size;
 
 protected:
@@ -91,4 +91,4 @@ protected:
 	virtual void update(std::span<const float> audio_buffer) {}
 };
 
-} // namespace audioviz
+} // namespace avz

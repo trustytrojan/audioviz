@@ -4,13 +4,13 @@
 
 static sf::Shader shader;
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 Mult::Mult(float factor)
 	: factor{factor}
 {
-	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_mult_frag, sf::Shader::Type::Fragment))
+	if (!shader.getNativeHandle() && !shader.loadFromMemory(libavz_shader_mult_frag, sf::Shader::Type::Fragment))
 		throw std::runtime_error{"failed to load mult shader!"};
 }
 
@@ -22,4 +22,4 @@ void Mult::apply(RenderTexture &rt) const
 	rt.display();
 }
 
-} // namespace audioviz::fx
+} // namespace avz::fx

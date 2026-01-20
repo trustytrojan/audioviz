@@ -5,7 +5,7 @@
 #include <span>
 #include <vector>
 
-namespace audioviz
+namespace avz
 {
 
 class fftwf_dft_r2c_1d
@@ -49,4 +49,4 @@ public:
 	inline int output_size() const { return out.size(); }
 };
 
-} // namespace audioviz
+} // namespace avz

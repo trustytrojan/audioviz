@@ -2,7 +2,7 @@
 
 #include <avz/RenderTexture.hpp>
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 class PostProcessEffect
@@ -17,4 +17,4 @@ public:
 	virtual void setRtSize(sf::Vector2u) {}
 };
 
-} // namespace audioviz::fx
+} // namespace avz::fx

@@ -2,7 +2,7 @@
 #include <avz/SpectrumDrawable.hpp>
 #include <cassert>
 
-namespace audioviz
+namespace avz
 {
 
 SpectrumDrawable::SpectrumDrawable(const ColorSettings &color, const bool backwards)
@@ -219,4 +219,4 @@ void SpectrumDrawable::update_bars()
 	}
 }
 
-} // namespace audioviz
+} // namespace avz

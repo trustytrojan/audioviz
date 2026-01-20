@@ -1,7 +1,7 @@
 #include <avz/ColorSettings.hpp>
 #include <avz/util.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 sf::Color ColorSettings::calculate_color(const float index_ratio) const
@@ -34,4 +34,4 @@ sf::Color ColorSettings::calculate_color(const float index_ratio) const
 	}
 }
 
-} // namespace audioviz
+} // namespace avz

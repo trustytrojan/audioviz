@@ -8,7 +8,7 @@
 #include <vector>
 
 
-namespace audioviz
+namespace avz
 {
 
 class Profiler
@@ -73,4 +73,4 @@ private:
 	}
 };
 
-} // namespace audioviz
+} // namespace avz

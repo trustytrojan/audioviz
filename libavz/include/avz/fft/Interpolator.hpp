@@ -4,7 +4,7 @@
 #include <tk-spline.hpp>
 #include <vector>
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -60,4 +60,4 @@ public:
 	inline float sample(float x) const { return spline(x); }
 };
 
-} // namespace audioviz
+} // namespace avz

@@ -1,6 +1,6 @@
 #include <avz/PostProcessLayer.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 PostProcessLayer::PostProcessLayer(const std::string &name, const sf::Vector2u size, const unsigned antialiasing)
@@ -39,4 +39,4 @@ void PostProcessLayer::render(sf::RenderTarget &target)
 		target.draw(_fx_rt);
 }
 
-} // namespace audioviz
+} // namespace avz

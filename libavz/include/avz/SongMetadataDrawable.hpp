@@ -4,7 +4,7 @@
 #include <avz/Sprite.hpp>
 #include <avz/media/Media.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -45,4 +45,4 @@ private:
 	void update_text_positions();
 };
 
-} // namespace audioviz
+} // namespace avz

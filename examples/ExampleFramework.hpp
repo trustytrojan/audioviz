@@ -7,7 +7,7 @@
 #include <SFML/Graphics.hpp>
 #include <argparse/argparse.hpp>
 
-namespace audioviz::examples
+namespace avz::examples
 {
 
 /**
@@ -47,10 +47,10 @@ ExampleConfig parse_arguments(
  * @tparam Derived The derived example class (CRTP pattern)
  */
 template <typename Derived>
-class ExampleBase : public audioviz::Base
+class ExampleBase : public avz::Base
 {
 public:
-	audioviz::FfmpegPopenMedia media;
+	avz::FfmpegPopenMedia media;
 	int sample_rate_hz;
 	int num_channels;
 	ExampleBase(const ExampleConfig &config)
@@ -86,7 +86,7 @@ template <typename VizType>
 int run_example(const ExampleConfig &config, int audio_frames_needed)
 {
 	VizType viz{config};
-	audioviz::Player{viz, viz.media, config.framerate, audio_frames_needed}.start_in_window(config.window_title);
+	avz::Player{viz, viz.media, config.framerate, audio_frames_needed}.start_in_window(config.window_title);
 	return EXIT_SUCCESS;
 }
 
@@ -94,27 +94,27 @@ int run_example(const ExampleConfig &config, int audio_frames_needed)
  * @brief Convenience macro for main function boilerplate
  *
  * Usage:
- * AUDIOVIZ_EXAMPLE_MAIN(MyVisualization, "Description of my visualization")
+ * LIBAVZ_EXAMPLE_MAIN(MyVisualization, "Description of my visualization")
  */
-#define AUDIOVIZ_EXAMPLE_MAIN(VizClass, description)                                             \
+#define LIBAVZ_EXAMPLE_MAIN(VizClass, description)                                             \
 	int main(int argc, const char *const *argv)                                                  \
 	{                                                                                            \
-		auto config = audioviz::examples::parse_arguments(argc, argv, #VizClass, description);   \
+		auto config = avz::examples::parse_arguments(argc, argv, #VizClass, description);   \
 		VizClass viz{config};                                                                    \
-		return audioviz::examples::run_example<VizClass>(config, viz.get_audio_frames_needed()); \
+		return avz::examples::run_example<VizClass>(config, viz.get_audio_frames_needed()); \
 	}
 
 /**
  * @brief Alternative main function helper that allows custom audio frame calculation
  */
-#define AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(VizClass, description, audio_frames_expr)                                 \
+#define LIBAVZ_EXAMPLE_MAIN_CUSTOM(VizClass, description, audio_frames_expr)                                 \
 	int main(int argc, const char *const *argv)                                                                \
 	{                                                                                                          \
-		auto config = audioviz::examples::parse_arguments(argc, argv, #VizClass, description);                 \
+		auto config = avz::examples::parse_arguments(argc, argv, #VizClass, description);                 \
 		VizClass viz{config};                                                                                  \
 		int audio_frames = (audio_frames_expr);                                                                \
-		audioviz::Player{viz, viz.media, config.framerate, audio_frames}.start_in_window(config.window_title); \
+		avz::Player{viz, viz.media, config.framerate, audio_frames}.start_in_window(config.window_title); \
 		return EXIT_SUCCESS;                                                                                   \
 	}
 
-} // namespace audioviz::examples
+} // namespace avz::examples

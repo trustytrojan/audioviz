@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace audioviz
+namespace avz
 {
 
 AudioAnalyzer::AudioAnalyzer(int sample_rate_hz, int fft_size)
@@ -113,4 +113,4 @@ std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> AudioAnalyzer::compute_mult
 	return *(multiband_shake = bands);
 }
 
-} // namespace audioviz
+} // namespace avz

@@ -2,7 +2,7 @@
 
 #include <avz/fx/PostProcessEffect.hpp>
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 // Multiplies the entire texture's COLORS by a factor.
@@ -14,4 +14,4 @@ struct Mult : public PostProcessEffect
 	void apply(RenderTexture &rt) const override;
 };
 
-} // namespace audioviz::fx
+} // namespace avz::fx

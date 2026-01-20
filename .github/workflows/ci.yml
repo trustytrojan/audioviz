@@ -78,7 +78,7 @@ jobs:
         uses: FedericoCarboni/setup-ffmpeg@v3
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -GNinja -DAUDIOVIZ_USE_PORTAUDIO=OFF ${{ matrix.platform.flags }}
+        run: cmake -S. -Bbuild -GNinja -DLIBAVZ_USE_PORTAUDIO=OFF ${{ matrix.platform.flags }}
 
       - name: Build project
         run: cmake --build build --parallel

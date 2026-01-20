@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-namespace audioviz
+namespace avz
 {
 
 MultiChannelAudioAnalyzer::MultiChannelAudioAnalyzer(int num_channels, int sample_rate_hz, int window_size_samples)
@@ -93,4 +93,4 @@ MultiChannelAudioAnalyzer::compute_averaged_multiband_shake(int from_hz, int to_
 	return result;
 }
 
-} // namespace audioviz
+} // namespace avz

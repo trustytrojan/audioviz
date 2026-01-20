@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 class Sprite : public sf::Sprite
@@ -19,4 +19,4 @@ public:
 	inline sf::Vector2f get_center() const { return getPosition() + (get_size() / 2.f); }
 };
 
-} // namespace audioviz
+} // namespace avz

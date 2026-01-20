@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace audioviz
+namespace avz
 {
 
 void FfmpegPopenMedia::init_audio(float start_time_sec)
@@ -123,4 +123,4 @@ bool FfmpegPopenMedia::read_video_frame(sf::Texture &txr)
 	return true;
 }
 
-} // namespace audioviz
+} // namespace avz

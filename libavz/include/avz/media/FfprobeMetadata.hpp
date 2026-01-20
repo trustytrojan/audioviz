@@ -4,7 +4,7 @@
 
 using json = nlohmann::json;
 
-// not sure if this should even be namespaced/part of the audioviz c++ api
+// not sure if this should even be namespaced/part of the avz c++ api
 class FfprobeMetadata
 {
 	json metadata;

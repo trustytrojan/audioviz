@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -21,4 +21,4 @@ public:
 	inline sf::Vector2f getVelocity() const { return velocity; }
 };
 
-} // namespace audioviz
+} // namespace avz

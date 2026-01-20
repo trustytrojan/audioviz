@@ -3,7 +3,7 @@
 #include "TransformEffect.hpp"
 #include <SFML/Graphics.hpp>
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 struct Polar : TransformEffect
@@ -19,4 +19,4 @@ struct Polar : TransformEffect
 	virtual void setShaderUniforms() const override;
 };
 
-} // namespace audioviz::fx
+} // namespace avz::fx

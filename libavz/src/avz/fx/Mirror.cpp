@@ -4,13 +4,13 @@
 
 static sf::Shader shader;
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 Mirror::Mirror(int mirror_side)
 	: mirror_side{mirror_side}
 {
-	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_mirror_frag, sf::Shader::Type::Fragment))
+	if (!shader.getNativeHandle() && !shader.loadFromMemory(libavz_shader_mirror_frag, sf::Shader::Type::Fragment))
 		throw std::runtime_error{"failed to load mirror shader!"};
 }
 
@@ -26,4 +26,4 @@ void Mirror::apply(RenderTexture &rt) const
 	rt.display();
 }
 
-} // namespace audioviz::fx
+} // namespace avz::fx

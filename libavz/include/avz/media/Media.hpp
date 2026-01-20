@@ -4,7 +4,7 @@
 #include <avz/aligned_allocator.hpp>
 #include <span>
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -57,4 +57,4 @@ public:
 	std::optional<std::span<const float>> read_audio(int frames);
 };
 
-} // namespace audioviz
+} // namespace avz

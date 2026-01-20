@@ -9,7 +9,7 @@
 #include <avz/util.hpp>
 #include <span>
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -57,4 +57,4 @@ private:
 	void update_bars();
 };
 
-} // namespace audioviz
+} // namespace avz

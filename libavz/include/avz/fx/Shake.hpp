@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <avz/fft/AudioAnalyzer.hpp>
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 struct Shake : TransformEffect
@@ -17,4 +17,4 @@ struct Shake : TransformEffect
 	void setParameters(AudioAnalyzer &aa, int from_hz, int to_hz, float multiplier);
 };
 
-} // namespace audioviz::fx
+} // namespace avz::fx

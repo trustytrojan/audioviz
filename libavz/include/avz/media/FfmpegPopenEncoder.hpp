@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <string>
 
-namespace audioviz
+namespace avz
 {
 
 class FfmpegPopenEncoder
@@ -35,4 +35,4 @@ public:
 	void send_frame(const sf::Texture &txr);
 };
 
-} // namespace audioviz
+} // namespace avz

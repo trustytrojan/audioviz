@@ -2,7 +2,7 @@
 
 #include "MultiChannelAudioAnalyzer.hpp"
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -35,4 +35,4 @@ public:
 	const AudioAnalyzer &right() const { return (*this)[1]; }
 };
 
-} // namespace audioviz
+} // namespace avz

@@ -9,7 +9,7 @@
 #include <string>
 
 
-namespace audioviz::util
+namespace avz::util
 {
 
 sf::Color hsv2rgb(float h, const float s, const float v);
@@ -52,6 +52,6 @@ void resample_spectrum(
 	int fft_size,
 	float start_freq,
 	float end_freq,
-	audioviz::Interpolator &interpolator);
+	avz::Interpolator &interpolator);
 
-} // namespace audioviz::util
+} // namespace avz::util

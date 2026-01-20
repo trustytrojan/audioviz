@@ -11,11 +11,11 @@ static void init()
 {
 	if (shader.getNativeHandle())
 		return;
-	if (!shader.loadFromMemory(std::string{audioviz_shader_shake_vert}, sf::Shader::Type::Vertex))
+	if (!shader.loadFromMemory(std::string{libavz_shader_shake_vert}, sf::Shader::Type::Vertex))
 		throw std::runtime_error{"failed to load shake shader!"};
 }
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 const sf::Shader &Shake::getShader() const
@@ -45,4 +45,4 @@ void Shake::setParameters(AudioAnalyzer &aa, int from_hz, int to_hz, float multi
 	amplitudes.z = bands[2].amplitude * multiplier;
 }
 
-} // namespace audioviz::fx
+} // namespace avz::fx

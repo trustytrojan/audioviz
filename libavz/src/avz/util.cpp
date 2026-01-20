@@ -42,7 +42,7 @@ std::unordered_map<FILE *, pid_t> popen_pid_map;
 
 #endif
 
-namespace audioviz::util
+namespace avz::util
 {
 
 FILE *popen_utf8(const std::string &command, const char *mode)
@@ -440,4 +440,4 @@ void resample_spectrum(
 	}
 }
 
-} // namespace audioviz::util
+} // namespace avz::util

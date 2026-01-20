@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cmath>
 
-namespace audioviz
+namespace avz
 {
 
 ScopeDrawable::ScopeDrawable(const ColorSettings &color, const bool backwards)
@@ -222,4 +222,4 @@ void ScopeDrawable::update_vertices(std::span<const float> samples)
 	}
 }
 
-} // namespace audioviz
+} // namespace avz

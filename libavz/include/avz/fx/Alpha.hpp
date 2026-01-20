@@ -2,7 +2,7 @@
 
 #include <avz/fx/PostProcessEffect.hpp>
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 // Sets the alpha of the entire texture.
@@ -13,4 +13,4 @@ struct Alpha : PostProcessEffect
 	void apply(RenderTexture &rt) const override;
 };
 
-} // namespace audioviz::fx
+} // namespace avz::fx

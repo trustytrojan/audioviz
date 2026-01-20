@@ -2,7 +2,7 @@
 #include <cassert>
 #include <cmath>
 
-namespace audioviz
+namespace avz
 {
 
 FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
@@ -114,4 +114,4 @@ void FrequencyAnalyzer::apply_blackman_window()
 			0.42f - 0.5f * cos(2 * M_PI * i / (fft_size - 1)) + 0.08f * cos(4 * M_PI * i / (fft_size - 1));
 }
 
-} // namespace audioviz
+} // namespace avz

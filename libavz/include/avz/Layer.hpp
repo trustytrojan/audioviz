@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
-namespace audioviz
+namespace avz
 {
 
 struct DrawCall
@@ -33,4 +33,4 @@ public:
 	virtual void render(sf::RenderTarget &target);
 };
 
-} // namespace audioviz
+} // namespace avz

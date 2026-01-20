@@ -3,7 +3,7 @@
 #include "Base.hpp"
 #include "media/Media.hpp"
 
-namespace audioviz
+namespace avz
 {
 
 class Player
@@ -23,4 +23,4 @@ public:
 	void encode(const std::string &outfile, const std::string &vcodec, const std::string &acodec);
 };
 
-} // namespace audioviz
+} // namespace avz

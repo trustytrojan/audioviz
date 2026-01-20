@@ -1,6 +1,6 @@
 #include <avz/Layer.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 void Layer::render(sf::RenderTarget &target)
@@ -17,4 +17,4 @@ void Layer::render(sf::RenderTarget &target)
 	}
 }
 
-} // namespace audioviz
+} // namespace avz

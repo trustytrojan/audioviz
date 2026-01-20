@@ -9,7 +9,7 @@
 
 // #include <print>
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct PolarSpectrum : ExampleBase<PolarSpectrum>
 {
@@ -18,13 +18,13 @@ struct PolarSpectrum : ExampleBase<PolarSpectrum>
 
 	std::vector<float, aligned_allocator<float, 32>> s, a;
 
-	audioviz::ColorSettings color;
-	audioviz::SpectrumDrawable spectrum;
-	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer aa;
-	audioviz::Interpolator ip;
+	avz::ColorSettings color;
+	avz::SpectrumDrawable spectrum;
+	avz::FrequencyAnalyzer fa;
+	avz::AudioAnalyzer aa;
+	avz::Interpolator ip;
 
-	audioviz::fx::Polar polar;
+	avz::fx::Polar polar;
 
 	PolarSpectrum(const ExampleConfig &config)
 		: ExampleBase{config},
@@ -47,30 +47,30 @@ struct PolarSpectrum : ExampleBase<PolarSpectrum>
 		spectrum.set_multiplier(6);
 
 		// Calculate frequency range (20-250 Hz)
-		min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
-		max_fft_index = audioviz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
+		min_fft_index = avz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
+		max_fft_index = avz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
 		// std::println(
 		// 	"min_fft_index={} max_fft_index={} bar_count={}", min_fft_index, max_fft_index, spectrum.get_bar_count());
 
-		emplace_layer<audioviz::Layer>("spectrum").add_draw({spectrum, &polar});
+		emplace_layer<avz::Layer>("spectrum").add_draw({spectrum, &polar});
 	}
 
 	void update(std::span<const float> audio_buffer) override
 	{
 		a.resize(fft_size);
-		capture_time("strided_copy", audioviz::util::extract_channel(a, audio_buffer, num_channels, 0));
+		capture_time("strided_copy", avz::util::extract_channel(a, audio_buffer, num_channels, 0));
 		capture_time("fft", aa.execute_fft(fa, a));
 		s.assign(spectrum.get_bar_count(), 0);
 		// capture_time(
 		// 	"spread_out",
-		// 	audioviz::util::spread_out(
+		// 	avz::util::spread_out(
 		// 		s, {aa.compute_amplitudes(fa).data() + min_fft_index, max_fft_index - min_fft_index + 1}));
 		capture_time(
 			"resample_spectrum",
-			audioviz::util::resample_spectrum(s, aa.compute_amplitudes(fa), sample_rate_hz, fft_size, 20, 250, ip));
+			avz::util::resample_spectrum(s, aa.compute_amplitudes(fa), sample_rate_hz, fft_size, 20, 250, ip));
 		capture_time("interpolate", ip.interpolate(s));
 		capture_time("spectrum_update", spectrum.update(s));
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(PolarSpectrum, "Polar spectrum visualization with bass frequencies", viz.fft_size)
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(PolarSpectrum, "Polar spectrum visualization with bass frequencies", viz.fft_size)

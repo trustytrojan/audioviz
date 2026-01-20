@@ -10,7 +10,7 @@
 #include <SFML/Graphics.hpp>
 // #include <print>
 
-using namespace audioviz::examples;
+using namespace avz::examples;
 
 struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
 {
@@ -19,13 +19,13 @@ struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
 
 	std::vector<float, aligned_allocator<float, 32>> s, a;
 
-	audioviz::ColorSettings cs;
-	audioviz::SpectrumDrawable spectrum_left, spectrum_right;
-	audioviz::FrequencyAnalyzer fa;
-	audioviz::AudioAnalyzer aa;
-	audioviz::Interpolator ip;
+	avz::ColorSettings cs;
+	avz::SpectrumDrawable spectrum_left, spectrum_right;
+	avz::FrequencyAnalyzer fa;
+	avz::AudioAnalyzer aa;
+	avz::Interpolator ip;
 
-	audioviz::fx::Polar polar_left, polar_right;
+	avz::fx::Polar polar_left, polar_right;
 
 	StereoPolarSpectrum(const ExampleConfig &config)
 		: ExampleBase{config},
@@ -47,29 +47,29 @@ struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
 		spectrum_right.set_multiplier(6);
 
 		// Calculate frequency range (20-125 Hz)
-		min_fft_index = audioviz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
-		max_fft_index = audioviz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
+		min_fft_index = avz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
+		max_fft_index = avz::util::bin_index_from_freq(125, sample_rate_hz, fft_size);
 		// std::println("max_fft_index={} bar_count={}", max_fft_index, spectrum_left.get_bar_count());
 
 		polar_right.angle_start = -M_PI / 2;
 
-		auto &spectrum_layer = emplace_layer<audioviz::Layer>("spectrum");
+		auto &spectrum_layer = emplace_layer<avz::Layer>("spectrum");
 		spectrum_layer.add_draw({spectrum_left, &polar_left});
 		spectrum_layer.add_draw({spectrum_right, &polar_right});
 	}
 
 	void update(std::span<const float> audio_buffer) override
 	{
-		auto process_channel = [&](bool backwards, int channel, audioviz::SpectrumDrawable &spectrum)
+		auto process_channel = [&](bool backwards, int channel, avz::SpectrumDrawable &spectrum)
 		{
 			spectrum.set_backwards(backwards);
 			a.resize(fft_size);
-			capture_time("strided_copy", audioviz::util::extract_channel(a, audio_buffer, num_channels, channel));
+			capture_time("strided_copy", avz::util::extract_channel(a, audio_buffer, num_channels, channel));
 			capture_time("fft", aa.execute_fft(fa, a));
 			s.assign(spectrum.get_bar_count(), 0);
 			capture_time(
 				"spread_out",
-				audioviz::util::spread_out(
+				avz::util::spread_out(
 					s, {aa.compute_amplitudes(fa).data() + min_fft_index, max_fft_index - min_fft_index + 1}));
 			capture_time("interpolate", ip.interpolate(s));
 			capture_time("spectrum_update", spectrum.update(s));
@@ -80,5 +80,5 @@ struct StereoPolarSpectrum : ExampleBase<StereoPolarSpectrum>
 	}
 };
 
-AUDIOVIZ_EXAMPLE_MAIN_CUSTOM(
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	StereoPolarSpectrum, "Stereo polar spectrum visualization with left and right channels", viz.fft_size)

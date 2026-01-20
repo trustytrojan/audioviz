@@ -6,7 +6,7 @@
 #include "avz/aligned_allocator.hpp"
 #include "fftwf_dft_r2c_1d.hpp"
 
-namespace audioviz
+namespace avz
 {
 
 /**
@@ -72,4 +72,4 @@ private:
 	void apply_blackman_window();
 };
 
-} // namespace audioviz
+} // namespace avz

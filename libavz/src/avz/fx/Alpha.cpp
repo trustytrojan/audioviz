@@ -4,13 +4,13 @@
 
 static sf::Shader shader;
 
-namespace audioviz::fx
+namespace avz::fx
 {
 
 Alpha::Alpha(float alpha)
 	: alpha{alpha}
 {
-	if (!shader.getNativeHandle() && !shader.loadFromMemory(audioviz_shader_alpha_frag, sf::Shader::Type::Fragment))
+	if (!shader.getNativeHandle() && !shader.loadFromMemory(libavz_shader_alpha_frag, sf::Shader::Type::Fragment))
 		throw std::runtime_error{"failed to load alpha shader!"};
 }
 
@@ -22,4 +22,4 @@ void Alpha::apply(RenderTexture &rt) const
 	rt.display();
 }
 
-} // namespace audioviz::fx
+} // namespace avz::fx

@@ -9,7 +9,7 @@
 #include <avz/fft/AudioAnalyzer.hpp>
 #include <avz/util.hpp>
 
-namespace audioviz
+namespace avz
 {
 
 template <typename ParticleShape>
@@ -219,4 +219,4 @@ private:
 	}
 };
 
-} // namespace audioviz
+} // namespace avz

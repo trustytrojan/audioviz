@@ -7,7 +7,7 @@
 #include <span>
 #include <vector>
 
-namespace audioviz
+namespace avz
 {
 
 class AudioAnalyzer
@@ -44,4 +44,4 @@ public:
 	std::array<FrequencyAmplitudePair, 3> compute_multiband_shake(int from_hz, int to_hz);
 };
 
-} // namespace audioviz
+} // namespace avz

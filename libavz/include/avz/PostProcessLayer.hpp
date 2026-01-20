@@ -6,7 +6,7 @@
 #include <functional>
 
 
-namespace audioviz
+namespace avz
 {
 
 class PostProcessLayer : public Layer
@@ -59,4 +59,4 @@ public:
 	virtual void render(sf::RenderTarget &target) override;
 };
 
-} // namespace audioviz
+} // namespace avz
