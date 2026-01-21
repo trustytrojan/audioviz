@@ -7,7 +7,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(argparse)
 
-link_libraries(avz::analysis avz::gfx avz::media avz::main argparse)
+link_libraries(
+	avz::analysis
+	avz::gfx
+	avz::media
+	avz::main
+	argparse
+)
 
 add_library(example-framework
 	src/framework/ExampleFramework.cpp

@@ -23,6 +23,11 @@ if(CMAKE_BUILD_TYPE MATCHES Rel)
 	add_compile_options(-march=native)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	# some gccs don't have features in the stable libstdc++ yet
+	link_libraries(stdc++exp)
+endif()
+
 add_subdirectory(libavz)
 
 if(LIBAVZ_BUILD_EXAMPLES)

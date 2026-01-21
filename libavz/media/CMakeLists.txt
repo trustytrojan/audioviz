@@ -15,6 +15,13 @@ target_include_directories(avz-media PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR} # for json
 )
 
+# sfml (TEMPORARY, FIGURE OUT HOW TO NOT DEPEND ON IT)
+# we can find_package() as gfx might have downloaded it already
+if(WIN32 AND EXISTS "${CMAKE_BINARY_DIR}/_deps/sfml-src")
+	find_package(SFML COMPONENTS Graphics Window System REQUIRED QUIET)
+	target_link_libraries(avz-media PUBLIC SFML::Graphics)
+endif()
+
 # GLEW (caused by pbo optimization changes)
 if(WIN32)
 	message(STATUS "glew: windows detected: fetching glew binaries")
