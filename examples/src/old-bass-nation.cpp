@@ -1,7 +1,6 @@
 #include "ExampleFramework.hpp"
 #include <avz/gfx.hpp>
 #include <avz/analysis.hpp>
-#include <avz/util.hpp>
 
 #include <future>
 #include <memory>

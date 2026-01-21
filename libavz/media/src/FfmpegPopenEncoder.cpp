@@ -1,6 +1,6 @@
 #include <GL/glew.h>
 #include <avz/media/FfmpegPopenEncoder.hpp>
-#include <avz/util.hpp>
+#include <avz/media/util.hpp>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>

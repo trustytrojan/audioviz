@@ -1,8 +1,6 @@
 #include "ExampleFramework.hpp"
 #include <avz/gfx.hpp>
-#include <avz/aligned_allocator.hpp>
 #include <avz/analysis.hpp>
-#include <avz/util.hpp>
 
 using namespace avz::examples;
 
@@ -14,7 +12,7 @@ struct ParticleSystemExample : ExampleBase
 	const int min_fft_index = avz::util::bin_index_from_freq(0, sample_rate_hz, fft_size);
 	const int max_fft_index = avz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
 
-	std::vector<float, aligned_allocator<float>> a, p;
+	std::vector<float> a, p;
 
 	avz::ParticleSystem ps;
 	avz::FrequencyAnalyzer fa;

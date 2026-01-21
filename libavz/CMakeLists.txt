@@ -28,15 +28,9 @@ target_include_directories(avz PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-# popen() on MinGW expects a 'b' to differentiate text/binary,
-# but on Linux it errors if a 'b' is there, so we have to do this...
-if(WIN32)
-	target_compile_definitions(avz PRIVATE POPEN_R_MODE="rb" POPEN_W_MODE="wb")
-else()
-	target_compile_definitions(avz PRIVATE POPEN_R_MODE="r" POPEN_W_MODE="w")
-endif()
-
 add_subdirectory(analysis)
 add_subdirectory(gfx)
+add_subdirectory(media)
 target_link_libraries(avz PUBLIC avz-analysis)
 target_link_libraries(avz PUBLIC avz-gfx)
+target_link_libraries(avz PUBLIC avz-media)

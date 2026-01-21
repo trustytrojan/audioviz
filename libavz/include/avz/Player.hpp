@@ -1,7 +1,7 @@
 #pragma once
 
 #include <avz/gfx/Base.hpp>
-#include "media/Media.hpp"
+#include <avz/media/Media.hpp>
 
 namespace avz
 {

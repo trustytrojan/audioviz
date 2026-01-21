@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <avz/aligned_allocator.hpp>
 #include <span>
 
 namespace avz
@@ -14,7 +13,7 @@ namespace avz
  */
 class Media
 {
-	std::vector<float, aligned_allocator<float>> _audio_buffer;
+	std::vector<float> _audio_buffer;
 
 public:
 	const std::string url;

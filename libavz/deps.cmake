@@ -1,38 +1,6 @@
 # deps.cmake - fetch, setup, and link to dependencies
 include(FetchContent)
 
-## GLEW (caused by pbo optimization changes)
-if(WIN32)
-	message(STATUS "glew: windows detected: fetching glew binaries")
-	FetchContent_Declare(glew URL https://github.com/nigels-com/glew/releases/download/glew-2.3.0/glew-2.3.0-win32.zip)
-	FetchContent_MakeAvailable(glew)
-	target_include_directories(avz PUBLIC ${glew_SOURCE_DIR}/include)
-	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-		target_link_directories(avz PUBLIC ${glew_SOURCE_DIR}/lib/Release/x64)
-	else()
-		message(FATAL_ERROR "glew: windows other architecture: not implemented, do more work")
-	endif()
-	target_link_libraries(avz PUBLIC glew32s)
-	target_compile_definitions(avz PUBLIC GLEW_STATIC)
-else()
-	find_package(GLEW REQUIRED)
-	target_link_libraries(avz PUBLIC GLEW::GLEW)
-endif()
-
-## OpenGL (also caused by optimization changes)
-find_package(OpenGL COMPONENTS OpenGL REQUIRED)
-target_link_libraries(avz PUBLIC OpenGL::GL)
-
-## spline
-if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/tk-spline.hpp)
-	file(DOWNLOAD https://github.com/ttk592/spline/raw/master/src/spline.h ${CMAKE_CURRENT_BINARY_DIR}/tk-spline.hpp)
-endif()
-
-## nlohmann_json
-FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
-FetchContent_MakeAvailable(json)
-target_link_libraries(avz PUBLIC nlohmann_json::nlohmann_json)
-
 ### TEMPORARY - libavz should not be responsible for audio playback.
 ### but to keep things stable i will leave this as is for now.
 ## portaudio (optional)

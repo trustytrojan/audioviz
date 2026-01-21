@@ -1,8 +1,6 @@
 #include "ExampleFramework.hpp"
 #include <avz/gfx.hpp>
-#include <avz/aligned_allocator.hpp>
 #include <avz/analysis.hpp>
-#include <avz/util.hpp>
 
 using namespace avz::examples;
 
@@ -11,7 +9,7 @@ struct LogSpectrum : ExampleBase
 	int fft_size{};
 
 	// audio, spectrum
-	std::vector<float, aligned_allocator<float>> a, s;
+	std::vector<float> a, s;
 
 	avz::ColorSettings color;
 	avz::SpectrumDrawable spectrum;

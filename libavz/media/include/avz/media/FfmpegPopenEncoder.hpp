@@ -1,7 +1,6 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <avz/gfx.hpp>
 #include <cstdio>
 #include <string>
 

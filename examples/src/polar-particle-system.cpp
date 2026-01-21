@@ -1,8 +1,6 @@
 #include "ExampleFramework.hpp"
 #include <avz/gfx.hpp>
-#include <avz/aligned_allocator.hpp>
 #include <avz/analysis.hpp>
-#include <avz/util.hpp>
 
 /*
 TODO: make new polar shader without coordinate warping
@@ -15,7 +13,7 @@ struct PolarParticleSystem : ExampleBase
 	const int fft_size;
 
 	// audio, spectrum
-	std::vector<float, aligned_allocator<float>> a, s;
+	std::vector<float> a, s;
 
 	avz::ParticleSystem ps;
 	avz::FrequencyAnalyzer fa;
