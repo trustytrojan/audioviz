@@ -1,8 +1,8 @@
 #pragma once
 
 #include <avz/gfx.hpp>
-#include <avz/Player.hpp>
-#include <avz/media/FfmpegPopenMedia.hpp>
+#include <avz/main.hpp>
+#include <avz/media.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <argparse/argparse.hpp>

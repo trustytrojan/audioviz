@@ -1,4 +1,4 @@
-#include <avz/Player.hpp>
+#include <avz/main/Player.hpp>
 #include <avz/media/FfmpegPopenEncoder.hpp>
 
 #ifdef LIBAVZ_PORTAUDIO
