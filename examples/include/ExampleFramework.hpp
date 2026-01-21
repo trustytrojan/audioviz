@@ -1,6 +1,6 @@
 #pragma once
 
-#include <avz/Base.hpp>
+#include <avz/gfx.hpp>
 #include <avz/Player.hpp>
 #include <avz/media/FfmpegPopenMedia.hpp>
 

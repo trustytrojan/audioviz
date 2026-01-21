@@ -1,6 +1,6 @@
 #pragma once
 
-#include <avz/SpectrumDrawable.hpp>
+#include <avz/gfx.hpp>
 #include <avz/analysis.hpp>
 #include <avz/util.hpp>
 

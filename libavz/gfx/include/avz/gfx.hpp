@@ -1,0 +1,23 @@
+#pragma once
+
+#include "gfx/Base.hpp"
+#include "gfx/ColorSettings.hpp"
+#include "gfx/Layer.hpp"
+#include "gfx/ParticleSystem.hpp"
+#include "gfx/PostProcessLayer.hpp"
+#include "gfx/Profiler.hpp"
+#include "gfx/RenderTexture.hpp"
+#include "gfx/ScopeDrawable.hpp"
+#include "gfx/SongMetadataDrawable.hpp"
+#include "gfx/SpectrumDrawable.hpp"
+#include "gfx/Sprite.hpp"
+#include "gfx/util.hpp"
+
+#include "gfx/fx/Add.hpp"
+#include "gfx/fx/Alpha.hpp"
+#include "gfx/fx/Blur.hpp"
+#include "gfx/fx/Mirror.hpp"
+#include "gfx/fx/Mult.hpp"
+#include "gfx/fx/Polar.hpp"
+#include "gfx/fx/PostProcessEffect.hpp"
+#include "gfx/fx/Shake.hpp"

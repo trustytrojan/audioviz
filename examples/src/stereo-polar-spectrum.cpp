@@ -1,11 +1,8 @@
 #include "ExampleFramework.hpp"
-#include <avz/SpectrumDrawable.hpp>
+#include <avz/gfx.hpp>
 #include <avz/aligned_allocator.hpp>
 #include <avz/analysis.hpp>
-#include <avz/fx/Polar.hpp>
 #include <avz/util.hpp>
-
-#include <SFML/Graphics.hpp>
 
 using namespace avz::examples;
 

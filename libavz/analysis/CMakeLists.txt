@@ -1,6 +1,8 @@
 file(GLOB_RECURSE LIBAVZ_ANALYSIS_SOURCES src/*.cpp)
 add_library(avz-analysis ${LIBAVZ_ANALYSIS_SOURCES})
 
+target_compile_options(avz-analysis PUBLIC -Wno-narrowing -ffast-math)
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(avz-analysis PUBLIC
 		-Wno-subobject-linkage # caused by tk-spline, safe to ignore

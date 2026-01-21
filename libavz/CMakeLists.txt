@@ -36,28 +36,7 @@ else()
 	target_compile_definitions(avz PRIVATE POPEN_R_MODE="r" POPEN_W_MODE="w")
 endif()
 
-# Generate header files with embedded shader source code
-file(GLOB SHADER_SOURCES
-	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
-	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
-)
-set(SHADER_HEADERS)
-set(SHADER_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader_headers")
-foreach(SHADER_SOURCE IN LISTS SHADER_SOURCES)
-	get_filename_component(SHADER_NAME ${SHADER_SOURCE} NAME)
-	set(SHADER_HEADER "${SHADER_HEADER_DIR}/${SHADER_NAME}.h")
-	list(APPEND SHADER_HEADERS ${SHADER_HEADER})
-	add_custom_command(
-		OUTPUT ${SHADER_HEADER}
-		COMMAND ${CMAKE_COMMAND} -DSHADER_SOURCE=${SHADER_SOURCE} -DSHADER_HEADER_DIR=${SHADER_HEADER_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shader_header.cmake
-		DEPENDS ${SHADER_SOURCE}
-		COMMENT "Generating shader header ${SHADER_NAME}.h"
-	)
-endforeach()
-add_custom_target(generate_shader_headers DEPENDS ${SHADER_HEADERS})
-add_dependencies(avz generate_shader_headers)
-
-target_include_directories(avz PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shader_headers)
-
 add_subdirectory(analysis)
+add_subdirectory(gfx)
 target_link_libraries(avz PUBLIC avz-analysis)
+target_link_libraries(avz PUBLIC avz-gfx)

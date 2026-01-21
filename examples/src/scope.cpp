@@ -1,5 +1,5 @@
 #include "ExampleFramework.hpp"
-#include <avz/ScopeDrawable.hpp>
+#include <avz/gfx.hpp>
 #include <avz/util.hpp>
 #include <avz/analysis.hpp>
 

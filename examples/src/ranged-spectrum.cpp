@@ -1,5 +1,5 @@
 #include "ExampleFramework.hpp"
-#include <avz/SpectrumDrawable.hpp>
+#include <avz/gfx.hpp>
 #include <avz/aligned_allocator.hpp>
 #include <avz/analysis.hpp>
 #include <avz/util.hpp>

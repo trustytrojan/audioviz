@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Base.hpp"
+#include <avz/gfx/Base.hpp>
 #include "media/Media.hpp"
 
 namespace avz

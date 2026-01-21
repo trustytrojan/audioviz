@@ -1,8 +1,6 @@
 #include "ExampleFramework.hpp"
-#include <avz/Layer.hpp>
-#include <avz/SpectrumDrawable.hpp>
+#include <avz/gfx.hpp>
 #include <avz/analysis.hpp>
-#include <avz/fx/Polar.hpp>
 #include <avz/util.hpp>
 
 #include <future>
