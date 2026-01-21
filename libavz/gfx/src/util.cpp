@@ -1,4 +1,4 @@
-#include "util.hpp"
+#include <avz/gfx/util.hpp>
 #include <cmath>
 
 namespace avz::util

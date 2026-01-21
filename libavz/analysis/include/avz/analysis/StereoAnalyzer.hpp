@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MultiChannelAudioAnalyzer.hpp"
+#include <avz/analysis/MultiChannelAudioAnalyzer.hpp>
 
 namespace avz
 {

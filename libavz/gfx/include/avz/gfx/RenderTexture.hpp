@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Sprite.hpp"
+#include <avz/gfx/Sprite.hpp>
 #include <SFML/Graphics.hpp>
 
 namespace avz

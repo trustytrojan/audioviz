@@ -5,9 +5,6 @@ target_compile_options(avz-gfx PUBLIC -Wno-narrowing -ffast-math)
 
 target_include_directories(avz-gfx PUBLIC include)
 
-# private include path to make our sources' lives easier
-target_include_directories(avz-gfx PRIVATE include/avz/gfx)
-
 # sfml
 if(WIN32)
 	# reduce dynamic linker hassle

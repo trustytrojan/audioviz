@@ -1,7 +1,7 @@
 #pragma once
 
-#include "media/FfmpegPopenMedia.hpp"
-#include "media/FfmpegPopenEncoder.hpp"
-#include "media/Media.hpp"
-#include "media/FfprobeMetadata.hpp"
-#include "media/util.hpp"
+#include <avz/media/FfmpegPopenMedia.hpp>
+#include <avz/media/FfmpegPopenEncoder.hpp>
+#include <avz/media/Media.hpp>
+#include <avz/media/FfprobeMetadata.hpp>
+#include <avz/media/util.hpp>

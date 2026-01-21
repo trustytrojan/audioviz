@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FrequencyAnalyzer.hpp"
+#include <avz/analysis/FrequencyAnalyzer.hpp>
 #include <cassert>
 #include <span>
 #include <vector>

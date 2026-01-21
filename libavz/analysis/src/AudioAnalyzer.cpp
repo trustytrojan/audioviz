@@ -1,5 +1,5 @@
-#include "AudioAnalyzer.hpp"
-#include "util.hpp"
+#include <avz/analysis/AudioAnalyzer.hpp>
+#include <avz/analysis/util.hpp>
 
 #include <algorithm>
 

@@ -1,5 +1,5 @@
-#include "SongMetadataDrawable.hpp"
-#include "util.hpp"
+#include <avz/gfx/SongMetadataDrawable.hpp>
+#include <avz/gfx/util.hpp>
 
 namespace avz
 {

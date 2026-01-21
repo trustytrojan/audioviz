@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TransformEffect.hpp"
+#include <avz/gfx/fx/TransformEffect.hpp>
 #include <SFML/Graphics.hpp>
 
 namespace avz::fx

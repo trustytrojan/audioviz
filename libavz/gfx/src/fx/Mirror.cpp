@@ -1,4 +1,4 @@
-#include "fx/Mirror.hpp"
+#include <avz/gfx/fx/Mirror.hpp>
 
 #include "shader_headers/mirror.frag.h"
 

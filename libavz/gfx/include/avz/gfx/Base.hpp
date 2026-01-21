@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Layer.hpp"
-#include "Profiler.hpp"
-#include "RenderTexture.hpp"
+#include <avz/gfx/Layer.hpp>
+#include <avz/gfx/Profiler.hpp>
+#include <avz/gfx/RenderTexture.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <memory>

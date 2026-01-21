@@ -1,7 +1,7 @@
 #pragma once
 
 #include <avz/gfx/RenderTexture.hpp>
-#include "PostProcessEffect.hpp"
+#include <avz/gfx/fx/PostProcessEffect.hpp>
 
 namespace avz::fx
 {

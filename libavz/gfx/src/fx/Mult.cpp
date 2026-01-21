@@ -1,4 +1,4 @@
-#include "fx/Mult.hpp"
+#include <avz/gfx/fx/Mult.hpp>
 
 #include "shader_headers/mult.frag.h"
 

@@ -1,5 +1,5 @@
 #include "shader_headers/polar.vert.h"
-#include "fx/Polar.hpp"
+#include <avz/gfx/fx/Polar.hpp>
 #include <stdexcept>
 #include <string>
 

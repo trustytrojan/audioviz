@@ -1,4 +1,4 @@
-#include "PostProcessLayer.hpp"
+#include <avz/gfx/PostProcessLayer.hpp>
 
 namespace avz
 {

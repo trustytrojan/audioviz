@@ -1,6 +1,6 @@
 #include "shader_headers/shake.vert.h"
 #include <SFML/System/Clock.hpp>
-#include "fx/Shake.hpp"
+#include <avz/gfx/fx/Shake.hpp>
 #include <numbers>
 
 static sf::Shader shader;

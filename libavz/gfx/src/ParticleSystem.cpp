@@ -1,4 +1,4 @@
-#include "ParticleSystem.hpp"
+#include <avz/gfx/ParticleSystem.hpp>
 #include <random>
 
 static float randf(const float min, const float max)

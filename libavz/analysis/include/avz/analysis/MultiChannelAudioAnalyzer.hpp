@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AudioAnalyzer.hpp"
+#include <avz/analysis/AudioAnalyzer.hpp>
 #include <span>
 #include <vector>
 

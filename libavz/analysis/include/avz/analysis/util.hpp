@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Interpolator.hpp"
+#include <avz/analysis/Interpolator.hpp>
 #include <span>
 
 namespace avz::util

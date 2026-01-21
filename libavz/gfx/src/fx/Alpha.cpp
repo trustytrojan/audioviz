@@ -1,4 +1,4 @@
-#include "fx/Alpha.hpp"
+#include <avz/gfx/fx/Alpha.hpp>
 
 #include "shader_headers/alpha.frag.h"
 

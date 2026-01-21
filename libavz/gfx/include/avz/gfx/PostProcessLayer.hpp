@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Layer.hpp"
-#include "RenderTexture.hpp"
-#include "fx/PostProcessEffect.hpp"
+#include <avz/gfx/Layer.hpp>
+#include <avz/gfx/RenderTexture.hpp>
+#include <avz/gfx/fx/PostProcessEffect.hpp>
 #include <functional>
 
 namespace avz

@@ -1,4 +1,4 @@
-#include "fx/Add.hpp"
+#include <avz/gfx/fx/Add.hpp>
 
 #include "shader_headers/add.frag.h"
 

@@ -3,7 +3,7 @@
 #include <span>
 #include <vector>
 
-#include "fftwf_dft_r2c_1d.hpp"
+#include <avz/analysis/fftwf_dft_r2c_1d.hpp>
 
 namespace avz
 {

@@ -1,4 +1,4 @@
-#include "fx/Blur.hpp"
+#include <avz/gfx/fx/Blur.hpp>
 
 #include "shader_headers/blur.frag.h"
 

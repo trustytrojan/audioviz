@@ -1,4 +1,4 @@
-#include "Sprite.hpp"
+#include <avz/gfx/Sprite.hpp>
 
 namespace avz
 {

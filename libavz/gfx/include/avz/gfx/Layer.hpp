@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fx/TransformEffect.hpp"
+#include <avz/gfx/fx/TransformEffect.hpp>
 #include <SFML/Graphics.hpp>
 #include <vector>
 

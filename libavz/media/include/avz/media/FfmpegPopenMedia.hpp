@@ -1,7 +1,7 @@
 #pragma once
 
-#include "FfprobeMetadata.hpp"
-#include "Media.hpp"
+#include <avz/media/FfprobeMetadata.hpp>
+#include <avz/media/Media.hpp>
 
 namespace avz
 {

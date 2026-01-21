@@ -1,5 +1,5 @@
-#include "ColorSettings.hpp"
-#include "util.hpp"
+#include <avz/gfx/ColorSettings.hpp>
+#include <avz/gfx/util.hpp>
 
 namespace avz
 {

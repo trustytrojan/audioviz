@@ -14,9 +14,6 @@ target_include_directories(avz-analysis PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR} # for spline
 )
 
-# private include path to make our sources' lives easier
-target_include_directories(avz-analysis PRIVATE include/avz/analysis)
-
 # fftw
 if(NOT ANDROID)
 	# termux's fftw package is missing FFTW3LibraryDepends.cmake, so don't bother finding

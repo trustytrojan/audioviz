@@ -1,4 +1,4 @@
-#include "Interpolator.hpp"
+#include <avz/analysis/Interpolator.hpp>
 
 namespace avz
 {

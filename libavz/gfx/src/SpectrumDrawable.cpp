@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "SpectrumDrawable.hpp"
+#include <avz/gfx/SpectrumDrawable.hpp>
 #include <cassert>
 
 namespace avz

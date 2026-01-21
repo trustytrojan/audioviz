@@ -1,5 +1,5 @@
 #include <algorithm>
-#include "BinPacker.hpp"
+#include <avz/analysis/BinPacker.hpp>
 #include <cmath>
 #include <stdexcept>
 

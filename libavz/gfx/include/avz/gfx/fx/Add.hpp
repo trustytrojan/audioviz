@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PostProcessEffect.hpp"
+#include <avz/gfx/fx/PostProcessEffect.hpp>
 
 namespace avz::fx
 {

@@ -1,4 +1,4 @@
-#include "ScopeDrawable.hpp"
+#include <avz/gfx/ScopeDrawable.hpp>
 
 #include <algorithm>
 #include <cassert>
