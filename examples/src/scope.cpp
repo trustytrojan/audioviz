@@ -6,7 +6,7 @@
 
 using namespace avz::examples;
 
-struct Scope : ExampleBase<Scope>
+struct Scope : ExampleBase
 {
 	avz::ColorSettings color;
 	avz::ScopeDrawable scope;
@@ -50,4 +50,5 @@ struct Scope : ExampleBase<Scope>
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	Scope,
 	"Audio oscilloscope visualization",
+	0.02f,
 	std::max(1, (int)std::round(config.audio_duration_sec *viz.sample_rate_hz)))

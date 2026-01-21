@@ -1,7 +1,6 @@
 #include "shader_headers/shake.vert.h"
 #include <SFML/System/Clock.hpp>
 #include <avz/fx/Shake.hpp>
-#include <avz/util.hpp>
 #include <numbers>
 
 static sf::Shader shader;
@@ -31,18 +30,16 @@ void Shake::setShaderUniforms() const
 	shader.setUniform("amplitudes", amplitudes);
 }
 
-void Shake::setParameters(AudioAnalyzer &aa, int from_hz, int to_hz, float multiplier)
+void Shake::setParameters(sf::Vector3f frequencies_hz, sf::Vector3f amplitudes, float multiplier)
 {
-	auto bands = aa.compute_multiband_shake(from_hz, to_hz);
-
 	// Apply multiplier to amplitudes and convert frequencies to radians
-	frequencies.x = bands[0].frequency_hz * 2.f * std::numbers::pi_v<float>;
-	frequencies.y = bands[1].frequency_hz * 2.f * std::numbers::pi_v<float>;
-	frequencies.z = bands[2].frequency_hz * 2.f * std::numbers::pi_v<float>;
 
-	amplitudes.x = bands[0].amplitude * multiplier;
-	amplitudes.y = bands[1].amplitude * multiplier;
-	amplitudes.z = bands[2].amplitude * multiplier;
+	static const sf::Vector3f two_pi3{
+		2 * std::numbers::pi_v<float>, 2 * std::numbers::pi_v<float>, 2 * std::numbers::pi_v<float>};
+	const sf::Vector3f multiplier3{multiplier, multiplier, multiplier};
+
+	frequencies = frequencies_hz.componentWiseMul(two_pi3);
+	this->amplitudes = amplitudes.componentWiseMul(multiplier3);
 }
 
 } // namespace avz::fx

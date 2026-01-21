@@ -1,11 +1,7 @@
 #pragma once
 
-#include "avz/fft/BinPacker.hpp"
-#include "avz/fft/Interpolator.hpp"
 #include <SFML/Graphics.hpp>
 #include <avz/ColorSettings.hpp>
-#include <avz/aligned_allocator.hpp>
-#include <avz/fft/AudioAnalyzer.hpp>
 #include <avz/util.hpp>
 #include <span>
 
@@ -20,7 +16,6 @@ class SpectrumDrawable : public sf::Drawable
 {
 	const ColorSettings &color;
 	float multiplier{1};
-	std::vector<float, aligned_allocator<float>> m_spectrum;
 	sf::VertexArray vertex_array;
 	sf::IntRect rect;
 	bool backwards{};
@@ -47,8 +42,6 @@ public:
 	void set_backwards(const bool b);
 
 	void update_bar_colors();
-	// bin-packing, interpolating overload of update
-	void update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, BinPacker &bp, Interpolator &ip);
 	void update(std::span<const float> spectrum);
 	void draw(sf::RenderTarget &target, sf::RenderStates states = {}) const override;
 

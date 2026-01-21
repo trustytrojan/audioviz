@@ -3,8 +3,12 @@
 namespace avz::examples
 {
 
-ExampleConfig
-parse_arguments(int argc, const char *const *argv, const std::string &program_name, const std::string &description)
+ExampleConfig parse_arguments(
+	int argc,
+	const char *const *argv,
+	const std::string &program_name,
+	const std::string &description,
+	float default_audio_duration)
 {
 	argparse::ArgumentParser parser(program_name);
 
@@ -28,8 +32,8 @@ parse_arguments(int argc, const char *const *argv, const std::string &program_na
 		.scan<'d', int>();
 
 	parser.add_argument("--fft-window")
-		.help("FFT window duration (seconds)")
-		.default_value(0.25f)
+		.help("Audio window duration (seconds)")
+		.default_value(default_audio_duration)
 		.scan<'g', float>();
 
 	parser.add_argument("--media-start")
@@ -96,6 +100,22 @@ parse_arguments(int argc, const char *const *argv, const std::string &program_na
 	}
 
 	return config;
+}
+
+ExampleBase::ExampleBase(const ExampleConfig &config)
+	: Base{config.size},
+	  media{config.media_path, config.media_start_time_sec},
+	  sample_rate_hz{media.audio_sample_rate()},
+	  num_channels{media.audio_channels()}
+{
+	if (config.profiler_enabled)
+	{
+		enable_profiler();
+		if (config.font_path.size())
+			set_font(config.font_path);
+		else
+			std::cerr << "profiler enabled but no font file provided, profiler text will not be visible\n";
+	}
 }
 
 } // namespace avz::examples

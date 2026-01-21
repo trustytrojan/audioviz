@@ -7,21 +7,13 @@
 namespace avz
 {
 
-MultiChannelAudioAnalyzer::MultiChannelAudioAnalyzer(int num_channels, int sample_rate_hz, int window_size_samples)
+MultiChannelAudioAnalyzer::MultiChannelAudioAnalyzer(int num_channels)
 	: num_channels{num_channels}
 {
 	if (num_channels <= 0)
 		throw std::invalid_argument("num_channels must be > 0");
 
-	analyzers.reserve(num_channels);
-	for (int i = 0; i < num_channels; ++i)
-		analyzers.emplace_back(sample_rate_hz, window_size_samples);
-}
-
-void MultiChannelAudioAnalyzer::set_fft_size(int fft_size)
-{
-	for (auto &aa : analyzers)
-		aa.set_fft_size(fft_size);
+	analyzers.resize(num_channels);
 }
 
 void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<const float> interleaved_audio)
@@ -40,6 +32,12 @@ void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<con
 	}
 }
 
+void MultiChannelAudioAnalyzer::compute_amplitudes(FrequencyAnalyzer &fa)
+{
+	for (int ch = 0; ch < num_channels; ++ch)
+		analyzers[ch].compute_amplitudes(fa);
+}
+
 AudioAnalyzer &MultiChannelAudioAnalyzer::operator[](int channel)
 {
 	if (channel < 0 || channel >= num_channels)
@@ -54,43 +52,20 @@ const AudioAnalyzer &MultiChannelAudioAnalyzer::operator[](int channel) const
 	return analyzers[channel];
 }
 
-AudioAnalyzer::FrequencyAmplitudePair MultiChannelAudioAnalyzer::compute_averaged_peak_frequency(int from_hz, int to_hz)
+AudioAnalyzer::FrequencyAmplitudePair MultiChannelAudioAnalyzer::compute_averaged_peak_frequency(
+	const FrequencyAnalyzer &fa, int sample_rate_hz, int from_hz, int to_hz)
 {
 	float total_freq = 0.f;
 	float total_amp = 0.f;
 
 	for (auto &analyzer : analyzers)
 	{
-		auto [freq, amp] = analyzer.compute_peak_frequency(from_hz, to_hz);
+		auto [freq, amp] = analyzer.compute_peak_frequency(fa, sample_rate_hz, from_hz, to_hz);
 		total_freq += freq;
 		total_amp += amp;
 	}
 
 	return {static_cast<int>(total_freq / num_channels), total_amp / num_channels};
-}
-
-std::array<AudioAnalyzer::FrequencyAmplitudePair, 3>
-MultiChannelAudioAnalyzer::compute_averaged_multiband_shake(int from_hz, int to_hz)
-{
-	std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> result{};
-
-	for (auto &analyzer : analyzers)
-	{
-		auto bands = analyzer.compute_multiband_shake(from_hz, to_hz);
-		for (int i = 0; i < 3; ++i)
-		{
-			result[i].frequency_hz += bands[i].frequency_hz;
-			result[i].amplitude += bands[i].amplitude;
-		}
-	}
-
-	for (auto &band : result)
-	{
-		band.frequency_hz /= num_channels;
-		band.amplitude /= num_channels;
-	}
-
-	return result;
 }
 
 } // namespace avz

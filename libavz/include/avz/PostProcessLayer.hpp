@@ -5,7 +5,6 @@
 #include "fx/PostProcessEffect.hpp"
 #include <functional>
 
-
 namespace avz
 {
 

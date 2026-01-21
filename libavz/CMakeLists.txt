@@ -9,6 +9,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(avz PUBLIC
 		-Wno-subobject-linkage # caused by tk-spline, safe to ignore
 	)
+
+	# for windows mingw gcc 15.2 on the github action runner
+	target_link_libraries(avz PUBLIC stdc++exp)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")

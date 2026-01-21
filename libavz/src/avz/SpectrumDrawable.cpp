@@ -53,15 +53,6 @@ void SpectrumDrawable::set_backwards(const bool b)
 	update_bars();
 }
 
-void SpectrumDrawable::update(FrequencyAnalyzer &fa, AudioAnalyzer &aa, BinPacker &bp, Interpolator &ip)
-{
-	m_spectrum.resize(bar.count);
-	bp.bin_pack(m_spectrum, aa.compute_amplitudes(fa));
-	if (bp.get_scale() != BinPacker::Scale::LINEAR)
-		ip.interpolate(m_spectrum);
-	update(m_spectrum);
-}
-
 void SpectrumDrawable::update(std::span<const float> spectrum)
 {
 	assert(spectrum.size() >= bar.count);

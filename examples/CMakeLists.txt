@@ -9,23 +9,21 @@ FetchContent_MakeAvailable(argparse)
 
 link_libraries(avz argparse)
 
-add_library(example-framework ExampleFramework.cpp)
+add_library(example-framework
+	src/framework/ExampleFramework.cpp
+	src/framework/BassNationSpectrumLayer.cpp
+)
 link_libraries(example-framework)
 
-# this is also used by testing.cmake!
-set(EXAMPLE_PROGRAMS
-	stereo-scope
-	ranged-spectrum
-	polar-spectrum
-	stereo-polar-spectrum
-	shake-bass
-	old-bass-nation
-	mirrored-bass-nation
-	scope
-)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-foreach(example ${EXAMPLE_PROGRAMS})
-	add_executable(${example} "${example}.cpp")
+# this is also used by testing.cmake!
+file(GLOB EXAMPLE_SOURCES "src/*.cpp")
+set(EXAMPLE_PROGRAMS "")
+foreach(source ${EXAMPLE_SOURCES})
+	get_filename_component(example ${source} NAME_WE)
+	list(APPEND EXAMPLE_PROGRAMS ${example})
+	add_executable(${example} ${source})
 endforeach()
 
 if(WIN32)

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AudioAnalyzer.hpp"
-#include <array>
 #include <span>
 #include <vector>
 
@@ -24,9 +23,7 @@ public:
 	 * @param sample_rate_hz Audio sample rate in Hz
 	 * @param window_size_samples FFT window size in samples
 	 */
-	MultiChannelAudioAnalyzer(int num_channels, int sample_rate_hz, int window_size_samples);
-
-	void set_fft_size(int fft_size);
+	MultiChannelAudioAnalyzer(int num_channels);
 
 	/**
 	 * Execute FFT on interleaved multi-channel audio buffer.
@@ -35,6 +32,8 @@ public:
 	 * @param interleaved_audio Interleaved audio buffer (size = window_size * num_channels)
 	 */
 	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> interleaved_audio);
+
+	void compute_amplitudes(FrequencyAnalyzer &fa);
 
 	/**
 	 * Get analyzer for specific channel.
@@ -46,17 +45,12 @@ public:
 	/**
 	 * Get number of channels.
 	 */
-	int get_num_channels() const { return num_channels; }
+	inline int get_num_channels() const { return num_channels; }
 
 	/**
 	 * Average peak frequency across all channels (useful for stereo->mono reduction).
 	 */
-	AudioAnalyzer::FrequencyAmplitudePair compute_averaged_peak_frequency(int from_hz, int to_hz);
-
-	/**
-	 * Average multiband shake across all channels.
-	 */
-	std::array<AudioAnalyzer::FrequencyAmplitudePair, 3> compute_averaged_multiband_shake(int from_hz, int to_hz);
+	AudioAnalyzer::FrequencyAmplitudePair compute_averaged_peak_frequency(const FrequencyAnalyzer &fa, int sample_rate_hz, int from_hz, int to_hz);
 };
 
 } // namespace avz

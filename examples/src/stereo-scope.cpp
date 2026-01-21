@@ -5,11 +5,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <print>
 #include <vector>
 
 using namespace avz::examples;
 
-struct StereoScopeViz : ExampleBase<StereoScopeViz>
+struct StereoScopeViz : ExampleBase
 {
 	avz::ColorSettings colorL, colorR;
 	avz::ScopeDrawable left_scope;
@@ -21,8 +22,10 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 		: ExampleBase{config},
 		  left_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorL},
 		  right_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorR},
-		  required_frames{std::max(1, (int)std::round(config.audio_duration_sec * sample_rate_hz))}
+		  required_frames{config.audio_duration_sec * sample_rate_hz}
 	{
+		std::println("required_frames={}", required_frames);
+
 		colorL.set_mode(avz::ColorSettings::Mode::SOLID);
 		colorL.set_solid_color(sf::Color::Red);
 		colorR.set_mode(avz::ColorSettings::Mode::SOLID);
@@ -51,6 +54,11 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 	{
 		if (num_channels > 1)
 		{
+			std::println(
+				"left_channel.size()={} audio_buffer.size()={} num_channels={}",
+				left_channel.size(),
+				audio_buffer.size(),
+				num_channels);
 			avz::util::extract_channel(left_channel, audio_buffer, num_channels, 0);
 			avz::util::extract_channel(right_channel, audio_buffer, num_channels, 1);
 			left_scope.update(left_channel);
@@ -68,4 +76,5 @@ struct StereoScopeViz : ExampleBase<StereoScopeViz>
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
 	StereoScopeViz,
 	"Stereo oscilloscope visualization with left (red) and right (cyan) channels",
-	std::max(1, (int)std::round(config.audio_duration_sec *viz.sample_rate_hz)))
+	0.02f,
+	viz.required_frames)

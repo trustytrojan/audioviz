@@ -11,16 +11,16 @@
 #include <memory>
 // #include <print>
 
-#include "SpectrumLayer.hpp"
+#include "BassNationSpectrumLayer.hpp"
 #include "avz/PostProcessLayer.hpp"
 
 using namespace avz::examples;
 
-struct MirroredBassNation : ExampleBase<MirroredBassNation>
+struct MirroredBassNation : ExampleBase
 {
 	const int max_fft_size;
 
-	std::vector<std::unique_ptr<SpectrumLayer>> spectrums;
+	std::vector<std::unique_ptr<BassNationSpectrumLayer>> spectrums;
 	avz::ColorSettings cs;
 	std::vector<std::future<void>> futures;
 
@@ -61,8 +61,8 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 
 			cs.set_solid_color(colors[i]);
 
-			auto &spectrum =
-				*spectrums.emplace_back(std::make_unique<SpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, true));
+			auto &spectrum = *spectrums.emplace_back(
+				std::make_unique<BassNationSpectrumLayer>(new_fft_size, sample_rate_hz, size, cs, true));
 			spectrum.configure_spectrum(false, size);
 
 			spectrum_layer.add_draw({spectrum.spectrum, &polar_left});
@@ -77,7 +77,8 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 	void update(std::span<const float> audio_buffer) override
 	{
 		// std::ranges::transform(spectrums, futures.begin(), [&](auto &l) { return l->trigger_work(audio_buffer); });
-		std::ranges::transform(spectrums, futures.begin(), std::bind_back(&SpectrumLayer::trigger_work, audio_buffer));
+		std::ranges::transform(
+			spectrums, futures.begin(), std::bind_back(&BassNationSpectrumLayer::trigger_work, audio_buffer));
 
 		// wait for all compute tasks
 		std::ranges::for_each(futures, &std::future<void>::wait);
@@ -85,4 +86,4 @@ struct MirroredBassNation : ExampleBase<MirroredBassNation>
 };
 
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
-	MirroredBassNation, "Mirrored multi-spectrum polar visualization with bass frequencies", viz.max_fft_size)
+	MirroredBassNation, "Mirrored multi-spectrum polar visualization with bass frequencies", 0.25f, viz.max_fft_size)
