@@ -1,6 +1,7 @@
 #include "ExampleFramework.hpp"
 #include <avz/ScopeDrawable.hpp>
 #include <avz/util.hpp>
+#include <avz/analysis.hpp>
 
 #include <vector>
 

@@ -3,7 +3,6 @@
 #include <span>
 #include <vector>
 
-#include "avz/aligned_allocator.hpp"
 #include "fftwf_dft_r2c_1d.hpp"
 
 namespace avz
@@ -29,7 +28,7 @@ private:
 	int fft_size;
 	fftwf_dft_r2c_1d fftw;
 	WindowFunction window_func{WindowFunction::Hanning};
-	std::vector<float, aligned_allocator<float>> window_values;
+	std::vector<float> window_values;
 
 public:
 	/**

@@ -1,6 +1,5 @@
-#include "avz/util.hpp"
-#include <avz/aligned_allocator.hpp>
-#include <avz/fft/MultiChannelAudioAnalyzer.hpp>
+#include "util.hpp"
+#include "MultiChannelAudioAnalyzer.hpp"
 
 #include <stdexcept>
 
@@ -26,7 +25,7 @@ void MultiChannelAudioAnalyzer::execute_fft(FrequencyAnalyzer &fa, std::span<con
 	{
 		// Copy channel data (deinterleave)
 		float buf[window_size];
-		std::span channel_audio{buf, window_size};
+		std::span channel_audio{buf, static_cast<size_t>(window_size)};
 		util::extract_channel(channel_audio, interleaved_audio, num_channels, ch);
 		analyzers[ch].execute_fft(fa, channel_audio);
 	}

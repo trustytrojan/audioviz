@@ -1,7 +1,6 @@
 #pragma once
 
 #include "FrequencyAnalyzer.hpp"
-#include "avz/aligned_allocator.hpp"
 #include <cassert>
 #include <span>
 #include <vector>
@@ -19,7 +18,7 @@ public:
 	};
 
 private:
-	std::vector<float, aligned_allocator<float>> _amplitudes;
+	std::vector<float> _amplitudes;
 
 public:
 	void execute_fft(FrequencyAnalyzer &fa, std::span<const float> audio);

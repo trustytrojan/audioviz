@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <avz/fft/BinPacker.hpp>
+#include "BinPacker.hpp"
 #include <cmath>
 #include <stdexcept>
 

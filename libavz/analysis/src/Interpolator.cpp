@@ -1,4 +1,4 @@
-#include <avz/fft/Interpolator.hpp>
+#include "Interpolator.hpp"
 
 namespace avz
 {

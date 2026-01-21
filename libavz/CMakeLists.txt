@@ -58,3 +58,6 @@ add_custom_target(generate_shader_headers DEPENDS ${SHADER_HEADERS})
 add_dependencies(avz generate_shader_headers)
 
 target_include_directories(avz PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shader_headers)
+
+add_subdirectory(analysis)
+target_link_libraries(avz PUBLIC avz-analysis)

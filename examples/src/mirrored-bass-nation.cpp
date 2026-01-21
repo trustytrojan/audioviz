@@ -1,8 +1,6 @@
 #include "ExampleFramework.hpp"
 #include <avz/SpectrumDrawable.hpp>
-#include <avz/fft/AudioAnalyzer.hpp>
-#include <avz/fft/FrequencyAnalyzer.hpp>
-#include <avz/fft/Interpolator.hpp>
+#include <avz/analysis.hpp>
 #include <avz/fx/Mirror.hpp>
 #include <avz/fx/Polar.hpp>
 #include <avz/util.hpp>

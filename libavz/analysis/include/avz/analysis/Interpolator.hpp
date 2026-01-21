@@ -1,7 +1,7 @@
 #pragma once
 
 #include <span>
-#include <tk-spline.hpp>
+#include "tk-spline.hpp"
 #include <vector>
 
 namespace avz

@@ -1,9 +1,7 @@
 #pragma once
 
 #include <avz/SpectrumDrawable.hpp>
-#include <avz/fft/AudioAnalyzer.hpp>
-#include <avz/fft/FrequencyAnalyzer.hpp>
-#include <avz/fft/Interpolator.hpp>
+#include <avz/analysis.hpp>
 #include <avz/util.hpp>
 
 #include <condition_variable>
@@ -19,7 +17,7 @@ struct BassNationSpectrumLayer
 	avz::FrequencyAnalyzer fa;
 	avz::AudioAnalyzer aa;
 	avz::Interpolator ip;
-	std::vector<float, aligned_allocator<float>> s, a;
+	std::vector<float> s, a;
 	avz::SpectrumDrawable spectrum;
 	bool is_left;
 	int sample_rate;

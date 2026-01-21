@@ -1,9 +1,7 @@
 #include "ExampleFramework.hpp"
 #include <avz/SpectrumDrawable.hpp>
 #include <avz/aligned_allocator.hpp>
-#include <avz/fft/AudioAnalyzer.hpp>
-#include <avz/fft/FrequencyAnalyzer.hpp>
-#include <avz/fft/Interpolator.hpp>
+#include <avz/analysis.hpp>
 #include <avz/fx/Polar.hpp>
 #include <avz/util.hpp>
 
