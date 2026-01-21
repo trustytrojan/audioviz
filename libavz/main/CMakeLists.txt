@@ -1,9 +1,10 @@
 file(GLOB_RECURSE LIBAVZ_MAIN_SOURCES src/*.cpp)
 add_library(avz-main ${LIBAVZ_MAIN_SOURCES})
+add_library(avz::main ALIAS avz-main)
 
 target_compile_options(avz-main PUBLIC -Wno-narrowing -ffast-math)
 target_include_directories(avz-main PUBLIC include)
-target_link_libraries(avz-main PUBLIC avz-gfx avz-media)
+target_link_libraries(avz-main PUBLIC avz::gfx avz::media)
 
 # TEMPORARY - libavz should not be responsible for audio playback.
 # but to keep things stable i will leave this as is for now.

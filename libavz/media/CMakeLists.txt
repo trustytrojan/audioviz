@@ -1,5 +1,6 @@
 file(GLOB_RECURSE LIBAVZ_MEDIA_SOURCES src/*.cpp)
 add_library(avz-media ${LIBAVZ_MEDIA_SOURCES})
+add_library(avz::media ALIAS avz-media)
 
 target_compile_options(avz-media PUBLIC -Wno-narrowing -ffast-math)
 

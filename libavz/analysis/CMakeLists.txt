@@ -1,5 +1,6 @@
 file(GLOB_RECURSE LIBAVZ_ANALYSIS_SOURCES src/*.cpp)
 add_library(avz-analysis ${LIBAVZ_ANALYSIS_SOURCES})
+add_library(avz::analysis ALIAS avz-analysis)
 
 target_compile_options(avz-analysis PUBLIC -Wno-narrowing -ffast-math)
 

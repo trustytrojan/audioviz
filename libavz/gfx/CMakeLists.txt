@@ -1,5 +1,6 @@
 file(GLOB_RECURSE LIBAVZ_GFX_SOURCES src/*.cpp)
 add_library(avz-gfx ${LIBAVZ_GFX_SOURCES})
+add_library(avz::gfx ALIAS avz-gfx)
 
 target_compile_options(avz-gfx PUBLIC -Wno-narrowing -ffast-math)
 
