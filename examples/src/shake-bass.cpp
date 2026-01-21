@@ -20,7 +20,6 @@ struct ShakeBassTest : ExampleBase
 	ShakeBassTest(const ExampleConfig &config)
 		: ExampleBase{config},
 		  fft_size{config.audio_duration_sec * sample_rate_hz},
-		  sa{static_cast<float>(sample_rate_hz), fft_size},
 		  rect{sf::Vector2f{size.x * 0.45f, size.y * 0.45f}}
 	{
 		rect.setOrigin(rect.getGeometricCenter());
@@ -43,9 +42,9 @@ struct ShakeBassTest : ExampleBase
 		// since we are calling this on a StereoAnalyzer, it will average the peak frequency
 		// of the frequency range across both channels.
 		constexpr auto band_size = 250 / 3;
-		const auto [f1, a1] = sa.compute_averaged_peak_frequency(0, band_size);
-		const auto [f2, a2] = sa.compute_averaged_peak_frequency(band_size + 1, 2 * band_size);
-		const auto [f3, a3] = sa.compute_averaged_peak_frequency(2 * band_size + 1, 3 * band_size);
+		const auto [f1, a1] = sa.compute_averaged_peak_frequency(fa, sample_rate_hz, 0, band_size);
+		const auto [f2, a2] = sa.compute_averaged_peak_frequency(fa, sample_rate_hz, band_size + 1, 2 * band_size);
+		const auto [f3, a3] = sa.compute_averaged_peak_frequency(fa, sample_rate_hz, 2 * band_size + 1, 3 * band_size);
 
 		// pass the three frequencies & amplitudes to Shake effect
 		shake.setParameters({f1, f2, f3}, {a1, a2, a3}, 100);

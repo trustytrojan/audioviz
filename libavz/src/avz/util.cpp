@@ -361,23 +361,12 @@ std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPat
 }
 */
 
-void spread_out(std::span<float> out, std::span<const float> in)
-{
-	assert(out.size() >= in.size());
-	const auto increment = out.size() / in.size();
-
-	auto *__restrict const out_ptr = out.data();
-	const auto *__restrict const in_ptr = in.data();
-
-#pragma GCC ivdep
-	for (size_t i = 0; i < in.size(); ++i)
-		out_ptr[i * increment] = in_ptr[i];
-}
-
 void extract_channel(std::span<float> out, std::span<const float> in, int num_channels, int channel)
 {
 	assert(num_channels > 0);
-	assert(out.size() * num_channels == in.size());
+
+	// out should definitely not be requesting MORE than in
+	assert(out.size() * num_channels <= in.size());
 
 	auto *__restrict const out_ptr = out.data();
 	const auto *__restrict const in_ptr = in.data();

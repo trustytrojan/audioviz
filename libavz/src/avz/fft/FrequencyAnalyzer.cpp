@@ -14,7 +14,6 @@ FrequencyAnalyzer::FrequencyAnalyzer(const int fft_size)
 void FrequencyAnalyzer::set_fft_size(const int fft_size)
 {
 	this->fft_size = fft_size;
-	inv_fft_size = 1.0f / fft_size;
 	fftw.set_n(fft_size);
 	compute_window_values();
 }
@@ -41,40 +40,6 @@ void FrequencyAnalyzer::copy_to_input(std::span<const float> wavedata)
 #pragma GCC ivdep
 		for (int i = 0; i < fft_size; ++i)
 			out_ptr[i] = in_ptr[i];
-}
-
-void FrequencyAnalyzer::compute_amplitude(std::span<float> output) const
-{
-	const int size = output.size();
-	assert(size == fftw.output_size());
-
-	auto *__restrict const out_ptr = output.data();
-	auto *__restrict const in_ptr = fftw.output().data();
-
-#pragma GCC ivdep
-	for (int i = 0; i < size; ++i)
-	{
-		const auto [re, im] = in_ptr[i];
-		// must divide by fft_size here to counteract the correlation
-		// between fft_size and the average amplitude across the spectrum vector.
-		out_ptr[i] = sqrtf((re * re) + (im * im)) * inv_fft_size;
-	}
-}
-
-void FrequencyAnalyzer::compute_phase(std::span<float> output) const
-{
-	const int size = output.size();
-	assert(size == fftw.output_size());
-
-	auto *__restrict const out_ptr = output.data();
-	auto *__restrict const in_ptr = fftw.output().data();
-
-#pragma GCC ivdep
-	for (int i = 0; i < size; ++i)
-	{
-		const auto [re, im] = in_ptr[i];
-		out_ptr[i] = atan2f(im, re);
-	}
 }
 
 void FrequencyAnalyzer::compute_window_values()

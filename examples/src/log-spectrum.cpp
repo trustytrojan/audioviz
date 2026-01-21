@@ -29,10 +29,8 @@ struct LogSpectrum : ExampleBase
 
 	LogSpectrum(const ExampleConfig &config)
 		: ExampleBase{config},
-		  //   fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
 		  spectrum{{{}, (sf::Vector2i)size}, color},
-		  fa{fft_size},
-		  aa{sample_rate_hz, fft_size}
+		  fa{fft_size}
 	{
 		spectrum.set_bar_width(1);
 		spectrum.set_bar_spacing(0);
@@ -41,7 +39,6 @@ struct LogSpectrum : ExampleBase
 
 		fft_size = 2 * spectrum.get_bar_count();
 		fa.set_fft_size(fft_size);
-		aa.set_fft_size(fft_size);
 
 		// logarithmically scale bin indices (frequencies)
 		bp.set_scale(avz::BinPacker::Scale::LINEAR);
@@ -59,6 +56,7 @@ struct LogSpectrum : ExampleBase
 		// extract first channel of audio and perform FFT (needed in case media file has stereo audio)
 		capture_time("strided_copy", avz::util::extract_channel(a, audio_buffer, num_channels, 0));
 		capture_time("fft", aa.execute_fft(fa, a));
+		capture_time("amplitudes", aa.compute_amplitudes(fa));
 
 		// make sure we can fit all the spectrum bars
 		// it's not necessary here, but assign all zero in case the spectrum bar count changes dynamically
@@ -71,7 +69,7 @@ struct LogSpectrum : ExampleBase
 		// capture_time("interpolate", ip.interpolate(s));
 
 		// finally, pass the data to SpectrumDrawable to draw to the screen!
-		capture_time("spectrum_update", spectrum.update(aa.compute_amplitudes(fa)));
+		capture_time("spectrum_update", spectrum.update(aa.get_amplitudes()));
 	}
 };
 

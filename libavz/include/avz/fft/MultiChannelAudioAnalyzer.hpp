@@ -23,9 +23,7 @@ public:
 	 * @param sample_rate_hz Audio sample rate in Hz
 	 * @param window_size_samples FFT window size in samples
 	 */
-	MultiChannelAudioAnalyzer(int num_channels, int sample_rate_hz, int window_size_samples);
-
-	void set_fft_size(int fft_size);
+	MultiChannelAudioAnalyzer(int num_channels);
 
 	/**
 	 * Execute FFT on interleaved multi-channel audio buffer.
@@ -52,7 +50,7 @@ public:
 	/**
 	 * Average peak frequency across all channels (useful for stereo->mono reduction).
 	 */
-	AudioAnalyzer::FrequencyAmplitudePair compute_averaged_peak_frequency(int from_hz, int to_hz);
+	AudioAnalyzer::FrequencyAmplitudePair compute_averaged_peak_frequency(const FrequencyAnalyzer &fa, int sample_rate_hz, int from_hz, int to_hz);
 };
 
 } // namespace avz

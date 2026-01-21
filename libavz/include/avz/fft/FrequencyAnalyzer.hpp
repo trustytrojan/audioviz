@@ -27,7 +27,6 @@ public:
 
 private:
 	int fft_size;
-	float inv_fft_size;
 	fftwf_dft_r2c_1d fftw;
 	WindowFunction window_func{WindowFunction::Hanning};
 	std::vector<float, aligned_allocator<float>> window_values;
@@ -46,8 +45,7 @@ public:
 	 * @throws `std::invalid_argument` if `fft_size` is not even
 	 */
 	void set_fft_size(int fft_size);
-	inline int get_fft_size() const { return fft_size; }
-	inline int get_fft_output_size() const { return fftw.output_size(); }
+	inline constexpr int get_fft_size() const { return fft_size; }
 
 	/**
 	 * Set window function.
@@ -61,9 +59,8 @@ public:
 	 */
 	void copy_to_input(std::span<const float> wavedata);
 
-	inline void execute_fft() const { fftw.execute(); }
-	void compute_amplitude(std::span<float> output) const;
-	void compute_phase(std::span<float> output) const;
+	inline constexpr void execute_fft() const { fftw.execute(); }
+	inline constexpr std::span<const std::complex<float>> get_output() const { return fftw.output(); }
 
 private:
 	void compute_window_values();

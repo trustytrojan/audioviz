@@ -25,8 +25,7 @@ struct ParticleSystemExample : ExampleBase
 		: ExampleBase{config},
 		  fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
 		  ps{{{}, (sf::Vector2i)size}, 50, config.framerate},
-		  fa{fft_size},
-		  aa{sample_rate_hz, fft_size}
+		  fa{fft_size}
 	{
 		emplace_layer<avz::Layer>("particles").add_draw({ps});
 	}
@@ -40,8 +39,11 @@ struct ParticleSystemExample : ExampleBase
 		capture_time("extract_channel", avz::util::extract_channel(a, audio_buffer, num_channels, 0));
 		capture_time("fft", aa.execute_fft(fa, a));
 
+		// compute amplitudes from FFT output
+		capture_time("amplitudes", aa.compute_amplitudes(fa));
+
 		// compute FFT amplitudes, take only the bass frequencies
-		const auto amps = aa.compute_amplitudes(fa).subspan(min_fft_index, max_fft_index);
+		const auto amps = aa.get_amplitudes().subspan(min_fft_index, max_fft_index);
 		p.resize(amps.size());
 
 		// weight each element by it's normalized position through a Gompertz function

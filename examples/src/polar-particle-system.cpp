@@ -35,8 +35,7 @@ struct PolarParticleSysten : ExampleBase
 		: ExampleBase{config},
 		  fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
 		  ps{{{}, (sf::Vector2i)size}, 100, config.framerate},
-		  fa{fft_size},
-		  aa{sample_rate_hz, fft_size}
+		  fa{fft_size}
 	{
 		emplace_layer<avz::Layer>("particles").add_draw({ps, &polar});
 	}
@@ -55,8 +54,8 @@ struct PolarParticleSysten : ExampleBase
 
 		// let the bass boost the particles' velocities
 		// lower bass has more power than higher bass
-		const auto a1 = aa.compute_peak_frequency(0, 125).amplitude;
-		const auto a2 = aa.compute_peak_frequency(126, 250).amplitude / 2;
+		const auto a1 = aa.compute_peak_frequency(fa, sample_rate_hz, 0, 125).amplitude;
+		const auto a2 = aa.compute_peak_frequency(fa, sample_rate_hz, 126, 250).amplitude / 2;
 		ps.update(std::max(a1, a2));
 	}
 };

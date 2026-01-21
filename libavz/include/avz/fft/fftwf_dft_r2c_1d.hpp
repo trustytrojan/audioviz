@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fftwf_allocator.hpp"
+#include <complex>
 #include <fftw3.h>
 #include <span>
 #include <vector>
@@ -10,18 +10,20 @@ namespace avz
 
 class fftwf_dft_r2c_1d
 {
-public:
-	struct ComplexNumber
+private:
+	template <typename T>
+	struct fftwf_allocator
 	{
-		float re, im;
+		using value_type = T;
+		inline T *allocate(const size_t n) { return (T *)fftwf_malloc(n * sizeof(T)); }
+		inline void deallocate(T *const p, size_t) { fftwf_free(p); }
 	};
 
-private:
 	template <typename T>
 	using Vector = std::vector<T, fftwf_allocator<T>>;
 
 	Vector<float> in;
-	Vector<ComplexNumber> out;
+	Vector<std::complex<float>> out;
 	fftwf_plan plan{};
 
 	inline void cleanup()
@@ -33,9 +35,9 @@ private:
 	}
 
 public:
-	inline ~fftwf_dft_r2c_1d() { cleanup(); }
+	inline constexpr ~fftwf_dft_r2c_1d() { cleanup(); }
 
-	inline void set_n(const int n)
+	inline constexpr void set_n(const int n)
 	{
 		in.resize(n);
 		out.resize(n / 2 + 1);
@@ -43,10 +45,9 @@ public:
 		plan = fftwf_plan_dft_r2c_1d(n, in.data(), (fftwf_complex *)out.data(), FFTW_ESTIMATE);
 	}
 
-	inline void execute() const { fftwf_execute(plan); }
-	inline std::span<float> input() { return in; }
-	inline std::span<const ComplexNumber> output() const { return out; }
-	inline int output_size() const { return out.size(); }
+	inline constexpr void execute() const { fftwf_execute(plan); }
+	inline constexpr std::span<float> input() { return in; }
+	inline constexpr std::span<const std::complex<float>> output() const { return out; }
 };
 
 } // namespace avz

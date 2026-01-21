@@ -6,7 +6,6 @@ namespace avz::examples
 BassNationSpectrumLayer::BassNationSpectrumLayer(
 	int fft_size, int sample_rate, sf::Vector2u size, const avz::ColorSettings &cs, bool left)
 	: fa{fft_size},
-	  aa{sample_rate, fft_size},
 	  spectrum{{{}, (sf::Vector2i)size}, cs},
 	  is_left(left),
 	  sample_rate(sample_rate)
@@ -33,7 +32,8 @@ void BassNationSpectrumLayer::compute(std::span<const float> audio_buffer)
 	const int channel = is_left ? 0 : 1;
 	avz::util::extract_channel(a, audio_buffer.first(fa.get_fft_size() * 2), 2, channel);
 	aa.execute_fft(fa, a);
-	const auto amps = aa.compute_amplitudes(fa);
+	aa.compute_amplitudes(fa);
+	const auto amps = aa.get_amplitudes();
 	avz::util::resample_spectrum(s, amps, sample_rate, fa.get_fft_size(), 20.0f, 135.0f, ip);
 	spectrum.update(s);
 }

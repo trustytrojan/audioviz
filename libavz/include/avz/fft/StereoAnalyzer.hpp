@@ -17,8 +17,8 @@ public:
 	 * @param sample_rate_hz Audio sample rate in Hz
 	 * @param window_size_samples FFT window size in samples
 	 */
-	StereoAnalyzer(int sample_rate_hz, int window_size_samples)
-		: MultiChannelAudioAnalyzer(2, sample_rate_hz, window_size_samples)
+	StereoAnalyzer()
+		: MultiChannelAudioAnalyzer(2)
 	{
 	}
 
