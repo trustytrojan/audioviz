@@ -1,13 +1,13 @@
 #include <avz/media/util.hpp>
 
+#include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
-#include <filesystem>
-#include <SFML/Graphics.hpp>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -273,5 +273,4 @@ std::optional<sf::Texture> getAttachedPictureViaDump(const std::string &mediaPat
 }
 */
 
-
-}
+} // namespace avz::util

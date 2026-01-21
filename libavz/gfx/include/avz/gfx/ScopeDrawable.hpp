@@ -1,7 +1,7 @@
 #pragma once
 
-#include <avz/gfx/ColorSettings.hpp>
 #include <SFML/Graphics.hpp>
+#include <avz/gfx/ColorSettings.hpp>
 #include <avz/gfx/util.hpp>
 #include <span>
 #include <vector>

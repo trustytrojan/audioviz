@@ -1,8 +1,8 @@
 #pragma once
 
-#include <avz/gfx/util.hpp>
 #include <SFML/Graphics.hpp>
 #include <avz/gfx/Sprite.hpp>
+#include <avz/gfx/util.hpp>
 
 namespace avz
 {

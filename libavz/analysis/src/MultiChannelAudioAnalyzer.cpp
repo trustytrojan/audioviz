@@ -1,5 +1,5 @@
-#include <avz/analysis/util.hpp>
 #include <avz/analysis/MultiChannelAudioAnalyzer.hpp>
+#include <avz/analysis/util.hpp>
 
 #include <stdexcept>
 

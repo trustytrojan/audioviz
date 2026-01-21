@@ -1,7 +1,7 @@
 #pragma once
 
-#include <avz/gfx/Sprite.hpp>
 #include <SFML/Graphics.hpp>
+#include <avz/gfx/Sprite.hpp>
 
 namespace avz
 {

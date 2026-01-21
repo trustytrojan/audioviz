@@ -1,7 +1,7 @@
 #pragma once
 
-#include <avz/gfx/fx/TransformEffect.hpp>
 #include <SFML/Graphics.hpp>
+#include <avz/gfx/fx/TransformEffect.hpp>
 
 namespace avz::fx
 {

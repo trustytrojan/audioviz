@@ -50,7 +50,8 @@ public:
 	/**
 	 * Average peak frequency across all channels (useful for stereo->mono reduction).
 	 */
-	AudioAnalyzer::FrequencyAmplitudePair compute_averaged_peak_frequency(const FrequencyAnalyzer &fa, int sample_rate_hz, int from_hz, int to_hz);
+	AudioAnalyzer::FrequencyAmplitudePair
+	compute_averaged_peak_frequency(const FrequencyAnalyzer &fa, int sample_rate_hz, int from_hz, int to_hz);
 };
 
 } // namespace avz

@@ -27,4 +27,4 @@ void resample_spectrum(
 	float end_freq,
 	avz::Interpolator &interpolator);
 
-} // namespace avz
+} // namespace avz::util

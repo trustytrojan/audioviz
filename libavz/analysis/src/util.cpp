@@ -45,4 +45,4 @@ void extract_channel(std::span<float> out, std::span<const float> in, int num_ch
 		out_ptr[i] = in_ptr[i * num_channels + channel];
 }
 
-} // namespace avz
+} // namespace avz::util

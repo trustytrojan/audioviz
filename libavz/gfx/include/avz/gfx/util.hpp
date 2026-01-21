@@ -16,4 +16,4 @@ sf::Vector3f interpolate_and_reverse(float t, sf::Vector3f start_hsv, sf::Vector
 
 inline const sf::BlendMode GreatAmazingBlendMode{sf::BlendMode::Factor::OneMinusDstColor, sf::BlendMode::Factor::One};
 
-}
+} // namespace avz::util
