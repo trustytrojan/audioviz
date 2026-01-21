@@ -42,7 +42,7 @@ endif()
 
 foreach(example ${EXAMPLE_PROGRAMS})
 	set(EXAMPLE_COMMAND
-		${CMAKE_CURRENT_BINARY_DIR}/${example}
+		$<TARGET_FILE:${example}>
 		--size 100 100
 		--framerate 30
 		${EXAMPLE_MEDIA_FILE}

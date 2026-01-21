@@ -22,8 +22,7 @@ struct BasicSpectrum : ExampleBase
 	BasicSpectrum(const ExampleConfig &config)
 		: ExampleBase{config},
 		  spectrum{{{}, (sf::Vector2i)size}, color},
-		  fa{fft_size},
-		  aa{sample_rate_hz, fft_size}
+		  fa{fft_size}
 	{
 		spectrum.set_bar_width(1);
 		spectrum.set_bar_spacing(0);
@@ -33,7 +32,6 @@ struct BasicSpectrum : ExampleBase
 		// remember, FFT takes N audio samples and returns N / 2 + 1 complex numbers
 		fft_size = 2 * spectrum.get_bar_count();
 		fa.set_fft_size(fft_size);
-		aa.set_fft_size(fft_size);
 	}
 
 	void update(std::span<const float> audio_buffer) override
@@ -44,9 +42,10 @@ struct BasicSpectrum : ExampleBase
 		// extract first channel of audio and perform FFT (needed in case media file has stereo audio)
 		capture_time("strided_copy", avz::util::extract_channel(a, audio_buffer, num_channels, 0));
 		capture_time("fft", aa.execute_fft(fa, a));
+		capture_time("amplitudes", aa.compute_amplitudes(fa));
 
 		// finally, pass the data to SpectrumDrawable to draw to the screen!
-		capture_time("spectrum_update", spectrum.update(aa.compute_amplitudes(fa)));
+		capture_time("spectrum_update", spectrum.update(aa.get_amplitudes()));
 	}
 };
 

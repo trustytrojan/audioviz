@@ -43,10 +43,10 @@ struct ParticleSystemExample : ExampleBase
 		capture_time("amplitudes", aa.compute_amplitudes(fa));
 
 		// compute FFT amplitudes, take only the bass frequencies
-		const auto amps = aa.get_amplitudes().subspan(min_fft_index, max_fft_index);
+		const auto amps = aa.get_amplitudes().subspan(min_fft_index, max_fft_index - min_fft_index);
 		p.resize(amps.size());
 
-		// weight each element by it's normalized position through a Gompertz function
+		// weight each element by its normalized position through a Gompertz function
 		// this makes lower bass frequencies boost the particles more than higher bass frequencies
 		for (size_t i = 0; i < amps.size(); ++i)
 		{

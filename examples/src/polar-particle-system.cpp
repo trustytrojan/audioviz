@@ -12,7 +12,7 @@ TODO: make new polar shader without coordinate warping
 
 using namespace avz::examples;
 
-struct PolarParticleSysten : ExampleBase
+struct PolarParticleSystem : ExampleBase
 {
 	const int fft_size;
 
@@ -31,7 +31,7 @@ struct PolarParticleSysten : ExampleBase
 		2 * M_PI			// Angle span
 	};
 
-	PolarParticleSysten(const ExampleConfig &config)
+	PolarParticleSystem(const ExampleConfig &config)
 		: ExampleBase{config},
 		  fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
 		  ps{{{}, (sf::Vector2i)size}, 100, config.framerate},
@@ -61,7 +61,7 @@ struct PolarParticleSysten : ExampleBase
 };
 
 LIBAVZ_EXAMPLE_MAIN_CUSTOM(
-	PolarParticleSysten,
+	PolarParticleSystem,
 	"Particle system with bass frequencies boosting particles in polar coordinates",
 	0.25f,
 	viz.fft_size)

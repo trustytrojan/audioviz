@@ -22,9 +22,9 @@ struct LogSpectrum : ExampleBase
 	avz::AudioAnalyzer aa;
 
 	// needed to logarithmically pack fft_size spectral samples into the spectrum's bars
-	// (in most cases it's guaranteed that )
 	avz::BinPacker bp;
 
+	// needed to interpolate the gaps left by BinPacker's spreading out of bins
 	avz::Interpolator ip;
 
 	LogSpectrum(const ExampleConfig &config)
@@ -41,7 +41,7 @@ struct LogSpectrum : ExampleBase
 		fa.set_fft_size(fft_size);
 
 		// logarithmically scale bin indices (frequencies)
-		bp.set_scale(avz::BinPacker::Scale::LINEAR);
+		bp.set_scale(avz::BinPacker::Scale::LOG);
 
 		// when multiple values go to a bin, accumulate them using std::max()
 		// for fun, change this to SUM and see what happens
@@ -60,16 +60,17 @@ struct LogSpectrum : ExampleBase
 
 		// make sure we can fit all the spectrum bars
 		// it's not necessary here, but assign all zero in case the spectrum bar count changes dynamically
-		// s.assign(spectrum.get_bar_count(), 0);
+		s.assign(spectrum.get_bar_count(), 0);
 
 		// pack FFT amplitudes into a smaller set of "bins" (our spectrum bars!)
-		// capture_time("bin_pack", bp.bin_pack(s, aa.compute_amplitudes(fa)));
+		capture_time("bin_pack", bp.bin_pack(s, aa.get_amplitudes()));
 
-		// there will be gaps, interpolate them to make a nice curve
-		// capture_time("interpolate", ip.interpolate(s));
+		// there will be gaps caused by BinPacker because we logarithmically spread the output bins
+		// interpolate between them to make a nice looking curve
+		capture_time("interpolate", ip.interpolate(s));
 
 		// finally, pass the data to SpectrumDrawable to draw to the screen!
-		capture_time("spectrum_update", spectrum.update(aa.get_amplitudes()));
+		capture_time("spectrum_update", spectrum.update(s));
 	}
 };
 
