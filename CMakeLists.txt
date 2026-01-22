@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.18)
 project(libavz LANGUAGES CXX)
+include(FetchContent)
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.24)
 	cmake_policy(SET CMP0135 NEW)
 endif()
-
-option(LIBAVZ_USE_PORTAUDIO "Build with PortAudio: allows audio playback during live rendering" ON) # not sure where to put this yet
-option(LIBAVZ_BUILD_EXAMPLES "Build the example programs" ON)
 
 set(BUILD_SHARED_LIBS OFF) # static preferred
 set(CMAKE_CXX_STANDARD 23)
@@ -30,6 +28,7 @@ endif()
 
 add_subdirectory(libavz)
 
+option(LIBAVZ_BUILD_EXAMPLES "Build the example programs" ON)
 if(LIBAVZ_BUILD_EXAMPLES)
 	add_subdirectory(examples)
 endif()

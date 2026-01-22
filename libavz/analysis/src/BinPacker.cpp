@@ -24,7 +24,7 @@ void BinPacker::set_scale(const Scale scale)
 void BinPacker::set_nth_root(const int nth_root)
 {
 	if (!nth_root)
-		throw std::invalid_argument("BinPacker::set_nth_root: nth_root cannot be zero!");
+		throw std::invalid_argument{"[BinPacker::set_nth_root] nth_root cannot be zero!"};
 	this->nth_root = nth_root;
 	nthroot_inv = 1.f / nth_root;
 	compute_bin_pack_index_mappings(bin_pack_index_mapping.size(), bin_pack_input_size);
@@ -84,7 +84,7 @@ float BinPacker::calc_index_ratio(const float i) const
 			return powf(i, nthroot_inv) / scale_max.nthroot;
 		}
 	default:
-		throw std::logic_error("BinPacker::calc_index_ratio: default case hit");
+		throw std::logic_error{"[BinPacker::calc_index_ratio] default case hit"};
 	}
 }
 

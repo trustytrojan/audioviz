@@ -10,7 +10,7 @@ MultiChannelAudioAnalyzer::MultiChannelAudioAnalyzer(int num_channels)
 	: num_channels{num_channels}
 {
 	if (num_channels <= 0)
-		throw std::invalid_argument("num_channels must be > 0");
+		throw std::invalid_argument{"[MultiChannelAudioAnalyzer] num_channels must be > 0"};
 
 	analyzers.resize(num_channels);
 }
@@ -40,14 +40,14 @@ void MultiChannelAudioAnalyzer::compute_amplitudes(FrequencyAnalyzer &fa)
 AudioAnalyzer &MultiChannelAudioAnalyzer::operator[](int channel)
 {
 	if (channel < 0 || channel >= num_channels)
-		throw std::out_of_range("Invalid channel index");
+		throw std::out_of_range{"Invalid channel index"};
 	return analyzers[channel];
 }
 
 const AudioAnalyzer &MultiChannelAudioAnalyzer::operator[](int channel) const
 {
 	if (channel < 0 || channel >= num_channels)
-		throw std::out_of_range("Invalid channel index");
+		throw std::out_of_range{"Invalid channel index"};
 	return analyzers[channel];
 }
 

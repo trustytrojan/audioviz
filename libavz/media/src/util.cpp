@@ -1,13 +1,9 @@
-#include <avz/media/util.hpp>
+#include "util.hpp"
 
 #include <SFML/Graphics.hpp>
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
-#include <stdexcept>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -172,12 +168,12 @@ sf::String utf8_to_sf_string(const std::string &text)
 #ifdef __linux__
 std::string detect_vaapi_device()
 {
-	for (const auto &e : std::filesystem::directory_iterator("/dev/dri"))
+	for (const auto &e : std::filesystem::directory_iterator{"/dev/dri"})
 	{
 		const auto &path = e.path();
 		if (!path.filename().string().starts_with("renderD"))
 			continue;
-		std::cerr << "detect_vaapi_device: testing " << path << '\n';
+		std::cerr << __func__ << ": testing " << path << '\n';
 
 		// Build the ffmpeg command
 		const auto cmd{
@@ -188,19 +184,25 @@ std::string detect_vaapi_device()
 		const auto pipe = popen(cmd.c_str(), "r");
 		if (!pipe)
 		{
-			std::cerr << "detect_vaapi_device: popen failed for " << path << '\n';
+			std::cerr << __func__ << ": popen: " << strerror(errno) << '\n';
 			continue;
 		}
 
 		const auto status = pclose(pipe);
+		if (status == -1)
+		{
+			std::cerr << __func__ << ": pclose: " << strerror(errno) << '\n';
+			continue;
+		}
+
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		{
-			std::cerr << "detect_vaapi_device: success, returning " << path << '\n';
+			std::cerr << __func__ << ": success, returning " << path << '\n';
 			return path.string();
 		}
 	}
 
-	std::cerr << "detect_vaapi_device: failed to find device\n";
+	std::cerr << __func__ << ": failed to find device\n";
 	return {};
 }
 #endif
@@ -208,7 +210,7 @@ std::string detect_vaapi_device()
 std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 {
 	const auto cmd{"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
-	// std::cout << __func__ << ": running command: '" << cmd << "'\n"; // this is going to display garbage ascii
+	std::cerr << __func__ << ": running command: '" << cmd << "'\n";
 
 	const auto pipe = popen_utf8(cmd, POPEN_R_MODE);
 	if (!pipe)
@@ -226,17 +228,18 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 			buffer.insert(buffer.end(), buf, buf + bytesRead);
 	}
 
-	switch (const auto rc = pclose_utf8(pipe))
+	const auto status = pclose_utf8(pipe);
+	if (status == -1)
 	{
-	case -1:
 		std::cerr << __func__ << ": pclose: " << strerror(errno) << '\n';
 		return {};
-	case 0:
-		return {{buffer.data(), buffer.size()}};
-	default:
-		std::cerr << __func__ << ": pclose returned: " << rc << '\n';
-		return {};
 	}
+
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+		return {{buffer.data(), buffer.size()}};
+
+	std::cerr << __func__ << ": ffmpeg exited with " << WEXITSTATUS(status) << '\n';
+	return {};
 }
 
 /*

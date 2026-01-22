@@ -93,4 +93,5 @@ sf::Vector3f interpolate_and_reverse(float t, sf::Vector3f start_hsv, sf::Vector
 	float v = v1 + reversed_t * (v2 - v1);
 	return {h, s, v};
 }
+
 } // namespace avz::util

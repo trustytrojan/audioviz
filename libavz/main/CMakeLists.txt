@@ -6,10 +6,9 @@ target_compile_options(avz-main PUBLIC -Wno-narrowing -ffast-math)
 target_include_directories(avz-main PUBLIC include)
 target_link_libraries(avz-main PUBLIC avz::gfx avz::media)
 
-# TEMPORARY - libavz should not be responsible for audio playback.
-# but to keep things stable i will leave this as is for now.
-# portaudio (optional)
-if(LIBAVZ_USE_PORTAUDIO)
+option(LIBAVZ_MAIN_USE_PORTAUDIO "Build with PortAudio: allows audio playback when rendering to a window" ON)
+
+if(LIBAVZ_MAIN_USE_PORTAUDIO)
 	FetchContent_Declare(portaudio-pp URL https://github.com/trustytrojan/portaudio-pp/archive/main.tar.gz)
 	FetchContent_MakeAvailable(portaudio-pp)
 	target_compile_definitions(avz-main PUBLIC LIBAVZ_PORTAUDIO)

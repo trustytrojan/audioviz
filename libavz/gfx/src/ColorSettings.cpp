@@ -30,7 +30,7 @@ sf::Color ColorSettings::calculate_color(const float index_ratio) const
 		return solid;
 
 	default:
-		throw std::logic_error("SpectrumRenderer::color::get: default case hit");
+		throw std::logic_error{"[ColorSettings::calculate_color] default case hit"};
 	}
 }
 
