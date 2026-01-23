@@ -242,7 +242,7 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 		return buffer;
 
 	std::cerr << __func__ << ": ffmpeg exited with " << status << '\n';
-	return {};
+	return {{buffer.data(), buffer.size()}};
 #else
 	// On POSIX, pclose returns a wait(2)-style status; use WIFEXITED/WEXITSTATUS.
 	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
