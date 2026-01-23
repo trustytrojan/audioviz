@@ -235,11 +235,22 @@ std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
 		return {};
 	}
 
+#ifdef _WIN32
+	// On Windows (including MinGW), _pclose/pclose_utf8 return the process
+	// exit code directly (not a wait(2)-style status), so test for 0.
+	if (status == 0)
+		return buffer;
+
+	std::cerr << __func__ << ": ffmpeg exited with " << status << '\n';
+	return {};
+#else
+	// On POSIX, pclose returns a wait(2)-style status; use WIFEXITED/WEXITSTATUS.
 	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		return {{buffer.data(), buffer.size()}};
 
 	std::cerr << __func__ << ": ffmpeg exited with " << WEXITSTATUS(status) << '\n';
 	return {};
+#endif
 }
 
 /*
