@@ -17,7 +17,7 @@ private:
 		inline void updatePosition() { setPosition(getPosition() + velocity); }
 		inline void setVelocity(const sf::Vector2f v) { velocity = v; }
 		inline sf::Vector2f getVelocity() const { return velocity; }
-		inline void scaleVelocity(const float x) { velocity = velocity.componentWiseMul({x, x}); }
+		inline void scaleVelocity(const float x) { velocity *= x; }
 	};
 
 	sf::IntRect rect;
