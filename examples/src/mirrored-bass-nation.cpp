@@ -29,7 +29,7 @@ struct MirroredBassNation : ExampleBase
 		(sf::Vector2f)size, // Dimensions of linear space
 		size.y * 0.25f,		// Base radius inner hole: 25% screen height
 		size.x * 0.6f,		// Max radius: 60% screen width, so that you don't see any particles disappear
-		M_PIf / 2,			// Angle start
+		M_PI / 2,			// Angle start
 		M_PI				// Angle span
 	};
 
