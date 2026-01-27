@@ -2,6 +2,7 @@
 #include <avz/media/FfmpegPopenMedia.hpp>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 namespace avz
 {
