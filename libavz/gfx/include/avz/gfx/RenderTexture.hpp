@@ -1,0 +1,28 @@
+#pragma once
+
+#include <SFML/Graphics.hpp>
+#include <avz/gfx/Sprite.hpp>
+
+namespace avz
+{
+
+/**
+ * Convenience extension of `sf::RenderTexture`
+ */
+class RenderTexture : public sf::RenderTexture
+{
+public:
+	inline RenderTexture()
+		: sf::RenderTexture{}
+	{
+	}
+
+	inline RenderTexture(const sf::Vector2u size, unsigned antialiasing = 0)
+		: sf::RenderTexture{size, {.antiAliasingLevel = antialiasing}}
+	{
+	}
+
+	inline operator Sprite() const { return getTexture(); }
+};
+
+} // namespace avz

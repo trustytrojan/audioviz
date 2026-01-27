@@ -43,9 +43,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Get CMake and Ninja
-        uses: lukka/get-cmake@latest
-
       # 15 is just never gonna work, I gave up
       - name: 'Linux: Install GCC 14'
         if: matrix.platform.name == 'Linux GCC'
@@ -78,7 +75,7 @@ jobs:
         uses: FedericoCarboni/setup-ffmpeg@v3
 
       - name: Configure CMake
-        run: cmake -S. -Bbuild -GNinja -DLIBAVZ_USE_PORTAUDIO=OFF ${{ matrix.platform.flags }}
+        run: cmake -S. -Bbuild -GNinja -DLIBAVZ_MAIN_USE_PORTAUDIO=OFF ${{ matrix.platform.flags }}
 
       - name: Build project
         run: cmake --build build --parallel

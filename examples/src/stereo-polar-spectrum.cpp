@@ -1,13 +1,6 @@
 #include "ExampleFramework.hpp"
-#include <avz/SpectrumDrawable.hpp>
-#include <avz/aligned_allocator.hpp>
-#include <avz/fft/AudioAnalyzer.hpp>
-#include <avz/fft/FrequencyAnalyzer.hpp>
-#include <avz/fft/Interpolator.hpp>
-#include <avz/fx/Polar.hpp>
-#include <avz/util.hpp>
-
-#include <SFML/Graphics.hpp>
+#include <avz/analysis.hpp>
+#include <avz/gfx.hpp>
 
 using namespace avz::examples;
 
@@ -15,7 +8,7 @@ struct StereoPolarSpectrum : ExampleBase
 {
 	const int fft_size;
 
-	std::vector<float, aligned_allocator<float, 32>> s, a;
+	std::vector<float> s, a;
 
 	avz::ColorSettings cs;
 	avz::SpectrumDrawable spectrum_left, spectrum_right;

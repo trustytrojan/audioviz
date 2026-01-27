@@ -1,11 +1,6 @@
 #include "ExampleFramework.hpp"
-#include <avz/Layer.hpp>
-#include <avz/SpectrumDrawable.hpp>
-#include <avz/fft/AudioAnalyzer.hpp>
-#include <avz/fft/FrequencyAnalyzer.hpp>
-#include <avz/fft/Interpolator.hpp>
-#include <avz/fx/Polar.hpp>
-#include <avz/util.hpp>
+#include <avz/analysis.hpp>
+#include <avz/gfx.hpp>
 
 #include <future>
 #include <memory>
