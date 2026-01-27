@@ -5,7 +5,8 @@ add_library(avz::media ALIAS avz-media)
 target_compile_options(avz-media PUBLIC
 	-Wno-narrowing
 	-ffast-math
-	$<IF:$<CXX_COMPILER_ID:Clang>,-Wno-nan-infinity-disabled,>  # caused by nlohmann/json, safe to ignore
+	# caused by nlohmann/json, safe to ignore
+	$<IF:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>,-Wno-nan-infinity-disabled,>
 )
 
 target_include_directories(avz-media PUBLIC
