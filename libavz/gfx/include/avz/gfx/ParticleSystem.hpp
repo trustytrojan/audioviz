@@ -56,7 +56,7 @@ public:
 
 	inline void set_debug_rect(bool b) { debug_rect = b; }
 	inline void set_fade_out(bool b) { fade_out = b; }
-	
+
 	inline void set_start_offscreen(bool b)
 	{
 		if (start_offscreen == b)

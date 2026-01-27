@@ -3,7 +3,6 @@ add_library(avz-gfx ${LIBAVZ_GFX_SOURCES})
 add_library(avz::gfx ALIAS avz-gfx)
 
 target_compile_options(avz-gfx PUBLIC -Wno-narrowing -ffast-math)
-
 target_include_directories(avz-gfx PUBLIC include)
 
 # sfml
@@ -13,14 +12,14 @@ if(WIN32)
 endif()
 find_package(SFML COMPONENTS Graphics Window System QUIET)
 if(NOT SFML_FOUND)
-	message(STATUS "sfml: FIND_SFML_ERROR: ${FIND_SFML_ERROR}")
+	message(STATUS "[avz-gfx] sfml: FIND_SFML_ERROR: ${FIND_SFML_ERROR}")
 	if(WIN32)
-		message(STATUS "sfml: windows detected: fetching binaries")
+		message(STATUS "[avz-gfx] sfml: windows detected: fetching binaries")
 		FetchContent_Declare(sfml URL https://github.com/SFML/SFML/releases/download/3.0.2/SFML-3.0.2-Windows.MinGW.x64.zip)
 		FetchContent_MakeAvailable(sfml)
 		list(APPEND CMAKE_PREFIX_PATH ${sfml_SOURCE_DIR}/lib/cmake/SFML)
 	else()
-		message(STATUS "sfml: fetching source")
+		message(STATUS "[avz-gfx] sfml: fetching source")
 		set(SFML_BUILD_AUDIO OFF)
 		set(SFML_BUILD_NETWORK OFF)
 		FetchContent_Declare(sfml URL https://github.com/SFML/SFML/archive/3.0.2.tar.gz)
@@ -45,7 +44,7 @@ foreach(SHADER_SOURCE IN LISTS SHADER_SOURCES)
 		OUTPUT ${SHADER_HEADER}
 		COMMAND ${CMAKE_COMMAND} -DSHADER_SOURCE=${SHADER_SOURCE} -DSHADER_HEADER_DIR=${SHADER_HEADER_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_shader_header.cmake
 		DEPENDS ${SHADER_SOURCE}
-		COMMENT "Generating shader header ${SHADER_NAME}.h"
+		COMMENT "[avz-gfx] Generating shader header ${SHADER_NAME}.h"
 	)
 endforeach()
 add_custom_target(generate_shader_headers DEPENDS ${SHADER_HEADERS})

@@ -207,52 +207,6 @@ std::string detect_vaapi_device()
 }
 #endif
 
-std::optional<sf::Texture> getAttachedPicture(const std::string &mediaPath)
-{
-	const auto cmd{"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
-	std::cerr << __func__ << ": running command: '" << cmd << "'\n";
-
-	const auto pipe = popen_utf8(cmd, POPEN_R_MODE);
-	if (!pipe)
-	{
-		std::cerr << __func__ << ": popen: " << strerror(errno) << '\n';
-		return {};
-	}
-
-	std::vector<std::byte> buffer;
-	while (!feof(pipe) && !ferror(pipe))
-	{
-		std::byte buf[4096];
-		const auto bytesRead = fread(buf, 1, sizeof(buf), pipe);
-		if (bytesRead > 0)
-			buffer.insert(buffer.end(), buf, buf + bytesRead);
-	}
-
-	const auto status = pclose_utf8(pipe);
-	if (status == -1)
-	{
-		std::cerr << __func__ << ": pclose: " << strerror(errno) << '\n';
-		return {};
-	}
-
-#ifdef _WIN32
-	// On Windows (including MinGW), _pclose/pclose_utf8 return the process
-	// exit code directly (not a wait(2)-style status), so test for 0.
-	if (status == 0)
-		return {{buffer.data(), buffer.size()}};
-
-	std::cerr << __func__ << ": ffmpeg exited with " << status << '\n';
-	return {};
-#else
-	// On POSIX, pclose returns a wait(2)-style status; use WIFEXITED/WEXITSTATUS.
-	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
-		return {{buffer.data(), buffer.size()}};
-
-	std::cerr << __func__ << ": ffmpeg exited with " << WEXITSTATUS(status) << '\n';
-	return {};
-#endif
-}
-
 /*
 This function is for handling cases where a media file has the coverart/thumbnail inside
 an *attachment* stream, but this is not the same as a *video* stream. To handle this we use

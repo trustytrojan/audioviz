@@ -1,7 +1,9 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include <optional>
 #include <span>
+#include <string>
+#include <vector>
 
 namespace avz
 {
@@ -31,13 +33,13 @@ public:
 	 * Read a video frame of size `video_size` (passed in the constructor)
 	 * from the underlying source into `txr`.
 	 */
-	virtual bool read_video_frame(sf::Texture &txr) = 0;
+	virtual bool read_video_frame(std::vector<std::byte> &txr) = 0;
 
 	virtual int audio_sample_rate() const = 0;
 	virtual int audio_channels() const = 0;
 	virtual bool has_video_stream() const = 0;
 	virtual int video_framerate() const = 0;
-	virtual const std::optional<sf::Texture> &attached_pic() const = 0;
+	virtual const std::optional<std::vector<std::byte>> &attached_pic() const = 0;
 	virtual std::string title() const = 0;
 	virtual std::string artist() const = 0;
 

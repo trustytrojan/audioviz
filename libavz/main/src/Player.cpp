@@ -4,7 +4,6 @@
 #ifdef LIBAVZ_PORTAUDIO
 #include <fcntl.h>
 #include <portaudio.hpp>
-
 #endif
 
 namespace avz
@@ -103,7 +102,7 @@ void Player::encode(const std::string &outfile, const std::string &vcodec, const
 	// Create OpenGL context first (sf::RenderWindow usually does this for us) otherwise GL extensions will be null!
 	sf::Context c;
 	sf::RenderTexture rt{viz.size};
-	FfmpegPopenEncoder ffmpeg{media.url, viz.size, framerate, outfile, vcodec, acodec};
+	FfmpegPopenEncoder ffmpeg{media.url, viz.size.x, viz.size.y, framerate, outfile, vcodec, acodec};
 	while (true)
 	{
 		const auto frames = std::max(audio_frames_needed, afpvf);
@@ -120,7 +119,7 @@ void Player::encode(const std::string &outfile, const std::string &vcodec, const
 		rt.clear();
 		rt.draw(viz);
 		rt.display();
-		ffmpeg.send_frame(rt.getTexture());
+		ffmpeg.send_frame(rt.getTexture().getNativeHandle());
 	}
 }
 

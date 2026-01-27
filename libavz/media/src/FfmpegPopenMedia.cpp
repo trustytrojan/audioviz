@@ -43,14 +43,14 @@ void FfmpegPopenMedia::init_video()
 	if (const auto vaapi_device{util::detect_vaapi_device()}; !vaapi_device.empty())
 	{
 		// use vaapi-accelerated scaling!
-		ss << "-vaapi_device " << vaapi_device << " -vf format=nv12,hwupload,scale_vaapi=" << scaled_video_size.x << ':'
-		   << scaled_video_size.y << ",hwdownload ";
+		ss << "-vaapi_device " << vaapi_device << " -vf format=nv12,hwupload,scale_vaapi=" << scaled_width << ':'
+		   << scaled_height << ",hwdownload ";
 	}
 	else
-		ss << "-s " << scaled_video_size.x << 'x' << scaled_video_size.y << ' ';
+		ss << "-s " << scaled_width << 'x' << scaled_height << ' ';
 #else
 	// va-api probably doesn't exist on this platform, software scale instead
-	ss << "-s " << scaled_video_size.x << 'x' << scaled_video_size.y << ' ';
+	ss << "-s " << scaled_width << 'x' << scaled_height << ' ';
 #endif
 
 	ss << "-pix_fmt rgba -f rawvideo -";
@@ -61,14 +61,62 @@ void FfmpegPopenMedia::init_video()
 		perror("[FfmpegPopenMedia::init_video] popen");
 }
 
-FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, const sf::Vector2u desired_video_size, float start_time_sec)
+std::optional<std::vector<std::byte>> FfmpegPopenMedia::getAttachedPicture(const std::string &mediaPath)
+{
+	const auto cmd{"ffmpeg -v warning -i \"" + mediaPath + "\" -an -sn -map disp:attached_pic -c copy -f image2pipe -"};
+	std::cerr << __func__ << ": running command: '" << cmd << "'\n";
+
+	const auto pipe = util::popen_utf8(cmd, POPEN_R_MODE);
+	if (!pipe)
+	{
+		std::cerr << __func__ << ": popen: " << strerror(errno) << '\n';
+		return {};
+	}
+
+	std::vector<std::byte> buffer;
+	while (!feof(pipe) && !ferror(pipe))
+	{
+		std::byte buf[4096];
+		const auto bytesRead = fread(buf, 1, sizeof(buf), pipe);
+		if (bytesRead > 0)
+			buffer.insert(buffer.end(), buf, buf + bytesRead);
+	}
+
+	const auto status = util::pclose_utf8(pipe);
+	if (status == -1)
+	{
+		std::cerr << __func__ << ": pclose: " << strerror(errno) << '\n';
+		return {};
+	}
+
+#ifdef _WIN32
+	// On Windows (including MinGW), _pclose/pclose_utf8 return the process
+	// exit code directly (not a wait(2)-style status), so test for 0.
+	if (status == 0)
+		return buffer;
+
+	std::cerr << __func__ << ": ffmpeg exited with " << status << '\n';
+	return {};
+#else
+	// On POSIX, pclose returns a wait(2)-style status; use WIFEXITED/WEXITSTATUS.
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+		return buffer;
+
+	std::cerr << __func__ << ": ffmpeg exited with " << WEXITSTATUS(status) << '\n';
+	return {};
+#endif
+}
+
+FfmpegPopenMedia::FfmpegPopenMedia(
+	const std::string &url, const unsigned scaled_width, const unsigned scaled_height, const float start_time_sec)
 	: Media{url},
-	  scaled_video_size{desired_video_size},
+	  scaled_width{scaled_width},
+	  scaled_height{scaled_height},
 	  metadata{url}
 {
-	_attached_pic = util::getAttachedPicture(url);
+	_attached_pic = getAttachedPicture(url);
 	init_audio(start_time_sec);
-	if (has_video_stream() && scaled_video_size.x && scaled_video_size.y)
+	if (has_video_stream() && scaled_width && scaled_height)
 		init_video();
 }
 
@@ -76,7 +124,7 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, float start_time_sec)
 	: Media{url},
 	  metadata{url}
 {
-	_attached_pic = util::getAttachedPicture(url);
+	_attached_pic = getAttachedPicture(url);
 	init_audio(start_time_sec);
 }
 
@@ -95,30 +143,16 @@ size_t FfmpegPopenMedia::read_audio_samples(float *const buf, const int samples)
 	return fread(buf, sizeof(float), samples, audio);
 }
 
-bool FfmpegPopenMedia::read_video_frame(sf::Texture &txr)
+bool FfmpegPopenMedia::read_video_frame(std::vector<std::byte> &buf)
 {
 	if (!video)
 		throw std::logic_error{"[FfmpegPopenMedia::read_video_frame] no video stream available!"};
-	if (!txr.resize(scaled_video_size))
-		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] texture resize failed!"};
-	const auto bytes_to_read{4 * scaled_video_size.x * scaled_video_size.y};
 
-#ifdef _WIN32
-	// windows doesnt like large stacks so we have to heap-allocate instead
-	const auto buf = new uint8_t[bytes_to_read];
-	if (!buf)
-		throw std::runtime_error{"[FfmpegPopenMedia::read_video_frame] failed to allocate buffer"};
-#else // most other things are probably unix based so... this is fine
-	uint8_t buf[bytes_to_read];
-#endif
+	const auto bytes_to_read{4 * scaled_width * scaled_height};
+	buf.resize(bytes_to_read);
 
-	if (fread(buf, sizeof(uint8_t), bytes_to_read, video) < bytes_to_read)
+	if (fread(buf.data(), sizeof(uint8_t), bytes_to_read, video) < bytes_to_read)
 		return false;
-	txr.update(buf);
-
-#ifdef _WIN32
-	delete[] buf;
-#endif
 
 	return true;
 }
