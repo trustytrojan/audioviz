@@ -26,9 +26,28 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	link_libraries(stdc++exp)
 endif()
 
-add_subdirectory(libavz)
-
+option(LIBAVZ_BUILD_ANALYSIS "Build the audio analysis library" ON)
+option(LIBAVZ_BUILD_GFX "Build the visualizer rendering library" ON)
+option(LIBAVZ_BUILD_MEDIA "Build the media I/O library" ON)
+option(LIBAVZ_BUILD_MAIN "Build the visualizer runner library" ON)
 option(LIBAVZ_BUILD_EXAMPLES "Build the example programs" ON)
+
+if(LIBAVZ_BUILD_ANALYSIS)
+	add_subdirectory(src/analysis)
+endif()
+
+if(LIBAVZ_BUILD_GFX)
+	add_subdirectory(src/gfx)
+endif()
+
+if(LIBAVZ_BUILD_MEDIA)
+	add_subdirectory(src/media)
+endif()
+
+if(LIBAVZ_BUILD_MAIN)
+	add_subdirectory(src/main)
+endif()
+
 if(LIBAVZ_BUILD_EXAMPLES)
 	add_subdirectory(examples)
 endif()

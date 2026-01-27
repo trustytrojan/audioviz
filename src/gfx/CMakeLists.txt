@@ -1,9 +1,9 @@
-file(GLOB_RECURSE LIBAVZ_GFX_SOURCES src/*.cpp)
+file(GLOB LIBAVZ_GFX_SOURCES *.cpp fx/*.cpp)
 add_library(avz-gfx ${LIBAVZ_GFX_SOURCES})
 add_library(avz::gfx ALIAS avz-gfx)
 
 target_compile_options(avz-gfx PUBLIC -Wno-narrowing -ffast-math)
-target_include_directories(avz-gfx PUBLIC include)
+target_include_directories(avz-gfx PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # sfml
 if(WIN32)

@@ -1,4 +1,4 @@
-file(GLOB_RECURSE LIBAVZ_MEDIA_SOURCES src/*.cpp)
+file(GLOB LIBAVZ_MEDIA_SOURCES *.cpp)
 add_library(avz-media ${LIBAVZ_MEDIA_SOURCES})
 add_library(avz::media ALIAS avz-media)
 
@@ -10,7 +10,7 @@ target_compile_options(avz-media PUBLIC
 )
 
 target_include_directories(avz-media PUBLIC
-	include
+	${CMAKE_SOURCE_DIR}/include
 	${CMAKE_CURRENT_BINARY_DIR} # for json
 )
 

@@ -1,9 +1,9 @@
-file(GLOB_RECURSE LIBAVZ_MAIN_SOURCES src/*.cpp)
+file(GLOB LIBAVZ_MAIN_SOURCES *.cpp)
 add_library(avz-main ${LIBAVZ_MAIN_SOURCES})
 add_library(avz::main ALIAS avz-main)
 
 target_compile_options(avz-main PUBLIC -Wno-narrowing -ffast-math)
-target_include_directories(avz-main PUBLIC include)
+target_include_directories(avz-main PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(avz-main PUBLIC avz::gfx avz::media)
 
 option(LIBAVZ_MAIN_USE_PORTAUDIO "Build with PortAudio: allows audio playback when rendering to a window" ON)

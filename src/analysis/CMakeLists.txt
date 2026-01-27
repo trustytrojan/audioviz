@@ -1,4 +1,4 @@
-file(GLOB_RECURSE LIBAVZ_ANALYSIS_SOURCES src/*.cpp)
+file(GLOB LIBAVZ_ANALYSIS_SOURCES *.cpp)
 add_library(avz-analysis ${LIBAVZ_ANALYSIS_SOURCES})
 add_library(avz::analysis ALIAS avz-analysis)
 
@@ -9,7 +9,7 @@ target_compile_options(avz-analysis PUBLIC
 )
 
 target_include_directories(avz-analysis PUBLIC
-	include
+	${CMAKE_SOURCE_DIR}/include
 	${CMAKE_CURRENT_BINARY_DIR} # for spline
 )
 
