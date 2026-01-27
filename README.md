@@ -57,25 +57,31 @@ explaining some of the fundamentals of programming with audio & visualization:
    build/examples/scope 'my-song.mp3'
    ```
 
-## libraries/software used
+## dependencies
 
-- [FFTW3](https://fftw.org): FFT
-- [FFmpeg](https://ffmpeg.org): media container transcoding
-- [portaudio-pp](https://github.com/trustytrojan/portaudio-pp): C++ header-only
-  wrapper for [PortAudio](https://github.com/PortAudio/portaudio), optional
-  dependency
-- [SFML](https://github.com/SFML/SFML): graphics/windowing
-- [tk-spline](https://github.com/ttk592/spline): cubic spline interpolation
-- [GLEW](https://github.com/nigels-com/glew): for OpenGL extension loading
+- **libavz-analysis**
+  - [FFTW3](https://fftw.org): FFT
+  - [tk-spline](https://github.com/ttk592/spline): cubic spline interpolation
+- **libavz-gfx**
+  - [SFML](https://github.com/SFML/SFML): graphics/windowing
+- **libavz-media**
+  - [FFmpeg](https://ffmpeg.org): media container transcoding
+  - [GLEW](https://github.com/nigels-com/glew): for OpenGL extension loading
+- **libavz-main**
+  - [portaudio-pp](https://github.com/trustytrojan/portaudio-pp): C++
+    header-only wrapper for [PortAudio](https://github.com/PortAudio/portaudio),
+    optional dependency
+- **examples**
+   - [argparse](https://github.com/p-ranav/argparse)
 
 ## developer environment setup
 
 the project requires C++23 with GNU extensions, so try to use a compliant
 toolchain. i primarily use GCC 15.2 on linux and windows. thanks to github
 actions, there is success building with AppleClang on macOS (see
-[actions workflow runs](https://github.com/trustytrojan/libavz/actions) for
-more details). i **do not** guarantee fully working builds with Clang/LLVM or
-MSVC. if you want to see them work, contribute!
+[actions workflow runs](https://github.com/trustytrojan/libavz/actions) for more
+details). i **do not** guarantee fully working builds with Clang/LLVM or MSVC.
+if you want to see them work, contribute!
 
 my choice of editor is [Visual Studio Code](https://code.visualstudio.com/) with
 the

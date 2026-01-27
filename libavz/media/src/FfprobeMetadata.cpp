@@ -6,31 +6,37 @@
 FfprobeMetadata::FfprobeMetadata(const std::string &media_url)
 {
 	const auto command{"ffprobe -v warning -show_format -show_streams -print_format json \"" + media_url + '"'};
+	std::cout << "[FfprobeMetadata] running command: '" << command << "'\n";
+
 	const auto ffprobe{avz::util::popen_utf8(command, POPEN_R_MODE)};
 	if (!ffprobe)
-		throw std::runtime_error{std::string{"popen: "} + strerror(errno)};
+		throw std::runtime_error{std::string{"[FfprobeMetadata] popen: "} + strerror(errno)};
 
 	std::ostringstream oss;
 	char buffer[128];
 	while (fgets(buffer, sizeof(buffer), ffprobe) != nullptr)
 		oss << buffer;
 
-	switch (const auto status{avz::util::pclose_utf8(ffprobe)})
+	switch (const auto status{pclose(ffprobe)})
 	{
 	case -1:
-		throw std::runtime_error{std::string{"pclose: "} + strerror(errno)};
+		throw std::runtime_error{std::string{"[FfprobeMetadata] pclose: "} + strerror(errno)};
 	case 0:
 		break;
 	default:
-		std::cerr << __func__ << ": pclose returned: " << status << '\n';
+		std::cerr << "[FfprobeMetadata] pclose returned: " << status << '\n';
 		return;
 	}
 
-	metadata = json::parse(oss.str());
+	const auto json_str = oss.str();
+	metadata = json::parse(json_str);
 
-	// Assert that required fields exist
-	assert(metadata.contains("streams") && metadata["streams"].is_array());
-	assert(metadata.contains("format") && metadata["format"].is_object());
+	if (!metadata.contains("streams") || !metadata["streams"].is_array())
+		throw std::invalid_argument{
+			"[FfprobeMetadata] ffprobe json output has no \"streams\" array! json output: " + json_str};
+	if (!metadata.contains("format") || !metadata["format"].is_object())
+		throw std::invalid_argument{
+			"[FfprobeMetadata] ffprobe json output has no \"format\" object! json output: " + json_str};
 }
 
 bool FfprobeMetadata::hasAudioStream() const

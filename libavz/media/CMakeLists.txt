@@ -2,36 +2,28 @@ file(GLOB_RECURSE LIBAVZ_MEDIA_SOURCES src/*.cpp)
 add_library(avz-media ${LIBAVZ_MEDIA_SOURCES})
 add_library(avz::media ALIAS avz-media)
 
-target_compile_options(avz-media PUBLIC -Wno-narrowing -ffast-math)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	target_compile_options(avz-media PUBLIC
-		-Wno-nan-infinity-disabled # caused by nlohmann/json, safe to ignore
-	)
-endif()
+target_compile_options(avz-media PUBLIC
+	-Wno-narrowing
+	-ffast-math
+	# caused by nlohmann/json, safe to ignore
+	$<IF:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>,-Wno-nan-infinity-disabled,>
+)
 
 target_include_directories(avz-media PUBLIC
 	include
 	${CMAKE_CURRENT_BINARY_DIR} # for json
 )
 
-# sfml (TEMPORARY, FIGURE OUT HOW TO NOT DEPEND ON IT)
-# we can find_package() as gfx might have downloaded it already
-if(WIN32 AND EXISTS "${CMAKE_BINARY_DIR}/_deps/sfml-src")
-	find_package(SFML COMPONENTS Graphics Window System REQUIRED QUIET)
-	target_link_libraries(avz-media PUBLIC SFML::Graphics)
-endif()
-
 # GLEW (caused by pbo optimization changes)
 if(WIN32)
-	message(STATUS "glew: windows detected: fetching glew binaries")
+	message(STATUS "[avz-media] glew: windows detected: fetching glew binaries")
 	FetchContent_Declare(glew URL https://github.com/nigels-com/glew/releases/download/glew-2.3.0/glew-2.3.0-win32.zip)
 	FetchContent_MakeAvailable(glew)
 	target_include_directories(avz-media PUBLIC ${glew_SOURCE_DIR}/include)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
 		target_link_directories(avz-media PUBLIC ${glew_SOURCE_DIR}/lib/Release/x64)
 	else()
-		message(FATAL_ERROR "glew: windows other architecture: not implemented, do more work")
+		message(FATAL_ERROR "[avz-media] glew: windows other architecture: not implemented, do more work")
 	endif()
 	target_link_libraries(avz-media PUBLIC glew32s)
 	target_compile_definitions(avz-media PUBLIC GLEW_STATIC)
@@ -51,8 +43,7 @@ target_link_libraries(avz-media PUBLIC nlohmann_json::nlohmann_json)
 
 # popen() on MinGW expects a 'b' to differentiate text/binary,
 # but on Linux it errors if a 'b' is there, so we have to do this...
-if(WIN32)
-	target_compile_definitions(avz-media PRIVATE POPEN_R_MODE="rb" POPEN_W_MODE="wb")
-else()
-	target_compile_definitions(avz-media PRIVATE POPEN_R_MODE="r" POPEN_W_MODE="w")
-endif()
+target_compile_definitions(avz-media PRIVATE
+	POPEN_R_MODE="r$<IF:$<PLATFORM_ID:Windows>,b,>"
+	POPEN_W_MODE="w$<IF:$<PLATFORM_ID:Windows>,b,>"
+)

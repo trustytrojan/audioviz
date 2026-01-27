@@ -18,8 +18,8 @@
 #include <avz/gfx/fx/Blur.hpp>
 #include <avz/gfx/fx/Mirror.hpp>
 #include <avz/gfx/fx/Mult.hpp>
-#include <avz/gfx/fx/PolarCenter.hpp>
 #include <avz/gfx/fx/Polar.hpp>
+#include <avz/gfx/fx/PolarCenter.hpp>
 #include <avz/gfx/fx/PostProcessEffect.hpp>
 #include <avz/gfx/fx/Shake.hpp>
 #include <avz/gfx/fx/TransformEffect.hpp>

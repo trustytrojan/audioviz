@@ -2,13 +2,11 @@ file(GLOB_RECURSE LIBAVZ_ANALYSIS_SOURCES src/*.cpp)
 add_library(avz-analysis ${LIBAVZ_ANALYSIS_SOURCES})
 add_library(avz::analysis ALIAS avz-analysis)
 
-target_compile_options(avz-analysis PUBLIC -Wno-narrowing -ffast-math)
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	target_compile_options(avz-analysis PUBLIC
-		-Wno-subobject-linkage # caused by tk-spline, safe to ignore
-	)
-endif()
+target_compile_options(avz-analysis PUBLIC
+	-Wno-narrowing
+	-ffast-math
+	$<IF:$<CXX_COMPILER_ID:GNU>,-Wno-subobject-linkage,> # caused by tk-spline, safe to ignore
+)
 
 target_include_directories(avz-analysis PUBLIC
 	include
@@ -22,14 +20,14 @@ if(NOT ANDROID)
 endif()
 if(WIN32 AND NOT FFTW3_FOUND)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
-		message(STATUS "fftw: windows x64 detected: fetching binaries")
+		message(STATUS "[avz-analysis] fftw: windows x64 detected: fetching binaries")
 		FetchContent_Declare(fftw URL https://fftw.org/pub/fftw/fftw-3.3.5-dll64.zip)
 		FetchContent_MakeAvailable(fftw)
 		target_link_directories(avz-analysis PUBLIC ${fftw_SOURCE_DIR})
 		target_include_directories(avz-analysis PUBLIC ${fftw_SOURCE_DIR})
 		target_link_libraries(avz-analysis PUBLIC fftw3f-3)
 	else()
-		message(STATUS "fftw: windows other architecture (probably ARM64) detected: fetching source")
+		message(STATUS "[avz-analysis] fftw: windows other architecture (probably ARM64) detected: fetching source")
 		set(BUILD_TESTS OFF)
 		set(ENABLE_FLOAT ON)
 		set(DISABLE_FORTRAN ON)
