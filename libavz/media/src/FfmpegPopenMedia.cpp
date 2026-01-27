@@ -82,7 +82,7 @@ std::optional<std::vector<std::byte>> FfmpegPopenMedia::getAttachedPicture(const
 			buffer.insert(buffer.end(), buf, buf + bytesRead);
 	}
 
-	const auto status = util::pclose_utf8(pipe);
+	const auto status = pclose(pipe);
 	if (status == -1)
 	{
 		std::cerr << __func__ << ": pclose: " << strerror(errno) << '\n';
@@ -130,9 +130,9 @@ FfmpegPopenMedia::FfmpegPopenMedia(const std::string &url, float start_time_sec)
 
 FfmpegPopenMedia::~FfmpegPopenMedia()
 {
-	if (audio && util::pclose_utf8(audio) == -1)
+	if (audio && pclose(audio) == -1)
 		perror("[FfmpegPopenMedia::~FfmpegPopenMedia] audio: pclose");
-	if (video && util::pclose_utf8(video) == -1)
+	if (video && pclose(video) == -1)
 		perror("[FfmpegPopenMedia::~FfmpegPopenMedia] video: pclose");
 }
 

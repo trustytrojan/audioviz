@@ -12,6 +12,4 @@ std::string detect_vaapi_device();
 
 FILE *popen_utf8(const std::string &command, const char *mode);
 
-int pclose_utf8(FILE *stream);
-
 } // namespace avz::util

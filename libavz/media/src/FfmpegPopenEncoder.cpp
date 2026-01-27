@@ -84,7 +84,7 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 		return;
 	if (fflush(ffmpeg) == EOF)
 		perror("[~FfmpegPopenEncoder] fflush");
-	if (util::pclose_utf8(ffmpeg) == -1)
+	if (pclose(ffmpeg) == -1)
 		perror("[~FfmpegPopenEncoder] pclose");
 }
 
