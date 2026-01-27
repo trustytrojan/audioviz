@@ -3,6 +3,7 @@
 #include <avz/media/FfmpegPopenEncoder.hpp>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 namespace avz
@@ -54,7 +55,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 		if (const auto vaapi_device = util::detect_vaapi_device(); !vaapi_device.empty())
 			cmd_stream << "-vaapi_device " << vaapi_device << " -vf vflip,format=nv12,hwupload ";
 		else
-			std::cerr << "failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
+			std::cerr << "[FfmpegPopenEncoder] failed to find a vaapi device for h264_vaapi ffmpeg encoder!\n";
 	}
 #else
 	// vertically flip because pixels from opengl functions are bottom-up rows
@@ -74,7 +75,7 @@ FfmpegPopenEncoder::FfmpegPopenEncoder(
 	std::cout << "[FfmpegPopenEncoder] command: " << command << '\n';
 	if (!(ffmpeg = util::popen_utf8(command, POPEN_W_MODE)))
 		throw std::runtime_error{
-			"[FfmpegPopenEncoder] Failed to start ffmpeg process with popen" + std::string{strerror(errno)}};
+			"[FfmpegPopenEncoder] Failed to start ffmpeg process with popen: " + std::string{strerror(errno)}};
 }
 
 FfmpegPopenEncoder::~FfmpegPopenEncoder()
@@ -82,9 +83,9 @@ FfmpegPopenEncoder::~FfmpegPopenEncoder()
 	if (!ffmpeg)
 		return;
 	if (fflush(ffmpeg) == EOF)
-		perror("[FfmpegPopenEncoder] fflush");
+		perror("[~FfmpegPopenEncoder] fflush");
 	if (util::pclose_utf8(ffmpeg) == -1)
-		perror("[FfmpegPopenEncoder] pclose");
+		perror("[~FfmpegPopenEncoder] pclose");
 }
 
 void FfmpegPopenEncoder::send_frame(const unsigned glTexture)
@@ -108,7 +109,7 @@ void FfmpegPopenEncoder::send_frame(const unsigned glTexture)
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[prev_idx]);
 		const auto *const ptr = static_cast<std::byte *>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
 		if (ptr && fwrite(ptr, 1, byte_size, ffmpeg) < byte_size)
-			throw std::runtime_error{"FfmpegPopenEncoder: fwrite returned < size!"};
+			throw std::runtime_error{"[FfmpegPopenEncoder::send_frame] fwrite returned < size!"};
 		glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 	}
 

@@ -23,17 +23,17 @@ public:
 	virtual ~Media() = default;
 
 	/**
-	 * Read `samples` audio SAMPLES (NOT FRAMES) from the underlying source
-	 * into `buf`. Typically not used publicly. You should prefer using the
-	 * built-in audio buffer instead.
+	 * Read audio SAMPLES (NOT frames) from the underlying source into `buf`.
+	 * Typically not used publicly, as  You should prefer using `read_audio` instead.
 	 */
 	virtual size_t read_audio_samples(float *buf, int samples) = 0;
 
 	/**
-	 * Read a video frame of size `video_size` (passed in the constructor)
-	 * from the underlying source into `txr`.
+	 * Read a video frame from the underlying source into `buf`.
+	 * The buffer will be resized to match the video frame's size.
+	 * Returns whether the read was successful.
 	 */
-	virtual bool read_video_frame(std::vector<std::byte> &txr) = 0;
+	virtual bool read_video_frame(std::vector<std::byte> &buf) = 0;
 
 	virtual int audio_sample_rate() const = 0;
 	virtual int audio_channels() const = 0;
@@ -44,16 +44,21 @@ public:
 	virtual std::string artist() const = 0;
 
 	/**
-	 * Erase `frames` audio frames from the buffer.
-	 * This helps "slide" the audio window forward by `frames`, ensuring
-	 * consistent playback when rendering at a specific framerate.
+	 * Erase the first `frames` audio frames from the buffer. This is
+	 * used in tandem with `read_audio` to "move" the audio buffer
+	 * forward by the `frames` you have already used.
 	 */
 	void consume_audio(const int frames);
 
 	/**
 	 * Attempts to buffer `frames` audio frames from the underlying source.
-	 * On success, returns a span pointing to the buffered audio.
+	 * On success, returns a span pointing to the audio buffer sized by
+	 * the amount of `frames` requested.
 	 * Otherwise returns an empty optional.
+	 *
+	 * NOTE: You must call `consume_audio` to erase the audio you no longer
+	 * need from the buffer, otherwise this method will keep returning the
+	 * same audio without reading new data from the implementation.
 	 */
 	std::optional<std::span<const float>> read_audio(int frames);
 };
