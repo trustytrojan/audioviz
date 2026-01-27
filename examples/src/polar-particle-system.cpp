@@ -2,10 +2,6 @@
 #include <avz/analysis.hpp>
 #include <avz/gfx.hpp>
 
-/*
-TODO: make new polar shader without coordinate warping
-*/
-
 using namespace avz::examples;
 
 struct PolarParticleSystem : ExampleBase
@@ -19,7 +15,7 @@ struct PolarParticleSystem : ExampleBase
 	avz::FrequencyAnalyzer fa;
 	avz::AudioAnalyzer aa;
 
-	avz::fx::Polar polar{
+	avz::fx::PolarCenter polar{
 		(sf::Vector2f)size, // Dimensions of linear space
 		size.y * 0.25f,		// Base radius inner hole: 25% screen height
 		size.x * 0.5f,		// Max radius: 50% screen width
