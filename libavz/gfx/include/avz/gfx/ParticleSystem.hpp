@@ -24,6 +24,8 @@ private:
 	std::vector<Particle> particles;
 	float timestep_scale{1.f};
 	bool debug_rect{};
+	bool fade_out{true};
+	bool start_offscreen{true};
 
 public:
 	inline ParticleSystem(const sf::IntRect &rect, const int particle_count)
@@ -53,6 +55,15 @@ public:
 	void update(const float additional_displacement = 0.f);
 
 	inline void set_debug_rect(bool b) { debug_rect = b; }
+	inline void set_fade_out(bool b) { fade_out = b; }
+	
+	inline void set_start_offscreen(bool b)
+	{
+		if (start_offscreen == b)
+			return;
+		start_offscreen = b;
+		init_particles();
+	}
 
 	void draw(sf::RenderTarget &target, const sf::RenderStates states) const override;
 

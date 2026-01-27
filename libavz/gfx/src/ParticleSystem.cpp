@@ -42,10 +42,13 @@ void ParticleSystem::update(const float additional_displacement)
 
 		p.setPosition(new_pos);
 
-		// alpha = sqrt(distance from top)
-		auto [r, g, b, a] = p.getFillColor();
-		a = sqrtf((new_pos.y - rect.position.y) / rect.size.y) * 255;
-		p.setFillColor({r, g, b, a});
+		if (fade_out)
+		{
+			// alpha = sqrt(distance from top)
+			auto [r, g, b, a] = p.getFillColor();
+			a = sqrtf((new_pos.y - rect.position.y) / rect.size.y) * 255;
+			p.setFillColor({r, g, b, a});
+		}
 
 		// teleport back to bottom once it reaches the top
 		if (new_pos.y <= rect.position.y)
@@ -100,7 +103,8 @@ void ParticleSystem::init_particle(Particle &p)
 	// otherwise all of them come out at once and it looks bad
 	p.setPosition({
 		randf(rect.position.x, rect.position.x + rect.size.x),
-		rect.position.y + rect.size.y * randf(1, 2),
+		start_offscreen ? (rect.position.y + rect.size.y * randf(1, 2))
+						: randf(rect.position.y, rect.position.y + rect.size.y),
 	});
 
 	const auto vx = randf(-0.5f, 0.5f) * timestep_scale;
