@@ -3,9 +3,6 @@
 #include <avz/analysis.hpp>
 #include <avz/gfx.hpp>
 
-#include <algorithm>
-#include <cmath>
-#include <print>
 #include <vector>
 
 using namespace avz::examples;
@@ -24,8 +21,6 @@ struct StereoScopeViz : ExampleBase
 		  right_scope{{{10, 10}, {(int)size.x - 20, (int)size.y - 20}}, colorR},
 		  required_frames{config.audio_duration_sec * sample_rate_hz}
 	{
-		std::println("required_frames={}", required_frames);
-
 		colorL.set_mode(avz::ColorSettings::Mode::SOLID);
 		colorL.set_solid_color(sf::Color::Red);
 		colorR.set_mode(avz::ColorSettings::Mode::SOLID);
@@ -54,11 +49,6 @@ struct StereoScopeViz : ExampleBase
 	{
 		if (num_channels > 1)
 		{
-			std::println(
-				"left_channel.size()={} audio_buffer.size()={} num_channels={}",
-				left_channel.size(),
-				audio_buffer.size(),
-				num_channels);
 			avz::util::extract_channel(left_channel, audio_buffer, num_channels, 0);
 			avz::util::extract_channel(right_channel, audio_buffer, num_channels, 1);
 			left_scope.update(left_channel);

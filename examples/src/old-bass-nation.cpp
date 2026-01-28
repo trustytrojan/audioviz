@@ -27,8 +27,6 @@ struct OldBassNation : ExampleBase
 		  polar_left{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, M_PI / 2, M_PI},
 		  polar_right{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, -M_PI / 2, M_PI}
 	{
-		// std::println("max_fft_size={} sample_rate_hz={}", max_fft_size, sample_rate_hz);
-
 		cs.set_mode(avz::ColorSettings::Mode::SOLID);
 
 		static const std::array<sf::Color, 9> colors{
