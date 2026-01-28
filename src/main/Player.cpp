@@ -41,12 +41,6 @@ void Player::start_in_window(const std::string &title)
 	close(devnull);
 #endif
 
-	// this looks like a bad idea, but letting portaudio handle timing
-	// with it's blocking write function is better than constantly getting
-	// "output underflowed" errors
-	window.setVerticalSyncEnabled(false);
-	window.setFramerateLimit(0);
-
 	pa::Init pa_init;
 	pa::Stream pa_stream{0, media.audio_channels(), paFloat32, media.audio_sample_rate(), afpvf};
 	pa_stream.start();
@@ -58,11 +52,33 @@ void Player::start_in_window(const std::string &title)
 #endif
 #endif
 
+	bool paused{};
+
 	while (window.isOpen())
 	{
-		while (const auto event = window.pollEvent())
-			if (event->is<sf::Event::Closed>())
-				window.close();
+		window.handleEvents(
+			[&](sf::Event::Closed) { window.close(); },
+			[&](sf::Event::KeyPressed key)
+			{
+				switch (key.scancode)
+				{
+				case sf::Keyboard::Scan::Space:
+					paused = !paused;
+					if (paused)
+						pa_stream.stop();
+					else
+						pa_stream.start();
+					break;
+				case sf::Keyboard::Scan::Escape:
+					window.close();
+					break;
+				default:
+					break;
+				}
+			});
+
+		if (paused)
+			continue;
 
 		const auto frames = std::max(audio_frames_needed, afpvf);
 		const auto audio = media.read_audio(frames);

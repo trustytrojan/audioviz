@@ -14,14 +14,17 @@ void ParticleSystem::set_framerate(const int framerate)
 {
 	timestep_scale = framerate > 0 ? 60.f / framerate : 1.f;
 	for (auto &p : particles)
-		p.scaleVelocity(timestep_scale);
+		p.applyTimescale(timestep_scale);
 }
 
 void ParticleSystem::update(const float additional_displacement)
 {
-	// negative Y so that it boosts the particles
+	// negative Y so that it boosts the particles up
 	// use sqrt to dampen the effect, otherwise the particles go crazy
-	const sf::Vector2f displacement{0.f, -sqrtf(rect.size.y * additional_displacement) * timestep_scale};
+	const sf::Vector2f displacement{0, -std::sqrt(rect.size.y * additional_displacement) * timestep_scale};
+
+	const float left_edge = rect.position.x;
+	const float right_edge = rect.position.x + rect.size.x;
 
 	for (auto &p : particles)
 	{
@@ -33,20 +36,20 @@ void ParticleSystem::update(const float additional_displacement)
 		const auto radius = p.getRadius();
 
 		// make sure particles don't escape the rect
-		if (new_pos.x >= (rect.position.x + rect.size.x))
-			// teleport from right edge to left
-			new_pos.x = rect.position.x + -radius;
-		else if (new_pos.x + radius < 0)
-			// teleport from left edge to right
-			new_pos.x = (rect.position.x + rect.size.x);
+		// Wrapping Right to Left
+		if (new_pos.x - radius > right_edge)
+			new_pos.x = left_edge - radius;
+		// Wrapping Left to Right
+		else if (new_pos.x + radius < left_edge)
+			new_pos.x = right_edge + radius;
 
 		p.setPosition(new_pos);
 
 		if (fade_out)
 		{
-			// alpha = sqrt(distance from top)
 			auto [r, g, b, a] = p.getFillColor();
-			a = sqrtf((new_pos.y - rect.position.y) / rect.size.y) * 255;
+			// alpha = sqrt(distance from top)
+			a = std::sqrt((new_pos.y - rect.position.y) / rect.size.y) * 255;
 			p.setFillColor({r, g, b, a});
 		}
 
@@ -97,7 +100,7 @@ void ParticleSystem::init_particle(Particle &p)
 
 	// these are going to be very small circles, don't need many points
 	p.setPointCount(10);
-	p.setRadius(randf(2, 5));
+	p.setRadius(randf(1, 5));
 
 	// start some particles offscreen, so the beginning sequence feels less "sudden"
 	// otherwise all of them come out at once and it looks bad
@@ -107,9 +110,10 @@ void ParticleSystem::init_particle(Particle &p)
 						: randf(rect.position.y, rect.position.y + rect.size.y),
 	});
 
-	const auto vx = randf(-0.5f, 0.5f) * timestep_scale;
-	const auto vy = randf(-2.f, 0.f) * timestep_scale;
-	p.setVelocity({vx, vy});
+	const auto vx = randf(-1.f, 1.f);
+	const auto vy = randf(-1.f, 0.f);
+	p.setBaseVelocity({vx, vy});
+	p.applyTimescale(timestep_scale);
 }
 
 void ParticleSystem::init_particles()
@@ -120,10 +124,12 @@ void ParticleSystem::init_particles()
 
 void ParticleSystem::teleport_particle_opposite_side(Particle &p)
 {
-	// same as init_particle() but without scaling Y by randf(1, 2)
+	const float radius = p.getRadius();
 	p.setPosition({
 		randf(rect.position.x, rect.position.x + rect.size.x),
-		static_cast<float>(rect.position.y + rect.size.y),
+		// Randomize the start height slightly below the view so they
+		// "drift" in rather than appearing in a flat line.
+		rect.position.y + rect.size.y + randf(radius, radius + 20.f),
 	});
 }
 

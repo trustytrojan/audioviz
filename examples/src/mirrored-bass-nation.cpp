@@ -10,6 +10,53 @@
 
 using namespace avz::examples;
 
+/**
+ * Calculates the additional particle displacement using the bass frequency spectrum passed
+ * as `bass_amps`. It is expected to contain a 20-135Hz frequency range, straight from FFT
+ * amplitude output.
+ */
+float bass_nation_additional_displacement(std::span<const float> bass_amps)
+{
+	// Constants for the "Nation" look
+	constexpr auto mid_point = 0.3f;	// Full weight at 53Hz
+	constexpr auto k_rise = 0.08f;		// Smooth, quick rise from 20Hz
+	constexpr auto k_fall = 0.08f;		// Gentle fall toward 135Hz
+	constexpr auto threshold = 1.0f;	// Your "Kick" detection threshold
+	constexpr auto boost_factor = 3.0f; // How much the "Bonus" multiplies
+
+	float max{};
+
+	for (size_t i = 0; i < bass_amps.size(); ++i)
+	{
+		const auto x = (float)i / bass_amps.size();
+
+		// 1. Optimized Asymmetric Weighting
+		const auto dist = x - mid_point;
+		const auto k = (dist < 0) ? k_rise : k_fall;
+		const auto freq_weight = std::exp(-(dist * dist) / k);
+
+		// 2. Apply weight to raw amplitude
+		auto val = bass_amps[i] * freq_weight;
+
+		// 3. The "Kick Bonus" (Exponential Expansion)
+		// Example: if val is 1.2, the 'extra' 0.2 is taken out, squared, then added back to val.
+		if (val > threshold)
+		{
+			const auto extra = val - threshold;
+			val = threshold + (extra * extra * boost_factor);
+		}
+
+		// Dividing by 5, for some reason, makes it look perfect.
+		val /= 5;
+
+		// Keep finding the max.
+		if (val > max)
+			max = val;
+	}
+
+	return max;
+}
+
 struct MirroredBassNation : ExampleBase
 {
 	const int fft_size;
@@ -19,18 +66,19 @@ struct MirroredBassNation : ExampleBase
 	std::vector<std::future<void>> futures;
 
 	// calculate the FFT amplitudes array indices of min/max frequencies in Hz
-	const int min_fft_index = avz::util::bin_index_from_freq(0, sample_rate_hz, fft_size);
-	const int max_fft_index = avz::util::bin_index_from_freq(250, sample_rate_hz, fft_size);
+	const int min_fft_index = avz::util::bin_index_from_freq(20, sample_rate_hz, fft_size);
+	const int max_fft_index = avz::util::bin_index_from_freq(135, sample_rate_hz, fft_size);
 	std::vector<float> a, p;
 	avz::ParticleSystem ps;
 	avz::FrequencyAnalyzer fa{fft_size};
 	avz::AudioAnalyzer aa;
-	avz::fx::PolarCenter ps_polar{
+	avz::fx::Polar ps_polar{
 		(sf::Vector2f)size, // Dimensions of linear space
 		size.y * 0.25f,		// Base radius inner hole: 25% screen height
 		size.x * 0.6f,		// Max radius: 60% screen width, so that you don't see any particles disappear
 		M_PI / 2,			// Angle start
-		M_PI				// Angle span
+		M_PI,				// Angle span
+		0.0f				// warping_factor: no warping for particles
 	};
 
 	avz::fx::Polar spectrum_polar{(sf::Vector2f)size, size.y * 0.25f, size.y * 0.5f, M_PI / 2, M_PI};
@@ -39,7 +87,7 @@ struct MirroredBassNation : ExampleBase
 	MirroredBassNation(const ExampleConfig &config)
 		: ExampleBase{config},
 		  fft_size{static_cast<int>(config.audio_duration_sec * sample_rate_hz)},
-		  ps{{{}, (sf::Vector2i)size}, 75, config.framerate}
+		  ps{{{}, (sf::Vector2i)size}, 50, config.framerate}
 	{
 		ps.set_fade_out(false);
 		ps.set_start_offscreen(false);
@@ -106,24 +154,11 @@ struct MirroredBassNation : ExampleBase
 			capture_time("amplitudes", aa.compute_amplitudes(fa));
 
 			// compute FFT amplitudes, take only the bass frequencies
-			const auto amps = aa.get_amplitudes().subspan(min_fft_index, max_fft_index - min_fft_index);
-			p.resize(amps.size());
+			const auto bass_amps = aa.get_amplitudes().subspan(min_fft_index, max_fft_index - min_fft_index);
+			p.resize(bass_amps.size());
 
-			// weight each element by its normalized position through a Gompertz function
-			// this makes lower bass frequencies boost the particles more than higher bass frequencies
-			for (size_t i = 0; i < amps.size(); ++i)
-			{
-				const auto normalized_pos = (float)i / amps.size();
-				p[i] = amps[i] * expf(-expf(4.5 * normalized_pos - 4)) / 5;
-			}
-
-			float max;
-			capture_time("max", max = std::ranges::max(p));
-
-			// pass the max as `additional_displacement` to ParticleSystem::update.
-			// the displacement is then scaled to the window's height, and dampened
-			// with sqrt (otherwise the particles just go crazy).
-			capture_time("ps_update", ps.update(max));
+			// calculate and pass additional particle displacement to the ParticleSystem's update() method
+			capture_time("ps_update", ps.update(bass_nation_additional_displacement(bass_amps)));
 		}
 
 		// wait for all spectrums to finish updating

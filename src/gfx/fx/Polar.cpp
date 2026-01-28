@@ -16,12 +16,13 @@ static void init()
 namespace avz::fx
 {
 
-Polar::Polar(sf::Vector2f size, float br, float mr, float angle_start, float angle_span)
+Polar::Polar(sf::Vector2f size, float br, float mr, float angle_start, float angle_span, float warping_factor)
 	: size{size},
 	  base_radius{br},
 	  max_radius{mr},
 	  angle_start{angle_start},
-	  angle_span{angle_span}
+	  angle_span{angle_span},
+	  warping_factor{warping_factor}
 {
 }
 
@@ -39,6 +40,7 @@ void Polar::setShaderUniforms() const
 	shader.setUniform("max_radius", max_radius);
 	shader.setUniform("angle_start", angle_start);
 	shader.setUniform("angle_span", angle_span);
+	shader.setUniform("warping_factor", warping_factor);
 }
 
 } // namespace avz::fx

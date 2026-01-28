@@ -1,46 +1,48 @@
 #version 120
 
-uniform vec2 size;          // 1280, 720
-uniform float base_radius;  // e.g., 100.0 (pixels)
-uniform float max_radius;   // e.g., 360.0 (pixels) - half of size.y
-uniform float angle_start;  // Starting angle in radians (default: PI/2 for top)
-uniform float angle_span;   // Angular span in radians (default: 2*PI for full circle)
+uniform vec2 size;
+uniform float base_radius;
+uniform float max_radius;
+uniform float angle_start;
+uniform float angle_span;
+
+// 0.0 = No warping (translate only), 1.0 = Full polar warp
+uniform float warping_factor;
 
 void main()
 {
-    // 1. Get position from ModelView
-    vec4 worldPos = gl_ModelViewMatrix * gl_Vertex;
+    // 1. Get world positions
+    vec4 world_pos = gl_ModelViewMatrix * gl_Vertex;
+    vec4 world_origin = gl_ModelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0);
 
-    // 2. Map the scene X to the angle range
-    float angle = angle_start + (worldPos.x / size.x) * angle_span;
+    // 2. Calculate the target reference point
+    // We mix between the specific vertex and the object's origin
+    vec2 target_ref = mix(world_origin.xy, world_pos.xy, warping_factor);
 
-    // 3. NORMALIZE THE BAR HEIGHT (0.0 to 1.0)
-    // We calculate how far "up" the bar the current vertex is.
-    // If your bars are at the bottom of the scene, use (size.y - worldPos.y) / size.y;
-    float height_factor = (size.y - worldPos.y) / size.y;
-    height_factor = clamp(height_factor, 0.0, 1.0); // Safety first
+    // 3. Map the target reference onto polar coordinates
+    float angle = angle_start + (target_ref.x / size.x) * angle_span;
+    float height_factor = (size.y - target_ref.y) / size.y;
 
-    // 4. LINEARLY INTERPOLATE RADIUS
-    // This "squeezes" the entire scene height into the gap between
-    // the inner circle and the screen edge.
+    // Unclamped to allow buffer zones as previously discussed
     float radius = base_radius + (height_factor * (max_radius - base_radius));
 
-    // 5. Convert to Cartesian
     vec2 polar_pos;
     polar_pos.x = radius * cos(angle);
     polar_pos.y = radius * sin(angle);
 
-    // 6. Aspect Ratio & NDC Conversion
+    // 4. Handle the Offset (only applies when warping_factor < 1.0)
+    // If warping_factor is 1, this offset becomes 0.
+    vec2 offset = world_pos.xy - target_ref;
+
+    // 5. Conversion to NDC
     float aspect = size.x / size.y;
+    vec2 center_ndc = polar_pos / (size.y * 0.5);
+    vec2 offset_ndc = offset / (size.y * 0.5);
 
-    // Convert to NDC (-1 to 1). 
-    // We use (size.y * 0.5) as our "1.0" unit.
-    vec2 ndc_pos = polar_pos / (size.y * 0.5);
+    center_ndc.x /= aspect;
+    offset_ndc.x /= aspect;
 
-    // 1:1 Aspect Correction
-    ndc_pos.x /= aspect;
-
-    gl_Position = vec4(ndc_pos, 0.0, 1.0);
+    gl_Position = vec4(center_ndc + offset_ndc, 0.0, 1.0);
 
     gl_FrontColor = gl_Color;
     gl_TexCoord[0] = gl_MultiTexCoord0;

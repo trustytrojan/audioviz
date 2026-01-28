@@ -11,13 +11,13 @@ private:
 	// leave private here until there is another usecase
 	class Particle : public sf::CircleShape
 	{
-		sf::Vector2f velocity;
+		sf::Vector2f base_velocity;
+		sf::Vector2f current_velocity;
 
 	public:
-		inline void updatePosition() { setPosition(getPosition() + velocity); }
-		inline void setVelocity(const sf::Vector2f v) { velocity = v; }
-		inline sf::Vector2f getVelocity() const { return velocity; }
-		inline void scaleVelocity(const float x) { velocity *= x; }
+		inline void updatePosition() { setPosition(getPosition() + current_velocity); }
+		inline void setBaseVelocity(const sf::Vector2f v) { base_velocity = v; }
+		inline void applyTimescale(float scale) { current_velocity = base_velocity * scale; }
 	};
 
 	sf::IntRect rect;

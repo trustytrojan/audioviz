@@ -19,12 +19,13 @@ struct PolarParticleSystem : ExampleBase
 	avz::FrequencyAnalyzer fa;
 	avz::AudioAnalyzer aa;
 
-	avz::fx::PolarCenter polar{
+	avz::fx::Polar polar{
 		(sf::Vector2f)size, // Dimensions of linear space
 		size.y * 0.25f,		// Base radius inner hole: 25% screen height
 		size.x * 0.5f,		// Max radius: 50% screen width
 		0,					// Angle start
-		2 * M_PI			// Angle span
+		2 * M_PI,			// Angle span
+		0.0f				// warping_factor: no warping for particles
 	};
 
 	PolarParticleSystem(const ExampleConfig &config)
