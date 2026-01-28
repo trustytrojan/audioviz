@@ -27,13 +27,14 @@ struct PolarSpectrum : ExampleBase
 			  (sf::Vector2f)size, // Dimensions of linear space
 			  size.y * 0.25f,	  // Base radius inner hole: 25% screen height
 			  size.y * 0.5f,	  // Max radius: 50% screen height
-			  0,				  // Angle start
+			  M_PI / 2,		  // Angle start
 			  2 * M_PI			  // Angle span
 		  }
 	{
-		spectrum.set_bar_width(2);
+		spectrum.set_bar_width(1);
 		spectrum.set_bar_spacing(0);
 		spectrum.set_multiplier(6);
+		spectrum.set_use_gs(true);
 
 		emplace_layer<avz::Layer>("spectrum").add_draw({spectrum, &polar});
 	}
@@ -52,4 +53,4 @@ struct PolarSpectrum : ExampleBase
 	}
 };
 
-LIBAVZ_EXAMPLE_MAIN_CUSTOM(PolarSpectrum, "Polar spectrum visualization with bass frequencies", 0.25f, viz.fft_size)
+LIBAVZ_EXAMPLE_MAIN_CUSTOM(PolarSpectrum, "Polar spectrum visualization with bass frequencies", 0.15f, viz.fft_size)

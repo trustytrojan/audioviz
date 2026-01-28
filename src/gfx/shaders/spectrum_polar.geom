@@ -59,11 +59,21 @@ void main()
 	float hw = bar_width * 0.5;
 	float top_y = bottom_y - height;
 
-	// Emit vertices for a rectangle (Triangle Strip: Bottom-Left, Bottom-Right, Top-Left, Top-Right)
-	emit_polar(vec2(x - hw, bottom_y)); // BL
-	emit_polar(vec2(x + hw, bottom_y)); // BR
-	emit_polar(vec2(x - hw, top_y));    // TL
-	emit_polar(vec2(x + hw, top_y));    // TR
+	if (base_radius == 0.0)
+	{
+		// Emit a triangle instead of a quad when base_radius is 0 (all points at bottom_y map to the center)
+		emit_polar(vec2(x, bottom_y));     // Center
+		emit_polar(vec2(x - hw, top_y));    // Top-Left
+		emit_polar(vec2(x + hw, top_y));    // Top-Right
+	}
+	else
+	{
+		// Emit vertices for a rectangle (Triangle Strip: Bottom-Left, Bottom-Right, Top-Left, Top-Right)
+		emit_polar(vec2(x - hw, bottom_y)); // BL
+		emit_polar(vec2(x + hw, bottom_y)); // BR
+		emit_polar(vec2(x - hw, top_y));    // TL
+		emit_polar(vec2(x + hw, top_y));    // TR
+	}
 
 	EndPrimitive();
 }
