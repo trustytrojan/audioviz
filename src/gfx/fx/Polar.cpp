@@ -24,7 +24,8 @@ static void init_gs()
 		return;
 
 	// Pass-through vertex shader to satisfy the linker
-	static const std::string vs_src = "#version 120\nvoid main() { gl_Position = gl_Vertex; gl_FrontColor = gl_Color; }";
+	static const std::string vs_src =
+		"#version 120\nvoid main() { gl_Position = gl_Vertex; gl_FrontColor = gl_Color; }";
 	static const std::string fs_src = "#version 120\nvoid main() { gl_FragColor = gl_Color; }";
 
 	if (!shader_gs.loadFromMemory(vs_src, std::string{libavz_shader_polar_expansion_geom}, fs_src))
@@ -46,7 +47,7 @@ Polar::Polar(sf::Vector2f size, float br, float mr, float angle_start, float ang
 
 const sf::Shader &Polar::getShader() const
 {
-	if (use_gs_expansion)
+	if (use_gs_spectrum_bars)
 	{
 		init_gs();
 		return shader_gs;
@@ -66,10 +67,10 @@ void Polar::setShaderUniforms() const
 	s.setUniform("angle_span", angle_span);
 	s.setUniform("warping_factor", warping_factor);
 
-	if (use_gs_expansion)
+	if (use_gs_spectrum_bars)
 	{
-		s.setUniform("bar_width", bar_width);
-		s.setUniform("bottom_y", bottom_y);
+		s.setUniform("bar_width", spectrum_bar_width);
+		s.setUniform("bottom_y", spectrum_bottom_y);
 	}
 }
 

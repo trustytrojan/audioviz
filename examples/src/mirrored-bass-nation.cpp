@@ -127,10 +127,11 @@ struct MirroredBassNation : ExampleBase
 			spectrum.spectrum.set_use_gs(true);
 			spectrum.configure_spectrum(false, size);
 
-			// Enable GS expansion on the polar effect
-			spectrum_polar.set_gs_expansion(true, spectrum.spectrum.get_bar_width(),
-											spectrum.spectrum.get_rect().position.y +
-												spectrum.spectrum.get_rect().size.y);
+			// Enable GS spectrum-bar expansion on the polar effect
+			spectrum_polar.set_gs_spectrum_bars(
+				true,
+				spectrum.spectrum.get_bar_width(),
+				spectrum.spectrum.get_rect().position.y + spectrum.spectrum.get_rect().size.y);
 
 			spectrum_layer.add_draw({spectrum.spectrum, &spectrum_polar});
 		}

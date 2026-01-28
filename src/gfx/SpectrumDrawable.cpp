@@ -13,7 +13,8 @@ static void init_gs_shader()
 		return;
 
 	// Pass-through vertex shader to satisfy the linker
-	static const std::string vs_src = "#version 120\nvoid main() { gl_Position = gl_Vertex; gl_FrontColor = gl_Color; }";
+	static const std::string vs_src =
+		"#version 120\nvoid main() { gl_Position = gl_Vertex; gl_FrontColor = gl_Color; }";
 	static const std::string fs_src = "#version 120\nvoid main() { gl_FragColor = gl_Color; }";
 
 	if (!gs_shader.loadFromMemory(vs_src, std::string{libavz_shader_spectrum_bars_geom}, fs_src))
