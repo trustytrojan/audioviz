@@ -32,6 +32,7 @@ target_link_libraries(avz-gfx PUBLIC SFML::Graphics)
 file(GLOB SHADER_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.frag"
 	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.vert"
+	"${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.geom"
 )
 set(SHADER_HEADERS)
 set(SHADER_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/shader_headers")

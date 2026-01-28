@@ -1,9 +1,24 @@
 #include <algorithm>
 #include <avz/gfx/SpectrumDrawable.hpp>
 #include <cassert>
+#include <shader_headers/spectrum_bars.geom.h>
 
 namespace avz
 {
+
+static sf::Shader gs_shader;
+static void init_gs_shader()
+{
+	if (gs_shader.getNativeHandle())
+		return;
+
+	// Pass-through vertex shader to satisfy the linker
+	static const std::string vs_src = "#version 120\nvoid main() { gl_Position = gl_Vertex; gl_FrontColor = gl_Color; }";
+	static const std::string fs_src = "#version 120\nvoid main() { gl_FragColor = gl_Color; }";
+
+	if (!gs_shader.loadFromMemory(vs_src, std::string{libavz_shader_spectrum_bars_geom}, fs_src))
+		throw std::runtime_error("failed to load spectrum_bars GS shader");
+}
 
 SpectrumDrawable::SpectrumDrawable(const ColorSettings &color, const bool backwards)
 	: color{color},
@@ -60,6 +75,18 @@ void SpectrumDrawable::update(std::span<const float> spectrum)
 	// Update vertex heights and colors
 	const bool update_colors = (color.wheel.rate != 0);
 
+	if (use_gs)
+	{
+		for (int i = 0; i < bar.count; ++i)
+		{
+			const float height = std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y);
+			vertex_array[i].position.y = height;
+			if (update_colors)
+				vertex_array[i].color = color.calculate_color((float)i / bar.count);
+		}
+		return;
+	}
+
 	for (int i = 0; i < bar.count; ++i)
 	{
 		const float height = std::clamp(multiplier * rect.size.y * spectrum[i], 0.f, (float)rect.size.y);
@@ -96,6 +123,17 @@ void SpectrumDrawable::update(std::span<const float> spectrum)
 
 void SpectrumDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+	if (use_gs)
+	{
+		if (!states.shader)
+		{
+			init_gs_shader();
+			gs_shader.setUniform("bar_width", (float)bar.width);
+			gs_shader.setUniform("bottom_y", (float)(rect.position.y + rect.size.y));
+			states.shader = &gs_shader;
+		}
+	}
+
 	target.draw(vertex_array, states);
 	if (debug_rect)
 	{
@@ -123,6 +161,13 @@ void SpectrumDrawable::draw(sf::RenderTarget &target, sf::RenderStates states) c
 
 void SpectrumDrawable::update_bar_colors()
 {
+	if (use_gs)
+	{
+		for (int i = 0; i < bar.count; ++i)
+			vertex_array[i].color = color.calculate_color((float)i / bar.count);
+		return;
+	}
+
 	for (int i = 0; i < bar.count; ++i)
 	{
 		const sf::Color bar_color = color.calculate_color((float)i / bar.count);
@@ -161,6 +206,9 @@ int SpectrumDrawable::get_bar_vertex_index(int bar_idx, int vertex_num) const
 
 void SpectrumDrawable::update_bars()
 {
+	if (rect.size.x <= 0 || bar.width <= 0)
+		return;
+
 	bar.count = rect.size.x / (bar.width + bar.spacing);
 	if (bar.count <= 0)
 	{
@@ -168,6 +216,22 @@ void SpectrumDrawable::update_bars()
 		return;
 	}
 
+	if (use_gs)
+	{
+		vertex_array.setPrimitiveType(sf::PrimitiveType::Points);
+		vertex_array.resize(bar.count);
+
+		for (int i = 0; i < bar.count; ++i)
+		{
+			const float x = backwards ? rect.position.x + rect.size.x - (i + 0.5f) * (bar.width + bar.spacing)
+									  : rect.position.x + (i + 0.5f) * (bar.width + bar.spacing);
+			vertex_array[i].position = {x, 0}; // y will be height
+			vertex_array[i].color = color.calculate_color((float)i / bar.count);
+		}
+		return;
+	}
+
+	vertex_array.setPrimitiveType(sf::PrimitiveType::TriangleStrip);
 	// Vertex count: 4 + (bar.count - 1) * 6 == bar.count * 6 - 2
 	vertex_array.resize(bar.count * 6 - 2);
 
