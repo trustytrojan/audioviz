@@ -31,6 +31,7 @@ void Player::start_in_window(const std::string &title)
 		sf::Style::Titlebar | sf::Style::Close,
 		sf::State::Windowed,
 	};
+	window.setVerticalSyncEnabled(true);
 
 #ifdef LIBAVZ_PORTAUDIO
 #ifdef __linux__
@@ -77,35 +78,35 @@ void Player::start_in_window(const std::string &title)
 				}
 			});
 
-		if (paused)
-			continue;
-
-		const auto frames = std::max(audio_frames_needed, afpvf);
-		const auto audio = media.read_audio(frames);
-
-		if (!audio)
+		if (!paused)
 		{
-			window.close();
-			continue;
-		}
+			const auto frames = std::max(audio_frames_needed, afpvf);
+			const auto audio = media.read_audio(frames);
+
+			if (!audio)
+			{
+				window.close();
+				continue;
+			}
 
 #ifdef LIBAVZ_PORTAUDIO
-		try
-		{
-			pa_stream.write(audio->data(), afpvf);
-		}
-		catch (const pa::Error &e)
-		{
-			if (e.code != paOutputUnderflowed)
-				throw e;
-			std::cerr << "PortAudio: Output underflowed\n";
-		}
+			try
+			{
+				pa_stream.write(audio->data(), afpvf);
+			}
+			catch (const pa::Error &e)
+			{
+				if (e.code != paOutputUnderflowed)
+					throw e;
+				std::cerr << "PortAudio: Output underflowed\n";
+			}
 #endif
 
-		viz.next_frame(*audio);
+			viz.next_frame(*audio);
 
-		// erase the audio "played" during this frame
-		media.consume_audio(afpvf);
+			// erase the audio "played" during this frame
+			media.consume_audio(afpvf);
+		}
 
 		window.clear();
 		window.draw(viz);

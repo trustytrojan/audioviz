@@ -31,12 +31,13 @@ class Profiler
 public:
 	inline void startSection(std::string_view name)
 	{
-		clock.restart();
 		current_section = name;
+		clock.restart();
 	}
 
 	inline void endSection()
 	{
+		clock.stop();
 		auto &stat = get_or_create_timing_stat(current_section);
 		const float time_ms = clock.getElapsedTime().asMicroseconds() / 1e3f;
 		stat.current = time_ms;

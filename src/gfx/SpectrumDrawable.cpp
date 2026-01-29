@@ -225,6 +225,8 @@ void SpectrumDrawable::update_bars()
 
 	if (use_gs)
 	{
+		// We're going to use the geometry shader. Setup our VA to only hold a single vertex for each bar.
+		// The shader does the rest of the work.
 		vertex_array.setPrimitiveType(sf::PrimitiveType::Points);
 		vertex_array.resize(bar.count);
 
